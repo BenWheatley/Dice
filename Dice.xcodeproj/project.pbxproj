@@ -1,0 +1,862 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B50B44D1215D803D00A6399B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B44D0215D803D00A6399B /* AppDelegate.swift */; };
+		B50B44D3215D803D00A6399B /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B44D2215D803D00A6399B /* ViewController.swift */; };
+		B50B44D6215D803D00A6399B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B50B44D4215D803D00A6399B /* Main.storyboard */; };
+		B50B44D8215D804100A6399B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B50B44D7215D804100A6399B /* Assets.xcassets */; };
+		B50B44DB215D804100A6399B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B50B44D9215D804100A6399B /* LaunchScreen.storyboard */; };
+		B50B44E6215D804100A6399B /* DiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B44E5215D804100A6399B /* DiceTests.swift */; };
+		B50B44F1215D804100A6399B /* DiceUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B44F0215D804100A6399B /* DiceUITests.swift */; };
+		B50B44F6215D804200A6399B /* Dice WatchKit App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = B50B44F5215D804200A6399B /* Dice WatchKit App.app */; };
+		B50B44FC215D804200A6399B /* Interface.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B50B44FA215D804200A6399B /* Interface.storyboard */; };
+		B50B44FE215D804200A6399B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B50B44FD215D804200A6399B /* Assets.xcassets */; };
+		B50B4505215D804200A6399B /* Dice WatchKit Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = B50B4504215D804200A6399B /* Dice WatchKit Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B50B450A215D804200A6399B /* InterfaceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B4509215D804200A6399B /* InterfaceController.swift */; };
+		B50B450C215D804200A6399B /* ExtensionDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B450B215D804200A6399B /* ExtensionDelegate.swift */; };
+		B50B450E215D804200A6399B /* NotificationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B450D215D804200A6399B /* NotificationController.swift */; };
+		B50B4510215D804300A6399B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B50B450F215D804300A6399B /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B50B44E2215D804100A6399B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B50B44C5215D803C00A6399B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B50B44CC215D803C00A6399B;
+			remoteInfo = Dice;
+		};
+		B50B44ED215D804100A6399B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B50B44C5215D803C00A6399B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B50B44CC215D803C00A6399B;
+			remoteInfo = Dice;
+		};
+		B50B44F7215D804200A6399B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B50B44C5215D803C00A6399B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B50B44F4215D804100A6399B;
+			remoteInfo = "Dice WatchKit App";
+		};
+		B50B4506215D804200A6399B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B50B44C5215D803C00A6399B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B50B4503215D804200A6399B;
+			remoteInfo = "Dice WatchKit Extension";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B50B4518215D804300A6399B /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B50B4505215D804200A6399B /* Dice WatchKit Extension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B50B451C215D804300A6399B /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				B50B44F6215D804200A6399B /* Dice WatchKit App.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		B50B44CD215D803D00A6399B /* Dice.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dice.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B50B44D0215D803D00A6399B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		B50B44D2215D803D00A6399B /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		B50B44D5215D803D00A6399B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		B50B44D7215D804100A6399B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B50B44DA215D804100A6399B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		B50B44DC215D804100A6399B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B50B44E1215D804100A6399B /* DiceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DiceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B50B44E5215D804100A6399B /* DiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceTests.swift; sourceTree = "<group>"; };
+		B50B44E7215D804100A6399B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B50B44EC215D804100A6399B /* DiceUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DiceUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B50B44F0215D804100A6399B /* DiceUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceUITests.swift; sourceTree = "<group>"; };
+		B50B44F2215D804100A6399B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B50B44F5215D804200A6399B /* Dice WatchKit App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Dice WatchKit App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B50B44FB215D804200A6399B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Interface.storyboard; sourceTree = "<group>"; };
+		B50B44FD215D804200A6399B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B50B44FF215D804200A6399B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B50B4504215D804200A6399B /* Dice WatchKit Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Dice WatchKit Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B50B4509215D804200A6399B /* InterfaceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterfaceController.swift; sourceTree = "<group>"; };
+		B50B450B215D804200A6399B /* ExtensionDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtensionDelegate.swift; sourceTree = "<group>"; };
+		B50B450D215D804200A6399B /* NotificationController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationController.swift; sourceTree = "<group>"; };
+		B50B450F215D804300A6399B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B50B4511215D804300A6399B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B50B4512215D804300A6399B /* PushNotificationPayload.apns */ = {isa = PBXFileReference; lastKnownFileType = text; path = PushNotificationPayload.apns; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		B50B44CA215D803C00A6399B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B50B44DE215D804100A6399B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B50B44E9215D804100A6399B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B50B4501215D804200A6399B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		B50B44C4215D803C00A6399B = {
+			isa = PBXGroup;
+			children = (
+				B50B44CF215D803D00A6399B /* Dice */,
+				B50B44E4215D804100A6399B /* DiceTests */,
+				B50B44EF215D804100A6399B /* DiceUITests */,
+				B50B44F9215D804200A6399B /* Dice WatchKit App */,
+				B50B4508215D804200A6399B /* Dice WatchKit Extension */,
+				B50B44CE215D803D00A6399B /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		B50B44CE215D803D00A6399B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B50B44CD215D803D00A6399B /* Dice.app */,
+				B50B44E1215D804100A6399B /* DiceTests.xctest */,
+				B50B44EC215D804100A6399B /* DiceUITests.xctest */,
+				B50B44F5215D804200A6399B /* Dice WatchKit App.app */,
+				B50B4504215D804200A6399B /* Dice WatchKit Extension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B50B44CF215D803D00A6399B /* Dice */ = {
+			isa = PBXGroup;
+			children = (
+				B50B44D0215D803D00A6399B /* AppDelegate.swift */,
+				B50B44D2215D803D00A6399B /* ViewController.swift */,
+				B50B44D4215D803D00A6399B /* Main.storyboard */,
+				B50B44D7215D804100A6399B /* Assets.xcassets */,
+				B50B44D9215D804100A6399B /* LaunchScreen.storyboard */,
+				B50B44DC215D804100A6399B /* Info.plist */,
+			);
+			path = Dice;
+			sourceTree = "<group>";
+		};
+		B50B44E4215D804100A6399B /* DiceTests */ = {
+			isa = PBXGroup;
+			children = (
+				B50B44E5215D804100A6399B /* DiceTests.swift */,
+				B50B44E7215D804100A6399B /* Info.plist */,
+			);
+			path = DiceTests;
+			sourceTree = "<group>";
+		};
+		B50B44EF215D804100A6399B /* DiceUITests */ = {
+			isa = PBXGroup;
+			children = (
+				B50B44F0215D804100A6399B /* DiceUITests.swift */,
+				B50B44F2215D804100A6399B /* Info.plist */,
+			);
+			path = DiceUITests;
+			sourceTree = "<group>";
+		};
+		B50B44F9215D804200A6399B /* Dice WatchKit App */ = {
+			isa = PBXGroup;
+			children = (
+				B50B44FA215D804200A6399B /* Interface.storyboard */,
+				B50B44FD215D804200A6399B /* Assets.xcassets */,
+				B50B44FF215D804200A6399B /* Info.plist */,
+			);
+			path = "Dice WatchKit App";
+			sourceTree = "<group>";
+		};
+		B50B4508215D804200A6399B /* Dice WatchKit Extension */ = {
+			isa = PBXGroup;
+			children = (
+				B50B4509215D804200A6399B /* InterfaceController.swift */,
+				B50B450B215D804200A6399B /* ExtensionDelegate.swift */,
+				B50B450D215D804200A6399B /* NotificationController.swift */,
+				B50B450F215D804300A6399B /* Assets.xcassets */,
+				B50B4511215D804300A6399B /* Info.plist */,
+				B50B4512215D804300A6399B /* PushNotificationPayload.apns */,
+			);
+			path = "Dice WatchKit Extension";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B50B44CC215D803C00A6399B /* Dice */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B50B451D215D804300A6399B /* Build configuration list for PBXNativeTarget "Dice" */;
+			buildPhases = (
+				B50B44C9215D803C00A6399B /* Sources */,
+				B50B44CA215D803C00A6399B /* Frameworks */,
+				B50B44CB215D803C00A6399B /* Resources */,
+				B50B451C215D804300A6399B /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B50B44F8215D804200A6399B /* PBXTargetDependency */,
+			);
+			name = Dice;
+			productName = Dice;
+			productReference = B50B44CD215D803D00A6399B /* Dice.app */;
+			productType = "com.apple.product-type.application";
+		};
+		B50B44E0215D804100A6399B /* DiceTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B50B4520215D804300A6399B /* Build configuration list for PBXNativeTarget "DiceTests" */;
+			buildPhases = (
+				B50B44DD215D804100A6399B /* Sources */,
+				B50B44DE215D804100A6399B /* Frameworks */,
+				B50B44DF215D804100A6399B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B50B44E3215D804100A6399B /* PBXTargetDependency */,
+			);
+			name = DiceTests;
+			productName = DiceTests;
+			productReference = B50B44E1215D804100A6399B /* DiceTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		B50B44EB215D804100A6399B /* DiceUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B50B4523215D804300A6399B /* Build configuration list for PBXNativeTarget "DiceUITests" */;
+			buildPhases = (
+				B50B44E8215D804100A6399B /* Sources */,
+				B50B44E9215D804100A6399B /* Frameworks */,
+				B50B44EA215D804100A6399B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B50B44EE215D804100A6399B /* PBXTargetDependency */,
+			);
+			name = DiceUITests;
+			productName = DiceUITests;
+			productReference = B50B44EC215D804100A6399B /* DiceUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+		B50B44F4215D804100A6399B /* Dice WatchKit App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B50B4519215D804300A6399B /* Build configuration list for PBXNativeTarget "Dice WatchKit App" */;
+			buildPhases = (
+				B50B44F3215D804100A6399B /* Resources */,
+				B50B4518215D804300A6399B /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B50B4507215D804200A6399B /* PBXTargetDependency */,
+			);
+			name = "Dice WatchKit App";
+			productName = "Dice WatchKit App";
+			productReference = B50B44F5215D804200A6399B /* Dice WatchKit App.app */;
+			productType = "com.apple.product-type.application.watchapp2";
+		};
+		B50B4503215D804200A6399B /* Dice WatchKit Extension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B50B4515215D804300A6399B /* Build configuration list for PBXNativeTarget "Dice WatchKit Extension" */;
+			buildPhases = (
+				B50B4500215D804200A6399B /* Sources */,
+				B50B4501215D804200A6399B /* Frameworks */,
+				B50B4502215D804200A6399B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Dice WatchKit Extension";
+			productName = "Dice WatchKit Extension";
+			productReference = B50B4504215D804200A6399B /* Dice WatchKit Extension.appex */;
+			productType = "com.apple.product-type.watchkit2-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B50B44C5215D803C00A6399B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1000;
+				LastUpgradeCheck = 1000;
+				ORGANIZATIONNAME = "Ben Wheatley";
+				TargetAttributes = {
+					B50B44CC215D803C00A6399B = {
+						CreatedOnToolsVersion = 10.0;
+					};
+					B50B44E0215D804100A6399B = {
+						CreatedOnToolsVersion = 10.0;
+						TestTargetID = B50B44CC215D803C00A6399B;
+					};
+					B50B44EB215D804100A6399B = {
+						CreatedOnToolsVersion = 10.0;
+						TestTargetID = B50B44CC215D803C00A6399B;
+					};
+					B50B44F4215D804100A6399B = {
+						CreatedOnToolsVersion = 10.0;
+					};
+					B50B4503215D804200A6399B = {
+						CreatedOnToolsVersion = 10.0;
+					};
+				};
+			};
+			buildConfigurationList = B50B44C8215D803C00A6399B /* Build configuration list for PBXProject "Dice" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = B50B44C4215D803C00A6399B;
+			productRefGroup = B50B44CE215D803D00A6399B /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B50B44CC215D803C00A6399B /* Dice */,
+				B50B44E0215D804100A6399B /* DiceTests */,
+				B50B44EB215D804100A6399B /* DiceUITests */,
+				B50B44F4215D804100A6399B /* Dice WatchKit App */,
+				B50B4503215D804200A6399B /* Dice WatchKit Extension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		B50B44CB215D803C00A6399B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B50B44DB215D804100A6399B /* LaunchScreen.storyboard in Resources */,
+				B50B44D8215D804100A6399B /* Assets.xcassets in Resources */,
+				B50B44D6215D803D00A6399B /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B50B44DF215D804100A6399B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B50B44EA215D804100A6399B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B50B44F3215D804100A6399B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B50B44FE215D804200A6399B /* Assets.xcassets in Resources */,
+				B50B44FC215D804200A6399B /* Interface.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B50B4502215D804200A6399B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B50B4510215D804300A6399B /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		B50B44C9215D803C00A6399B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B50B44D3215D803D00A6399B /* ViewController.swift in Sources */,
+				B50B44D1215D803D00A6399B /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B50B44DD215D804100A6399B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B50B44E6215D804100A6399B /* DiceTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B50B44E8215D804100A6399B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B50B44F1215D804100A6399B /* DiceUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B50B4500215D804200A6399B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B50B450E215D804200A6399B /* NotificationController.swift in Sources */,
+				B50B450C215D804200A6399B /* ExtensionDelegate.swift in Sources */,
+				B50B450A215D804200A6399B /* InterfaceController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B50B44E3215D804100A6399B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B50B44CC215D803C00A6399B /* Dice */;
+			targetProxy = B50B44E2215D804100A6399B /* PBXContainerItemProxy */;
+		};
+		B50B44EE215D804100A6399B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B50B44CC215D803C00A6399B /* Dice */;
+			targetProxy = B50B44ED215D804100A6399B /* PBXContainerItemProxy */;
+		};
+		B50B44F8215D804200A6399B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B50B44F4215D804100A6399B /* Dice WatchKit App */;
+			targetProxy = B50B44F7215D804200A6399B /* PBXContainerItemProxy */;
+		};
+		B50B4507215D804200A6399B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B50B4503215D804200A6399B /* Dice WatchKit Extension */;
+			targetProxy = B50B4506215D804200A6399B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		B50B44D4215D803D00A6399B /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B50B44D5215D803D00A6399B /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		B50B44D9215D804100A6399B /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B50B44DA215D804100A6399B /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		B50B44FA215D804200A6399B /* Interface.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B50B44FB215D804200A6399B /* Base */,
+			);
+			name = Interface.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		B50B4513215D804300A6399B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		B50B4514215D804300A6399B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		B50B4516215D804300A6399B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = "Dice WatchKit Extension/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kitsunesoftware.Dice.watchkitapp.watchkitextension;
+				PRODUCT_NAME = "${TARGET_NAME}";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 5.0;
+			};
+			name = Debug;
+		};
+		B50B4517215D804300A6399B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_COMPLICATION_NAME = Complication;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = "Dice WatchKit Extension/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kitsunesoftware.Dice.watchkitapp.watchkitextension;
+				PRODUCT_NAME = "${TARGET_NAME}";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 5.0;
+			};
+			name = Release;
+		};
+		B50B451A215D804300A6399B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				IBSC_MODULE = Dice_WatchKit_Extension;
+				INFOPLIST_FILE = "Dice WatchKit App/Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = com.kitsunesoftware.Dice.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 5.0;
+			};
+			name = Debug;
+		};
+		B50B451B215D804300A6399B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				IBSC_MODULE = Dice_WatchKit_Extension;
+				INFOPLIST_FILE = "Dice WatchKit App/Info.plist";
+				PRODUCT_BUNDLE_IDENTIFIER = com.kitsunesoftware.Dice.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 5.0;
+			};
+			name = Release;
+		};
+		B50B451E215D804300A6399B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = Dice/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kitsunesoftware.Dice;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B50B451F215D804300A6399B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = Dice/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kitsunesoftware.Dice;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		B50B4521215D804300A6399B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = DiceTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kitsunesoftware.DiceTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Dice.app/Dice";
+			};
+			name = Debug;
+		};
+		B50B4522215D804300A6399B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = DiceTests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kitsunesoftware.DiceTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Dice.app/Dice";
+			};
+			name = Release;
+		};
+		B50B4524215D804300A6399B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = DiceUITests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kitsunesoftware.DiceUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Dice;
+			};
+			name = Debug;
+		};
+		B50B4525215D804300A6399B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = DiceUITests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kitsunesoftware.DiceUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 4.2;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Dice;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B50B44C8215D803C00A6399B /* Build configuration list for PBXProject "Dice" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B50B4513215D804300A6399B /* Debug */,
+				B50B4514215D804300A6399B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B50B4515215D804300A6399B /* Build configuration list for PBXNativeTarget "Dice WatchKit Extension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B50B4516215D804300A6399B /* Debug */,
+				B50B4517215D804300A6399B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B50B4519215D804300A6399B /* Build configuration list for PBXNativeTarget "Dice WatchKit App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B50B451A215D804300A6399B /* Debug */,
+				B50B451B215D804300A6399B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B50B451D215D804300A6399B /* Build configuration list for PBXNativeTarget "Dice" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B50B451E215D804300A6399B /* Debug */,
+				B50B451F215D804300A6399B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B50B4520215D804300A6399B /* Build configuration list for PBXNativeTarget "DiceTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B50B4521215D804300A6399B /* Debug */,
+				B50B4522215D804300A6399B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B50B4523215D804300A6399B /* Build configuration list for PBXNativeTarget "DiceUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B50B4524215D804300A6399B /* Debug */,
+				B50B4525215D804300A6399B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = B50B44C5215D803C00A6399B /* Project object */;
+}
