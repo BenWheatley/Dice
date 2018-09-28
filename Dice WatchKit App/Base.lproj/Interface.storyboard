@@ -13,8 +13,12 @@
             <objects>
                 <controller id="AgC-eL-Hgc" customClass="InterfaceController" customModule="Dice_WatchKit_App" customModuleProvider="target">
                     <items>
-                        <button width="1" height="1" alignment="center" verticalAlignment="center" backgroundImage="1" id="64x-ie-It6">
-                            <fontDescription key="font" type="system" pointSize="140"/>
+                        <button alignment="center" verticalAlignment="center" id="64x-ie-It6">
+                            <group key="contentGroup" width="1" height="1" alignment="left" id="Rub-qg-0Kw">
+                                <items>
+                                    <imageView width="1" height="1" alignment="center" verticalAlignment="center" image="1" contentMode="scaleAspectFit" id="fBg-Ge-r7O"/>
+                                </items>
+                            </group>
                             <connections>
                                 <action selector="roll" destination="AgC-eL-Hgc" id="VKZ-xf-75P"/>
                             </connections>
@@ -22,6 +26,7 @@
                     </items>
                     <connections>
                         <outlet property="diceButton" destination="64x-ie-It6" id="ZmX-2S-onO"/>
+                        <outlet property="diceView" destination="fBg-Ge-r7O" id="yWX-oM-HPU"/>
                     </connections>
                 </controller>
             </objects>

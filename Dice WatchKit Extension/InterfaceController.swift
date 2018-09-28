@@ -13,6 +13,7 @@ import Foundation
 class InterfaceController: WKInterfaceController {
 	
 	@IBOutlet weak var diceButton: WKInterfaceButton!
+	@IBOutlet weak var diceView: WKInterfaceImage!
 	
     override func awake(withContext context: Any?) {
         super.awake(withContext: context)
@@ -33,7 +34,7 @@ class InterfaceController: WKInterfaceController {
 	@IBAction func roll() {
 		let dice = [#imageLiteral(resourceName: "1"), #imageLiteral(resourceName: "2"), #imageLiteral(resourceName: "3"), #imageLiteral(resourceName: "4"), #imageLiteral(resourceName: "5"), #imageLiteral(resourceName: "6")]
 		let roll = Int(arc4random_uniform(UInt32(dice.count)))
-		diceButton.setBackgroundImage(dice[roll])
+		diceView.setImage(dice[roll])
 	}
 
 }
