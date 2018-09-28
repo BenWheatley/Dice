@@ -13,7 +13,7 @@
             <objects>
                 <controller id="AgC-eL-Hgc" customClass="InterfaceController" customModule="Dice_WatchKit_App" customModuleProvider="target">
                     <items>
-                        <button width="1" height="1" alignment="left" title="⚀" id="64x-ie-It6">
+                        <button width="1" height="1" alignment="center" verticalAlignment="center" backgroundImage="1" id="64x-ie-It6">
                             <fontDescription key="font" type="system" pointSize="140"/>
                             <connections>
                                 <action selector="roll" destination="AgC-eL-Hgc" id="VKZ-xf-75P"/>
