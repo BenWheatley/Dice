@@ -30,6 +30,14 @@ class DiceCollectionViewController: UICollectionViewController {
 		return cell
 	}
 	
+	override func motionEnded(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
+		if (event?.subtype == UIEvent.EventSubtype.motionShake) {
+			for i in 0..<DiceCollectionViewController.dice.count {
+				DiceCollectionViewController.dice[i] = Int(arc4random_uniform(UInt32(DiceCollectionViewCell.dice.count)))
+			}
+			collectionView.reloadData()
+		}
+	}
 }
 
 class DiceCollectionViewCell: UICollectionViewCell {
