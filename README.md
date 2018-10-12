@@ -10,3 +10,5 @@ Added iOS app to go with WatchKit app:
 * Tap a die to re-roll it
 * Shake to re-roll all dice
 * Same old (low-quality) art
+
+![Dice iOS app preview](Screen%20Shot%202018-10-12%20at%2020.27.53.png?raw=true "Dice iOS app preview")
