@@ -16,7 +16,8 @@ class DiceCollectionViewController: UICollectionViewController {
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		// Do any additional setup after loading the view, typically from a nib.
+		
+		self.collectionView.backgroundColor = UIColor(patternImage: UIImage(named: "stripes")!)
 	}
 	
 	override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -72,7 +73,9 @@ class DiceCollectionViewCell: UICollectionViewCell {
 			delay: 0.0,
 			options: .curveLinear,
 			animations: {
+				// No need to wrap in `#if DEBUG`/`#endif` because print, unlike NSLog, only appears in the debugger console.
 				print("this roll = \(self.roll), stepsRemaining = \(stepsRemaining)")
+				
 				self.roll = stepsRemaining==0 ?
 					ultimateTarget :
 					Int(arc4random_uniform(UInt32(DiceCollectionViewCell.dice.count)))
