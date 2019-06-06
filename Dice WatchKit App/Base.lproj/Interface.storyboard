@@ -27,10 +27,22 @@
                     <connections>
                         <outlet property="diceButton" destination="64x-ie-It6" id="ZmX-2S-onO"/>
                         <outlet property="diceView" destination="fBg-Ge-r7O" id="yWX-oM-HPU"/>
+                        <segue destination="DCL-M6-75F" kind="relationship" relationship="nextPage" id="Fyd-Zh-Njx"/>
                     </connections>
                 </controller>
             </objects>
             <point key="canvasLocation" x="220" y="345"/>
+        </scene>
+        <!--Interface Controller-->
+        <scene sceneID="NJm-yr-ZnV">
+            <objects>
+                <controller id="DCL-M6-75F">
+                    <items>
+                        <sceneKitScene alignment="left" scene="DiceScene.scn" id="JD6-p3-ox9"/>
+                    </items>
+                </controller>
+            </objects>
+            <point key="canvasLocation" x="477" y="345"/>
         </scene>
     </scenes>
 </document>

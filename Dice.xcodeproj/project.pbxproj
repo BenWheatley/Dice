@@ -22,6 +22,8 @@
 		B50B450C215D804200A6399B /* ExtensionDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B450B215D804200A6399B /* ExtensionDelegate.swift */; };
 		B50B450E215D804200A6399B /* NotificationController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B450D215D804200A6399B /* NotificationController.swift */; };
 		B50B4510215D804300A6399B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B50B450F215D804300A6399B /* Assets.xcassets */; };
+		B56A8D062173BD3F00444349 /* SceneKit Asset Catalog.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = B56A8D052173BD3F00444349 /* SceneKit Asset Catalog.scnassets */; };
+		B56A8D072173BD3F00444349 /* SceneKit Asset Catalog.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = B56A8D052173BD3F00444349 /* SceneKit Asset Catalog.scnassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -105,6 +107,7 @@
 		B50B450F215D804300A6399B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B50B4511215D804300A6399B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B50B4512215D804300A6399B /* PushNotificationPayload.apns */ = {isa = PBXFileReference; lastKnownFileType = text; path = PushNotificationPayload.apns; sourceTree = "<group>"; };
+		B56A8D052173BD3F00444349 /* SceneKit Asset Catalog.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = "SceneKit Asset Catalog.scnassets"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -142,6 +145,7 @@
 		B50B44C4215D803C00A6399B = {
 			isa = PBXGroup;
 			children = (
+				B5A2978F2172A0A0003BA102 /* Common assets */,
 				B50B44CF215D803D00A6399B /* Dice */,
 				B50B44E4215D804100A6399B /* DiceTests */,
 				B50B44EF215D804100A6399B /* DiceUITests */,
@@ -215,6 +219,14 @@
 				B50B4512215D804300A6399B /* PushNotificationPayload.apns */,
 			);
 			path = "Dice WatchKit Extension";
+			sourceTree = "<group>";
+		};
+		B5A2978F2172A0A0003BA102 /* Common assets */ = {
+			isa = PBXGroup;
+			children = (
+				B56A8D052173BD3F00444349 /* SceneKit Asset Catalog.scnassets */,
+			);
+			path = "Common assets";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -365,6 +377,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B56A8D062173BD3F00444349 /* SceneKit Asset Catalog.scnassets in Resources */,
 				B50B44DB215D804100A6399B /* LaunchScreen.storyboard in Resources */,
 				B50B44D8215D804100A6399B /* Assets.xcassets in Resources */,
 				B50B44D6215D803D00A6399B /* Main.storyboard in Resources */,
@@ -390,6 +403,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B50B44FE215D804200A6399B /* Assets.xcassets in Resources */,
+				B56A8D072173BD3F00444349 /* SceneKit Asset Catalog.scnassets in Resources */,
 				B50B44FC215D804200A6399B /* Interface.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
