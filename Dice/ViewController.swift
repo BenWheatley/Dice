@@ -7,7 +7,6 @@
 //
 
 import UIKit
-import SceneKit
 
 private let reuseIdentifier = "DiceCell"
 
@@ -294,6 +293,15 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		updateTotalsText(outcome: outcome)
 		collectionView.collectionViewLayout.invalidateLayout()
 		collectionView.reloadData()
+		collectionView.layoutIfNeeded()
+		animateVisibleDiceToCurrentValues()
+	}
+
+	private func animateVisibleDiceToCurrentValues() {
+		for case let cell as DiceCollectionViewCell in collectionView.visibleCells {
+			guard let indexPath = collectionView.indexPath(for: cell), indexPath.row < diceValues.count else { continue }
+			cell.recursiveDiceAnimation(ultimateTarget: diceValues[indexPath.row], sideCount: configuration.sideCount)
+		}
 	}
 
 	private func parseRollConfiguration(from text: String) -> RollConfiguration? {
@@ -463,21 +471,24 @@ class DiceCollectionViewCell: UICollectionViewCell {
 		configureCubeView()
 	}
 
+	override func layoutSubviews() {
+		super.layoutSubviews()
+		// Fill the full cell; storyboard originally sized this control to 88x88.
+		diceButton.frame = contentView.bounds
+		cubeView.frame = diceButton.bounds
+	}
+
 	func configure(faceValue: Int, sideCount: Int) {
 		setFaceValue(faceValue, sideCount: sideCount)
 	}
 
 	private func configureCubeView() {
 		guard cubeView.superview == nil else { return }
-		cubeView.translatesAutoresizingMaskIntoConstraints = false
+		cubeView.translatesAutoresizingMaskIntoConstraints = true
 		cubeView.isUserInteractionEnabled = false
 		diceButton.insertSubview(cubeView, at: 0)
-		NSLayoutConstraint.activate([
-			cubeView.leadingAnchor.constraint(equalTo: diceButton.leadingAnchor),
-			cubeView.trailingAnchor.constraint(equalTo: diceButton.trailingAnchor),
-			cubeView.topAnchor.constraint(equalTo: diceButton.topAnchor),
-			cubeView.bottomAnchor.constraint(equalTo: diceButton.bottomAnchor),
-		])
+		cubeView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+		cubeView.frame = diceButton.bounds
 	}
 
 	private func setFaceValue(_ value: Int, sideCount: Int) {

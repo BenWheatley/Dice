@@ -30,6 +30,7 @@ class DiceCubeView: UIView {
 		scnView.backgroundColor = .clear
 		scnView.isUserInteractionEnabled = false
 		scnView.antialiasingMode = .multisampling4X
+		scnView.autoenablesDefaultLighting = true
 		addSubview(scnView)
 
 		NSLayoutConstraint.activate([
@@ -50,14 +51,15 @@ class DiceCubeView: UIView {
 			return material
 		}
 
-		let box = SCNBox(width: 1, height: 1, length: 1, chamferRadius: 0.05)
+		let box = SCNBox(width: 1.5, height: 1.5, length: 1.5, chamferRadius: 0.09)
 		box.materials = materials
 		cubeNode.geometry = box
 		scene.rootNode.addChildNode(cubeNode)
 
 		let cameraNode = SCNNode()
 		cameraNode.camera = SCNCamera()
-		cameraNode.position = SCNVector3(0, 0, 3.3)
+		cameraNode.camera?.fieldOfView = 48
+		cameraNode.position = SCNVector3(0, 0, 2.15)
 		scene.rootNode.addChildNode(cameraNode)
 
 		let keyLight = SCNNode()
@@ -83,9 +85,10 @@ class DiceCubeView: UIView {
 		let target = orientation(for: value)
 		cubeNode.removeAllActions()
 
-		let spinX = Float.random(in: Float.pi * 2 ... Float.pi * 5)
-		let spinY = Float.random(in: Float.pi * 2 ... Float.pi * 5)
-		let spinZ = Float.random(in: Float.pi ... Float.pi * 3)
+		let adjustedDuration = max(duration, 0.9)
+		let spinX = Float.random(in: Float.pi * 4 ... Float.pi * 8)
+		let spinY = Float.random(in: Float.pi * 4 ... Float.pi * 8)
+		let spinZ = Float.random(in: Float.pi * 2 ... Float.pi * 5)
 
 		let mid = SCNVector3(
 			cubeNode.eulerAngles.x + spinX,
@@ -98,11 +101,11 @@ class DiceCubeView: UIView {
 			target.z + Float.random(in: -0.08...0.08)
 		)
 
-		let action1 = SCNAction.rotateTo(x: CGFloat(mid.x), y: CGFloat(mid.y), z: CGFloat(mid.z), duration: duration * 0.72, usesShortestUnitArc: false)
+		let action1 = SCNAction.rotateTo(x: CGFloat(mid.x), y: CGFloat(mid.y), z: CGFloat(mid.z), duration: adjustedDuration * 0.78, usesShortestUnitArc: false)
 		action1.timingMode = .easeIn
-		let action2 = SCNAction.rotateTo(x: CGFloat(overshoot.x), y: CGFloat(overshoot.y), z: CGFloat(overshoot.z), duration: duration * 0.18, usesShortestUnitArc: false)
+		let action2 = SCNAction.rotateTo(x: CGFloat(overshoot.x), y: CGFloat(overshoot.y), z: CGFloat(overshoot.z), duration: adjustedDuration * 0.14, usesShortestUnitArc: false)
 		action2.timingMode = .easeOut
-		let action3 = SCNAction.rotateTo(x: CGFloat(target.x), y: CGFloat(target.y), z: CGFloat(target.z), duration: duration * 0.10, usesShortestUnitArc: false)
+		let action3 = SCNAction.rotateTo(x: CGFloat(target.x), y: CGFloat(target.y), z: CGFloat(target.z), duration: adjustedDuration * 0.08, usesShortestUnitArc: false)
 		action3.timingMode = .easeInEaseOut
 
 		cubeNode.runAction(.sequence([action1, action2, action3]))
