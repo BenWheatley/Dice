@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import SceneKit
 
 private let reuseIdentifier = "DiceCell"
 
@@ -452,31 +453,44 @@ extension DiceCollectionViewController: UICollectionViewDelegateFlowLayout {
 }
 
 class DiceCollectionViewCell: UICollectionViewCell {
-	private static let d6Images = [
-		#imageLiteral(resourceName: "1"),
-		#imageLiteral(resourceName: "2"),
-		#imageLiteral(resourceName: "3"),
-		#imageLiteral(resourceName: "4"),
-		#imageLiteral(resourceName: "5"),
-		#imageLiteral(resourceName: "6"),
-	]
-
 	var onRequestReroll: (() -> Void)?
+	private let cubeView = DiceCubeView()
 
 	@IBOutlet weak var diceButton: UIButton!
+
+	override func awakeFromNib() {
+		super.awakeFromNib()
+		configureCubeView()
+	}
 
 	func configure(faceValue: Int, sideCount: Int) {
 		setFaceValue(faceValue, sideCount: sideCount)
 	}
 
+	private func configureCubeView() {
+		guard cubeView.superview == nil else { return }
+		cubeView.translatesAutoresizingMaskIntoConstraints = false
+		cubeView.isUserInteractionEnabled = false
+		diceButton.insertSubview(cubeView, at: 0)
+		NSLayoutConstraint.activate([
+			cubeView.leadingAnchor.constraint(equalTo: diceButton.leadingAnchor),
+			cubeView.trailingAnchor.constraint(equalTo: diceButton.trailingAnchor),
+			cubeView.topAnchor.constraint(equalTo: diceButton.topAnchor),
+			cubeView.bottomAnchor.constraint(equalTo: diceButton.bottomAnchor),
+		])
+	}
+
 	private func setFaceValue(_ value: Int, sideCount: Int) {
 		if sideCount == 6, (1...6).contains(value) {
+			cubeView.isHidden = false
+			cubeView.setFaceValue(value)
 			diceButton.setTitle(nil, for: .normal)
-			diceButton.setImage(Self.d6Images[value - 1], for: .normal)
+			diceButton.setImage(nil, for: .normal)
 			diceButton.layer.borderWidth = 0
 			diceButton.layer.cornerRadius = 0
 			diceButton.backgroundColor = .clear
 		} else {
+			cubeView.isHidden = true
 			diceButton.setImage(nil, for: .normal)
 			diceButton.setTitle("\(value)", for: .normal)
 			diceButton.setTitleColor(.black, for: .normal)
@@ -493,6 +507,12 @@ class DiceCollectionViewCell: UICollectionViewCell {
 	}
 
 	func recursiveDiceAnimation(ultimateTarget: Int, sideCount: Int, stepsRemaining: Int = Constants.rollingAnimationSteps) {
+		if sideCount == 6 {
+			cubeView.isHidden = false
+			cubeView.roll(to: ultimateTarget, duration: Constants.finalRollAnimationTime)
+			return
+		}
+
 		UIView.animate(
 			withDuration: Constants.finalRollAnimationTime / pow(Constants.ithRollAnimationDecayConstant, 1.0 + Double(stepsRemaining)),
 			delay: 0.0,
