@@ -125,7 +125,7 @@ final class DiceCubeView: UIView {
 		let valuesForFaces = [1, 3, 6, 4, 2, 5] // front, right, back, left, top, bottom
 		let materials = valuesForFaces.map { value -> SCNMaterial in
 			let material = SCNMaterial()
-			material.diffuse.contents = UIImage(named: "\(value)")
+			material.diffuse.contents = zoomedTexture(named: "\(value)", factor: 1.25)
 			material.locksAmbientWithDiffuse = true
 			return material
 		}
@@ -164,25 +164,59 @@ final class DiceCubeView: UIView {
 
 	private func makeRotateAction(node: SCNNode, targetFace: Int, duration: TimeInterval) -> SCNAction {
 		let target = orientation(for: targetFace)
-		let spinX = Float.random(in: Float.pi * 4 ... Float.pi * 8)
-		let spinY = Float.random(in: Float.pi * 4 ... Float.pi * 8)
-		let spinZ = Float.random(in: Float.pi * 2 ... Float.pi * 5)
-
 		let current = node.presentation.eulerAngles
-		let mid = SCNVector3(current.x + spinX, current.y + spinY, current.z + spinZ)
-		let overshoot = SCNVector3(
-			target.x + Float.random(in: -0.14...0.14),
-			target.y + Float.random(in: -0.14...0.14),
-			target.z + Float.random(in: -0.10...0.10)
+		let peakTime = duration * 0.16
+		let decayWindow = max(0.001, duration - peakTime)
+		let rampSharpness = 5.0
+		let decaySharpness = 6.0
+
+		let spinTarget = SCNVector3(
+			target.x + Float.random(in: Float.pi * 4 ... Float.pi * 8),
+			target.y + Float.random(in: Float.pi * 4 ... Float.pi * 8),
+			target.z + Float.random(in: Float.pi * 2 ... Float.pi * 5)
 		)
 
-		let action1 = SCNAction.rotateTo(x: CGFloat(mid.x), y: CGFloat(mid.y), z: CGFloat(mid.z), duration: duration * 0.76, usesShortestUnitArc: false)
-		action1.timingMode = .easeIn
-		let action2 = SCNAction.rotateTo(x: CGFloat(overshoot.x), y: CGFloat(overshoot.y), z: CGFloat(overshoot.z), duration: duration * 0.16, usesShortestUnitArc: false)
-		action2.timingMode = .easeOut
-		let action3 = SCNAction.rotateTo(x: CGFloat(target.x), y: CGFloat(target.y), z: CGFloat(target.z), duration: duration * 0.08, usesShortestUnitArc: false)
-		action3.timingMode = .easeInEaseOut
-		return .sequence([action1, action2, action3])
+		// Normalize integrated angular velocity so progress reaches exactly 1 at t=duration.
+		let eRamp = exp(-rampSharpness)
+		let rampIntegralAtPeak = peakTime * (1.0 / (1.0 - eRamp) - 1.0 / rampSharpness)
+		let decayIntegralFull = decayWindow * (1.0 - exp(-decaySharpness)) / decaySharpness
+		let omegaMax = 1.0 / max(0.0001, rampIntegralAtPeak + decayIntegralFull)
+
+		return SCNAction.customAction(duration: duration) { n, elapsed in
+			let t = TimeInterval(elapsed)
+			let progress: Double
+			if t <= peakTime {
+				// Fast ramp-up of angular velocity.
+				let scaled = t / peakTime
+				let expTerm = exp(-rampSharpness * scaled)
+				let rampIntegral = (t / (1.0 - eRamp)) + (peakTime / rampSharpness) * (expTerm - 1.0) / (1.0 - eRamp)
+				progress = max(0, min(1, omegaMax * rampIntegral))
+			} else {
+				// Exponential decay of angular velocity after peak.
+				let x = t - peakTime
+				let decayIntegral = decayWindow * (1.0 - exp(-decaySharpness * (x / decayWindow))) / decaySharpness
+				progress = max(0, min(1, omegaMax * (rampIntegralAtPeak + decayIntegral)))
+			}
+
+			let p = Float(progress)
+			let x = current.x + (spinTarget.x - current.x) * p
+			let y = current.y + (spinTarget.y - current.y) * p
+			let z = current.z + (spinTarget.z - current.z) * p
+			n.eulerAngles = SCNVector3(x, y, z)
+		}
+	}
+
+	private func zoomedTexture(named name: String, factor: CGFloat) -> UIImage? {
+		guard let source = UIImage(named: name) else { return nil }
+		let size = source.size
+		let renderer = UIGraphicsImageRenderer(size: size)
+		let zoomed = renderer.image { _ in
+			let w = size.width * factor
+			let h = size.height * factor
+			let rect = CGRect(x: (size.width - w) / 2, y: (size.height - h) / 2, width: w, height: h)
+			source.draw(in: rect)
+		}
+		return zoomed
 	}
 
 	private func makeBounceMoveAction(start: SCNVector3, target: SCNVector3, sideLength: CGFloat, duration: TimeInterval) -> SCNAction {
