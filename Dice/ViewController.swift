@@ -124,6 +124,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	private let notationField = UITextField()
 	private let totalsLabel = UILabel()
+	private let presetsButton = UIButton(type: .system)
 	private var controlsContainer: UIView?
 
 	override func viewDidLoad() {
@@ -140,8 +141,11 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		super.viewDidLayoutSubviews()
 		guard let controlsContainer else { return }
 		let insets = UIEdgeInsets(top: controlsContainer.bounds.height + 8, left: 0, bottom: totalsLabel.bounds.height + 16, right: 0)
-		collectionView.contentInset = insets
-		collectionView.scrollIndicatorInsets = insets
+		if collectionView.contentInset != insets {
+			collectionView.contentInset = insets
+			collectionView.scrollIndicatorInsets = insets
+			collectionView.collectionViewLayout.invalidateLayout()
+		}
 	}
 
 	override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -198,10 +202,10 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		rollButton.setTitle("Roll", for: .normal)
 		rollButton.addTarget(self, action: #selector(rollFromInput), for: .touchUpInside)
 
-		let presetsButton = UIButton(type: .system)
 		presetsButton.translatesAutoresizingMaskIntoConstraints = false
 		presetsButton.setTitle("Presets", for: .normal)
-		presetsButton.addTarget(self, action: #selector(showPresets), for: .touchUpInside)
+		presetsButton.showsMenuAsPrimaryAction = true
+		presetsButton.menu = makePresetMenu()
 
 		let row = UIStackView(arrangedSubviews: [notationField, rollButton, presetsButton])
 		row.translatesAutoresizingMaskIntoConstraints = false
@@ -234,7 +238,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			totalsLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
 			totalsLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
 			totalsLabel.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -8),
-			totalsLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 84),
+			totalsLabel.heightAnchor.constraint(equalToConstant: 92),
 
 			rollButton.widthAnchor.constraint(equalToConstant: 52),
 			presetsButton.widthAnchor.constraint(equalToConstant: 72),
@@ -260,6 +264,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceValues = outcome.values
 		updateNotationField()
 		updateTotalsText(outcome: outcome)
+		collectionView.collectionViewLayout.invalidateLayout()
 		collectionView.reloadData()
 	}
 
@@ -294,29 +299,61 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		return RollConfiguration(diceCount: diceCount, sideCount: sideCount, intuitive: intuitive)
 	}
 
-	@objc private func showPresets() {
-		let actionSheet = UIAlertController(title: "eDice Presets", message: nil, preferredStyle: .actionSheet)
-
-		for count in 1...10 {
-			actionSheet.addAction(UIAlertAction(title: "\(count)d6", style: .default, handler: { _ in
+	private func makePresetMenu() -> UIMenu {
+		let normalActions = (1...10).map { count in
+			UIAction(title: "\(count)d6", image: presetIcon(diceCount: count, intuitive: false)) { _ in
 				self.configuration = RollConfiguration(diceCount: count, sideCount: 6, intuitive: false)
 				self.performRoll()
-			}))
+			}
 		}
-		for count in 1...10 {
-			actionSheet.addAction(UIAlertAction(title: "\(count)d6i", style: .default, handler: { _ in
+		let intuitiveActions = (1...10).map { count in
+			UIAction(title: "\(count)d6i", image: presetIcon(diceCount: count, intuitive: true)) { _ in
 				self.configuration = RollConfiguration(diceCount: count, sideCount: 6, intuitive: true)
 				self.performRoll()
-			}))
+			}
 		}
 
-		actionSheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+		return UIMenu(title: "eDice Presets", children: [
+			UIMenu(title: "Normal", options: .displayInline, children: normalActions),
+			UIMenu(title: "Intuitive", options: .displayInline, children: intuitiveActions),
+		])
+	}
 
-		if let popover = actionSheet.popoverPresentationController {
-			popover.sourceView = view
-			popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 1, height: 1)
+	private func presetIcon(diceCount: Int, intuitive: Bool) -> UIImage? {
+		let size = CGSize(width: 36, height: 24)
+		let renderer = UIGraphicsImageRenderer(size: size)
+		let dieImage = UIImage(named: "1")
+		let visibleDice = max(1, min(diceCount, 10))
+		let offset: CGFloat = 2
+		let cardSize = CGSize(width: 14, height: 14)
+		let totalStackWidth = cardSize.width + CGFloat(visibleDice - 1) * offset
+		let startX = max(0, (size.width - totalStackWidth) / 2)
+		let baseY = (size.height - cardSize.height) / 2
+
+		return renderer.image { context in
+			for index in 0..<visibleDice {
+				let x = startX + CGFloat(index) * offset
+				let y = baseY - CGFloat(visibleDice - index - 1)
+				let rect = CGRect(x: x, y: y, width: cardSize.width, height: cardSize.height)
+
+				UIColor.white.setFill()
+				UIColor(white: 0.5, alpha: 1).setStroke()
+				let path = UIBezierPath(roundedRect: rect, cornerRadius: 3)
+				path.lineWidth = 1
+				path.fill()
+				path.stroke()
+
+				if let dieImage {
+					dieImage.draw(in: rect.insetBy(dx: 2, dy: 2))
+				}
+			}
+
+			if intuitive {
+				let badgeRect = CGRect(x: size.width - 9, y: 1, width: 8, height: 8)
+				context.cgContext.setFillColor(UIColor.systemBlue.cgColor)
+				context.cgContext.fillEllipse(in: badgeRect)
+			}
 		}
-		present(actionSheet, animated: true)
 	}
 
 	private func showInvalidNotationAlert() {
@@ -358,6 +395,27 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			return top.map { "\($0.offset + 1)s:\($0.element)" }.joined(separator: " ")
 		}
 		return totals.enumerated().map { "\($0.offset + 1)s:\($0.element)" }.joined(separator: " ")
+	}
+}
+
+extension DiceCollectionViewController: UICollectionViewDelegateFlowLayout {
+	func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+		4
+	}
+
+	func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
+		4
+	}
+
+	func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+		let spacing: CGFloat = 4
+		let availableWidth = collectionView.bounds.width - collectionView.adjustedContentInset.left - collectionView.adjustedContentInset.right
+		let preferredColumns = max(1, Int(ceil(sqrt(Double(diceValues.count)))))
+		let columns = min(max(preferredColumns, 3), 8)
+		let totalSpacing = spacing * CGFloat(max(0, columns - 1))
+		let rawSize = floor((availableWidth - totalSpacing) / CGFloat(columns))
+		let clamped = max(92, min(140, rawSize))
+		return CGSize(width: clamped, height: clamped)
 	}
 }
 
