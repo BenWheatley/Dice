@@ -65,6 +65,12 @@ private final class DiceRollSession {
 		return RollOutcome(values: values, localTotals: localTotals, sessionTotals: sessionTotals, totalRolls: totalRolls, sum: sum)
 	}
 
+	func reset() {
+		persistentTotals = []
+		sortedTotals = []
+		totalRolls = 0
+	}
+
 	private func ensureCapacity(_ sideCount: Int) {
 		if persistentTotals.count < sideCount {
 			persistentTotals += Array(repeating: 0, count: sideCount - persistentTotals.count)
@@ -124,6 +130,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	private let notationField = UITextField()
 	private let totalsLabel = UILabel()
+	private let totalsContainer = UIView()
+	private let resetStatsButton = UIButton(type: .system)
 	private let presetsButton = UIButton(type: .system)
 	private var controlsContainer: UIView?
 
@@ -140,7 +148,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	override func viewDidLayoutSubviews() {
 		super.viewDidLayoutSubviews()
 		guard let controlsContainer else { return }
-		let insets = UIEdgeInsets(top: controlsContainer.bounds.height + 8, left: 0, bottom: totalsLabel.bounds.height + 16, right: 0)
+		let insets = UIEdgeInsets(top: controlsContainer.bounds.height + 8, left: 0, bottom: totalsContainer.bounds.height + 16, right: 0)
 		if collectionView.contentInset != insets {
 			collectionView.contentInset = insets
 			collectionView.scrollIndicatorInsets = insets
@@ -213,15 +221,25 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		row.spacing = 8
 		row.alignment = .fill
 
+		totalsContainer.translatesAutoresizingMaskIntoConstraints = false
+		totalsContainer.backgroundColor = UIColor(white: 1.0, alpha: 0.9)
+		totalsContainer.layer.cornerRadius = 10
+		totalsContainer.layer.masksToBounds = true
+		view.addSubview(totalsContainer)
+
 		totalsLabel.translatesAutoresizingMaskIntoConstraints = false
-		totalsLabel.backgroundColor = UIColor(white: 1.0, alpha: 0.9)
-		totalsLabel.layer.cornerRadius = 10
-		totalsLabel.layer.masksToBounds = true
+		totalsLabel.backgroundColor = .clear
 		totalsLabel.font = UIFont.systemFont(ofSize: 12)
 		totalsLabel.numberOfLines = 0
 		totalsLabel.textColor = .darkGray
 		totalsLabel.textAlignment = .left
-		view.addSubview(totalsLabel)
+
+		resetStatsButton.translatesAutoresizingMaskIntoConstraints = false
+		resetStatsButton.setTitle("Reset", for: .normal)
+		resetStatsButton.addTarget(self, action: #selector(resetStats), for: .touchUpInside)
+
+		totalsContainer.addSubview(totalsLabel)
+		totalsContainer.addSubview(resetStatsButton)
 
 		controlsContainer.addSubview(row)
 
@@ -235,10 +253,19 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			row.trailingAnchor.constraint(equalTo: controlsContainer.trailingAnchor, constant: -8),
 			row.bottomAnchor.constraint(equalTo: controlsContainer.bottomAnchor, constant: -8),
 
-			totalsLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
-			totalsLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
-			totalsLabel.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -8),
-			totalsLabel.heightAnchor.constraint(equalToConstant: 92),
+			totalsContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
+			totalsContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
+			totalsContainer.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -8),
+			totalsContainer.heightAnchor.constraint(equalToConstant: 92),
+
+			totalsLabel.leadingAnchor.constraint(equalTo: totalsContainer.leadingAnchor, constant: 8),
+			totalsLabel.topAnchor.constraint(equalTo: totalsContainer.topAnchor, constant: 8),
+			totalsLabel.bottomAnchor.constraint(equalTo: totalsContainer.bottomAnchor, constant: -8),
+			totalsLabel.trailingAnchor.constraint(equalTo: resetStatsButton.leadingAnchor, constant: -8),
+
+			resetStatsButton.trailingAnchor.constraint(equalTo: totalsContainer.trailingAnchor, constant: -8),
+			resetStatsButton.centerYAnchor.constraint(equalTo: totalsContainer.centerYAnchor),
+			resetStatsButton.widthAnchor.constraint(equalToConstant: 52),
 
 			rollButton.widthAnchor.constraint(equalToConstant: 52),
 			presetsButton.widthAnchor.constraint(equalToConstant: 72),
@@ -364,6 +391,11 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		)
 		alert.addAction(UIAlertAction(title: "OK", style: .default))
 		present(alert, animated: true)
+	}
+
+	@objc private func resetStats() {
+		rollSession.reset()
+		totalsLabel.text = "  Stats reset"
 	}
 
 	private func updateTotalsText(outcome: RollOutcome) {
