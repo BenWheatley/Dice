@@ -133,6 +133,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let totalsContainer = UIView()
 	private let resetStatsButton = UIButton(type: .system)
 	private let presetsButton = UIButton(type: .system)
+	private let diceBoardView = DiceCubeView()
 	private var controlsContainer: UIView?
 
 	override func viewDidLoad() {
@@ -141,6 +142,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		collectionView.backgroundColor = UIColor(patternImage: UIImage(named: "stripes")!)
 		collectionView.keyboardDismissMode = .onDrag
 		configureControls()
+		configureDiceBoard()
 		updateNotationField()
 		performRoll()
 	}
@@ -154,6 +156,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			collectionView.scrollIndicatorInsets = insets
 			collectionView.collectionViewLayout.invalidateLayout()
 		}
+		updateDiceBoard(animated: false)
 	}
 
 	override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -171,9 +174,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			guard let newValue = outcome.values.first else { return }
 			self.diceValues[indexPath.row] = newValue
 			self.updateTotalsText(outcome: outcome)
-			if let rerolledCell = collectionView?.cellForItem(at: indexPath) as? DiceCollectionViewCell {
-				rerolledCell.recursiveDiceAnimation(ultimateTarget: newValue, sideCount: self.configuration.sideCount)
-			}
+			collectionView?.reloadItems(at: [indexPath])
+			collectionView?.layoutIfNeeded()
+			self.updateDiceBoard(animated: self.configuration.sideCount == 6)
 		}
 		return cell
 	}
@@ -272,6 +275,21 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		])
 	}
 
+	private func configureDiceBoard() {
+		diceBoardView.translatesAutoresizingMaskIntoConstraints = false
+		diceBoardView.backgroundColor = .clear
+		diceBoardView.isUserInteractionEnabled = false
+		view.addSubview(diceBoardView)
+		view.bringSubviewToFront(controlsContainer ?? UIView())
+		view.bringSubviewToFront(totalsContainer)
+		NSLayoutConstraint.activate([
+			diceBoardView.leadingAnchor.constraint(equalTo: collectionView.leadingAnchor),
+			diceBoardView.trailingAnchor.constraint(equalTo: collectionView.trailingAnchor),
+			diceBoardView.topAnchor.constraint(equalTo: collectionView.topAnchor),
+			diceBoardView.bottomAnchor.constraint(equalTo: collectionView.bottomAnchor),
+		])
+	}
+
 	private func updateNotationField() {
 		notationField.text = configuration.notation
 	}
@@ -294,14 +312,42 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		collectionView.collectionViewLayout.invalidateLayout()
 		collectionView.reloadData()
 		collectionView.layoutIfNeeded()
-		animateVisibleDiceToCurrentValues()
+		updateDiceBoard(animated: configuration.sideCount == 6)
 	}
 
-	private func animateVisibleDiceToCurrentValues() {
-		for case let cell as DiceCollectionViewCell in collectionView.visibleCells {
-			guard let indexPath = collectionView.indexPath(for: cell), indexPath.row < diceValues.count else { continue }
-			cell.recursiveDiceAnimation(ultimateTarget: diceValues[indexPath.row], sideCount: configuration.sideCount)
+	private func updateDiceBoard(animated: Bool) {
+		guard configuration.sideCount == 6 else {
+			diceBoardView.isHidden = true
+			return
 		}
+
+		diceBoardView.isHidden = false
+
+		let sideLength = 0.25 * min(UIScreen.main.bounds.width, UIScreen.main.bounds.height)
+		let itemCount = collectionView.numberOfItems(inSection: 0)
+		var centers: [CGPoint] = []
+		var values: [Int] = []
+		centers.reserveCapacity(itemCount)
+		values.reserveCapacity(itemCount)
+
+		for row in 0..<itemCount {
+			let indexPath = IndexPath(row: row, section: 0)
+			let cellFrame: CGRect
+			if let attrs = collectionView.layoutAttributesForItem(at: indexPath) {
+				cellFrame = attrs.frame
+			} else {
+				continue
+			}
+			let visibleCenter = CGPoint(
+				x: cellFrame.midX - collectionView.contentOffset.x,
+				y: cellFrame.midY - collectionView.contentOffset.y
+			)
+			let centerInBoard = diceBoardView.convert(visibleCenter, from: collectionView)
+			centers.append(centerInBoard)
+			values.append(diceValues[row])
+		}
+
+		diceBoardView.setDice(values: values, centers: centers, sideLength: sideLength, animated: animated)
 	}
 
 	private func parseRollConfiguration(from text: String) -> RollConfiguration? {
@@ -449,59 +495,33 @@ extension DiceCollectionViewController: UICollectionViewDelegateFlowLayout {
 	}
 
 	func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-		let spacing: CGFloat = 4
-		let availableWidth = collectionView.bounds.width - collectionView.adjustedContentInset.left - collectionView.adjustedContentInset.right
-		let preferredColumns = max(1, Int(ceil(sqrt(Double(diceValues.count)))))
-		let columns = min(max(preferredColumns, 3), 8)
-		let totalSpacing = spacing * CGFloat(max(0, columns - 1))
-		let rawSize = floor((availableWidth - totalSpacing) / CGFloat(columns))
-		let clamped = max(92, min(140, rawSize))
-		return CGSize(width: clamped, height: clamped)
+		let sideLength = floor(0.25 * min(UIScreen.main.bounds.width, UIScreen.main.bounds.height))
+		return CGSize(width: sideLength, height: sideLength)
 	}
 }
 
 class DiceCollectionViewCell: UICollectionViewCell {
 	var onRequestReroll: (() -> Void)?
-	private let cubeView = DiceCubeView()
 
 	@IBOutlet weak var diceButton: UIButton!
 
-	override func awakeFromNib() {
-		super.awakeFromNib()
-		configureCubeView()
-	}
-
 	override func layoutSubviews() {
 		super.layoutSubviews()
-		// Fill the full cell; storyboard originally sized this control to 88x88.
 		diceButton.frame = contentView.bounds
-		cubeView.frame = diceButton.bounds
 	}
 
 	func configure(faceValue: Int, sideCount: Int) {
 		setFaceValue(faceValue, sideCount: sideCount)
 	}
 
-	private func configureCubeView() {
-		guard cubeView.superview == nil else { return }
-		cubeView.translatesAutoresizingMaskIntoConstraints = true
-		cubeView.isUserInteractionEnabled = false
-		diceButton.insertSubview(cubeView, at: 0)
-		cubeView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-		cubeView.frame = diceButton.bounds
-	}
-
 	private func setFaceValue(_ value: Int, sideCount: Int) {
 		if sideCount == 6, (1...6).contains(value) {
-			cubeView.isHidden = false
-			cubeView.setFaceValue(value)
 			diceButton.setTitle(nil, for: .normal)
 			diceButton.setImage(nil, for: .normal)
 			diceButton.layer.borderWidth = 0
 			diceButton.layer.cornerRadius = 0
-			diceButton.backgroundColor = .clear
+			diceButton.backgroundColor = UIColor.clear
 		} else {
-			cubeView.isHidden = true
 			diceButton.setImage(nil, for: .normal)
 			diceButton.setTitle("\(value)", for: .normal)
 			diceButton.setTitleColor(.black, for: .normal)
@@ -515,36 +535,5 @@ class DiceCollectionViewCell: UICollectionViewCell {
 
 	@IBAction func reroll(_ sender: Any) {
 		onRequestReroll?()
-	}
-
-	func recursiveDiceAnimation(ultimateTarget: Int, sideCount: Int, stepsRemaining: Int = Constants.rollingAnimationSteps) {
-		if sideCount == 6 {
-			cubeView.isHidden = false
-			cubeView.roll(to: ultimateTarget, duration: Constants.finalRollAnimationTime)
-			return
-		}
-
-		UIView.animate(
-			withDuration: Constants.finalRollAnimationTime / pow(Constants.ithRollAnimationDecayConstant, 1.0 + Double(stepsRemaining)),
-			delay: 0.0,
-			options: .curveLinear,
-			animations: {
-				let thisRoll = stepsRemaining == 0 ? ultimateTarget : Int.random(in: 1...sideCount)
-				self.setFaceValue(thisRoll, sideCount: sideCount)
-				let angle = CGFloat.pi
-				self.diceButton.transform = self.diceButton.transform.rotated(by: angle)
-			},
-			completion: { finished in
-				if finished && stepsRemaining > 0 {
-					self.recursiveDiceAnimation(ultimateTarget: ultimateTarget, sideCount: sideCount, stepsRemaining: stepsRemaining - 1)
-				}
-			}
-		)
-	}
-
-	private struct Constants {
-		static let rollingAnimationSteps = 5
-		static let finalRollAnimationTime: TimeInterval = 0.6
-		static let ithRollAnimationDecayConstant = 1.3
 	}
 }
