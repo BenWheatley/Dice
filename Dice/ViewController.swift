@@ -34,7 +34,7 @@ class DiceCollectionViewController: UICollectionViewController {
 	override func motionEnded(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
 		if (event?.subtype == UIEvent.EventSubtype.motionShake) {
 			for i in 0..<DiceCollectionViewController.dice.count {
-				DiceCollectionViewController.dice[i] = Int(arc4random_uniform(UInt32(DiceCollectionViewCell.dice.count)))
+				DiceCollectionViewController.dice[i] = Int.random(in: 0..<DiceCollectionViewCell.dice.count)
 			}
 			for cell in self.collectionView!.visibleCells {
 				guard let dice = cell as? DiceCollectionViewCell else {
@@ -62,7 +62,7 @@ class DiceCollectionViewCell: UICollectionViewCell {
 	@IBOutlet weak var diceButton: UIButton!
 	
 	@IBAction func reroll(_ sender: Any) {
-		let r = Int(arc4random_uniform(UInt32(DiceCollectionViewCell.dice.count)))
+		let r = Int.random(in: 0..<DiceCollectionViewCell.dice.count)
 		
 		recursiveDiceAnimation(ultimateTarget: r)
 	}
@@ -78,7 +78,7 @@ class DiceCollectionViewCell: UICollectionViewCell {
 				
 				self.roll = stepsRemaining==0 ?
 					ultimateTarget :
-					Int(arc4random_uniform(UInt32(DiceCollectionViewCell.dice.count)))
+					Int.random(in: 0..<DiceCollectionViewCell.dice.count)
 				let angle = CGFloat.pi
 				self.diceButton.transform = self.diceButton.transform.rotated(by: angle)
 			},

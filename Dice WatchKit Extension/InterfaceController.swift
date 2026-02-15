@@ -33,7 +33,7 @@ class InterfaceController: WKInterfaceController {
 	
 	@IBAction func roll() {
 		let dice = [#imageLiteral(resourceName: "1"), #imageLiteral(resourceName: "2"), #imageLiteral(resourceName: "3"), #imageLiteral(resourceName: "4"), #imageLiteral(resourceName: "5"), #imageLiteral(resourceName: "6")]
-		let roll = Int(arc4random_uniform(UInt32(dice.count)))
+		let roll = Int.random(in: 0..<dice.count)
 		diceView.setImage(dice[roll])
 	}
 
