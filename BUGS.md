@@ -1,9 +1,9 @@
 - [x] D10 geometry does not render all faces correctly.
-- [ ] History should not be an alert popup, it should be its own view
+- [x] History should not be an alert popup, it should be its own view
 - [x] The number textures are flipped left-right
 - [x] The animation of lateral movement should start high, _bounce__ off screen edges, and exp decay to rest
-- [ ] History should be separate to presets
-- [ ] Presets popover should be a two column list, left column for normal, right for intuitive
-- [ ] Mode/Totals info at bottom of screen uses too small a font, and still clips
-- [ ] Move to a hamburger menu: History, Anim on/off (should be toggle, not button name), Reset
-- [ ] Add items to aforementioned hamburger menu: Show stats (toggle, not button name)
+- [x] History should be separate to presets
+- [x] Presets popover should be a two column list, left column for normal, right for intuitive
+- [x] Mode/Totals info at bottom of screen uses too small a font, and still clips
+- [x] Move to a hamburger menu: History, Anim on/off (should be toggle, not button name), Reset
+- [x] Add items to aforementioned hamburger menu: Show stats (toggle, not button name)

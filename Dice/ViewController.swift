@@ -11,11 +11,6 @@ import UIKit
 private let reuseIdentifier = "DiceCell"
 
 class DiceCollectionViewController: UICollectionViewController, UITextFieldDelegate {
-	private struct PresetIconCacheKey: Hashable {
-		let diceCount: Int
-		let intuitive: Bool
-	}
-
 	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 	private let viewModel = DiceViewModel()
 
@@ -24,13 +19,12 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let totalsLabel = UILabel()
 	private let totalsContainer = UIView()
 	private let rollButton = UIButton(type: .system)
-	private let resetStatsButton = UIButton(type: .system)
 	private let presetsButton = UIButton(type: .system)
-	private let historyButton = UIButton(type: .system)
-	private let animationButton = UIButton(type: .system)
+	private let menuButton = UIButton(type: .system)
 	private let diceBoardView = DiceCubeView()
 	private var controlsContainer: UIView?
-	private var presetIconCache: [PresetIconCacheKey: UIImage] = [:]
+	private let statsVisibilityKey = "Dice.showStats"
+	private var statsVisible = true
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -42,7 +36,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		configureDiceBoard()
 		configurePointerInteractionsIfNeeded()
 		updateNotationField()
-		updateAnimationButtonState()
+		restoreStatsVisibility()
+		updateStatsVisibility()
+		updateControlMenu()
 		performRoll()
 	}
 
@@ -58,7 +54,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	override func viewDidLayoutSubviews() {
 		super.viewDidLayoutSubviews()
 		guard let controlsContainer else { return }
-		let insets = UIEdgeInsets(top: controlsContainer.bounds.height + 8, left: 0, bottom: totalsContainer.bounds.height + 16, right: 0)
+		let bottomInset = statsVisible ? totalsContainer.bounds.height + 16 : 8
+		let insets = UIEdgeInsets(top: controlsContainer.bounds.height + 8, left: 0, bottom: bottomInset, right: 0)
 		if collectionView.contentInset != insets {
 			collectionView.contentInset = insets
 			collectionView.scrollIndicatorInsets = insets
@@ -134,30 +131,19 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 		presetsButton.translatesAutoresizingMaskIntoConstraints = false
 		presetsButton.setTitle(NSLocalizedString("button.presets", comment: "Presets button title"), for: .normal)
-		presetsButton.showsMenuAsPrimaryAction = true
-		presetsButton.menu = makePresetMenu()
+		presetsButton.addTarget(self, action: #selector(showPresetPicker), for: .touchUpInside)
 		presetsButton.accessibilityLabel = NSLocalizedString("a11y.presets.label", comment: "Presets button accessibility label")
 		presetsButton.accessibilityIdentifier = "presetsButton"
 		presetsButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
 		presetsButton.titleLabel?.adjustsFontForContentSizeCategory = true
 
-		historyButton.translatesAutoresizingMaskIntoConstraints = false
-		historyButton.setTitle(NSLocalizedString("button.history", comment: "History button title"), for: .normal)
-		historyButton.addTarget(self, action: #selector(showHistory), for: .touchUpInside)
-		historyButton.accessibilityLabel = NSLocalizedString("a11y.history.label", comment: "History button accessibility label")
-		historyButton.accessibilityHint = NSLocalizedString("a11y.history.hint", comment: "History button accessibility hint")
-		historyButton.accessibilityIdentifier = "historyButton"
-		historyButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
-		historyButton.titleLabel?.adjustsFontForContentSizeCategory = true
+		menuButton.translatesAutoresizingMaskIntoConstraints = false
+		menuButton.setImage(UIImage(systemName: "line.3.horizontal"), for: .normal)
+		menuButton.accessibilityLabel = NSLocalizedString("a11y.menu.label", comment: "Main menu accessibility label")
+		menuButton.accessibilityIdentifier = "menuButton"
+		menuButton.showsMenuAsPrimaryAction = true
 
-		animationButton.translatesAutoresizingMaskIntoConstraints = false
-		animationButton.addTarget(self, action: #selector(toggleAnimations), for: .touchUpInside)
-		animationButton.accessibilityLabel = NSLocalizedString("a11y.animation.label", comment: "Animation toggle accessibility label")
-		animationButton.accessibilityIdentifier = "animationButton"
-		animationButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
-		animationButton.titleLabel?.adjustsFontForContentSizeCategory = true
-
-		let row = UIStackView(arrangedSubviews: [notationField, rollButton, presetsButton, historyButton, animationButton])
+		let row = UIStackView(arrangedSubviews: [notationField, rollButton, presetsButton, menuButton])
 		row.translatesAutoresizingMaskIntoConstraints = false
 		row.axis = .horizontal
 		row.spacing = 8
@@ -180,7 +166,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 		totalsLabel.translatesAutoresizingMaskIntoConstraints = false
 		totalsLabel.backgroundColor = .clear
-		totalsLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
+		totalsLabel.font = UIFont.preferredFont(forTextStyle: .body)
 		totalsLabel.adjustsFontForContentSizeCategory = true
 		totalsLabel.numberOfLines = 0
 		totalsLabel.textColor = .darkGray
@@ -188,16 +174,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		totalsLabel.accessibilityIdentifier = "totalsLabel"
 		totalsLabel.accessibilityLabel = NSLocalizedString("a11y.totals.label", comment: "Totals accessibility label")
 
-		resetStatsButton.translatesAutoresizingMaskIntoConstraints = false
-		resetStatsButton.setTitle(NSLocalizedString("button.reset", comment: "Reset stats button title"), for: .normal)
-		resetStatsButton.addTarget(self, action: #selector(resetStats), for: .touchUpInside)
-		resetStatsButton.accessibilityLabel = NSLocalizedString("a11y.reset.label", comment: "Reset stats button accessibility label")
-		resetStatsButton.accessibilityIdentifier = "resetStatsButton"
-		resetStatsButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
-		resetStatsButton.titleLabel?.adjustsFontForContentSizeCategory = true
-
 		totalsContainer.addSubview(totalsLabel)
-		totalsContainer.addSubview(resetStatsButton)
 
 		controlsContainer.addSubview(row)
 		controlsContainer.addSubview(validationLabel)
@@ -218,21 +195,16 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			totalsContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
 			totalsContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
 			totalsContainer.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -8),
-			totalsContainer.heightAnchor.constraint(equalToConstant: 92),
+			totalsContainer.heightAnchor.constraint(greaterThanOrEqualToConstant: 116),
 
 			totalsLabel.leadingAnchor.constraint(equalTo: totalsContainer.leadingAnchor, constant: 8),
 			totalsLabel.topAnchor.constraint(equalTo: totalsContainer.topAnchor, constant: 8),
 			totalsLabel.bottomAnchor.constraint(equalTo: totalsContainer.bottomAnchor, constant: -8),
-			totalsLabel.trailingAnchor.constraint(equalTo: resetStatsButton.leadingAnchor, constant: -8),
-
-			resetStatsButton.trailingAnchor.constraint(equalTo: totalsContainer.trailingAnchor, constant: -8),
-			resetStatsButton.centerYAnchor.constraint(equalTo: totalsContainer.centerYAnchor),
-			resetStatsButton.widthAnchor.constraint(equalToConstant: 52),
+			totalsLabel.trailingAnchor.constraint(equalTo: totalsContainer.trailingAnchor, constant: -8),
 
 			rollButton.widthAnchor.constraint(equalToConstant: 52),
 			presetsButton.widthAnchor.constraint(equalToConstant: 72),
-			historyButton.widthAnchor.constraint(equalToConstant: 72),
-			animationButton.widthAnchor.constraint(equalToConstant: 68),
+			menuButton.widthAnchor.constraint(equalToConstant: 44),
 		])
 	}
 
@@ -262,7 +234,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			notationField.resignFirstResponder()
 			clearValidationFeedback()
 			updateNotationField()
-			presetsButton.menu = makePresetMenu()
 			updateTotalsText(outcome: outcome)
 			collectionView.collectionViewLayout.invalidateLayout()
 			collectionView.reloadData()
@@ -318,92 +289,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.setDice(values: values, centers: centers, sideLength: sideLength, sideCount: viewModel.configuration.sideCount, animated: animated)
 	}
 
-	private func makePresetMenu() -> UIMenu {
-		let normalActions = (1...10).map { count in
-			UIAction(title: "\(count)d6", image: presetIcon(diceCount: count, intuitive: false)) { _ in
-				let outcome = self.viewModel.selectPreset(diceCount: count, intuitive: false)
-				self.updateNotationField()
-				self.clearValidationFeedback()
-				self.presetsButton.menu = self.makePresetMenu()
-				self.updateTotalsText(outcome: outcome)
-				self.collectionView.reloadData()
-				self.collectionView.layoutIfNeeded()
-				self.updateDiceBoard(animated: self.shouldAnimateBoard)
-			}
-		}
-		let intuitiveActions = (1...10).map { count in
-			UIAction(title: "\(count)d6i", image: presetIcon(diceCount: count, intuitive: true)) { _ in
-				let outcome = self.viewModel.selectPreset(diceCount: count, intuitive: true)
-				self.updateNotationField()
-				self.clearValidationFeedback()
-				self.presetsButton.menu = self.makePresetMenu()
-				self.updateTotalsText(outcome: outcome)
-				self.collectionView.reloadData()
-				self.collectionView.layoutIfNeeded()
-				self.updateDiceBoard(animated: self.shouldAnimateBoard)
-			}
-		}
-
-		let recentActions = viewModel.recentPresets.prefix(6).map { notation in
-			UIAction(title: notation) { _ in
-				self.notationField.text = notation
-				self.rollFromInput()
-			}
-		}
-		var sections: [UIMenu] = []
-		if !recentActions.isEmpty {
-			sections.append(UIMenu(title: NSLocalizedString("menu.presets.recent", comment: "Recent presets section title"), options: .displayInline, children: recentActions))
-		}
-		sections.append(UIMenu(title: NSLocalizedString("menu.presets.normal", comment: "Normal presets section title"), options: .displayInline, children: normalActions))
-		sections.append(UIMenu(title: NSLocalizedString("menu.presets.intuitive", comment: "Intuitive presets section title"), options: .displayInline, children: intuitiveActions))
-
-		return UIMenu(title: NSLocalizedString("menu.presets.title", comment: "Preset menu title"), children: sections)
-	}
-
-	private func presetIcon(diceCount: Int, intuitive: Bool) -> UIImage? {
-		let key = PresetIconCacheKey(diceCount: diceCount, intuitive: intuitive)
-		if let cached = presetIconCache[key] {
-			return cached
-		}
-
-		let size = CGSize(width: 36, height: 24)
-		let renderer = UIGraphicsImageRenderer(size: size)
-		let dieImage = UIImage(named: "1")
-		let visibleDice = max(1, min(diceCount, 10))
-		let offset: CGFloat = 2
-		let cardSize = CGSize(width: 14, height: 14)
-		let totalStackWidth = cardSize.width + CGFloat(visibleDice - 1) * offset
-		let startX = max(0, (size.width - totalStackWidth) / 2)
-		let baseY = (size.height - cardSize.height) / 2
-
-		let icon = renderer.image { context in
-			for index in 0..<visibleDice {
-				let x = startX + CGFloat(index) * offset
-				let y = baseY - CGFloat(visibleDice - index - 1)
-				let rect = CGRect(x: x, y: y, width: cardSize.width, height: cardSize.height)
-
-				UIColor.white.setFill()
-				UIColor(white: 0.5, alpha: 1).setStroke()
-				let path = UIBezierPath(roundedRect: rect, cornerRadius: 3)
-				path.lineWidth = 1
-				path.fill()
-				path.stroke()
-
-				if let dieImage {
-					dieImage.draw(in: rect.insetBy(dx: 2, dy: 2))
-				}
-			}
-
-			if intuitive {
-				let badgeRect = CGRect(x: size.width - 9, y: 1, width: 8, height: 8)
-				context.cgContext.setFillColor(UIColor.systemBlue.cgColor)
-				context.cgContext.fillEllipse(in: badgeRect)
-			}
-		}
-		presetIconCache[key] = icon
-		return icon
-	}
-
 	private func showInvalidNotationAlert(message: String) {
 		let alert = UIAlertController(
 			title: NSLocalizedString("alert.invalid.title", comment: "Invalid notation alert title"),
@@ -424,44 +309,31 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	@objc private func toggleAnimations() {
 		viewModel.setAnimationsEnabled(!viewModel.animationsEnabled)
-		updateAnimationButtonState()
+		updateControlMenu()
 	}
 
 	@objc private func showHistory() {
-		let entries = viewModel.historyEntries
-		let alert = UIAlertController(
-			title: NSLocalizedString("history.title", comment: "Roll history title"),
-			message: formattedHistoryMessage(entries),
-			preferredStyle: .actionSheet
-		)
-		alert.addAction(UIAlertAction(title: NSLocalizedString("history.export.text", comment: "Export history text action"), style: .default) { _ in
+		let historyViewController = RollHistoryViewController(entries: viewModel.historyEntries)
+		historyViewController.onExportText = { [weak self] in
+			guard let self else { return }
 			self.presentExportSheet(content: self.viewModel.exportHistory(format: .text), filename: "dice-history.txt")
-		})
-		alert.addAction(UIAlertAction(title: NSLocalizedString("history.export.csv", comment: "Export history csv action"), style: .default) { _ in
+		}
+		historyViewController.onExportCSV = { [weak self] in
+			guard let self else { return }
 			self.presentExportSheet(content: self.viewModel.exportHistory(format: .csv), filename: "dice-history.csv")
-		})
-		alert.addAction(UIAlertAction(title: NSLocalizedString("history.clear", comment: "Clear history action"), style: .destructive) { _ in
+		}
+		historyViewController.onClearHistory = { [weak self, weak historyViewController] in
+			guard let self else { return }
 			self.viewModel.clearHistory()
-		})
-		alert.addAction(UIAlertAction(title: NSLocalizedString("button.close", comment: "Close button title"), style: .cancel))
-		if let popover = alert.popoverPresentationController {
-			popover.sourceView = historyButton
-			popover.sourceRect = historyButton.bounds
+			historyViewController?.updateEntries([])
 		}
-		present(alert, animated: true)
-	}
-
-	private func formattedHistoryMessage(_ entries: [RollHistoryEntry]) -> String {
-		guard !entries.isEmpty else {
-			return NSLocalizedString("history.empty", comment: "Empty history message")
+		let navigationController = UINavigationController(rootViewController: historyViewController)
+		navigationController.modalPresentationStyle = .formSheet
+		if let popover = navigationController.popoverPresentationController {
+			popover.sourceView = menuButton
+			popover.sourceRect = menuButton.bounds
 		}
-		let formatter = DateFormatter()
-		formatter.dateStyle = .none
-		formatter.timeStyle = .short
-		return entries.prefix(10).map { entry in
-			let mode = entry.intuitive ? "i" : "r"
-			return "\(formatter.string(from: entry.timestamp)) \(entry.notation) [\(mode)] = \(entry.sum)"
-		}.joined(separator: "\n")
+		present(navigationController, animated: true)
 	}
 
 	private func presentExportSheet(content: String, filename: String) {
@@ -470,8 +342,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			try content.write(to: temporaryURL, atomically: true, encoding: .utf8)
 			let activity = UIActivityViewController(activityItems: [temporaryURL], applicationActivities: nil)
 			if let popover = activity.popoverPresentationController {
-				popover.sourceView = historyButton
-				popover.sourceRect = historyButton.bounds
+				popover.sourceView = menuButton
+				popover.sourceRect = menuButton.bounds
 			}
 			present(activity, animated: true)
 		} catch {
@@ -525,7 +397,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	private func configurePointerInteractionsIfNeeded() {
 		guard traitCollection.userInterfaceIdiom == .mac else { return }
-		for control in [rollButton, presetsButton, historyButton, animationButton, resetStatsButton] {
+		for control in [rollButton, presetsButton, menuButton] {
 			control.isPointerInteractionEnabled = true
 		}
 	}
@@ -534,14 +406,235 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		boardSupportedSides.contains(viewModel.configuration.sideCount) && viewModel.animationsEnabled
 	}
 
-	private func updateAnimationButtonState() {
-		let title = viewModel.animationsEnabled
-			? NSLocalizedString("button.anim.on", comment: "Animations enabled button title")
-			: NSLocalizedString("button.anim.off", comment: "Animations disabled button title")
-		animationButton.setTitle(title, for: .normal)
-		animationButton.accessibilityValue = viewModel.animationsEnabled
-			? NSLocalizedString("state.on", comment: "Enabled state label")
-			: NSLocalizedString("state.off", comment: "Disabled state label")
+	@objc private func showPresetPicker() {
+		let picker = PresetPickerViewController()
+		picker.onSelectPreset = { [weak self] diceCount, intuitive in
+			self?.applyPreset(diceCount: diceCount, intuitive: intuitive)
+		}
+		let navigationController = UINavigationController(rootViewController: picker)
+		navigationController.modalPresentationStyle = .formSheet
+		if let popover = navigationController.popoverPresentationController {
+			popover.sourceView = presetsButton
+			popover.sourceRect = presetsButton.bounds
+		}
+		present(navigationController, animated: true)
+	}
+
+	private func applyPreset(diceCount: Int, intuitive: Bool) {
+		let outcome = viewModel.selectPreset(diceCount: diceCount, intuitive: intuitive)
+		updateNotationField()
+		clearValidationFeedback()
+		updateTotalsText(outcome: outcome)
+		collectionView.reloadData()
+		collectionView.layoutIfNeeded()
+		updateDiceBoard(animated: shouldAnimateBoard)
+	}
+
+	@objc private func showControlMenu() {
+		updateControlMenu()
+	}
+
+	private func updateControlMenu() {
+		let animationAction = UIAction(
+			title: NSLocalizedString("menu.control.animations", comment: "Animations toggle menu title"),
+			state: viewModel.animationsEnabled ? .on : .off
+		) { [weak self] _ in
+			self?.toggleAnimations()
+		}
+		let statsAction = UIAction(
+			title: NSLocalizedString("menu.control.showStats", comment: "Show stats toggle menu title"),
+			state: statsVisible ? .on : .off
+		) { [weak self] _ in
+			self?.toggleStatsVisibility()
+		}
+		let historyAction = UIAction(title: NSLocalizedString("button.history", comment: "History button title")) { [weak self] _ in
+			self?.showHistory()
+		}
+		let resetAction = UIAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), attributes: .destructive) { [weak self] _ in
+			self?.resetStats()
+		}
+		menuButton.menu = UIMenu(children: [historyAction, animationAction, statsAction, resetAction])
+	}
+
+	@objc private func toggleStatsVisibility() {
+		statsVisible.toggle()
+		UserDefaults.standard.set(statsVisible, forKey: statsVisibilityKey)
+		updateStatsVisibility()
+		updateControlMenu()
+	}
+
+	private func restoreStatsVisibility() {
+		if UserDefaults.standard.object(forKey: statsVisibilityKey) != nil {
+			statsVisible = UserDefaults.standard.bool(forKey: statsVisibilityKey)
+		}
+	}
+
+	private func updateStatsVisibility() {
+		totalsContainer.isHidden = !statsVisible
+		view.setNeedsLayout()
+		view.layoutIfNeeded()
+	}
+}
+
+private final class PresetPickerViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+	var onSelectPreset: ((Int, Bool) -> Void)?
+
+	private let normalTableView = UITableView(frame: .zero, style: .insetGrouped)
+	private let intuitiveTableView = UITableView(frame: .zero, style: .insetGrouped)
+
+	override func viewDidLoad() {
+		super.viewDidLoad()
+		title = NSLocalizedString("menu.presets.title", comment: "Preset menu title")
+		view.backgroundColor = .systemBackground
+		navigationItem.leftBarButtonItem = UIBarButtonItem(
+			title: NSLocalizedString("button.close", comment: "Close button title"),
+			style: .plain,
+			target: self,
+			action: #selector(close)
+		)
+		configureTableView(normalTableView, intuitive: false)
+		configureTableView(intuitiveTableView, intuitive: true)
+
+		let stack = UIStackView(arrangedSubviews: [normalTableView, intuitiveTableView])
+		stack.axis = .horizontal
+		stack.spacing = 8
+		stack.distribution = .fillEqually
+		stack.translatesAutoresizingMaskIntoConstraints = false
+		view.addSubview(stack)
+
+		NSLayoutConstraint.activate([
+			stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+			stack.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+			stack.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+			stack.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+			normalTableView.widthAnchor.constraint(equalTo: intuitiveTableView.widthAnchor),
+		])
+
+		preferredContentSize = CGSize(width: 420, height: 420)
+	}
+
+	private func configureTableView(_ tableView: UITableView, intuitive: Bool) {
+		tableView.dataSource = self
+		tableView.delegate = self
+		tableView.register(UITableViewCell.self, forCellReuseIdentifier: "PresetCell")
+		tableView.accessibilityIdentifier = intuitive ? "intuitivePresetsTable" : "normalPresetsTable"
+		tableView.tag = intuitive ? 1 : 0
+	}
+
+	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+		10
+	}
+
+	func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+		tableView.tag == 0
+			? NSLocalizedString("menu.presets.normal", comment: "Normal presets section title")
+			: NSLocalizedString("menu.presets.intuitive", comment: "Intuitive presets section title")
+	}
+
+	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+		let cell = tableView.dequeueReusableCell(withIdentifier: "PresetCell", for: indexPath)
+		let diceCount = indexPath.row + 1
+		let intuitive = tableView.tag == 1
+		cell.textLabel?.text = intuitive ? "\(diceCount)d6i" : "\(diceCount)d6"
+		cell.accessibilityIdentifier = intuitive ? "preset_\(diceCount)d6i" : "preset_\(diceCount)d6"
+		return cell
+	}
+
+	func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+		let diceCount = indexPath.row + 1
+		let intuitive = tableView.tag == 1
+		onSelectPreset?(diceCount, intuitive)
+		dismiss(animated: true)
+	}
+
+	@objc private func close() {
+		dismiss(animated: true)
+	}
+}
+
+private final class RollHistoryViewController: UITableViewController {
+	var onExportText: (() -> Void)?
+	var onExportCSV: (() -> Void)?
+	var onClearHistory: (() -> Void)?
+
+	private var entries: [RollHistoryEntry]
+	private let dateFormatter: DateFormatter = {
+		let formatter = DateFormatter()
+		formatter.dateStyle = .none
+		formatter.timeStyle = .short
+		return formatter
+	}()
+
+	init(entries: [RollHistoryEntry]) {
+		self.entries = entries
+		super.init(style: .insetGrouped)
+	}
+
+	required init?(coder: NSCoder) {
+		fatalError("init(coder:) has not been implemented")
+	}
+
+	override func viewDidLoad() {
+		super.viewDidLoad()
+		title = NSLocalizedString("history.title", comment: "Roll history title")
+		tableView.register(UITableViewCell.self, forCellReuseIdentifier: "HistoryCell")
+		tableView.accessibilityIdentifier = "historyTable"
+		navigationItem.leftBarButtonItem = UIBarButtonItem(
+			title: NSLocalizedString("button.close", comment: "Close button title"),
+			style: .plain,
+			target: self,
+			action: #selector(close)
+		)
+		navigationItem.rightBarButtonItem = UIBarButtonItem(
+			title: NSLocalizedString("menu.control.actions", comment: "History actions menu title"),
+			menu: historyActionsMenu()
+		)
+	}
+
+	func updateEntries(_ entries: [RollHistoryEntry]) {
+		self.entries = entries
+		tableView.reloadData()
+	}
+
+	override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+		max(1, entries.count)
+	}
+
+	override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+		let cell = tableView.dequeueReusableCell(withIdentifier: "HistoryCell", for: indexPath)
+		if entries.isEmpty {
+			cell.textLabel?.text = NSLocalizedString("history.empty", comment: "Empty history message")
+			cell.detailTextLabel?.text = nil
+			cell.selectionStyle = .none
+			return cell
+		}
+		let entry = entries[indexPath.row]
+		var content = UIListContentConfiguration.subtitleCell()
+		content.text = "\(entry.notation) = \(entry.sum)"
+		content.secondaryText = "\(dateFormatter.string(from: entry.timestamp))  \(entry.values.map(String.init).joined(separator: ", "))"
+		cell.contentConfiguration = content
+		cell.selectionStyle = .none
+		return cell
+	}
+
+	private func historyActionsMenu() -> UIMenu {
+		let exportText = UIAction(title: NSLocalizedString("history.export.text", comment: "Export history text action")) { [weak self] _ in
+			self?.onExportText?()
+		}
+		let exportCSV = UIAction(title: NSLocalizedString("history.export.csv", comment: "Export history csv action")) { [weak self] _ in
+			self?.onExportCSV?()
+		}
+		let clear = UIAction(
+			title: NSLocalizedString("history.clear", comment: "Clear history action"),
+			attributes: .destructive
+		) { [weak self] _ in
+			self?.onClearHistory?()
+		}
+		return UIMenu(children: [exportText, exportCSV, clear])
+	}
+
+	@objc private func close() {
+		dismiss(animated: true)
 	}
 }
 

@@ -37,7 +37,9 @@ final class DiceUITests: XCTestCase {
 		XCTAssertTrue(presetsButton.waitForExistence(timeout: 5))
 
 		presetsButton.tap()
-		app.buttons.matching(identifier: "2d6i").firstMatch.tap()
+		let intuitivePreset = app.cells["preset_2d6i"].firstMatch
+		XCTAssertTrue(intuitivePreset.waitForExistence(timeout: 5))
+		intuitivePreset.tap()
 
 		let firstDie = app.buttons["dieButton_0"]
 		XCTAssertTrue(firstDie.waitForExistence(timeout: 5))
@@ -45,16 +47,18 @@ final class DiceUITests: XCTestCase {
 	}
 
 	func testResetStatsAndToggleAnimations() {
-		let animationButton = app.buttons["animationButton"]
-		let resetButton = app.buttons["resetStatsButton"]
+		let menuButton = app.buttons["menuButton"]
 		let totalsLabel = app.staticTexts["totalsLabel"]
 
-		XCTAssertTrue(animationButton.waitForExistence(timeout: 5))
-		animationButton.tap()
-		animationButton.tap()
+		XCTAssertTrue(menuButton.waitForExistence(timeout: 5))
+		menuButton.tap()
+		app.buttons["Animations"].tap()
 
-		XCTAssertTrue(resetButton.exists)
-		resetButton.tap()
+		menuButton.tap()
+		app.buttons["Animations"].tap()
+
+		menuButton.tap()
+		app.buttons["Reset"].tap()
 		XCTAssertTrue(totalsLabel.exists)
 	}
 

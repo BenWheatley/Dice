@@ -23,6 +23,9 @@ These rules apply to all agents working in this repository.
 7. Ignore user-specific Xcode scheme metadata churn and do not interrupt progress for it:
    - treat `Dice.xcodeproj/xcuserdata/**` as local environment noise unless the user explicitly asks to modify it
    - never include `xcschememanagement.plist` updates in feature commits unless requested
+8. Avoid triggering simulator runtime downloads during routine testing:
+   - prefer explicit installed runtimes in `xcodebuild -destination` (for example `platform=iOS Simulator,OS=18.6,name=iPhone 16`)
+   - avoid `OS=latest` unless intentionally validating against the newest installed runtime
 
 ## Platform/Feature Scope
 

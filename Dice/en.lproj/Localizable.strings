@@ -16,6 +16,9 @@
 "menu.presets.recent" = "Recent";
 "menu.presets.normal" = "Normal";
 "menu.presets.intuitive" = "Intuitive";
+"menu.control.animations" = "Animations";
+"menu.control.showStats" = "Show Stats";
+"menu.control.actions" = "Actions";
 "alert.invalid.title" = "Invalid dice input";
 "alert.invalid.announcement" = "Invalid dice notation.";
 "history.title" = "Roll History";
@@ -47,5 +50,6 @@
 "a11y.validation.label" = "Input validation message";
 "a11y.totals.label" = "Roll statistics";
 "a11y.reset.label" = "Reset statistics";
+"a11y.menu.label" = "Menu";
 "a11y.die.label" = "Die %d, value %d";
 "a11y.die.hint" = "Reroll this die";
