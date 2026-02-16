@@ -241,6 +241,11 @@ final class DiceCubeView: UIView {
 		let mesh = view.meshData(for: sideCount)
 		return (mesh.vertices, mesh.faces)
 	}
+
+	static func debugD4FaceVertexLabels() -> [[Int]] {
+		let view = DiceCubeView(frame: .zero)
+		return view.tetrahedronFaces().map { view.d4VertexLabels(forFace: $0) }
+	}
 #endif
 
 	private func buildGeometry(sideLength: CGFloat, sideCount: Int) -> BuiltMesh {
@@ -300,7 +305,7 @@ final class DiceCubeView: UIView {
 			}
 
 			elements.append(SCNGeometryElement(indices: faceTriIndices, primitiveType: .triangles))
-			materials.append(faceMaterial(value: faceIndex + 1, sideCount: sideCount))
+			materials.append(faceMaterial(faceIndex: faceIndex, face: workingFace, sideCount: sideCount))
 		}
 
 		let vSource = SCNGeometrySource(vertices: finalVertices)
@@ -321,16 +326,57 @@ final class DiceCubeView: UIView {
 		return mesh
 	}
 
-	private func faceMaterial(value: Int, sideCount: Int) -> SCNMaterial {
+	private func faceMaterial(faceIndex: Int, face: [Int], sideCount: Int) -> SCNMaterial {
 		let material = SCNMaterial()
+		let value = faceIndex + 1
 		if sideCount == 6 {
 			material.diffuse.contents = zoomedTexture(named: "\(value)", factor: 1.25)
+		} else if sideCount == 4 {
+			material.diffuse.contents = d4FaceTexture(vertexLabels: d4VertexLabels(forFace: face))
 		} else {
 			material.diffuse.contents = faceValueTexture(value: value, sideCount: sideCount)
 		}
 		material.locksAmbientWithDiffuse = true
 		material.isDoubleSided = false
 		return material
+	}
+
+	private func d4VertexLabels(forFace face: [Int]) -> [Int] {
+		face.map { $0 + 1 }
+	}
+
+	private func d4FaceTexture(vertexLabels: [Int]) -> UIImage {
+		let size = CGSize(width: 256, height: 256)
+		let renderer = UIGraphicsImageRenderer(size: size)
+		return renderer.image { ctx in
+			let rect = CGRect(origin: .zero, size: size)
+			ctx.cgContext.setFillColor(UIColor(white: 0.96, alpha: 1).cgColor)
+			ctx.cgContext.fill(rect)
+			ctx.cgContext.setStrokeColor(UIColor(white: 0.70, alpha: 1).cgColor)
+			ctx.cgContext.setLineWidth(8)
+			ctx.cgContext.stroke(rect.insetBy(dx: 6, dy: 6))
+
+			let points = [
+				CGPoint(x: size.width * 0.5, y: size.height * 0.2),
+				CGPoint(x: size.width * 0.23, y: size.height * 0.72),
+				CGPoint(x: size.width * 0.77, y: size.height * 0.72),
+			]
+			let attrs: [NSAttributedString.Key: Any] = [
+				.font: UIFont.boldSystemFont(ofSize: 52),
+				.foregroundColor: UIColor.black
+			]
+			for (index, point) in points.enumerated() where index < vertexLabels.count {
+				let text = "\(vertexLabels[index])" as NSString
+				let textSize = text.size(withAttributes: attrs)
+				let textRect = CGRect(
+					x: point.x - textSize.width / 2,
+					y: point.y - textSize.height / 2,
+					width: textSize.width,
+					height: textSize.height
+				)
+				text.draw(in: textRect, withAttributes: attrs)
+			}
+		}
 	}
 
 	private func faceValueTexture(value: Int, sideCount: Int) -> UIImage {

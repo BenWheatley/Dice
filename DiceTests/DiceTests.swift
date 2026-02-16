@@ -668,4 +668,13 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(detail, "Time: 16:27 • Values: 2, 4, 6, 8, 10, 1")
 	}
 
+	func testD4FacesUseVertexLabelTriples() {
+		let labels = DiceCubeView.debugD4FaceVertexLabels()
+		XCTAssertEqual(labels.count, 4)
+		XCTAssertEqual(labels[0], [1, 2, 3])
+		XCTAssertEqual(labels[1], [1, 4, 2])
+		XCTAssertEqual(labels[2], [1, 3, 4])
+		XCTAssertEqual(labels[3], [2, 4, 3])
+	}
+
 }
