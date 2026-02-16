@@ -15,6 +15,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let notationParser = DiceNotationParser()
 	private let preferencesStore = DicePreferencesStore()
 	private let historyStore = DiceRollHistoryStore()
+	private let telemetry = DiceTelemetry()
 	private let appState = DiceAppState()
 	private let rollSession = DiceRollSession()
 	private var rollHistory = DiceRollHistory()
@@ -68,6 +69,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			self.appState.diceValues[indexPath.row] = newValue
 			self.appState.stats = DiceStats(outcome: outcome)
 			self.appendHistory(for: singleRoll, outcome: outcome)
+			self.telemetry.logRoll(configuration: singleRoll, sum: outcome.sum, diceCount: singleRoll.diceCount)
 			self.updateTotalsText(outcome: outcome)
 			collectionView?.reloadItems(at: [indexPath])
 			collectionView?.layoutIfNeeded()
@@ -196,6 +198,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		case let .success(configuration):
 			parsed = configuration
 		case let .failure(error):
+			telemetry.logInvalidInput(text, reason: error.userMessage)
 			showInvalidNotationAlert(message: error.userMessage)
 			return
 		}
@@ -210,6 +213,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let outcome = rollSession.roll(appState.configuration)
 		appState.applyRollOutcome(outcome)
 		appendHistory(for: appState.configuration, outcome: outcome)
+		telemetry.logRoll(configuration: appState.configuration, sum: outcome.sum, diceCount: appState.configuration.diceCount)
 		updateNotationField()
 		updateTotalsText(outcome: outcome)
 		collectionView.collectionViewLayout.invalidateLayout()
@@ -326,6 +330,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	@objc private func resetStats() {
 		rollSession.reset()
+		telemetry.logStatsReset()
 		totalsLabel.text = "  Stats reset"
 	}
 
