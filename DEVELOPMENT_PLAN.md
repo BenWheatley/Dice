@@ -44,7 +44,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Implement/update adaptive layout for iPhone and iPad (size class, split view, dynamic type).
 - [x] Harden input UX: notation editing, presets, validation feedback, keyboard/accessibility flow.
 - [x] Improve dice board rendering integration (supported polyhedra, animation toggles, fallback behavior).
-- [ ] Add UI tests for primary flows (launch, roll, reroll die, preset select, intuitive toggle, reset).
+- [x] Add UI tests for primary flows (launch, roll, reroll die, preset select, intuitive toggle, reset).
 
 ## 5. watchOS Experience
 

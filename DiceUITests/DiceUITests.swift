@@ -8,27 +8,66 @@
 
 import XCTest
 
-class DiceUITests: XCTestCase {
+final class DiceUITests: XCTestCase {
+	private var app: XCUIApplication!
 
-    override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
+	override func setUpWithError() throws {
+		continueAfterFailure = false
+		app = XCUIApplication()
+		app.launch()
+	}
 
-        // In UI tests it is usually best to stop immediately when a failure occurs.
-        continueAfterFailure = false
+	func testLaunchAndRollFromNotationInput() {
+		let notationField = app.textFields["notationField"]
+		let rollButton = app.buttons["rollButton"]
+		let totalsLabel = app.staticTexts["totalsLabel"]
 
-        // UI tests must launch the application that they test. Doing this in setup will make sure it happens for each test method.
-        XCUIApplication().launch()
+		XCTAssertTrue(notationField.waitForExistence(timeout: 3))
+		XCTAssertTrue(rollButton.exists)
 
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
-    }
+		replaceNotation(with: "3d6")
+		rollButton.tap()
 
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
+		XCTAssertTrue(totalsLabel.label.contains("Mode: 3d6"))
+	}
 
-    func testExample() {
-        // Use recording to get started writing UI tests.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-    }
+	func testPresetIntuitiveAndRerollSingleDie() {
+		let presetsButton = app.buttons["presetsButton"]
+		XCTAssertTrue(presetsButton.waitForExistence(timeout: 3))
 
+		presetsButton.tap()
+		app.buttons["2d6i"].tap()
+
+		let totalsLabel = app.staticTexts["totalsLabel"]
+		XCTAssertTrue(totalsLabel.label.contains("Mode: 2d6i"))
+
+		let firstDie = app.buttons["dieButton_0"]
+		XCTAssertTrue(firstDie.waitForExistence(timeout: 3))
+		firstDie.tap()
+	}
+
+	func testResetStatsAndToggleAnimations() {
+		let animationButton = app.buttons["animationButton"]
+		let resetButton = app.buttons["resetStatsButton"]
+		let totalsLabel = app.staticTexts["totalsLabel"]
+
+		XCTAssertTrue(animationButton.waitForExistence(timeout: 3))
+		animationButton.tap()
+		animationButton.tap()
+
+		XCTAssertTrue(resetButton.exists)
+		resetButton.tap()
+		XCTAssertTrue(totalsLabel.label.contains("Stats reset"))
+	}
+
+	private func replaceNotation(with notation: String) {
+		let notationField = app.textFields["notationField"]
+		notationField.tap()
+		if let current = notationField.value as? String {
+			for _ in 0..<current.count {
+				notationField.typeText(XCUIKeyboardKey.delete.rawValue)
+			}
+		}
+		notationField.typeText(notation)
+	}
 }

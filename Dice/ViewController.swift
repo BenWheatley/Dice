@@ -57,7 +57,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
 		let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! DiceCollectionViewCell
 		let faceValue = viewModel.diceValues[indexPath.row]
-		cell.configure(faceValue: faceValue, sideCount: viewModel.configuration.sideCount)
+		cell.configure(faceValue: faceValue, sideCount: viewModel.configuration.sideCount, index: indexPath.row)
 		cell.onRequestReroll = { [weak self, weak collectionView] in
 			guard let self else { return }
 			guard let outcome = self.viewModel.rerollDie(at: indexPath.row) else { return }
@@ -103,6 +103,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		notationField.delegate = self
 		notationField.accessibilityLabel = "Dice notation input"
 		notationField.accessibilityHint = "Enter notation like 6d6 or 6d6i"
+		notationField.accessibilityIdentifier = "notationField"
 		notationField.addTarget(self, action: #selector(notationEditingChanged), for: .editingChanged)
 		configureNotationInputAccessory()
 
@@ -111,6 +112,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		rollButton.setTitle("Roll", for: .normal)
 		rollButton.addTarget(self, action: #selector(rollFromInput), for: .touchUpInside)
 		rollButton.accessibilityLabel = "Roll dice"
+		rollButton.accessibilityIdentifier = "rollButton"
 		rollButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
 		rollButton.titleLabel?.adjustsFontForContentSizeCategory = true
 
@@ -119,6 +121,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		presetsButton.showsMenuAsPrimaryAction = true
 		presetsButton.menu = makePresetMenu()
 		presetsButton.accessibilityLabel = "Dice presets"
+		presetsButton.accessibilityIdentifier = "presetsButton"
 		presetsButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
 		presetsButton.titleLabel?.adjustsFontForContentSizeCategory = true
 
@@ -127,12 +130,14 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		historyButton.addTarget(self, action: #selector(showHistory), for: .touchUpInside)
 		historyButton.accessibilityLabel = "Roll history"
 		historyButton.accessibilityHint = "Open session history and export options"
+		historyButton.accessibilityIdentifier = "historyButton"
 		historyButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
 		historyButton.titleLabel?.adjustsFontForContentSizeCategory = true
 
 		animationButton.translatesAutoresizingMaskIntoConstraints = false
 		animationButton.addTarget(self, action: #selector(toggleAnimations), for: .touchUpInside)
 		animationButton.accessibilityLabel = "Toggle dice animations"
+		animationButton.accessibilityIdentifier = "animationButton"
 		animationButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
 		animationButton.titleLabel?.adjustsFontForContentSizeCategory = true
 
@@ -163,11 +168,13 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		totalsLabel.numberOfLines = 0
 		totalsLabel.textColor = .darkGray
 		totalsLabel.textAlignment = .left
+		totalsLabel.accessibilityIdentifier = "totalsLabel"
 
 		resetStatsButton.translatesAutoresizingMaskIntoConstraints = false
 		resetStatsButton.setTitle("Reset", for: .normal)
 		resetStatsButton.addTarget(self, action: #selector(resetStats), for: .touchUpInside)
 		resetStatsButton.accessibilityLabel = "Reset statistics"
+		resetStatsButton.accessibilityIdentifier = "resetStatsButton"
 		resetStatsButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
 		resetStatsButton.titleLabel?.adjustsFontForContentSizeCategory = true
 
@@ -536,7 +543,9 @@ class DiceCollectionViewCell: UICollectionViewCell {
 		diceButton.frame = contentView.bounds
 	}
 
-	func configure(faceValue: Int, sideCount: Int) {
+	func configure(faceValue: Int, sideCount: Int, index: Int) {
+		diceButton.accessibilityIdentifier = "dieButton_\(index)"
+		diceButton.accessibilityLabel = "Die \(index + 1), value \(faceValue)"
 		setFaceValue(faceValue, sideCount: sideCount)
 	}
 
