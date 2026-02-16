@@ -48,7 +48,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 ## 5. watchOS Experience
 
-- [ ] Confirm watch target architecture (extension/app model) compatibility for watchOS 10.2+.
+- [x] Confirm watch target architecture (extension/app model) compatibility for watchOS 10.2+.
 - [ ] Refactor watch roll logic to shared engine APIs.
 - [ ] Add watch-focused unit tests for state transitions and mode handling.
 - [ ] Implement watch interaction polish: tap-to-roll, haptics, accessibility labels, glanceable stats.
