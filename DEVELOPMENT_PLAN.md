@@ -8,7 +8,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 - [x] Audit current codebase and produce a gap report against platform/version targets and feature requirements.
 - [x] Confirm product definition (MVP vs v1) and acceptance criteria for iOS/iPadOS, watchOS, and macOS.
-- [ ] Define architecture decision record (ADR): shared dice engine package/module + per-platform UI layers.
+- [x] Define architecture decision record (ADR): shared dice engine package/module + per-platform UI layers.
 - [ ] Document v1 testing constraint: simulator-only test matrix, no provisioning-dependent features.
 - [ ] Create and document branch/commit workflow: one completed checklist unit per commit, with test evidence in commit message.
 - [ ] Set up CI pipeline skeleton for build + unit tests for all targets.
