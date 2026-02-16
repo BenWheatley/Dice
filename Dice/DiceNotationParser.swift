@@ -7,6 +7,23 @@
 
 import Foundation
 
+enum DiceInputError: Error, Equatable {
+	case emptyInput
+	case invalidFormat
+	case outOfBounds(diceBounds: ClosedRange<Int>, sideBounds: ClosedRange<Int>)
+
+	var userMessage: String {
+		switch self {
+		case .emptyInput:
+			return "Enter a dice notation like 6d6, 8d10, or 6d6i."
+		case .invalidFormat:
+			return "Use NdM or N (for d6), optionally with i."
+		case let .outOfBounds(diceBounds, sideBounds):
+			return "Dice count must be \(diceBounds.lowerBound)-\(diceBounds.upperBound) and sides must be \(sideBounds.lowerBound)-\(sideBounds.upperBound)."
+		}
+	}
+}
+
 struct RollConfiguration {
 	let diceCount: Int
 	let sideCount: Int
@@ -27,8 +44,18 @@ struct DiceNotationParser {
 	}
 
 	func parse(_ text: String) -> RollConfiguration? {
+		try? parseOrThrow(text)
+	}
+
+	func parseResult(_ text: String) -> Result<RollConfiguration, DiceInputError> {
+		Result { try parseOrThrow(text) }.mapError { error in
+			(error as? DiceInputError) ?? .invalidFormat
+		}
+	}
+
+	private func parseOrThrow(_ text: String) throws -> RollConfiguration {
 		let sanitized = text.lowercased().replacingOccurrences(of: " ", with: "")
-		if sanitized.isEmpty { return nil }
+		if sanitized.isEmpty { throw DiceInputError.emptyInput }
 
 		let intuitive = sanitized.contains("i")
 		let withoutIntuitiveFlag = sanitized.replacingOccurrences(of: "i", with: "")
@@ -40,18 +67,18 @@ struct DiceNotationParser {
 			let dicePart = String(withoutIntuitiveFlag[..<dIndex])
 			let sidePart = String(withoutIntuitiveFlag[withoutIntuitiveFlag.index(after: dIndex)...])
 			guard let parsedDice = Int(dicePart), let parsedSides = Int(sidePart) else {
-				return nil
+				throw DiceInputError.invalidFormat
 			}
 			diceCount = parsedDice
 			sideCount = parsedSides
 		} else {
-			guard let parsedDice = Int(withoutIntuitiveFlag) else { return nil }
+			guard let parsedDice = Int(withoutIntuitiveFlag) else { throw DiceInputError.invalidFormat }
 			diceCount = parsedDice
 			sideCount = 6
 		}
 
 		guard diceBounds.contains(diceCount), sideBounds.contains(sideCount) else {
-			return nil
+			throw DiceInputError.outOfBounds(diceBounds: diceBounds, sideBounds: sideBounds)
 		}
 
 		return RollConfiguration(diceCount: diceCount, sideCount: sideCount, intuitive: intuitive)

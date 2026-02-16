@@ -51,6 +51,20 @@ final class DiceTests: XCTestCase {
 		XCTAssertNil(parser.parse("6d"))
 	}
 
+	func testParseResultReturnsStructuredErrors() {
+		if case let .failure(error) = parser.parseResult("") {
+			XCTAssertEqual(error, .emptyInput)
+		} else {
+			XCTFail("Expected empty input failure")
+		}
+
+		if case let .failure(error) = parser.parseResult("31d6") {
+			XCTAssertEqual(error, .outOfBounds(diceBounds: 1...30, sideBounds: 2...100))
+		} else {
+			XCTFail("Expected out-of-bounds failure")
+		}
+	}
+
 	func testParseRespectsV1Bounds() {
 		XCTAssertNil(parser.parse("0d6"))
 		XCTAssertNil(parser.parse("31d6"))

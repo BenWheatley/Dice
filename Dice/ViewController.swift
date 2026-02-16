@@ -190,8 +190,13 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	@objc private func rollFromInput() {
-		guard let text = notationField.text, let parsed = notationParser.parse(text) else {
-			showInvalidNotationAlert()
+		guard let text = notationField.text else { return }
+		let parsed: RollConfiguration
+		switch notationParser.parseResult(text) {
+		case let .success(configuration):
+			parsed = configuration
+		case let .failure(error):
+			showInvalidNotationAlert(message: error.userMessage)
 			return
 		}
 		appState.configuration = parsed
@@ -309,10 +314,10 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		}
 	}
 
-	private func showInvalidNotationAlert() {
+	private func showInvalidNotationAlert(message: String) {
 		let alert = UIAlertController(
 			title: "Invalid dice input",
-			message: "Use NdM or N (for d6), optionally with i. Examples: 6d6, 8d10, 6d6i, 20",
+			message: message,
 			preferredStyle: .alert
 		)
 		alert.addAction(UIAlertAction(title: "OK", style: .default))
@@ -341,6 +346,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			lines.append("Session counts: \(sessionCounts)")
 		}
 		lines.append("Session total dice rolled: \(outcome.totalRolls)")
+		if !boardSupportedSides.contains(appState.configuration.sideCount) {
+			lines.append("3D board preview unavailable for d\(appState.configuration.sideCount)")
+		}
 
 		totalsLabel.text = "  " + lines.joined(separator: "\n  ")
 	}

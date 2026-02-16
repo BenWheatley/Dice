@@ -33,7 +33,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Design roll history domain model and retention policy (per-window active history + persisted recent history).
 - [x] Write tests first for roll history append, ordering, truncation, and clear behavior.
 - [x] Implement roll history persistence and export formatting service (share/export text or CSV).
-- [ ] Define and implement error/reporting strategy for invalid input and unsupported dice configurations.
+- [x] Define and implement error/reporting strategy for invalid input and unsupported dice configurations.
 - [ ] Add lightweight analytics/logging hooks for roll events and failure diagnostics.
 
 ## 4. iOS/iPadOS Experience
