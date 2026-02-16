@@ -1,0 +1,42 @@
+included:
+  - Dice
+  - DiceTests
+  - DiceUITests
+  - Dice WatchKit Extension
+
+excluded:
+  - Dice.xcodeproj
+  - Common assets
+
+disabled_rules:
+  - trailing_whitespace
+
+opt_in_rules:
+  - empty_count
+  - explicit_init
+  - first_where
+  - force_unwrapping
+  - implicit_return
+  - sorted_imports
+
+line_length:
+  warning: 140
+  error: 200
+
+identifier_name:
+  min_length:
+    warning: 2
+  excluded:
+    - i
+    - j
+    - x
+    - y
+
+type_body_length:
+  warning: 400
+  error: 550
+
+file_length:
+  warning: 700
+  error: 900
+
