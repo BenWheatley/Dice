@@ -164,6 +164,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		validationLabel.numberOfLines = 2
 		validationLabel.isHidden = true
 		validationLabel.accessibilityTraits = .staticText
+		validationLabel.accessibilityLabel = "Input validation message"
 
 		totalsContainer.translatesAutoresizingMaskIntoConstraints = false
 		totalsContainer.backgroundColor = UIColor(white: 1.0, alpha: 0.9)
@@ -179,6 +180,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		totalsLabel.textColor = .darkGray
 		totalsLabel.textAlignment = .left
 		totalsLabel.accessibilityIdentifier = "totalsLabel"
+		totalsLabel.accessibilityLabel = "Roll statistics"
 
 		resetStatsButton.translatesAutoresizingMaskIntoConstraints = false
 		resetStatsButton.setTitle("Reset", for: .normal)
@@ -567,6 +569,8 @@ class DiceCollectionViewCell: UICollectionViewCell {
 	func configure(faceValue: Int, sideCount: Int, index: Int) {
 		diceButton.accessibilityIdentifier = "dieButton_\(index)"
 		diceButton.accessibilityLabel = "Die \(index + 1), value \(faceValue)"
+		diceButton.accessibilityHint = "Reroll this die"
+		diceButton.accessibilityTraits = .button
 		setFaceValue(faceValue, sideCount: sideCount)
 	}
 

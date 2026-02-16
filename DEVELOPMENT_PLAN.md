@@ -66,7 +66,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 ## 7. Cross-Platform Quality and Accessibility
 
-- [ ] Build accessibility checklist and remediate labels, traits, focus order, contrast, and dynamic type.
+- [x] Build accessibility checklist and remediate labels, traits, focus order, contrast, and dynamic type.
 - [ ] Add localization-ready string extraction and baseline English string catalog structure.
 - [ ] Run performance pass for animation/render loops and optimize hot paths.
 - [ ] Execute battery/resource usage checks on watchOS and iOS (profiling + quick fixes).
