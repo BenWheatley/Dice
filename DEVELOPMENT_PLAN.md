@@ -1,0 +1,90 @@
+# Dice App Development Plan
+
+This plan targets completion for iOS/iPadOS 18+, watchOS 10.2+, and macOS 15.7+, with both true-random and intuitive roll modes.
+Each checklist item is scoped to about 1-2 hours of focused developer work.
+
+## 1. Project Foundation
+
+- [ ] Audit current codebase and produce a gap report against platform/version targets and feature requirements.
+- [ ] Confirm product definition (MVP vs v1) and acceptance criteria for iOS/iPadOS, watchOS, and macOS.
+- [ ] Define architecture decision record (ADR): shared dice engine package/module + per-platform UI layers.
+- [ ] Create and document branch/commit workflow: one completed checklist unit per commit, with test evidence in commit message.
+- [ ] Set up CI pipeline skeleton for build + unit tests for all targets.
+- [ ] Add lint/format/static analysis baseline and document local developer commands.
+
+## 2. Shared Domain Engine
+
+- [ ] Extract roll configuration parsing and validation into a shared domain module.
+- [ ] Write unit tests first for notation parser (valid/invalid inputs, bounds, intuitive suffix behavior).
+- [ ] Extract true-random rolling algorithm into pure testable services with deterministic test seams.
+- [ ] Write unit tests first for true-random behavior (range safety, count accuracy, statistical smoke checks).
+- [ ] Extract intuitive rolling algorithm into pure testable services.
+- [ ] Write unit tests first for intuitive behavior (bias constraints, reset behavior, edge cases, mode switching).
+- [ ] Implement roll session/statistics domain model (local/session totals, reset logic, sums).
+- [ ] Write unit tests first for roll session life cycle and persistence semantics.
+
+## 3. App State and Persistence
+
+- [ ] Introduce shared app-state model for active notation, mode, dice values, and stats.
+- [ ] Add persistence service for user preferences and recent presets (AppStorage/UserDefaults wrapper).
+- [ ] Write tests first for persistence round-trip and migration defaults.
+- [ ] Define and implement error/reporting strategy for invalid input and unsupported dice configurations.
+- [ ] Add lightweight analytics/logging hooks for roll events and failure diagnostics.
+
+## 4. iOS/iPadOS Experience
+
+- [ ] Refactor iOS/iPadOS UI to consume shared state + engine with clear view-model boundaries.
+- [ ] Add tests first for view-model behavior (roll, reroll single die, shake-to-roll, reset stats).
+- [ ] Implement/update adaptive layout for iPhone and iPad (size class, split view, dynamic type).
+- [ ] Harden input UX: notation editing, presets, validation feedback, keyboard/accessibility flow.
+- [ ] Improve dice board rendering integration (supported polyhedra, animation toggles, fallback behavior).
+- [ ] Add UI tests for primary flows (launch, roll, reroll die, preset select, intuitive toggle, reset).
+
+## 5. watchOS Experience
+
+- [ ] Confirm watch target architecture (extension/app model) compatibility for watchOS 10.2+.
+- [ ] Refactor watch roll logic to shared engine APIs.
+- [ ] Add watch-focused unit tests for state transitions and mode handling.
+- [ ] Implement watch interaction polish: tap-to-roll, haptics, accessibility labels, glanceable stats.
+- [ ] Add watch UI test coverage for core roll and mode-switch scenarios.
+
+## 6. macOS Experience
+
+- [ ] Define macOS app strategy (Mac Catalyst vs native AppKit/SwiftUI shell) and document decision.
+- [ ] Create macOS target scaffolding and integrate shared domain module.
+- [ ] Implement macOS primary UI flows (roll, reroll, notation input, presets, stats, mode toggle).
+- [ ] Add keyboard shortcuts and pointer interactions for macOS ergonomics.
+- [ ] Add macOS unit/UI tests for core behavior parity with iOS.
+
+## 7. Cross-Platform Quality and Accessibility
+
+- [ ] Build accessibility checklist and remediate labels, traits, focus order, contrast, and dynamic type.
+- [ ] Add localization-ready string extraction and baseline English string catalog structure.
+- [ ] Run performance pass for animation/render loops and optimize hot paths.
+- [ ] Execute battery/resource usage checks on watchOS and iOS (profiling + quick fixes).
+- [ ] Perform cross-device manual QA matrix run and log defects with severity/owner.
+
+## 8. Documentation and Developer Experience
+
+- [ ] Write architecture overview with module boundaries, data flow, and mode algorithm notes.
+- [ ] Add inline code comments for non-obvious logic in dice algorithms and SceneKit geometry generation.
+- [ ] Document testing strategy (TDD rules, test pyramid, required checks before commit).
+- [ ] Document release process (versioning, signing, TestFlight/internal distribution steps).
+- [ ] Create onboarding guide with local setup, build commands, and troubleshooting.
+
+## 9. Release Hardening
+
+- [ ] Complete bug bash round 1 and resolve high-priority defects.
+- [ ] Complete bug bash round 2 focused on edge-case notation and long roll sessions.
+- [ ] Verify deterministic reproducibility for failing tests and stabilize flaky test cases.
+- [ ] Validate App Store metadata/assets checklist for iOS/iPadOS/watchOS/macOS listings.
+- [ ] Cut release candidate tag and run full CI + manual regression sign-off.
+
+## 10. Product Questions (Resolve Before/While Implementing)
+
+- [ ] Confirm exact definition of "intuitive" mode behavior and acceptable bias boundaries.
+- [ ] Confirm maximum supported dice notation ranges (max dice count, max sides).
+- [ ] Confirm whether roll history/export is required for v1.
+- [ ] Confirm whether cloud sync/shared settings across iPhone, iPad, Mac, and Watch is required.
+- [ ] Confirm visual/design direction and whether to preserve current art assets in v1.
+
