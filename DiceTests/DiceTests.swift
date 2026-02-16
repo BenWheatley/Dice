@@ -532,4 +532,30 @@ final class DiceTests: XCTestCase {
 		XCTAssertFalse(preferencesStore.load().animationsEnabled)
 	}
 
+	func testWatchRollViewModelTogglesModeAndUpdatesNotation() {
+		let viewModel = WatchRollViewModel(
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { _ in 2 }, randomDouble: { 0.5 }))
+		)
+
+		XCTAssertFalse(viewModel.isIntuitiveMode)
+		viewModel.toggleMode()
+		XCTAssertTrue(viewModel.isIntuitiveMode)
+		XCTAssertEqual(viewModel.currentNotation, "1d6i")
+	}
+
+	func testWatchRollViewModelRollResetsSessionWhenModeChanges() {
+		let viewModel = WatchRollViewModel(
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { _ in 3 }, randomDouble: { 0.5 }))
+		)
+
+		let first = viewModel.roll()
+		XCTAssertEqual(first.totalRolls, 1)
+		let second = viewModel.roll()
+		XCTAssertEqual(second.totalRolls, 2)
+
+		viewModel.toggleMode()
+		let afterModeChange = viewModel.roll()
+		XCTAssertEqual(afterModeChange.totalRolls, 1)
+	}
+
 }

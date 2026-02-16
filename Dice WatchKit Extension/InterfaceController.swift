@@ -12,8 +12,7 @@ import Foundation
 
 class InterfaceController: WKInterfaceController {
 
-	private let rollSession = DiceRollSession()
-	private var configuration = RollConfiguration(diceCount: 1, sideCount: 6, intuitive: false)
+	private let viewModel = WatchRollViewModel()
 
 	@IBOutlet weak var diceButton: WKInterfaceButton!
 	@IBOutlet weak var diceView: WKInterfaceImage!
@@ -32,7 +31,7 @@ class InterfaceController: WKInterfaceController {
     }
 
 	@IBAction func roll() {
-		let outcome = rollSession.roll(configuration)
+		let outcome = viewModel.roll()
 		guard let value = outcome.values.first else { return }
 		diceView.setImageNamed("\(value)")
 	}
