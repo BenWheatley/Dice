@@ -51,7 +51,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Confirm watch target architecture (extension/app model) compatibility for watchOS 10.2+.
 - [x] Refactor watch roll logic to shared engine APIs.
 - [x] Add watch-focused unit tests for state transitions and mode handling.
-- [ ] Implement watch interaction polish: tap-to-roll, haptics, accessibility labels, glanceable stats.
+- [x] Implement watch interaction polish: tap-to-roll, haptics, accessibility labels, glanceable stats.
 - [ ] Add watch UI test coverage for core roll and mode-switch scenarios.
 
 ## 6. macOS Experience
