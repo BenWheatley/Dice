@@ -254,11 +254,11 @@ final class DiceCubeView: UIView {
 		node.eulerAngles = orientation
 		let vertices = view.tetrahedronVertices()
 		var bestIndex = 0
-		var bestY = -Float.greatestFiniteMagnitude
+		var bestZ = -Float.greatestFiniteMagnitude
 		for (index, vertex) in vertices.enumerated() {
 			let transformed = node.simdConvertPosition(vertex, to: nil)
-			if transformed.y > bestY {
-				bestY = transformed.y
+			if transformed.z > bestZ {
+				bestZ = transformed.z
 				bestIndex = index
 			}
 		}
@@ -380,6 +380,21 @@ final class DiceCubeView: UIView {
 		let size = CGSize(width: 256, height: 256)
 		let renderer = UIGraphicsImageRenderer(size: size)
 		return renderer.image { ctx in
+			let rect = CGRect(origin: .zero, size: size)
+			ctx.cgContext.setFillColor(UIColor(white: 0.96, alpha: 1.0).cgColor)
+			ctx.cgContext.fill(rect)
+
+			let triangle = UIBezierPath()
+			triangle.move(to: CGPoint(x: size.width * 0.50, y: size.height * 0.10))
+			triangle.addLine(to: CGPoint(x: size.width * 0.14, y: size.height * 0.86))
+			triangle.addLine(to: CGPoint(x: size.width * 0.86, y: size.height * 0.86))
+			triangle.close()
+			UIColor(white: 0.88, alpha: 1.0).setFill()
+			triangle.fill()
+			UIColor(white: 0.70, alpha: 1.0).setStroke()
+			triangle.lineWidth = 6
+			triangle.stroke()
+
 			let points = [
 				CGPoint(x: size.width * 0.50, y: size.height * 0.22),
 				CGPoint(x: size.width * 0.23, y: size.height * 0.73),
@@ -630,7 +645,7 @@ final class DiceCubeView: UIView {
 		}
 
 		let vertices = tetrahedronVertices()
-		let targetTop = simd_normalize(SIMD3<Float>(0, 1, 0.65))
+		let targetTop = SIMD3<Float>(0, 0, 1)
 		var map: [Int: SCNVector3] = [:]
 
 		for topValue in 1...4 {
@@ -643,11 +658,11 @@ final class DiceCubeView: UIView {
 			let rotatedNeighbor = simd_act(q1, neighborDir)
 			let projectedNeighbor = simd_normalize(rotatedNeighbor - simd_dot(rotatedNeighbor, targetTop) * targetTop)
 
-			let worldRight = SIMD3<Float>(1, 0, 0)
-			let projectedRight = simd_normalize(worldRight - simd_dot(worldRight, targetTop) * targetTop)
-			let crossVec = simd_cross(projectedNeighbor, projectedRight)
+			let worldUp = SIMD3<Float>(0, 1, 0)
+			let projectedUp = simd_normalize(worldUp - simd_dot(worldUp, targetTop) * targetTop)
+			let crossVec = simd_cross(projectedNeighbor, projectedUp)
 			let signed = simd_dot(crossVec, targetTop)
-			let angle = atan2(signed, simd_dot(projectedNeighbor, projectedRight))
+			let angle = atan2(signed, simd_dot(projectedNeighbor, projectedUp))
 			let q2 = simd_quatf(angle: angle, axis: targetTop)
 
 			let q = simd_normalize(q2 * q1)

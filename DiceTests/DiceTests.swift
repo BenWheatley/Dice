@@ -677,7 +677,7 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(labels[3], [2, 4, 3])
 	}
 
-	func testD4OrientationMapsRollValueToTopVertex() {
+	func testD4OrientationMapsRollValueToCameraFacingVertex() {
 		for value in 1...4 {
 			XCTAssertEqual(DiceCubeView.debugD4TopVertex(for: value), value)
 		}
