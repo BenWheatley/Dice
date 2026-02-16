@@ -18,6 +18,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let validationLabel = UILabel()
 	private let totalsLabel = UILabel()
 	private let totalsContainer = UIView()
+	private let rollButton = UIButton(type: .system)
 	private let resetStatsButton = UIButton(type: .system)
 	private let presetsButton = UIButton(type: .system)
 	private let historyButton = UIButton(type: .system)
@@ -33,9 +34,19 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		collectionView.keyboardDismissMode = .onDrag
 		configureControls()
 		configureDiceBoard()
+		configurePointerInteractionsIfNeeded()
 		updateNotationField()
 		updateAnimationButtonState()
 		performRoll()
+	}
+
+	override var keyCommands: [UIKeyCommand]? {
+		[
+			UIKeyCommand(title: "Roll", action: #selector(rollFromInput), input: "r", modifierFlags: .command),
+			UIKeyCommand(title: "Reset Stats", action: #selector(resetStats), input: "\u{8}", modifierFlags: .command),
+			UIKeyCommand(title: "Focus Notation", action: #selector(focusNotationField), input: "f", modifierFlags: .command),
+			UIKeyCommand(title: "History", action: #selector(showHistory), input: "h", modifierFlags: .command),
+		]
 	}
 
 	override func viewDidLayoutSubviews() {
@@ -107,7 +118,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		notationField.addTarget(self, action: #selector(notationEditingChanged), for: .editingChanged)
 		configureNotationInputAccessory()
 
-		let rollButton = UIButton(type: .system)
 		rollButton.translatesAutoresizingMaskIntoConstraints = false
 		rollButton.setTitle("Roll", for: .normal)
 		rollButton.addTarget(self, action: #selector(rollFromInput), for: .touchUpInside)
@@ -393,6 +403,10 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		clearValidationFeedback()
 	}
 
+	@objc private func focusNotationField() {
+		notationField.becomeFirstResponder()
+	}
+
 	@objc private func toggleAnimations() {
 		viewModel.setAnimationsEnabled(!viewModel.animationsEnabled)
 		updateAnimationButtonState()
@@ -487,6 +501,13 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			UIBarButtonItem(barButtonSystemItem: .done, target: notationField, action: #selector(UIResponder.resignFirstResponder)),
 		]
 		notationField.inputAccessoryView = toolbar
+	}
+
+	private func configurePointerInteractionsIfNeeded() {
+		guard traitCollection.userInterfaceIdiom == .mac else { return }
+		for control in [rollButton, presetsButton, historyButton, animationButton, resetStatsButton] {
+			control.isPointerInteractionEnabled = true
+		}
 	}
 
 	private var shouldAnimateBoard: Bool {
