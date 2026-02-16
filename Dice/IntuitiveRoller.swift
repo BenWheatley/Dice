@@ -1,0 +1,67 @@
+//
+//  IntuitiveRoller.swift
+//  Dice
+//
+//  Created by Codex on 16.02.26.
+//
+
+import Foundation
+
+struct IntuitiveRollContext {
+	let sideCount: Int
+	let numDiceBeingRolled: Int
+	let totalRolls: Int
+	let persistentTotals: [Int]
+	let sortedTotals: [Int]
+}
+
+struct IntuitiveRoller {
+	let fallbackRoller: TrueRandomRoller
+
+	init(fallbackRoller: TrueRandomRoller = TrueRandomRoller()) {
+		self.fallbackRoller = fallbackRoller
+	}
+
+	func roll(context: IntuitiveRollContext, intuitive: Bool) -> Int {
+		if context.totalRolls == 0 || !intuitive {
+			return fallbackRoller.roll(sideCount: context.sideCount)
+		}
+
+		let localTotalRolls = context.persistentTotals.prefix(context.sideCount).reduce(0, +)
+		if localTotalRolls == 0 {
+			return fallbackRoller.roll(sideCount: context.sideCount)
+		}
+
+		let leastRolled = context.sortedTotals.count >= context.sideCount ? context.sortedTotals[context.sideCount - 1] : 0
+		var rollBoundaries = Array(repeating: 0.0, count: context.sideCount)
+		var scaleFactor = 0.0
+
+		for index in 0..<context.sideCount {
+			let count = context.persistentTotals[index]
+			let observedProbability = Double(count) / Double(localTotalRolls)
+			var intuitiveProbability = 1.0 - observedProbability
+			if count - leastRolled >= context.numDiceBeingRolled {
+				intuitiveProbability = 0
+			}
+			rollBoundaries[index] = intuitiveProbability
+			scaleFactor += intuitiveProbability
+		}
+
+		if scaleFactor <= 0 {
+			return fallbackRoller.roll(sideCount: context.sideCount)
+		}
+
+		for index in 0..<context.sideCount {
+			rollBoundaries[index] /= scaleFactor
+		}
+
+		var sample = Double.random(in: 0..<1)
+		var index = 0
+		while index < context.sideCount - 1 && sample >= rollBoundaries[index] {
+			sample -= rollBoundaries[index]
+			index += 1
+		}
+		return index + 1
+	}
+}
+

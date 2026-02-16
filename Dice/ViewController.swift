@@ -23,7 +23,7 @@ private final class DiceRollSession {
 	private var sortedTotals: [Int] = []
 	private var totalRolls = 0
 	private var wasIntuitive = false
-	private let trueRandomRoller = TrueRandomRoller()
+	private let intuitiveRoller = IntuitiveRoller()
 
 	func roll(_ configuration: RollConfiguration) -> RollOutcome {
 		if configuration.intuitive != wasIntuitive {
@@ -72,45 +72,14 @@ private final class DiceRollSession {
 	}
 
 	private func getDiceRoll(sideCount: Int, numDiceBeingRolled: Int, intuitive: Bool) -> Int {
-		if totalRolls == 0 || !intuitive {
-			return trueRandomRoller.roll(sideCount: sideCount)
-		}
-
-		let localTotalRolls = persistentTotals.prefix(sideCount).reduce(0, +)
-		if localTotalRolls == 0 {
-			return trueRandomRoller.roll(sideCount: sideCount)
-		}
-
-		let leastRolled = sortedTotals.count >= sideCount ? sortedTotals[sideCount - 1] : 0
-		var rollBoundaries = Array(repeating: 0.0, count: sideCount)
-		var scaleFactor = 0.0
-
-		for index in 0..<sideCount {
-			let count = persistentTotals[index]
-			let observedProbability = Double(count) / Double(localTotalRolls)
-			var intuitiveProbability = 1.0 - observedProbability
-			if count - leastRolled >= numDiceBeingRolled {
-				intuitiveProbability = 0
-			}
-			rollBoundaries[index] = intuitiveProbability
-			scaleFactor += intuitiveProbability
-		}
-
-		if scaleFactor <= 0 {
-			return trueRandomRoller.roll(sideCount: sideCount)
-		}
-
-		for index in 0..<sideCount {
-			rollBoundaries[index] /= scaleFactor
-		}
-
-		var sample = Double.random(in: 0..<1)
-		var index = 0
-		while index < sideCount - 1 && sample >= rollBoundaries[index] {
-			sample -= rollBoundaries[index]
-			index += 1
-		}
-		return index + 1
+		let context = IntuitiveRollContext(
+			sideCount: sideCount,
+			numDiceBeingRolled: numDiceBeingRolled,
+			totalRolls: totalRolls,
+			persistentTotals: persistentTotals,
+			sortedTotals: sortedTotals
+		)
+		return intuitiveRoller.roll(context: context, intuitive: intuitive)
 	}
 }
 

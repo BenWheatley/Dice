@@ -27,6 +27,7 @@
 		B57DA5BA2F4228E00057BC3A /* DiceCubeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57DA5B92F4228E00057BC3A /* DiceCubeView.swift */; };
 		C0DE00012F44000100D1CE00 /* DiceNotationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00002F44000100D1CE00 /* DiceNotationParser.swift */; };
 		C0DE00032F44003200D1CE00 /* TrueRandomRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00022F44003200D1CE00 /* TrueRandomRoller.swift */; };
+		C0DE00052F44005400D1CE00 /* IntuitiveRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00042F44005400D1CE00 /* IntuitiveRoller.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -114,6 +115,7 @@
 		B57DA5B92F4228E00057BC3A /* DiceCubeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceCubeView.swift; sourceTree = "<group>"; };
 		C0DE00002F44000100D1CE00 /* DiceNotationParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceNotationParser.swift; sourceTree = "<group>"; };
 		C0DE00022F44003200D1CE00 /* TrueRandomRoller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrueRandomRoller.swift; sourceTree = "<group>"; };
+		C0DE00042F44005400D1CE00 /* IntuitiveRoller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntuitiveRoller.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -180,6 +182,7 @@
 				B50B44D2215D803D00A6399B /* ViewController.swift */,
 				C0DE00002F44000100D1CE00 /* DiceNotationParser.swift */,
 				C0DE00022F44003200D1CE00 /* TrueRandomRoller.swift */,
+				C0DE00042F44005400D1CE00 /* IntuitiveRoller.swift */,
 				B57DA5B92F4228E00057BC3A /* DiceCubeView.swift */,
 				B50B44D4215D803D00A6399B /* Main.storyboard */,
 				B50B44D7215D804100A6399B /* Assets.xcassets */,
@@ -432,6 +435,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0DE00052F44005400D1CE00 /* IntuitiveRoller.swift in Sources */,
 				C0DE00032F44003200D1CE00 /* TrueRandomRoller.swift in Sources */,
 				C0DE00012F44000100D1CE00 /* DiceNotationParser.swift in Sources */,
 				B57DA5BA2F4228E00057BC3A /* DiceCubeView.swift in Sources */,
