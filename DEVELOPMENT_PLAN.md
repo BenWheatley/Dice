@@ -95,3 +95,69 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Confirm whether roll history/export is required for v1 (include in v1).
 - [x] Confirm whether cloud sync/shared settings across iPhone, iPad, Mac, and Watch is required (deferred from v1 to avoid Apple Developer Team dependency).
 - [x] Confirm visual/design direction and whether to preserve current art assets in v1 (preserve current assets for now).
+
+## 11. Post-v1 Feature Additions (Useful Next Steps)
+
+### Visual Themes and Texture Options
+
+- [ ] Add user-selectable color themes (Classic, Dark Slate, High Contrast) backed by app-wide style tokens.
+- [ ] Add selectable table/background textures (felt, wood, neutral) with performance-safe asset loading.
+- [ ] Add configurable die body finish presets (matte, gloss, stone) via SceneKit material parameters.
+- [ ] Add optional edge-outline rendering toggle to improve readability of lighter dice.
+- [ ] Add per-face contrast calibration so numerals/pips remain legible across theme and texture combinations.
+
+### Dice Visual Customization
+
+- [ ] Add per-die-type color customization (d4/d6/d8/d10/d12/d20) with persisted preferences.
+- [ ] Add optional pip style variants for d6 (classic round, square, inset) with A/B visual tests.
+- [ ] Add numeral font selection for non-d6 dice faces with readability validation at small sizes.
+- [ ] Add a "preview current style" panel to test selected theme/material before applying globally.
+- [ ] Add reset-to-default controls for all visual customizations with confirmation UX.
+
+### UX and Interaction Improvements
+
+- [ ] Add notation helper chips (d4, d6, d8, d10, d12, d20, +, i) above keyboard for faster input.
+- [ ] Add inline notation parser hints that explain invalid segments instead of generic invalid-format errors.
+- [ ] Add advanced preset manager (create, rename, reorder, delete, pin favorites).
+- [ ] Add "repeat last roll" action and shortcut across iOS/iPadOS/macOS/watchOS.
+- [ ] Add optional per-die lock feature so selected dice are held while rerolling the rest.
+
+### Board and Animation Enhancements
+
+- [ ] Add board camera presets (top, slight tilt, dramatic angle) with animated transitions.
+- [ ] Add animation intensity settings (off, subtle, full) mapped to duration and bounce parameters.
+- [ ] Add optional motion blur/trail effect for rolling dice while maintaining 60fps target.
+- [ ] Add deterministic seed mode for board animation replay/debug of specific roll sequences.
+- [ ] Add mixed-dice spacing/layout presets to improve readability for large heterogeneous rolls.
+
+### Audio and Haptics
+
+- [ ] Add optional dice roll sound pack v1 (soft wood, hard table) with volume slider.
+- [ ] Add face-up settle "tick" sound for final die stop, synchronized to animation completion.
+- [ ] Add separate mute toggles for SFX and haptics, persisted per platform.
+- [ ] Add accessibility-safe audio defaults (sound off by default when VoiceOver is active).
+- [ ] Add watchOS haptic variants for roll begin/end and invalid input feedback.
+
+### Statistics and History UX
+
+- [ ] Add histogram visualization for recent roll distributions per side count.
+- [ ] Add streak/outlier indicators (e.g., repeated highs/lows) with explanatory tooltip text.
+- [ ] Add filter/search controls in history (by notation, mode, date range).
+- [ ] Add shareable summary card export for a roll session (image + text metadata).
+- [ ] Add "clear recent only" and "clear all persisted" split actions in history management.
+
+### Accessibility and Internationalization Extensions
+
+- [ ] Add dyslexia-friendly numeral option and test face-label readability across all die types.
+- [ ] Add larger-face-label accessibility mode for board previews and static dice cells.
+- [ ] Add reduced-motion-specific board behavior profile beyond simple animation on/off.
+- [ ] Add VoiceOver custom rotor actions for rerolling selected die and reading per-die side count.
+- [ ] Add additional localization pass for validation errors and stats copy tone consistency.
+
+### Quality, Reliability, and Tooling
+
+- [ ] Add snapshot tests for key visual themes and dice combinations on iPhone/iPad/macOS layouts.
+- [ ] Add SceneKit regression tests for d6 pip orientation and d4/d10 geometry correctness.
+- [ ] Add property-based parser tests for mixed separators and whitespace/edge formatting.
+- [ ] Add startup performance budget checks and automated alerting for regressions in CI.
+- [ ] Add crash/telemetry event aggregation dashboard document for release triage workflow.
