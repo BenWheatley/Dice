@@ -38,11 +38,13 @@ final class DiceAppState {
 	var configuration: RollConfiguration
 	var diceValues: [Int]
 	var stats: DiceStats
+	var animationsEnabled: Bool
 
 	init(configuration: RollConfiguration = RollConfiguration(diceCount: 6, sideCount: 6, intuitive: false)) {
 		self.configuration = configuration
 		self.diceValues = Array(repeating: 1, count: configuration.diceCount)
 		self.stats = .empty
+		self.animationsEnabled = true
 	}
 
 	func applyRollOutcome(_ outcome: RollOutcome) {
@@ -50,4 +52,3 @@ final class DiceAppState {
 		stats = DiceStats(outcome: outcome)
 	}
 }
-

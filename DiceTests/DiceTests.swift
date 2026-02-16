@@ -262,7 +262,7 @@ final class DiceTests: XCTestCase {
 		let defaults = UserDefaults(suiteName: suiteName)!
 		defer { defaults.removePersistentDomain(forName: suiteName) }
 		let store = DicePreferencesStore(defaults: defaults)
-		let expected = DiceUserPreferences(lastNotation: "12d10i", recentPresets: ["12d10i", "6d6"])
+		let expected = DiceUserPreferences(lastNotation: "12d10i", recentPresets: ["12d10i", "6d6"], animationsEnabled: false)
 
 		store.save(expected)
 
@@ -514,6 +514,22 @@ final class DiceTests: XCTestCase {
 			return XCTFail("Expected failure for out-of-bounds input")
 		}
 		XCTAssertEqual(error, .outOfBounds(diceBounds: 1...30, sideBounds: 2...100))
+	}
+
+	func testViewModelAnimationTogglePersistsToPreferences() {
+		let suiteName = "DiceTests.viewmodel.animations.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		XCTAssertTrue(viewModel.animationsEnabled)
+		viewModel.setAnimationsEnabled(false)
+		XCTAssertFalse(viewModel.animationsEnabled)
+		XCTAssertFalse(preferencesStore.load().animationsEnabled)
 	}
 
 }

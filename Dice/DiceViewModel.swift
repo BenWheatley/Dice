@@ -54,11 +54,16 @@ final class DiceViewModel {
 		preferencesStore.load().recentPresets
 	}
 
+	var animationsEnabled: Bool {
+		appState.animationsEnabled
+	}
+
 	func restore() {
 		let preferences = preferencesStore.load()
 		if let parsed = notationParser.parse(preferences.lastNotation) {
 			appState.configuration = parsed
 		}
+		appState.animationsEnabled = preferences.animationsEnabled
 		let persisted = historyStore.loadPersistedEntries()
 		rollHistory = DiceRollHistory(persistedRecentEntries: persisted)
 	}
@@ -119,6 +124,11 @@ final class DiceViewModel {
 		historyExporter.export(rollHistory.sessionEntries, format: format)
 	}
 
+	func setAnimationsEnabled(_ enabled: Bool) {
+		appState.animationsEnabled = enabled
+		persistPreferences()
+	}
+
 	func formattedTotalsText(outcome: RollOutcome, boardSupportedSides: Set<Int>) -> String {
 		var lines: [String] = []
 		lines.append("Mode: \(appState.configuration.notation)")
@@ -154,7 +164,8 @@ final class DiceViewModel {
 	private func persistPreferences() {
 		let preferences = DiceUserPreferences(
 			lastNotation: appState.configuration.notation,
-			recentPresets: preferencesStore.load().recentPresets
+			recentPresets: preferencesStore.load().recentPresets,
+			animationsEnabled: appState.animationsEnabled
 		)
 		preferencesStore.save(preferences)
 	}

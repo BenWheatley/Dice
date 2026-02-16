@@ -21,6 +21,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let resetStatsButton = UIButton(type: .system)
 	private let presetsButton = UIButton(type: .system)
 	private let historyButton = UIButton(type: .system)
+	private let animationButton = UIButton(type: .system)
 	private let diceBoardView = DiceCubeView()
 	private var controlsContainer: UIView?
 
@@ -33,6 +34,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		configureControls()
 		configureDiceBoard()
 		updateNotationField()
+		updateAnimationButtonState()
 		performRoll()
 	}
 
@@ -62,7 +64,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			self.updateTotalsText(outcome: outcome)
 			collectionView?.reloadItems(at: [indexPath])
 			collectionView?.layoutIfNeeded()
-			self.updateDiceBoard(animated: self.boardSupportedSides.contains(self.viewModel.configuration.sideCount))
+			self.updateDiceBoard(animated: self.shouldAnimateBoard)
 		}
 		return cell
 	}
@@ -75,7 +77,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			collectionView.collectionViewLayout.invalidateLayout()
 			collectionView.reloadData()
 			collectionView.layoutIfNeeded()
-			updateDiceBoard(animated: boardSupportedSides.contains(viewModel.configuration.sideCount))
+			updateDiceBoard(animated: shouldAnimateBoard)
 		}
 	}
 
@@ -128,7 +130,13 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		historyButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
 		historyButton.titleLabel?.adjustsFontForContentSizeCategory = true
 
-		let row = UIStackView(arrangedSubviews: [notationField, rollButton, presetsButton, historyButton])
+		animationButton.translatesAutoresizingMaskIntoConstraints = false
+		animationButton.addTarget(self, action: #selector(toggleAnimations), for: .touchUpInside)
+		animationButton.accessibilityLabel = "Toggle dice animations"
+		animationButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
+		animationButton.titleLabel?.adjustsFontForContentSizeCategory = true
+
+		let row = UIStackView(arrangedSubviews: [notationField, rollButton, presetsButton, historyButton, animationButton])
 		row.translatesAutoresizingMaskIntoConstraints = false
 		row.axis = .horizontal
 		row.spacing = 8
@@ -199,6 +207,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			rollButton.widthAnchor.constraint(equalToConstant: 52),
 			presetsButton.widthAnchor.constraint(equalToConstant: 72),
 			historyButton.widthAnchor.constraint(equalToConstant: 72),
+			animationButton.widthAnchor.constraint(equalToConstant: 68),
 		])
 	}
 
@@ -233,7 +242,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			collectionView.collectionViewLayout.invalidateLayout()
 			collectionView.reloadData()
 			collectionView.layoutIfNeeded()
-			updateDiceBoard(animated: boardSupportedSides.contains(viewModel.configuration.sideCount))
+			updateDiceBoard(animated: shouldAnimateBoard)
 		case let .failure(error):
 			showValidationError(message: error.userMessage)
 		}
@@ -246,7 +255,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		collectionView.collectionViewLayout.invalidateLayout()
 		collectionView.reloadData()
 		collectionView.layoutIfNeeded()
-		updateDiceBoard(animated: boardSupportedSides.contains(viewModel.configuration.sideCount))
+		updateDiceBoard(animated: shouldAnimateBoard)
 	}
 
 	private func updateDiceBoard(animated: Bool) {
@@ -294,7 +303,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 				self.updateTotalsText(outcome: outcome)
 				self.collectionView.reloadData()
 				self.collectionView.layoutIfNeeded()
-				self.updateDiceBoard(animated: self.boardSupportedSides.contains(self.viewModel.configuration.sideCount))
+				self.updateDiceBoard(animated: self.shouldAnimateBoard)
 			}
 		}
 		let intuitiveActions = (1...10).map { count in
@@ -306,7 +315,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 				self.updateTotalsText(outcome: outcome)
 				self.collectionView.reloadData()
 				self.collectionView.layoutIfNeeded()
-				self.updateDiceBoard(animated: self.boardSupportedSides.contains(self.viewModel.configuration.sideCount))
+				self.updateDiceBoard(animated: self.shouldAnimateBoard)
 			}
 		}
 
@@ -375,6 +384,11 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	@objc private func notationEditingChanged() {
 		clearValidationFeedback()
+	}
+
+	@objc private func toggleAnimations() {
+		viewModel.setAnimationsEnabled(!viewModel.animationsEnabled)
+		updateAnimationButtonState()
 	}
 
 	@objc private func showHistory() {
@@ -466,6 +480,16 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			UIBarButtonItem(barButtonSystemItem: .done, target: notationField, action: #selector(UIResponder.resignFirstResponder)),
 		]
 		notationField.inputAccessoryView = toolbar
+	}
+
+	private var shouldAnimateBoard: Bool {
+		boardSupportedSides.contains(viewModel.configuration.sideCount) && viewModel.animationsEnabled
+	}
+
+	private func updateAnimationButtonState() {
+		let title = viewModel.animationsEnabled ? "Anim On" : "Anim Off"
+		animationButton.setTitle(title, for: .normal)
+		animationButton.accessibilityValue = viewModel.animationsEnabled ? "On" : "Off"
 	}
 }
 
