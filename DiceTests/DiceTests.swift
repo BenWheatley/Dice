@@ -68,4 +68,38 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(upperBound?.sideCount, 100)
 	}
 
+	func testTrueRandomRollerUsesProvidedRandomSourceAndRange() {
+		var capturedRange: ClosedRange<Int>?
+		let roller = TrueRandomRoller { range in
+			capturedRange = range
+			return range.upperBound
+		}
+
+		let result = roller.roll(sideCount: 12)
+		XCTAssertEqual(result, 12)
+		XCTAssertEqual(capturedRange, 1...12)
+	}
+
+	func testTrueRandomRollerProducesExpectedCountAndRange() {
+		let roller = TrueRandomRoller()
+		let rolls = (0..<300).map { _ in roller.roll(sideCount: 10) }
+
+		XCTAssertEqual(rolls.count, 300)
+		XCTAssertTrue(rolls.allSatisfy { (1...10).contains($0) })
+	}
+
+	func testTrueRandomRollerD6StatisticalSmoke() {
+		let roller = TrueRandomRoller()
+		let rolls = (0..<6000).map { _ in roller.roll(sideCount: 6) }
+		var counts = Array(repeating: 0, count: 6)
+		for roll in rolls {
+			counts[roll - 1] += 1
+		}
+
+		for count in counts {
+			XCTAssertGreaterThan(count, 700)
+			XCTAssertLessThan(count, 1300)
+		}
+	}
+
 }
