@@ -637,6 +637,60 @@ final class DiceTests: XCTestCase {
 		XCTAssertFalse(preferencesStore.load().animationsEnabled)
 	}
 
+	func testViewModelFormattedTotalsOmitsBoardWarningForSupportedMixedDice() {
+		let suiteName = "DiceTests.viewmodel.board.supportedmixed.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults),
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { $0.lowerBound }, randomDouble: { 0.5 }))
+		)
+		let supportedBoardSides: Set<Int> = [4, 6, 8, 10, 12, 20]
+
+		_ = viewModel.rollFromInput("3d6+2d4+d20")
+		let outcome = viewModel.rollCurrent()
+		let text = viewModel.formattedTotalsText(outcome: outcome, boardSupportedSides: supportedBoardSides)
+
+		XCTAssertFalse(text.contains("3D board preview unavailable"))
+	}
+
+	func testViewModelFormattedTotalsShowsSingleUnsupportedSideWarning() {
+		let suiteName = "DiceTests.viewmodel.board.singleunsupported.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults),
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { $0.lowerBound }, randomDouble: { 0.5 }))
+		)
+		let supportedBoardSides: Set<Int> = [4, 6, 8, 10, 12, 20]
+
+		_ = viewModel.rollFromInput("1d6+1d100")
+		let outcome = viewModel.rollCurrent()
+		let text = viewModel.formattedTotalsText(outcome: outcome, boardSupportedSides: supportedBoardSides)
+
+		XCTAssertTrue(text.contains("d100"))
+	}
+
+	func testViewModelFormattedTotalsShowsMixedUnsupportedWarning() {
+		let suiteName = "DiceTests.viewmodel.board.mixedunsupported.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults),
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { $0.lowerBound }, randomDouble: { 0.5 }))
+		)
+		let supportedBoardSides: Set<Int> = [4, 6, 8, 10, 12, 20]
+
+		_ = viewModel.rollFromInput("1d30+1d100")
+		let outcome = viewModel.rollCurrent()
+		let text = viewModel.formattedTotalsText(outcome: outcome, boardSupportedSides: supportedBoardSides)
+
+		XCTAssertTrue(text.contains("mixed dice sides"))
+	}
+
 	func testWatchRollViewModelTogglesModeAndUpdatesNotation() {
 		let viewModel = WatchRollViewModel(
 			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { _ in 2 }, randomDouble: { 0.5 }))

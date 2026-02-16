@@ -37,7 +37,7 @@ final class DiceCubeView: UIView {
 	private let cameraNode = SCNNode()
 	private var dieNodes: [SCNNode] = []
 	private var currentSideLength: CGFloat = 0
-	private var currentSideCount: Int = 6
+	private var dieSideCounts: [Int] = []
 	private var orientationCache: [Int: [Int: SCNVector3]] = [:]
 	private var meshCache: [MeshCacheKey: BuiltMesh] = [:]
 	private var badgeImageCache: [BadgeCacheKey: UIImage] = [:]
@@ -67,35 +67,37 @@ final class DiceCubeView: UIView {
 		updateCamera()
 	}
 
-	func setDice(values: [Int], centers: [CGPoint], sideLength: CGFloat, sideCount: Int, animated: Bool) {
-		guard values.count == centers.count else { return }
+	func setDice(values: [Int], centers: [CGPoint], sideLength: CGFloat, sideCounts: [Int], animated: Bool) {
+		guard values.count == centers.count, values.count == sideCounts.count else { return }
 		ensureNodeCount(values.count)
 
-		let sideChanged = sideCount != currentSideCount
 		let sizeChanged = abs(currentSideLength - sideLength) > 0.5
-		if sideChanged || sizeChanged {
-			currentSideCount = sideCount
+		if sizeChanged {
 			currentSideLength = sideLength
-			orientationCache.removeValue(forKey: sideCount)
-			let cachedMesh = builtMesh(sideLength: sideLength, sideCount: sideCount)
 			for node in dieNodes {
-				let body = node.childNode(withName: "body", recursively: false)
-				body?.geometry = cachedMesh.geometry
 				let label = node.childNode(withName: "label", recursively: false)
 				label?.geometry = makeLabelGeometry(sideLength: sideLength)
 				label?.position = SCNVector3(0, 0, Float(sideLength * 0.65))
 			}
 		}
 
-		let showLabel = sideCount != 6
 		for index in values.indices {
 			let container = dieNodes[index]
+			let sideCount = sideCounts[index]
+			let didSideChange = dieSideCounts[index] != sideCount
+			if didSideChange || sizeChanged {
+				let body = container.childNode(withName: "body", recursively: false)
+				body?.geometry = builtMesh(sideLength: sideLength, sideCount: sideCount).geometry
+				dieSideCounts[index] = sideCount
+			}
+
+			let showLabel = sideCount != 6
 			let labelNode = container.childNode(withName: "label", recursively: false)
 			labelNode?.isHidden = !showLabel
 			if showLabel, let labelNode {
 				let cacheKey = ObjectIdentifier(labelNode)
 				let previousValue = labelValueCache[cacheKey]
-				if sizeChanged || previousValue != values[index] {
+				if sizeChanged || didSideChange || previousValue != values[index] {
 					(labelNode.geometry as? SCNPlane)?.firstMaterial?.diffuse.contents = valueBadgeImage(values[index], sideLength: sideLength)
 					labelValueCache[cacheKey] = values[index]
 				}
@@ -187,6 +189,7 @@ final class DiceCubeView: UIView {
 				node.removeFromParentNode()
 			}
 			dieNodes = Array(dieNodes.prefix(count))
+			dieSideCounts = Array(dieSideCounts.prefix(count))
 		}
 
 		while dieNodes.count < count {
@@ -195,7 +198,7 @@ final class DiceCubeView: UIView {
 
 			let body = SCNNode()
 			body.name = "body"
-			body.geometry = builtMesh(sideLength: max(currentSideLength, 60), sideCount: currentSideCount).geometry
+			body.geometry = builtMesh(sideLength: max(currentSideLength, 60), sideCount: 6).geometry
 			container.addChildNode(body)
 
 			let label = SCNNode()
@@ -210,6 +213,7 @@ final class DiceCubeView: UIView {
 
 			scene.rootNode.addChildNode(container)
 			dieNodes.append(container)
+			dieSideCounts.append(6)
 		}
 	}
 

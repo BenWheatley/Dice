@@ -174,15 +174,14 @@ final class DiceViewModel {
 			locale: .current,
 			outcome.totalRolls
 		))
-		if let uniformSideCount = appState.configuration.uniformSideCount {
-			if !boardSupportedSides.contains(uniformSideCount) {
-				lines.append(String(
-					format: NSLocalizedString("stats.boardUnavailable", comment: "3D board unsupported sides message"),
-					locale: .current,
-					uniformSideCount
-				))
-			}
-		} else {
+		let unsupportedSides = Set(appState.diceSideCounts.filter { !boardSupportedSides.contains($0) })
+		if unsupportedSides.count == 1, let sideCount = unsupportedSides.first {
+			lines.append(String(
+				format: NSLocalizedString("stats.boardUnavailable", comment: "3D board unsupported sides message"),
+				locale: .current,
+				sideCount
+			))
+		} else if unsupportedSides.count > 1 {
 			lines.append(NSLocalizedString("stats.boardUnavailableMixed", comment: "3D board unsupported mixed sides message"))
 		}
 

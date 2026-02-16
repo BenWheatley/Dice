@@ -270,8 +270,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	private func updateDiceBoard(animated: Bool) {
-		guard let uniformSideCount = viewModel.configuration.uniformSideCount,
-			  boardSupportedSides.contains(uniformSideCount) else {
+		let sideCounts = viewModel.diceSideCounts
+		guard !sideCounts.isEmpty,
+			  sideCounts.allSatisfy({ boardSupportedSides.contains($0) }) else {
 			diceBoardView.isHidden = true
 			return
 		}
@@ -282,8 +283,10 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let itemCount = collectionView.numberOfItems(inSection: 0)
 		var centers: [CGPoint] = []
 		var values: [Int] = []
+		var boardSideCounts: [Int] = []
 		centers.reserveCapacity(itemCount)
 		values.reserveCapacity(itemCount)
+		boardSideCounts.reserveCapacity(itemCount)
 
 		for row in 0..<itemCount {
 			let indexPath = IndexPath(row: row, section: 0)
@@ -300,9 +303,10 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			let centerInBoard = diceBoardView.convert(visibleCenter, from: collectionView)
 			centers.append(centerInBoard)
 			values.append(viewModel.diceValues[row])
+			boardSideCounts.append(sideCounts[row])
 		}
 
-		diceBoardView.setDice(values: values, centers: centers, sideLength: sideLength, sideCount: uniformSideCount, animated: animated)
+		diceBoardView.setDice(values: values, centers: centers, sideLength: sideLength, sideCounts: boardSideCounts, animated: animated)
 	}
 
 	private func showInvalidNotationAlert(message: String) {
@@ -419,8 +423,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	private var shouldAnimateBoard: Bool {
-		guard let uniformSideCount = viewModel.configuration.uniformSideCount else { return false }
-		return boardSupportedSides.contains(uniformSideCount) && viewModel.animationsEnabled
+		let sideCounts = viewModel.diceSideCounts
+		return !sideCounts.isEmpty && sideCounts.allSatisfy({ boardSupportedSides.contains($0) }) && viewModel.animationsEnabled
 	}
 
 	@objc private func showPresetPicker() {
