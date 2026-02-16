@@ -6,7 +6,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 ## 1. Project Foundation
 
-- [ ] Audit current codebase and produce a gap report against platform/version targets and feature requirements.
+- [x] Audit current codebase and produce a gap report against platform/version targets and feature requirements.
 - [ ] Confirm product definition (MVP vs v1) and acceptance criteria for iOS/iPadOS, watchOS, and macOS.
 - [ ] Define architecture decision record (ADR): shared dice engine package/module + per-platform UI layers.
 - [ ] Document v1 testing constraint: simulator-only test matrix, no provisioning-dependent features.
