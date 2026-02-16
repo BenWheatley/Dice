@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		B50B44D1215D803D00A6399B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B44D0215D803D00A6399B /* AppDelegate.swift */; };
+		B50B44D2215D803D00A6399A /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B44D0215D803D00A6399A /* SceneDelegate.swift */; };
 		B50B44D3215D803D00A6399B /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B44D2215D803D00A6399B /* ViewController.swift */; };
 		B50B44D6215D803D00A6399B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B50B44D4215D803D00A6399B /* Main.storyboard */; };
 		B50B44D8215D804100A6399B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B50B44D7215D804100A6399B /* Assets.xcassets */; };
@@ -102,6 +103,7 @@
 /* Begin PBXFileReference section */
 		B50B44CD215D803D00A6399B /* Dice.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dice.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B50B44D0215D803D00A6399B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		B50B44D0215D803D00A6399A /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		B50B44D2215D803D00A6399B /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		B50B44D5215D803D00A6399B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		B50B44D7215D804100A6399B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -200,6 +202,7 @@
 			isa = PBXGroup;
 			children = (
 				B50B44D0215D803D00A6399B /* AppDelegate.swift */,
+				B50B44D0215D803D00A6399A /* SceneDelegate.swift */,
 				B50B44D2215D803D00A6399B /* ViewController.swift */,
 				C0DE00002F44000100D1CE00 /* DiceNotationParser.swift */,
 				C0DE00022F44003200D1CE00 /* TrueRandomRoller.swift */,
@@ -477,6 +480,7 @@
 				C0DE00012F44000100D1CE00 /* DiceNotationParser.swift in Sources */,
 				B57DA5BA2F4228E00057BC3A /* DiceCubeView.swift in Sources */,
 				B50B44D3215D803D00A6399B /* ViewController.swift in Sources */,
+				B50B44D2215D803D00A6399A /* SceneDelegate.swift in Sources */,
 				B50B44D1215D803D00A6399B /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -772,6 +776,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.kitsunesoftware.Dice;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -790,6 +795,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.kitsunesoftware.Dice;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

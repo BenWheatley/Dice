@@ -57,7 +57,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 ## 6. macOS Experience
 
 - [x] Define macOS app strategy (Mac Catalyst) and document decision.
-- [ ] Create macOS target scaffolding and integrate shared domain module.
+- [x] Create macOS target scaffolding and integrate shared domain module.
 - [ ] Enable multiple Catalyst windows/scenes with isolated dice state per window.
 - [ ] Implement macOS primary UI flows (roll, reroll, notation input, presets, stats, mode toggle).
 - [ ] Add macOS roll history panel and export flow parity with iOS.
