@@ -20,6 +20,9 @@ These rules apply to all agents working in this repository.
    - maintain architecture documentation
    - add concise comments only where behavior is not obvious
 6. When requirements are unclear or blocked, ask the user targeted questions before proceeding.
+7. Ignore user-specific Xcode scheme metadata churn and do not interrupt progress for it:
+   - treat `Dice.xcodeproj/xcuserdata/**` as local environment noise unless the user explicitly asks to modify it
+   - never include `xcschememanagement.plist` updates in feature commits unless requested
 
 ## Platform/Feature Scope
 
