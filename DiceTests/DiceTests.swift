@@ -83,6 +83,19 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(upperBound?.sideCount, 100)
 	}
 
+	func testParseAcceptsUpperBoundIntuitiveNotation() {
+		let configuration = parser.parse("30d100i")
+		XCTAssertNotNil(configuration)
+		XCTAssertEqual(configuration?.diceCount, 30)
+		XCTAssertEqual(configuration?.sideCount, 100)
+		XCTAssertEqual(configuration?.intuitive, true)
+	}
+
+	func testParseRejectsEdgeOutOfBoundsNotation() {
+		XCTAssertNil(parser.parse("31d100i"))
+		XCTAssertNil(parser.parse("30d101i"))
+	}
+
 	func testTrueRandomRollerUsesProvidedRandomSourceAndRange() {
 		var capturedRange: ClosedRange<Int>?
 		let roller = TrueRandomRoller { range in
@@ -246,6 +259,32 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(outcome.values, Array(repeating: 1, count: 5))
 		XCTAssertEqual(outcome.localTotals[0], 5)
 		XCTAssertEqual(outcome.localTotals.dropFirst().reduce(0, +), 0)
+	}
+
+	func testRollSessionTracksLongRunTotalsWithoutDrift() {
+		var seed = 0
+		let deterministicRoller = TrueRandomRoller { range in
+			seed = (seed % range.upperBound) + 1
+			return seed
+		}
+		let session = DiceRollSession(
+			intuitiveRoller: IntuitiveRoller(
+				fallbackRoller: deterministicRoller,
+				randomDouble: { 0.5 }
+			)
+		)
+
+		var lastOutcome: RollOutcome?
+		for _ in 0..<1_000 {
+			lastOutcome = session.roll(RollConfiguration(diceCount: 1, sideCount: 6, intuitive: false))
+		}
+
+		guard let outcome = lastOutcome else {
+			return XCTFail("Expected outcome after long run")
+		}
+		XCTAssertEqual(outcome.totalRolls, 1_000)
+		XCTAssertEqual(outcome.sessionTotals.reduce(0, +), 1_000)
+		XCTAssertEqual(outcome.sessionTotals.count, 6)
 	}
 
 	func testPreferencesStoreReturnsDefaultsWhenUnset() {
