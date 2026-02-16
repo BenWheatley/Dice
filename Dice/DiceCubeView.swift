@@ -11,6 +11,16 @@ import SceneKit
 import simd
 
 final class DiceCubeView: UIView {
+	private struct MeshCacheKey: Hashable {
+		let sideCount: Int
+		let roundedSideLength: Int
+	}
+
+	private struct BadgeCacheKey: Hashable {
+		let value: Int
+		let roundedBadgeSize: Int
+	}
+
 	private struct MeshData {
 		let vertices: [SIMD3<Float>]
 		let faces: [[Int]]
@@ -29,6 +39,9 @@ final class DiceCubeView: UIView {
 	private var currentSideLength: CGFloat = 0
 	private var currentSideCount: Int = 6
 	private var orientationCache: [Int: [Int: SCNVector3]] = [:]
+	private var meshCache: [MeshCacheKey: BuiltMesh] = [:]
+	private var badgeImageCache: [BadgeCacheKey: UIImage] = [:]
+	private var labelValueCache: [ObjectIdentifier: Int] = [:]
 
 	override init(frame: CGRect) {
 		super.init(frame: frame)
@@ -55,9 +68,10 @@ final class DiceCubeView: UIView {
 			currentSideCount = sideCount
 			currentSideLength = sideLength
 			orientationCache.removeValue(forKey: sideCount)
+			let cachedMesh = builtMesh(sideLength: sideLength, sideCount: sideCount)
 			for node in dieNodes {
 				let body = node.childNode(withName: "body", recursively: false)
-				body?.geometry = buildGeometry(sideLength: sideLength, sideCount: sideCount).geometry
+				body?.geometry = cachedMesh.geometry
 				let label = node.childNode(withName: "label", recursively: false)
 				label?.geometry = makeLabelGeometry(sideLength: sideLength)
 				label?.position = SCNVector3(0, 0, Float(sideLength * 0.65))
@@ -69,8 +83,13 @@ final class DiceCubeView: UIView {
 			let container = dieNodes[index]
 			let labelNode = container.childNode(withName: "label", recursively: false)
 			labelNode?.isHidden = !showLabel
-			if showLabel {
-				(labelNode?.geometry as? SCNPlane)?.firstMaterial?.diffuse.contents = valueBadgeImage(values[index], sideLength: sideLength)
+			if showLabel, let labelNode {
+				let cacheKey = ObjectIdentifier(labelNode)
+				let previousValue = labelValueCache[cacheKey]
+				if sizeChanged || previousValue != values[index] {
+					(labelNode.geometry as? SCNPlane)?.firstMaterial?.diffuse.contents = valueBadgeImage(values[index], sideLength: sideLength)
+					labelValueCache[cacheKey] = values[index]
+				}
 			}
 
 			let targetPosition = scenePosition(for: centers[index])
@@ -134,6 +153,9 @@ final class DiceCubeView: UIView {
 	private func ensureNodeCount(_ count: Int) {
 		if dieNodes.count > count {
 			for node in dieNodes[count...] {
+				if let label = node.childNode(withName: "label", recursively: false) {
+					labelValueCache.removeValue(forKey: ObjectIdentifier(label))
+				}
 				node.removeFromParentNode()
 			}
 			dieNodes = Array(dieNodes.prefix(count))
@@ -145,7 +167,7 @@ final class DiceCubeView: UIView {
 
 			let body = SCNNode()
 			body.name = "body"
-			body.geometry = buildGeometry(sideLength: max(currentSideLength, 60), sideCount: currentSideCount).geometry
+			body.geometry = builtMesh(sideLength: max(currentSideLength, 60), sideCount: currentSideCount).geometry
 			container.addChildNode(body)
 
 			let label = SCNNode()
@@ -156,6 +178,7 @@ final class DiceCubeView: UIView {
 			bb.freeAxes = .all
 			label.constraints = [bb]
 			container.addChildNode(label)
+			labelValueCache[ObjectIdentifier(label)] = nil
 
 			scene.rootNode.addChildNode(container)
 			dieNodes.append(container)
@@ -249,6 +272,17 @@ final class DiceCubeView: UIView {
 		return BuiltMesh(geometry: geometry, faceNormals: faceNormals, faceUps: faceUps)
 	}
 
+	private func builtMesh(sideLength: CGFloat, sideCount: Int) -> BuiltMesh {
+		let roundedSideLength = Int(sideLength.rounded())
+		let key = MeshCacheKey(sideCount: sideCount, roundedSideLength: roundedSideLength)
+		if let cached = meshCache[key] {
+			return cached
+		}
+		let mesh = buildGeometry(sideLength: CGFloat(roundedSideLength), sideCount: sideCount)
+		meshCache[key] = mesh
+		return mesh
+	}
+
 	private func faceMaterial(value: Int, sideCount: Int) -> SCNMaterial {
 		let material = SCNMaterial()
 		if sideCount == 6 {
@@ -303,9 +337,15 @@ final class DiceCubeView: UIView {
 	}
 
 	private func valueBadgeImage(_ value: Int, sideLength: CGFloat) -> UIImage {
-		let size = CGSize(width: sideLength * 0.45, height: sideLength * 0.45)
+		let badgeSize = Int((sideLength * 0.45).rounded())
+		let key = BadgeCacheKey(value: value, roundedBadgeSize: badgeSize)
+		if let cached = badgeImageCache[key] {
+			return cached
+		}
+
+		let size = CGSize(width: badgeSize, height: badgeSize)
 		let renderer = UIGraphicsImageRenderer(size: size)
-		return renderer.image { ctx in
+		let image = renderer.image { ctx in
 			let rect = CGRect(origin: .zero, size: size)
 			ctx.cgContext.setFillColor(UIColor(white: 1.0, alpha: 0.92).cgColor)
 			ctx.cgContext.fillEllipse(in: rect)
@@ -319,6 +359,8 @@ final class DiceCubeView: UIView {
 			let textRect = CGRect(x: (size.width - textSize.width) / 2, y: (size.height - textSize.height) / 2, width: textSize.width, height: textSize.height)
 			text.draw(in: textRect, withAttributes: attrs)
 		}
+		badgeImageCache[key] = image
+		return image
 	}
 
 	private func scenePosition(for center: CGPoint) -> SCNVector3 {
@@ -433,7 +475,7 @@ final class DiceCubeView: UIView {
 	private func orientation(for value: Int, sideCount: Int) -> SCNVector3 {
 		if let cached = orientationCache[sideCount]?[value] { return cached }
 
-		let mesh = buildGeometry(sideLength: 120, sideCount: sideCount)
+		let mesh = builtMesh(sideLength: 120, sideCount: sideCount)
 		var map: [Int: SCNVector3] = [:]
 		let targetNormal = SIMD3<Float>(0, 0, 1)
 		let worldUp = SIMD3<Float>(0, 1, 0)

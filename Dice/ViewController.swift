@@ -11,6 +11,11 @@ import UIKit
 private let reuseIdentifier = "DiceCell"
 
 class DiceCollectionViewController: UICollectionViewController, UITextFieldDelegate {
+	private struct PresetIconCacheKey: Hashable {
+		let diceCount: Int
+		let intuitive: Bool
+	}
+
 	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 	private let viewModel = DiceViewModel()
 
@@ -25,6 +30,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let animationButton = UIButton(type: .system)
 	private let diceBoardView = DiceCubeView()
 	private var controlsContainer: UIView?
+	private var presetIconCache: [PresetIconCacheKey: UIImage] = [:]
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -355,6 +361,11 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	private func presetIcon(diceCount: Int, intuitive: Bool) -> UIImage? {
+		let key = PresetIconCacheKey(diceCount: diceCount, intuitive: intuitive)
+		if let cached = presetIconCache[key] {
+			return cached
+		}
+
 		let size = CGSize(width: 36, height: 24)
 		let renderer = UIGraphicsImageRenderer(size: size)
 		let dieImage = UIImage(named: "1")
@@ -365,7 +376,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let startX = max(0, (size.width - totalStackWidth) / 2)
 		let baseY = (size.height - cardSize.height) / 2
 
-		return renderer.image { context in
+		let icon = renderer.image { context in
 			for index in 0..<visibleDice {
 				let x = startX + CGFloat(index) * offset
 				let y = baseY - CGFloat(visibleDice - index - 1)
@@ -389,6 +400,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 				context.cgContext.fillEllipse(in: badgeRect)
 			}
 		}
+		presetIconCache[key] = icon
+		return icon
 	}
 
 	private func showInvalidNotationAlert(message: String) {
