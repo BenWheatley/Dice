@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+      - "codex/**"
+  pull_request:
+
+jobs:
+  ios-tests:
+    name: iOS Unit + UI Tests
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Run Dice scheme tests (iOS Simulator)
+        run: |
+          xcodebuild test \
+            -project Dice.xcodeproj \
+            -scheme Dice \
+            -destination 'platform=iOS Simulator,name=iPhone 16'
+
+  watchos-build:
+    name: watchOS Build
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Build Watch scheme
+        run: |
+          xcodebuild build \
+            -project Dice.xcodeproj \
+            -scheme "Dice WatchKit App" \
+            -destination 'platform=watchOS Simulator,name=Apple Watch Series 10 (46mm)'
+
+  catalyst-build:
+    name: Mac Catalyst Build
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select latest Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Build Dice scheme for Catalyst
+        run: |
+          # TODO: This becomes mandatory once Catalyst target setup is completed.
+          xcodebuild build \
+            -project Dice.xcodeproj \
+            -scheme Dice \
+            -destination 'platform=macOS,variant=Mac Catalyst'
+
