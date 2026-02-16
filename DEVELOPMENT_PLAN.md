@@ -17,7 +17,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 ## 2. Shared Domain Engine
 
 - [x] Extract roll configuration parsing and validation into a shared domain module.
-- [ ] Write unit tests first for notation parser (valid/invalid inputs, bounds, intuitive suffix behavior).
+- [x] Write unit tests first for notation parser (valid/invalid inputs, bounds, intuitive suffix behavior).
 - [ ] Extract true-random rolling algorithm into pure testable services with deterministic test seams.
 - [ ] Write unit tests first for true-random behavior (range safety, count accuracy, statistical smoke checks).
 - [ ] Extract intuitive rolling algorithm into pure testable services.

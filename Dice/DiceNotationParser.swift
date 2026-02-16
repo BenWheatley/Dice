@@ -21,7 +21,7 @@ struct DiceNotationParser {
 	let diceBounds: ClosedRange<Int>
 	let sideBounds: ClosedRange<Int>
 
-	init(diceBounds: ClosedRange<Int> = 1...500, sideBounds: ClosedRange<Int> = 2...1000) {
+	init(diceBounds: ClosedRange<Int> = 1...30, sideBounds: ClosedRange<Int> = 2...100) {
 		self.diceBounds = diceBounds
 		self.sideBounds = sideBounds
 	}
@@ -57,4 +57,3 @@ struct DiceNotationParser {
 		return RollConfiguration(diceCount: diceCount, sideCount: sideCount, intuitive: intuitive)
 	}
 }
-
