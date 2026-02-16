@@ -82,7 +82,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 ## 9. Release Hardening
 
-- [ ] Complete bug bash round 1 and resolve high-priority defects.
+- [x] Complete bug bash round 1 and resolve high-priority defects.
 - [ ] Complete bug bash round 2 focused on edge-case notation and long roll sessions.
 - [ ] Verify deterministic reproducibility for failing tests and stabilize flaky test cases.
 - [ ] Validate App Store metadata/assets checklist for iOS/iPadOS/watchOS/macOS listings.
