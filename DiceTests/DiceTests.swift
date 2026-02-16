@@ -7,6 +7,7 @@
 //
 
 import XCTest
+import UIKit
 @testable import Dice
 
 final class DiceTests: XCTestCase {
@@ -586,6 +587,15 @@ final class DiceTests: XCTestCase {
 
 		XCTAssertEqual(first.diceValues, [1, 1])
 		XCTAssertEqual(second.diceValues, [2, 2, 2, 2])
+	}
+
+	func testControllerExposesKeyboardCommandsForCatalystParity() {
+		let controller = DiceCollectionViewController(collectionViewLayout: UICollectionViewFlowLayout())
+		let commands = controller.keyCommands ?? []
+		let commandInputs = Set(commands.compactMap(\.input))
+		XCTAssertTrue(commandInputs.contains("r"))
+		XCTAssertTrue(commandInputs.contains("h"))
+		XCTAssertTrue(commandInputs.contains("f"))
 	}
 
 }

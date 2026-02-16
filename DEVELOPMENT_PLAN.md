@@ -62,7 +62,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Implement macOS primary UI flows (roll, reroll, notation input, presets, stats, mode toggle).
 - [x] Add macOS roll history panel and export flow parity with iOS.
 - [x] Add keyboard shortcuts and pointer interactions for macOS ergonomics.
-- [ ] Add macOS unit/UI tests for core behavior parity with iOS.
+- [x] Add macOS unit/UI tests for core behavior parity with iOS.
 
 ## 7. Cross-Platform Quality and Accessibility
 
