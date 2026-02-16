@@ -85,7 +85,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
 		let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! DiceCollectionViewCell
 		let faceValue = viewModel.diceValues[indexPath.row]
-		cell.configure(faceValue: faceValue, sideCount: viewModel.configuration.sideCount, index: indexPath.row)
+		let sideCount = viewModel.diceSideCounts[indexPath.row]
+		cell.configure(faceValue: faceValue, sideCount: sideCount, index: indexPath.row)
 		cell.onRequestReroll = { [weak self, weak collectionView] in
 			guard let self else { return }
 			guard let outcome = self.viewModel.rerollDie(at: indexPath.row) else { return }
@@ -269,7 +270,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	private func updateDiceBoard(animated: Bool) {
-		guard boardSupportedSides.contains(viewModel.configuration.sideCount) else {
+		guard let uniformSideCount = viewModel.configuration.uniformSideCount,
+			  boardSupportedSides.contains(uniformSideCount) else {
 			diceBoardView.isHidden = true
 			return
 		}
@@ -300,7 +302,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			values.append(viewModel.diceValues[row])
 		}
 
-		diceBoardView.setDice(values: values, centers: centers, sideLength: sideLength, sideCount: viewModel.configuration.sideCount, animated: animated)
+		diceBoardView.setDice(values: values, centers: centers, sideLength: sideLength, sideCount: uniformSideCount, animated: animated)
 	}
 
 	private func showInvalidNotationAlert(message: String) {
@@ -417,7 +419,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	private var shouldAnimateBoard: Bool {
-		boardSupportedSides.contains(viewModel.configuration.sideCount) && viewModel.animationsEnabled
+		guard let uniformSideCount = viewModel.configuration.uniformSideCount else { return false }
+		return boardSupportedSides.contains(uniformSideCount) && viewModel.animationsEnabled
 	}
 
 	@objc private func showPresetPicker() {

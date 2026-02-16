@@ -1,4 +1,4 @@
-"notation.placeholder" = "e.g. 6d6, 12d10, 6d6i";
+"notation.placeholder" = "e.g. 6d6, 3d6+2d4+d20, 6d6i";
 "button.roll" = "Roll";
 "button.presets" = "Presets";
 "button.history" = "History";
@@ -37,13 +37,14 @@
 "stats.sessionCounts" = "Session counts: %@";
 "stats.sessionTotalDice" = "Session total dice rolled: %d";
 "stats.boardUnavailable" = "3D board preview unavailable for d%d";
-"error.input.empty" = "Enter a dice notation like 6d6, 8d10, or 6d6i.";
-"error.input.invalidFormat" = "Use NdM or N (for d6), optionally with i.";
+"stats.boardUnavailableMixed" = "3D board preview unavailable for mixed dice sides";
+"error.input.empty" = "Enter a dice notation like 6d6, 3d6+2d4+d20, or 6d6i.";
+"error.input.invalidFormat" = "Use NdM or mixed groups like 3d6+2d4+d20, optionally with i.";
 "error.input.outOfBounds" = "Dice count must be %d-%d and sides must be %d-%d.";
 "state.on" = "On";
 "state.off" = "Off";
 "a11y.notation.label" = "Dice notation input";
-"a11y.notation.hint" = "Enter notation like 6d6 or 6d6i";
+"a11y.notation.hint" = "Enter notation like 6d6, d20, 3d6+2d4, or 6d6i";
 "a11y.roll.label" = "Roll dice";
 "a11y.presets.label" = "Dice presets";
 "a11y.history.label" = "Roll history";

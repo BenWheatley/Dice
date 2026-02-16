@@ -46,6 +46,10 @@ final class DiceViewModel {
 		appState.diceValues
 	}
 
+	var diceSideCounts: [Int] {
+		appState.diceSideCounts
+	}
+
 	var historyEntries: [RollHistoryEntry] {
 		rollHistory.sessionEntries
 	}
@@ -98,10 +102,14 @@ final class DiceViewModel {
 
 	func rerollDie(at index: Int) -> RollOutcome? {
 		guard diceValues.indices.contains(index) else { return nil }
-		let singleRoll = RollConfiguration(diceCount: 1, sideCount: appState.configuration.sideCount, intuitive: appState.configuration.intuitive)
+		guard appState.diceSideCounts.indices.contains(index) else { return nil }
+		let singleRoll = RollConfiguration(diceCount: 1, sideCount: appState.diceSideCounts[index], intuitive: appState.configuration.intuitive)
 		let outcome = rollSession.roll(singleRoll)
 		guard let newValue = outcome.values.first else { return nil }
 		appState.diceValues[index] = newValue
+		if let newSideCount = outcome.sideCounts.first {
+			appState.diceSideCounts[index] = newSideCount
+		}
 		appState.stats = DiceStats(outcome: outcome)
 		appendHistory(for: singleRoll, outcome: outcome)
 		telemetry.logRoll(configuration: singleRoll, sum: outcome.sum, diceCount: singleRoll.diceCount)
@@ -166,12 +174,16 @@ final class DiceViewModel {
 			locale: .current,
 			outcome.totalRolls
 		))
-		if !boardSupportedSides.contains(appState.configuration.sideCount) {
-			lines.append(String(
-				format: NSLocalizedString("stats.boardUnavailable", comment: "3D board unsupported sides message"),
-				locale: .current,
-				appState.configuration.sideCount
-			))
+		if let uniformSideCount = appState.configuration.uniformSideCount {
+			if !boardSupportedSides.contains(uniformSideCount) {
+				lines.append(String(
+					format: NSLocalizedString("stats.boardUnavailable", comment: "3D board unsupported sides message"),
+					locale: .current,
+					uniformSideCount
+				))
+			}
+		} else {
+			lines.append(NSLocalizedString("stats.boardUnavailableMixed", comment: "3D board unsupported mixed sides message"))
 		}
 
 		return "  " + lines.joined(separator: "\n  ")

@@ -9,6 +9,7 @@ import Foundation
 
 struct RollOutcome {
 	let values: [Int]
+	let sideCounts: [Int]
 	let localTotals: [Int]
 	let sessionTotals: [Int]
 	let totalRolls: Int
@@ -34,27 +35,33 @@ final class DiceRollSession {
 			wasIntuitive = configuration.intuitive
 		}
 
-		ensureCapacity(configuration.sideCount)
-		sortedTotals = Array(persistentTotals.prefix(configuration.sideCount)).sorted(by: >)
+		let maxSideCount = configuration.pools.map(\.sideCount).max() ?? configuration.sideCount
+		ensureCapacity(maxSideCount)
+		sortedTotals = Array(persistentTotals.prefix(maxSideCount)).sorted(by: >)
 
 		var values: [Int] = []
 		values.reserveCapacity(configuration.diceCount)
-		var localTotals = Array(repeating: 0, count: configuration.sideCount)
+		var sideCounts: [Int] = []
+		sideCounts.reserveCapacity(configuration.diceCount)
+		var localTotals = Array(repeating: 0, count: maxSideCount)
 
-		for _ in 0..<configuration.diceCount {
-			let roll = getDiceRoll(sideCount: configuration.sideCount, numDiceBeingRolled: configuration.diceCount, intuitive: configuration.intuitive)
-			values.append(roll)
-			let index = roll - 1
-			localTotals[index] += 1
-			persistentTotals[index] += 1
-			totalRolls += 1
+		for pool in configuration.pools {
+			for _ in 0..<pool.diceCount {
+				let roll = getDiceRoll(sideCount: pool.sideCount, numDiceBeingRolled: pool.diceCount, intuitive: configuration.intuitive)
+				values.append(roll)
+				sideCounts.append(pool.sideCount)
+				let index = roll - 1
+				localTotals[index] += 1
+				persistentTotals[index] += 1
+				totalRolls += 1
+			}
 		}
 
-		let sessionTotals = Array(persistentTotals.prefix(configuration.sideCount))
+		let sessionTotals = Array(persistentTotals.prefix(maxSideCount))
 		sortedTotals = sessionTotals.sorted(by: >)
 		let sum = values.reduce(0, +)
 
-		return RollOutcome(values: values, localTotals: localTotals, sessionTotals: sessionTotals, totalRolls: totalRolls, sum: sum)
+		return RollOutcome(values: values, sideCounts: sideCounts, localTotals: localTotals, sessionTotals: sessionTotals, totalRolls: totalRolls, sum: sum)
 	}
 
 	func reset() {

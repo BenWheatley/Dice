@@ -37,18 +37,21 @@ struct DiceStats {
 final class DiceAppState {
 	var configuration: RollConfiguration
 	var diceValues: [Int]
+	var diceSideCounts: [Int]
 	var stats: DiceStats
 	var animationsEnabled: Bool
 
 	init(configuration: RollConfiguration = RollConfiguration(diceCount: 6, sideCount: 6, intuitive: false)) {
 		self.configuration = configuration
 		self.diceValues = Array(repeating: 1, count: configuration.diceCount)
+		self.diceSideCounts = configuration.sideCountsPerDie
 		self.stats = .empty
 		self.animationsEnabled = true
 	}
 
 	func applyRollOutcome(_ outcome: RollOutcome) {
 		diceValues = outcome.values
+		diceSideCounts = outcome.sideCounts
 		stats = DiceStats(outcome: outcome)
 	}
 }

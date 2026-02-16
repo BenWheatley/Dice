@@ -49,8 +49,37 @@ final class DiceTests: XCTestCase {
 	func testParseRejectsMalformedInput() {
 		XCTAssertNil(parser.parse(""))
 		XCTAssertNil(parser.parse("abc"))
-		XCTAssertNil(parser.parse("d6"))
+		XCTAssertNotNil(parser.parse("d6"))
 		XCTAssertNil(parser.parse("6d"))
+	}
+
+	func testParseSupportsMixedDiceWithCommonSeparatorsAndImplicitOne() {
+		let mixedSpace = parser.parse("3d6 2d4 d20")
+		XCTAssertEqual(mixedSpace?.diceCount, 6)
+		XCTAssertEqual(mixedSpace?.pools, [
+			DicePool(diceCount: 3, sideCount: 6),
+			DicePool(diceCount: 2, sideCount: 4),
+			DicePool(diceCount: 1, sideCount: 20)
+		])
+		XCTAssertNil(mixedSpace?.uniformSideCount)
+
+		let mixedPlus = parser.parse("3d20+1d6")
+		XCTAssertEqual(mixedPlus?.pools, [
+			DicePool(diceCount: 3, sideCount: 20),
+			DicePool(diceCount: 1, sideCount: 6)
+		])
+
+		let mixedComma = parser.parse("3d20, 1d6")
+		XCTAssertEqual(mixedComma?.pools, [
+			DicePool(diceCount: 3, sideCount: 20),
+			DicePool(diceCount: 1, sideCount: 6)
+		])
+
+		let mixedAmp = parser.parse("3d20 & 1d6")
+		XCTAssertEqual(mixedAmp?.pools, [
+			DicePool(diceCount: 3, sideCount: 20),
+			DicePool(diceCount: 1, sideCount: 6)
+		])
 	}
 
 	func testParseResultReturnsStructuredErrors() {
@@ -95,6 +124,7 @@ final class DiceTests: XCTestCase {
 	func testParseRejectsEdgeOutOfBoundsNotation() {
 		XCTAssertNil(parser.parse("31d100i"))
 		XCTAssertNil(parser.parse("30d101i"))
+		XCTAssertNil(parser.parse("20d6+20d6"))
 	}
 
 	func testTrueRandomRollerUsesProvidedRandomSourceAndRange() {
@@ -286,6 +316,40 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(outcome.totalRolls, 1_000)
 		XCTAssertEqual(outcome.sessionTotals.reduce(0, +), 1_000)
 		XCTAssertEqual(outcome.sessionTotals.count, 6)
+	}
+
+	func testRollSessionMixedDiceTracksPerDieSidesAndRanges() {
+		var sequence = [6, 4, 3, 2, 1, 20]
+		let deterministicRoller = TrueRandomRoller { range in
+			while let next = sequence.first {
+				sequence.removeFirst()
+				if range.contains(next) {
+					return next
+				}
+			}
+			return range.lowerBound
+		}
+		let session = DiceRollSession(
+			intuitiveRoller: IntuitiveRoller(
+				fallbackRoller: deterministicRoller,
+				randomDouble: { 0.5 }
+			)
+		)
+		let config = RollConfiguration(
+			pools: [
+				DicePool(diceCount: 3, sideCount: 6),
+				DicePool(diceCount: 2, sideCount: 4),
+				DicePool(diceCount: 1, sideCount: 20)
+			],
+			intuitive: false
+		)
+
+		let outcome = session.roll(config)
+		XCTAssertEqual(outcome.values.count, 6)
+		XCTAssertEqual(outcome.sideCounts, [6, 6, 6, 4, 4, 20])
+		for (value, sides) in zip(outcome.values, outcome.sideCounts) {
+			XCTAssertTrue((1...sides).contains(value))
+		}
 	}
 
 	func testPreferencesStoreReturnsDefaultsWhenUnset() {
