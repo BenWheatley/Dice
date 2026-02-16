@@ -558,4 +558,11 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(afterModeChange.totalRolls, 1)
 	}
 
+	func testWatchRollViewModelStatusTextReflectsModeAndCount() {
+		let viewModel = WatchRollViewModel()
+		XCTAssertEqual(viewModel.statusText(rollCount: 1), "1d6 • 1")
+		viewModel.toggleMode()
+		XCTAssertEqual(viewModel.statusText(rollCount: 4), "1d6i • 4")
+	}
+
 }

@@ -23,6 +23,10 @@ final class WatchRollViewModel {
 		isIntuitiveMode ? "1d6i" : "1d6"
 	}
 
+	func statusText(rollCount: Int) -> String {
+		"\(currentNotation) • \(rollCount)"
+	}
+
 	func toggleMode() {
 		isIntuitiveMode.toggle()
 	}

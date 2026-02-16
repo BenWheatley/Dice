@@ -41,7 +41,7 @@ class InterfaceController: WKInterfaceController {
 		rollCount += 1
 		diceView.setImageNamed("\(value)")
 		diceView.setAccessibilityValue("Value \(value)")
-		diceButton.setTitle("\(viewModel.currentNotation) • \(rollCount)")
+		diceButton.setTitle(viewModel.statusText(rollCount: rollCount))
 		WKInterfaceDevice.current().play(.click)
 	}
 
