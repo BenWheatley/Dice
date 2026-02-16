@@ -34,6 +34,7 @@
 		C0DE000D2F4400DC00D1CE00 /* DiceRollHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE000C2F4400DC00D1CE00 /* DiceRollHistory.swift */; };
 		C0DE000F2F4400FE00D1CE00 /* DiceRollHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE000E2F4400FE00D1CE00 /* DiceRollHistoryStore.swift */; };
 		C0DE00112F44012000D1CE00 /* DiceTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00102F44012000D1CE00 /* DiceTelemetry.swift */; };
+		C0DE00132F44014200D1CE00 /* DiceViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00122F44014200D1CE00 /* DiceViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -128,6 +129,7 @@
 		C0DE000C2F4400DC00D1CE00 /* DiceRollHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceRollHistory.swift; sourceTree = "<group>"; };
 		C0DE000E2F4400FE00D1CE00 /* DiceRollHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceRollHistoryStore.swift; sourceTree = "<group>"; };
 		C0DE00102F44012000D1CE00 /* DiceTelemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceTelemetry.swift; sourceTree = "<group>"; };
+		C0DE00122F44014200D1CE00 /* DiceViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -201,6 +203,7 @@
 				C0DE000C2F4400DC00D1CE00 /* DiceRollHistory.swift */,
 				C0DE000E2F4400FE00D1CE00 /* DiceRollHistoryStore.swift */,
 				C0DE00102F44012000D1CE00 /* DiceTelemetry.swift */,
+				C0DE00122F44014200D1CE00 /* DiceViewModel.swift */,
 				B57DA5B92F4228E00057BC3A /* DiceCubeView.swift */,
 				B50B44D4215D803D00A6399B /* Main.storyboard */,
 				B50B44D7215D804100A6399B /* Assets.xcassets */,
@@ -453,6 +456,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0DE00132F44014200D1CE00 /* DiceViewModel.swift in Sources */,
 				C0DE00112F44012000D1CE00 /* DiceTelemetry.swift in Sources */,
 				C0DE000F2F4400FE00D1CE00 /* DiceRollHistoryStore.swift in Sources */,
 				C0DE000D2F4400DC00D1CE00 /* DiceRollHistory.swift in Sources */,

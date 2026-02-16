@@ -12,13 +12,7 @@ private let reuseIdentifier = "DiceCell"
 
 class DiceCollectionViewController: UICollectionViewController, UITextFieldDelegate {
 	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
-	private let notationParser = DiceNotationParser()
-	private let preferencesStore = DicePreferencesStore()
-	private let historyStore = DiceRollHistoryStore()
-	private let telemetry = DiceTelemetry()
-	private let appState = DiceAppState()
-	private let rollSession = DiceRollSession()
-	private var rollHistory = DiceRollHistory()
+	private let viewModel = DiceViewModel()
 
 	private let notationField = UITextField()
 	private let totalsLabel = UILabel()
@@ -30,8 +24,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		restorePreferences()
-		restoreRollHistory()
+		viewModel.restore()
 
 		collectionView.backgroundColor = UIColor(patternImage: UIImage(named: "stripes")!)
 		collectionView.keyboardDismissMode = .onDrag
@@ -54,27 +47,21 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-		appState.diceValues.count
+		viewModel.diceValues.count
 	}
 
 	override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
 		let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! DiceCollectionViewCell
-		let faceValue = appState.diceValues[indexPath.row]
-		cell.configure(faceValue: faceValue, sideCount: appState.configuration.sideCount)
+		let faceValue = viewModel.diceValues[indexPath.row]
+		cell.configure(faceValue: faceValue, sideCount: viewModel.configuration.sideCount)
 		cell.onRequestReroll = { [weak self, weak collectionView] in
 			guard let self else { return }
-			let singleRoll = RollConfiguration(diceCount: 1, sideCount: self.appState.configuration.sideCount, intuitive: self.appState.configuration.intuitive)
-			let outcome = self.rollSession.roll(singleRoll)
-			guard let newValue = outcome.values.first else { return }
-			self.appState.diceValues[indexPath.row] = newValue
-			self.appState.stats = DiceStats(outcome: outcome)
-			self.appendHistory(for: singleRoll, outcome: outcome)
-			self.telemetry.logRoll(configuration: singleRoll, sum: outcome.sum, diceCount: singleRoll.diceCount)
+			guard let outcome = self.viewModel.rerollDie(at: indexPath.row) else { return }
 			self.updateTotalsText(outcome: outcome)
 			collectionView?.reloadItems(at: [indexPath])
 			collectionView?.layoutIfNeeded()
-				self.updateDiceBoard(animated: self.boardSupportedSides.contains(self.appState.configuration.sideCount))
-			}
+			self.updateDiceBoard(animated: self.boardSupportedSides.contains(self.viewModel.configuration.sideCount))
+		}
 		return cell
 	}
 
@@ -188,42 +175,37 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	private func updateNotationField() {
-		notationField.text = appState.configuration.notation
+		notationField.text = viewModel.configuration.notation
 	}
 
 	@objc private func rollFromInput() {
 		guard let text = notationField.text else { return }
-		let parsed: RollConfiguration
-		switch notationParser.parseResult(text) {
-		case let .success(configuration):
-			parsed = configuration
+		switch viewModel.rollFromInput(text) {
+		case let .success(outcome):
+			notationField.resignFirstResponder()
+			updateNotationField()
+			updateTotalsText(outcome: outcome)
+			collectionView.collectionViewLayout.invalidateLayout()
+			collectionView.reloadData()
+			collectionView.layoutIfNeeded()
+			updateDiceBoard(animated: boardSupportedSides.contains(viewModel.configuration.sideCount))
 		case let .failure(error):
-			telemetry.logInvalidInput(text, reason: error.userMessage)
 			showInvalidNotationAlert(message: error.userMessage)
-			return
 		}
-		appState.configuration = parsed
-		notationField.resignFirstResponder()
-		preferencesStore.addRecentPreset(parsed.notation)
-		persistPreferences()
-		performRoll()
 	}
 
 	private func performRoll() {
-		let outcome = rollSession.roll(appState.configuration)
-		appState.applyRollOutcome(outcome)
-		appendHistory(for: appState.configuration, outcome: outcome)
-		telemetry.logRoll(configuration: appState.configuration, sum: outcome.sum, diceCount: appState.configuration.diceCount)
+		let outcome = viewModel.rollCurrent()
 		updateNotationField()
 		updateTotalsText(outcome: outcome)
 		collectionView.collectionViewLayout.invalidateLayout()
 		collectionView.reloadData()
 		collectionView.layoutIfNeeded()
-		updateDiceBoard(animated: boardSupportedSides.contains(appState.configuration.sideCount))
+		updateDiceBoard(animated: boardSupportedSides.contains(viewModel.configuration.sideCount))
 	}
 
 	private func updateDiceBoard(animated: Bool) {
-		guard boardSupportedSides.contains(appState.configuration.sideCount) else {
+		guard boardSupportedSides.contains(viewModel.configuration.sideCount) else {
 			diceBoardView.isHidden = true
 			return
 		}
@@ -251,27 +233,31 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			)
 			let centerInBoard = diceBoardView.convert(visibleCenter, from: collectionView)
 			centers.append(centerInBoard)
-			values.append(appState.diceValues[row])
+			values.append(viewModel.diceValues[row])
 		}
 
-		diceBoardView.setDice(values: values, centers: centers, sideLength: sideLength, sideCount: appState.configuration.sideCount, animated: animated)
+		diceBoardView.setDice(values: values, centers: centers, sideLength: sideLength, sideCount: viewModel.configuration.sideCount, animated: animated)
 	}
 
 	private func makePresetMenu() -> UIMenu {
 		let normalActions = (1...10).map { count in
 			UIAction(title: "\(count)d6", image: presetIcon(diceCount: count, intuitive: false)) { _ in
-				self.appState.configuration = RollConfiguration(diceCount: count, sideCount: 6, intuitive: false)
-				self.preferencesStore.addRecentPreset(self.appState.configuration.notation)
-				self.persistPreferences()
-				self.performRoll()
+				let outcome = self.viewModel.selectPreset(diceCount: count, intuitive: false)
+				self.updateNotationField()
+				self.updateTotalsText(outcome: outcome)
+				self.collectionView.reloadData()
+				self.collectionView.layoutIfNeeded()
+				self.updateDiceBoard(animated: self.boardSupportedSides.contains(self.viewModel.configuration.sideCount))
 			}
 		}
 		let intuitiveActions = (1...10).map { count in
 			UIAction(title: "\(count)d6i", image: presetIcon(diceCount: count, intuitive: true)) { _ in
-				self.appState.configuration = RollConfiguration(diceCount: count, sideCount: 6, intuitive: true)
-				self.preferencesStore.addRecentPreset(self.appState.configuration.notation)
-				self.persistPreferences()
-				self.performRoll()
+				let outcome = self.viewModel.selectPreset(diceCount: count, intuitive: true)
+				self.updateNotationField()
+				self.updateTotalsText(outcome: outcome)
+				self.collectionView.reloadData()
+				self.collectionView.layoutIfNeeded()
+				self.updateDiceBoard(animated: self.boardSupportedSides.contains(self.viewModel.configuration.sideCount))
 			}
 		}
 
@@ -329,75 +315,12 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	@objc private func resetStats() {
-		rollSession.reset()
-		telemetry.logStatsReset()
+		viewModel.resetStats()
 		totalsLabel.text = "  Stats reset"
 	}
 
 	private func updateTotalsText(outcome: RollOutcome) {
-		var lines: [String] = []
-		lines.append("Mode: \(appState.configuration.notation)")
-
-		if appState.configuration.diceCount > 1 {
-			let localCounts = formattedCounts(outcome.localTotals)
-			if !localCounts.isEmpty {
-				lines.append("Roll counts: \(localCounts)")
-			}
-			lines.append("Roll sum: \(outcome.sum)")
-		}
-
-		let sessionCounts = formattedCounts(outcome.sessionTotals)
-		if !sessionCounts.isEmpty {
-			lines.append("Session counts: \(sessionCounts)")
-		}
-		lines.append("Session total dice rolled: \(outcome.totalRolls)")
-		if !boardSupportedSides.contains(appState.configuration.sideCount) {
-			lines.append("3D board preview unavailable for d\(appState.configuration.sideCount)")
-		}
-
-		totalsLabel.text = "  " + lines.joined(separator: "\n  ")
-	}
-
-	private func formattedCounts(_ totals: [Int]) -> String {
-		if totals.isEmpty { return "" }
-		if totals.count > 40 {
-			let nonZero = totals.enumerated().filter { $0.element > 0 }
-			let top = nonZero.sorted { $0.element > $1.element }.prefix(10)
-			return top.map { "\($0.offset + 1)s:\($0.element)" }.joined(separator: " ")
-		}
-		return totals.enumerated().map { "\($0.offset + 1)s:\($0.element)" }.joined(separator: " ")
-	}
-
-	private func restorePreferences() {
-		let preferences = preferencesStore.load()
-		if let parsed = notationParser.parse(preferences.lastNotation) {
-			appState.configuration = parsed
-		}
-	}
-
-	private func persistPreferences() {
-		let preferences = DiceUserPreferences(
-			lastNotation: appState.configuration.notation,
-			recentPresets: preferencesStore.load().recentPresets
-		)
-		preferencesStore.save(preferences)
-	}
-
-	private func restoreRollHistory() {
-		let persisted = historyStore.loadPersistedEntries()
-		rollHistory = DiceRollHistory(persistedRecentEntries: persisted)
-	}
-
-	private func appendHistory(for configuration: RollConfiguration, outcome: RollOutcome) {
-		let entry = RollHistoryEntry(
-			timestamp: Date(),
-			notation: configuration.notation,
-			values: outcome.values,
-			sum: outcome.sum,
-			intuitive: configuration.intuitive
-		)
-		rollHistory.append(entry)
-		historyStore.savePersistedEntries(rollHistory.persistedRecentEntries)
+		totalsLabel.text = viewModel.formattedTotalsText(outcome: outcome, boardSupportedSides: boardSupportedSides)
 	}
 }
 

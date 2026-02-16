@@ -38,7 +38,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 ## 4. iOS/iPadOS Experience
 
-- [ ] Refactor iOS/iPadOS UI to consume shared state + engine with clear view-model boundaries.
+- [x] Refactor iOS/iPadOS UI to consume shared state + engine with clear view-model boundaries.
 - [ ] Add tests first for view-model behavior (roll, reroll single die, shake-to-roll, reset stats).
 - [ ] Add roll history UI (session view, clear action, export action) with accessibility coverage.
 - [ ] Implement/update adaptive layout for iPhone and iPad (size class, split view, dynamic type).
