@@ -21,7 +21,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Extract true-random rolling algorithm into pure testable services with deterministic test seams.
 - [x] Write unit tests first for true-random behavior (range safety, count accuracy, statistical smoke checks).
 - [x] Extract intuitive rolling algorithm into pure testable services.
-- [ ] Write unit tests first for intuitive behavior (bias constraints, reset behavior, edge cases, mode switching).
+- [x] Write unit tests first for intuitive behavior (bias constraints, reset behavior, edge cases, mode switching).
 - [ ] Implement roll session/statistics domain model (local/session totals, reset logic, sums).
 - [ ] Write unit tests first for roll session life cycle and persistence semantics.
 

@@ -102,4 +102,93 @@ final class DiceTests: XCTestCase {
 		}
 	}
 
+	func testIntuitiveRollerFallsBackWhenNotInIntuitiveMode() {
+		var fallbackCalls = 0
+		let roller = IntuitiveRoller(
+			fallbackRoller: TrueRandomRoller { _ in
+				fallbackCalls += 1
+				return 4
+			},
+			randomDouble: { 0.5 }
+		)
+
+		let context = IntuitiveRollContext(
+			sideCount: 6,
+			numDiceBeingRolled: 3,
+			totalRolls: 12,
+			persistentTotals: [2, 2, 2, 2, 2, 2],
+			sortedTotals: [2, 2, 2, 2, 2, 2]
+		)
+
+		let result = roller.roll(context: context, intuitive: false)
+		XCTAssertEqual(result, 4)
+		XCTAssertEqual(fallbackCalls, 1)
+	}
+
+	func testIntuitiveRollerFallsBackWhenNoLocalTotalsExist() {
+		var fallbackCalls = 0
+		let roller = IntuitiveRoller(
+			fallbackRoller: TrueRandomRoller { _ in
+				fallbackCalls += 1
+				return 2
+			},
+			randomDouble: { 0.0 }
+		)
+
+		let context = IntuitiveRollContext(
+			sideCount: 6,
+			numDiceBeingRolled: 1,
+			totalRolls: 2,
+			persistentTotals: [0, 0, 0, 0, 0, 0],
+			sortedTotals: [0, 0, 0, 0, 0, 0]
+		)
+
+		let result = roller.roll(context: context, intuitive: true)
+		XCTAssertEqual(result, 2)
+		XCTAssertEqual(fallbackCalls, 1)
+	}
+
+	func testIntuitiveRollerAvoidsOverrepresentedFaceWhenThresholdMet() {
+		let rollerLowSample = IntuitiveRoller(
+			fallbackRoller: TrueRandomRoller { _ in 1 },
+			randomDouble: { 0.0 }
+		)
+		let rollerHighSample = IntuitiveRoller(
+			fallbackRoller: TrueRandomRoller { _ in 1 },
+			randomDouble: { 0.99 }
+		)
+
+		let context = IntuitiveRollContext(
+			sideCount: 6,
+			numDiceBeingRolled: 1,
+			totalRolls: 10,
+			persistentTotals: [10, 0, 0, 0, 0, 0],
+			sortedTotals: [10, 0, 0, 0, 0, 0]
+		)
+
+		let lowResult = rollerLowSample.roll(context: context, intuitive: true)
+		let highResult = rollerHighSample.roll(context: context, intuitive: true)
+
+		XCTAssertEqual(lowResult, 2)
+		XCTAssertEqual(highResult, 6)
+	}
+
+	func testIntuitiveRollerUsesBoundaryWeightsDeterministically() {
+		let context = IntuitiveRollContext(
+			sideCount: 3,
+			numDiceBeingRolled: 2,
+			totalRolls: 4,
+			persistentTotals: [2, 1, 1],
+			sortedTotals: [2, 1, 1]
+		)
+
+		let low = IntuitiveRoller(randomDouble: { 0.10 }).roll(context: context, intuitive: true)
+		let mid = IntuitiveRoller(randomDouble: { 0.30 }).roll(context: context, intuitive: true)
+		let high = IntuitiveRoller(randomDouble: { 0.90 }).roll(context: context, intuitive: true)
+
+		XCTAssertEqual(low, 1)
+		XCTAssertEqual(mid, 2)
+		XCTAssertEqual(high, 3)
+	}
+
 }

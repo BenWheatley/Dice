@@ -17,9 +17,14 @@ struct IntuitiveRollContext {
 
 struct IntuitiveRoller {
 	let fallbackRoller: TrueRandomRoller
+	let randomDouble: () -> Double
 
-	init(fallbackRoller: TrueRandomRoller = TrueRandomRoller()) {
+	init(
+		fallbackRoller: TrueRandomRoller = TrueRandomRoller(),
+		randomDouble: @escaping () -> Double = { Double.random(in: 0..<1) }
+	) {
 		self.fallbackRoller = fallbackRoller
+		self.randomDouble = randomDouble
 	}
 
 	func roll(context: IntuitiveRollContext, intuitive: Bool) -> Int {
@@ -55,7 +60,7 @@ struct IntuitiveRoller {
 			rollBoundaries[index] /= scaleFactor
 		}
 
-		var sample = Double.random(in: 0..<1)
+		var sample = randomDouble()
 		var index = 0
 		while index < context.sideCount - 1 && sample >= rollBoundaries[index] {
 			sample -= rollBoundaries[index]
@@ -64,4 +69,3 @@ struct IntuitiveRoller {
 		return index + 1
 	}
 }
-
