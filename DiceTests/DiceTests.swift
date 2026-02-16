@@ -8,6 +8,7 @@
 
 import XCTest
 import UIKit
+import simd
 @testable import Dice
 
 final class DiceTests: XCTestCase {
@@ -635,6 +636,19 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(commandInputs.contains("r"))
 		XCTAssertTrue(commandInputs.contains("h"))
 		XCTAssertTrue(commandInputs.contains("f"))
+	}
+
+	func testD10MeshFacesArePlanar() {
+		let mesh = DiceCubeView.debugMeshData(sideCount: 10)
+		for face in mesh.faces {
+			XCTAssertEqual(face.count, 4)
+			let a = mesh.vertices[face[0]]
+			let b = mesh.vertices[face[1]]
+			let c = mesh.vertices[face[2]]
+			let d = mesh.vertices[face[3]]
+			let volume6 = simd_dot(b - a, simd_cross(c - a, d - a))
+			XCTAssertEqual(volume6, 0, accuracy: 0.0001, "Non-planar face indices: \(face)")
+		}
 	}
 
 }

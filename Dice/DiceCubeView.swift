@@ -235,6 +235,14 @@ final class DiceCubeView: UIView {
 		}
 	}
 
+#if DEBUG
+	static func debugMeshData(sideCount: Int) -> (vertices: [SIMD3<Float>], faces: [[Int]]) {
+		let view = DiceCubeView(frame: .zero)
+		let mesh = view.meshData(for: sideCount)
+		return (mesh.vertices, mesh.faces)
+	}
+#endif
+
 	private func buildGeometry(sideLength: CGFloat, sideCount: Int) -> BuiltMesh {
 		let mesh = meshData(for: sideCount)
 		let maxNorm = mesh.vertices.map { simd_length($0) }.max() ?? 1
@@ -624,8 +632,11 @@ final class DiceCubeView: UIView {
 
 	private func pentagonalTrapezohedron() -> (vertices: [SIMD3<Float>], faces: [[Int]]) {
 		let r: Float = 1.0
-		let k: Float = 0.42
-		let h: Float = 1.35
+		let k: Float = 0.11
+		let s36 = sin(Float.pi / 5)
+		let s72 = sin(2 * Float.pi / 5)
+		// Enforce coplanar kite faces for [top, u(i), l(i), u(i+1)] and [bottom, l(i), u(i+1), l(i+1)].
+		let h: Float = k * (s72 + 2 * s36) / (2 * s36 - s72)
 
 		var vertices: [SIMD3<Float>] = [SIMD3(0, h, 0), SIMD3(0, -h, 0)]
 		for i in 0..<5 {
