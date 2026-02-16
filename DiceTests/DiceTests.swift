@@ -272,4 +272,43 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(loaded.recentPresets, ["20d6", "4d4", "6d6"])
 	}
 
+	func testRollHistoryAppendsInNewestFirstOrder() {
+		let history = DiceRollHistory(maxPersistedEntries: 10)
+		let first = RollHistoryEntry(timestamp: Date(timeIntervalSince1970: 1), notation: "1d6", values: [1], sum: 1, intuitive: false)
+		let second = RollHistoryEntry(timestamp: Date(timeIntervalSince1970: 2), notation: "2d6", values: [1, 2], sum: 3, intuitive: false)
+
+		history.append(first)
+		history.append(second)
+
+		XCTAssertEqual(history.sessionEntries, [second, first])
+		XCTAssertEqual(history.persistedRecentEntries, [second, first])
+	}
+
+	func testRollHistoryTruncatesPersistedEntriesToLimit() {
+		let history = DiceRollHistory(maxPersistedEntries: 2)
+		let one = RollHistoryEntry(timestamp: Date(timeIntervalSince1970: 1), notation: "1d6", values: [1], sum: 1, intuitive: false)
+		let two = RollHistoryEntry(timestamp: Date(timeIntervalSince1970: 2), notation: "1d6", values: [2], sum: 2, intuitive: false)
+		let three = RollHistoryEntry(timestamp: Date(timeIntervalSince1970: 3), notation: "1d6", values: [3], sum: 3, intuitive: false)
+
+		history.append(one)
+		history.append(two)
+		history.append(three)
+
+		XCTAssertEqual(history.persistedRecentEntries, [three, two])
+		XCTAssertEqual(history.sessionEntries, [three, two, one])
+	}
+
+	func testRollHistoryClearOperations() {
+		let history = DiceRollHistory(maxPersistedEntries: 10)
+		let entry = RollHistoryEntry(timestamp: Date(), notation: "1d6", values: [1], sum: 1, intuitive: false)
+		history.append(entry)
+
+		history.clearSession()
+		XCTAssertTrue(history.sessionEntries.isEmpty)
+		XCTAssertFalse(history.persistedRecentEntries.isEmpty)
+
+		history.clearPersistedRecent()
+		XCTAssertTrue(history.persistedRecentEntries.isEmpty)
+	}
+
 }
