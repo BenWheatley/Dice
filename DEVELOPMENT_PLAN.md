@@ -86,7 +86,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Complete bug bash round 2 focused on edge-case notation and long roll sessions.
 - [x] Verify deterministic reproducibility for failing tests and stabilize flaky test cases.
 - [x] Validate App Store metadata/assets checklist for iOS/iPadOS/watchOS/macOS listings.
-- [ ] Cut release candidate tag and run full CI + manual regression sign-off.
+- [x] Cut release candidate tag and run full CI + manual regression sign-off.
 
 ## 10. Product Questions (Resolve Before/While Implementing)
 
