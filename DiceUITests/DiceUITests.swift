@@ -36,7 +36,7 @@ final class DiceUITests: XCTestCase {
 		XCTAssertTrue(presetsButton.waitForExistence(timeout: 3))
 
 		presetsButton.tap()
-		app.buttons["2d6i"].tap()
+		app.buttons.matching(identifier: "2d6i").firstMatch.tap()
 
 		let totalsLabel = app.staticTexts["totalsLabel"]
 		XCTAssertTrue(totalsLabel.label.contains("Mode: 2d6i"))

@@ -35,6 +35,10 @@
 		C0DE000F2F4400FE00D1CE00 /* DiceRollHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE000E2F4400FE00D1CE00 /* DiceRollHistoryStore.swift */; };
 		C0DE00112F44012000D1CE00 /* DiceTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00102F44012000D1CE00 /* DiceTelemetry.swift */; };
 		C0DE00132F44014200D1CE00 /* DiceViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00122F44014200D1CE00 /* DiceViewModel.swift */; };
+		C0DE00212F44022100D1CE00 /* DiceNotationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00002F44000100D1CE00 /* DiceNotationParser.swift */; };
+		C0DE00232F44022300D1CE00 /* TrueRandomRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00022F44003200D1CE00 /* TrueRandomRoller.swift */; };
+		C0DE00252F44022500D1CE00 /* IntuitiveRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00042F44005400D1CE00 /* IntuitiveRoller.swift */; };
+		C0DE00272F44022700D1CE00 /* DiceRollSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00062F44007600D1CE00 /* DiceRollSession.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -492,6 +496,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0DE00272F44022700D1CE00 /* DiceRollSession.swift in Sources */,
+				C0DE00252F44022500D1CE00 /* IntuitiveRoller.swift in Sources */,
+				C0DE00232F44022300D1CE00 /* TrueRandomRoller.swift in Sources */,
+				C0DE00212F44022100D1CE00 /* DiceNotationParser.swift in Sources */,
 				B50B450E215D804200A6399B /* NotificationController.swift in Sources */,
 				B50B450C215D804200A6399B /* ExtensionDelegate.swift in Sources */,
 				B50B450A215D804200A6399B /* InterfaceController.swift in Sources */,

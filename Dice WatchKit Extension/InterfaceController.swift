@@ -11,30 +11,30 @@ import Foundation
 
 
 class InterfaceController: WKInterfaceController {
-	
+
+	private let rollSession = DiceRollSession()
+	private var configuration = RollConfiguration(diceCount: 1, sideCount: 6, intuitive: false)
+
 	@IBOutlet weak var diceButton: WKInterfaceButton!
 	@IBOutlet weak var diceView: WKInterfaceImage!
-	
+
     override func awake(withContext context: Any?) {
         super.awake(withContext: context)
-        
-        // Configure interface objects here.
+		roll()
     }
-	
+
 	override func willActivate() {
-        // This method is called when watch view controller is about to be visible to user
         super.willActivate()
     }
-    
+
     override func didDeactivate() {
-        // This method is called when watch view controller is no longer visible
         super.didDeactivate()
     }
-	
+
 	@IBAction func roll() {
-		let dice = [#imageLiteral(resourceName: "1"), #imageLiteral(resourceName: "2"), #imageLiteral(resourceName: "3"), #imageLiteral(resourceName: "4"), #imageLiteral(resourceName: "5"), #imageLiteral(resourceName: "6")]
-		let roll = Int.random(in: 0..<dice.count)
-		diceView.setImage(dice[roll])
+		let outcome = rollSession.roll(configuration)
+		guard let value = outcome.values.first else { return }
+		diceView.setImageNamed("\(value)")
 	}
 
 }
