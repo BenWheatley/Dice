@@ -69,6 +69,10 @@ final class DiceViewModel {
 		performRoll()
 	}
 
+	func shakeToRoll() -> RollOutcome {
+		performRoll()
+	}
+
 	func selectPreset(diceCount: Int, intuitive: Bool) -> RollOutcome {
 		appState.configuration = RollConfiguration(diceCount: diceCount, sideCount: 6, intuitive: intuitive)
 		preferencesStore.addRecentPreset(appState.configuration.notation)
@@ -90,6 +94,7 @@ final class DiceViewModel {
 
 	func resetStats() {
 		rollSession.reset()
+		appState.stats = .empty
 		telemetry.logStatsReset()
 	}
 
@@ -155,4 +160,3 @@ final class DiceViewModel {
 		return totals.enumerated().map { "\($0.offset + 1)s:\($0.element)" }.joined(separator: " ")
 	}
 }
-

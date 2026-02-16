@@ -357,4 +357,80 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(csv.contains("2d6"))
 	}
 
+	func testViewModelRollFromInputUpdatesConfigurationAndDiceCount() {
+		let suiteName = "DiceTests.viewmodel.roll.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults),
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { _ in 3 }, randomDouble: { 0.5 }))
+		)
+
+		let result = viewModel.rollFromInput("4d8")
+		guard case let .success(outcome) = result else {
+			return XCTFail("Expected success")
+		}
+
+		XCTAssertEqual(viewModel.configuration.diceCount, 4)
+		XCTAssertEqual(viewModel.configuration.sideCount, 8)
+		XCTAssertEqual(viewModel.diceValues.count, 4)
+		XCTAssertEqual(outcome.values.count, 4)
+	}
+
+	func testViewModelRerollDieReturnsSingleOutcomeAndUpdatesValue() {
+		let suiteName = "DiceTests.viewmodel.reroll.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults),
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { _ in 5 }, randomDouble: { 0.5 }))
+		)
+
+		_ = viewModel.rollFromInput("3d6")
+		let outcome = viewModel.rerollDie(at: 1)
+
+		XCTAssertNotNil(outcome)
+		XCTAssertEqual(outcome?.values.count, 1)
+		XCTAssertEqual(viewModel.diceValues.count, 3)
+		XCTAssertEqual(viewModel.diceValues[1], 5)
+	}
+
+	func testViewModelShakeToRollUsesCurrentConfiguration() {
+		let suiteName = "DiceTests.viewmodel.shake.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults),
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { _ in 2 }, randomDouble: { 0.5 }))
+		)
+
+		_ = viewModel.rollFromInput("2d10")
+		let outcome = viewModel.shakeToRoll()
+
+		XCTAssertEqual(outcome.values.count, 2)
+		XCTAssertEqual(viewModel.configuration.notation, "2d10")
+	}
+
+	func testViewModelResetStatsResetsSessionTotalsForNextRoll() {
+		let suiteName = "DiceTests.viewmodel.reset.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults),
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { _ in 1 }, randomDouble: { 0.5 }))
+		)
+
+		_ = viewModel.rollFromInput("3d6")
+		_ = viewModel.rollCurrent()
+		viewModel.resetStats()
+		let outcome = viewModel.rollCurrent()
+
+		XCTAssertEqual(outcome.totalRolls, 3)
+		XCTAssertEqual(outcome.sessionTotals[0], 3)
+	}
+
 }

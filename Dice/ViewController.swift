@@ -67,7 +67,13 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	override func motionEnded(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
 		if event?.subtype == .motionShake {
-			performRoll()
+			let outcome = viewModel.shakeToRoll()
+			updateNotationField()
+			updateTotalsText(outcome: outcome)
+			collectionView.collectionViewLayout.invalidateLayout()
+			collectionView.reloadData()
+			collectionView.layoutIfNeeded()
+			updateDiceBoard(animated: boardSupportedSides.contains(viewModel.configuration.sideCount))
 		}
 	}
 
