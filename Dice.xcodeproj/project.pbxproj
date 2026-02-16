@@ -25,6 +25,7 @@
 		B56A8D062173BD3F00444349 /* SceneKit Asset Catalog.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = B56A8D052173BD3F00444349 /* SceneKit Asset Catalog.scnassets */; };
 		B56A8D072173BD3F00444349 /* SceneKit Asset Catalog.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = B56A8D052173BD3F00444349 /* SceneKit Asset Catalog.scnassets */; };
 		B57DA5BA2F4228E00057BC3A /* DiceCubeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57DA5B92F4228E00057BC3A /* DiceCubeView.swift */; };
+		C0DE00012F44000100D1CE00 /* DiceNotationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00002F44000100D1CE00 /* DiceNotationParser.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -110,6 +111,7 @@
 		B50B4512215D804300A6399B /* PushNotificationPayload.apns */ = {isa = PBXFileReference; lastKnownFileType = text; path = PushNotificationPayload.apns; sourceTree = "<group>"; };
 		B56A8D052173BD3F00444349 /* SceneKit Asset Catalog.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = "SceneKit Asset Catalog.scnassets"; sourceTree = "<group>"; };
 		B57DA5B92F4228E00057BC3A /* DiceCubeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceCubeView.swift; sourceTree = "<group>"; };
+		C0DE00002F44000100D1CE00 /* DiceNotationParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceNotationParser.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -174,6 +176,7 @@
 			children = (
 				B50B44D0215D803D00A6399B /* AppDelegate.swift */,
 				B50B44D2215D803D00A6399B /* ViewController.swift */,
+				C0DE00002F44000100D1CE00 /* DiceNotationParser.swift */,
 				B57DA5B92F4228E00057BC3A /* DiceCubeView.swift */,
 				B50B44D4215D803D00A6399B /* Main.storyboard */,
 				B50B44D7215D804100A6399B /* Assets.xcassets */,
@@ -426,6 +429,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0DE00012F44000100D1CE00 /* DiceNotationParser.swift in Sources */,
 				B57DA5BA2F4228E00057BC3A /* DiceCubeView.swift in Sources */,
 				B50B44D3215D803D00A6399B /* ViewController.swift in Sources */,
 				B50B44D1215D803D00A6399B /* AppDelegate.swift in Sources */,

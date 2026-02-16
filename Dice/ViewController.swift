@@ -10,16 +10,6 @@ import UIKit
 
 private let reuseIdentifier = "DiceCell"
 
-private struct RollConfiguration {
-	let diceCount: Int
-	let sideCount: Int
-	let intuitive: Bool
-
-	var notation: String {
-		"\(diceCount)d\(sideCount)\(intuitive ? "i" : "")"
-	}
-}
-
 private struct RollOutcome {
 	let values: [Int]
 	let localTotals: [Int]
@@ -125,6 +115,7 @@ private final class DiceRollSession {
 
 class DiceCollectionViewController: UICollectionViewController, UITextFieldDelegate {
 	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
+	private let notationParser = DiceNotationParser()
 	private var configuration = RollConfiguration(diceCount: 6, sideCount: 6, intuitive: false)
 	private var diceValues = Array(repeating: 1, count: 6)
 	private let rollSession = DiceRollSession()
@@ -296,7 +287,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	@objc private func rollFromInput() {
-		guard let text = notationField.text, let parsed = parseRollConfiguration(from: text) else {
+		guard let text = notationField.text, let parsed = notationParser.parse(text) else {
 			showInvalidNotationAlert()
 			return
 		}
@@ -349,37 +340,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		}
 
 		diceBoardView.setDice(values: values, centers: centers, sideLength: sideLength, sideCount: configuration.sideCount, animated: animated)
-	}
-
-	private func parseRollConfiguration(from text: String) -> RollConfiguration? {
-		let sanitized = text.lowercased().replacingOccurrences(of: " ", with: "")
-		if sanitized.isEmpty { return nil }
-
-		let intuitive = sanitized.contains("i")
-		let withoutIntuitiveFlag = sanitized.replacingOccurrences(of: "i", with: "")
-
-		let diceCount: Int
-		let sideCount: Int
-
-		if let dIndex = withoutIntuitiveFlag.firstIndex(of: "d") {
-			let dicePart = String(withoutIntuitiveFlag[..<dIndex])
-			let sidePart = String(withoutIntuitiveFlag[withoutIntuitiveFlag.index(after: dIndex)...])
-			guard let parsedDice = Int(dicePart), let parsedSides = Int(sidePart) else {
-				return nil
-			}
-			diceCount = parsedDice
-			sideCount = parsedSides
-		} else {
-			guard let parsedDice = Int(withoutIntuitiveFlag) else { return nil }
-			diceCount = parsedDice
-			sideCount = 6
-		}
-
-		guard (1...500).contains(diceCount), (2...1000).contains(sideCount) else {
-			return nil
-		}
-
-		return RollConfiguration(diceCount: diceCount, sideCount: sideCount, intuitive: intuitive)
 	}
 
 	private func makePresetMenu() -> UIMenu {
