@@ -106,18 +106,24 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		rollButton.setTitle("Roll", for: .normal)
 		rollButton.addTarget(self, action: #selector(rollFromInput), for: .touchUpInside)
 		rollButton.accessibilityLabel = "Roll dice"
+		rollButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
+		rollButton.titleLabel?.adjustsFontForContentSizeCategory = true
 
 		presetsButton.translatesAutoresizingMaskIntoConstraints = false
 		presetsButton.setTitle("Presets", for: .normal)
 		presetsButton.showsMenuAsPrimaryAction = true
 		presetsButton.menu = makePresetMenu()
 		presetsButton.accessibilityLabel = "Dice presets"
+		presetsButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
+		presetsButton.titleLabel?.adjustsFontForContentSizeCategory = true
 
 		historyButton.translatesAutoresizingMaskIntoConstraints = false
 		historyButton.setTitle("History", for: .normal)
 		historyButton.addTarget(self, action: #selector(showHistory), for: .touchUpInside)
 		historyButton.accessibilityLabel = "Roll history"
 		historyButton.accessibilityHint = "Open session history and export options"
+		historyButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
+		historyButton.titleLabel?.adjustsFontForContentSizeCategory = true
 
 		let row = UIStackView(arrangedSubviews: [notationField, rollButton, presetsButton, historyButton])
 		row.translatesAutoresizingMaskIntoConstraints = false
@@ -133,7 +139,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 		totalsLabel.translatesAutoresizingMaskIntoConstraints = false
 		totalsLabel.backgroundColor = .clear
-		totalsLabel.font = UIFont.systemFont(ofSize: 12)
+		totalsLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
+		totalsLabel.adjustsFontForContentSizeCategory = true
 		totalsLabel.numberOfLines = 0
 		totalsLabel.textColor = .darkGray
 		totalsLabel.textAlignment = .left
@@ -142,6 +149,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		resetStatsButton.setTitle("Reset", for: .normal)
 		resetStatsButton.addTarget(self, action: #selector(resetStats), for: .touchUpInside)
 		resetStatsButton.accessibilityLabel = "Reset statistics"
+		resetStatsButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
+		resetStatsButton.titleLabel?.adjustsFontForContentSizeCategory = true
 
 		totalsContainer.addSubview(totalsLabel)
 		totalsContainer.addSubview(resetStatsButton)
@@ -231,7 +240,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 		diceBoardView.isHidden = false
 
-		let sideLength = 0.25 * min(UIScreen.main.bounds.width, UIScreen.main.bounds.height)
+		let sideLength = 0.25 * min(collectionView.bounds.width, collectionView.bounds.height)
 		let itemCount = collectionView.numberOfItems(inSection: 0)
 		var centers: [CGPoint] = []
 		var values: [Int] = []
@@ -399,16 +408,33 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 extension DiceCollectionViewController: UICollectionViewDelegateFlowLayout {
 	func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-		4
+		layoutSpacing(for: collectionView)
 	}
 
 	func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
-		4
+		layoutSpacing(for: collectionView)
 	}
 
 	func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-		let sideLength = floor(0.25 * min(UIScreen.main.bounds.width, UIScreen.main.bounds.height))
-		return CGSize(width: sideLength, height: sideLength)
+		let spacing = layoutSpacing(for: collectionView)
+		let inset = collectionView.adjustedContentInset.left + collectionView.adjustedContentInset.right
+		let availableWidth = max(0, collectionView.bounds.width - inset)
+		let columns = targetColumnCount(for: availableWidth)
+		let totalSpacing = CGFloat(columns - 1) * spacing
+		let sideLength = floor((availableWidth - totalSpacing) / CGFloat(columns))
+		let clamped = max(56, min(160, sideLength))
+		return CGSize(width: clamped, height: clamped)
+	}
+
+	private func layoutSpacing(for collectionView: UICollectionView) -> CGFloat {
+		traitCollection.horizontalSizeClass == .regular ? 8 : 4
+	}
+
+	private func targetColumnCount(for availableWidth: CGFloat) -> Int {
+		if traitCollection.horizontalSizeClass == .regular {
+			return max(4, min(8, Int(availableWidth / 120)))
+		}
+		return availableWidth > 460 ? 4 : 3
 	}
 }
 

@@ -41,7 +41,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Refactor iOS/iPadOS UI to consume shared state + engine with clear view-model boundaries.
 - [x] Add tests first for view-model behavior (roll, reroll single die, shake-to-roll, reset stats).
 - [x] Add roll history UI (session view, clear action, export action) with accessibility coverage.
-- [ ] Implement/update adaptive layout for iPhone and iPad (size class, split view, dynamic type).
+- [x] Implement/update adaptive layout for iPhone and iPad (size class, split view, dynamic type).
 - [ ] Harden input UX: notation editing, presets, validation feedback, keyboard/accessibility flow.
 - [ ] Improve dice board rendering integration (supported polyhedra, animation toggles, fallback behavior).
 - [ ] Add UI tests for primary flows (launch, roll, reroll die, preset select, intuitive toggle, reset).
