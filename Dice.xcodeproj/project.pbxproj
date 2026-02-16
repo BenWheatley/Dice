@@ -13,6 +13,7 @@
 		B50B44D6215D803D00A6399B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B50B44D4215D803D00A6399B /* Main.storyboard */; };
 		B50B44D8215D804100A6399B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B50B44D7215D804100A6399B /* Assets.xcassets */; };
 		B50B44DB215D804100A6399B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B50B44D9215D804100A6399B /* LaunchScreen.storyboard */; };
+		C0DE00312F44033100D1CE00 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C0DE00302F44033100D1CE00 /* Localizable.strings */; };
 		B50B44E6215D804100A6399B /* DiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B44E5215D804100A6399B /* DiceTests.swift */; };
 		B50B44F1215D804100A6399B /* DiceUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B44F0215D804100A6399B /* DiceUITests.swift */; };
 		B50B44F6215D804200A6399B /* Dice WatchKit App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = B50B44F5215D804200A6399B /* Dice WatchKit App.app */; };
@@ -138,6 +139,7 @@
 		C0DE000E2F4400FE00D1CE00 /* DiceRollHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceRollHistoryStore.swift; sourceTree = "<group>"; };
 		C0DE00102F44012000D1CE00 /* DiceTelemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceTelemetry.swift; sourceTree = "<group>"; };
 		C0DE00122F44014200D1CE00 /* DiceViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceViewModel.swift; sourceTree = "<group>"; };
+		C0DE00302F44033100D1CE00 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C0DE00142F44016400D1CE00 /* WatchRollViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRollViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -219,6 +221,7 @@
 				B50B44D4215D803D00A6399B /* Main.storyboard */,
 				B50B44D7215D804100A6399B /* Assets.xcassets */,
 				B50B44D9215D804100A6399B /* LaunchScreen.storyboard */,
+				C0DE00302F44033100D1CE00 /* Localizable.strings */,
 				B50B44DC215D804100A6399B /* Info.plist */,
 			);
 			path = Dice;
@@ -424,6 +427,7 @@
 				B56A8D062173BD3F00444349 /* SceneKit Asset Catalog.scnassets in Resources */,
 				B50B44DB215D804100A6399B /* LaunchScreen.storyboard in Resources */,
 				B50B44D8215D804100A6399B /* Assets.xcassets in Resources */,
+				C0DE00312F44033100D1CE00 /* Localizable.strings in Resources */,
 				B50B44D6215D803D00A6399B /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

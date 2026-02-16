@@ -15,11 +15,18 @@ enum DiceInputError: Error, Equatable {
 	var userMessage: String {
 		switch self {
 		case .emptyInput:
-			return "Enter a dice notation like 6d6, 8d10, or 6d6i."
+			return NSLocalizedString("error.input.empty", comment: "Prompt for empty notation input")
 		case .invalidFormat:
-			return "Use NdM or N (for d6), optionally with i."
+			return NSLocalizedString("error.input.invalidFormat", comment: "Prompt for invalid notation format")
 		case let .outOfBounds(diceBounds, sideBounds):
-			return "Dice count must be \(diceBounds.lowerBound)-\(diceBounds.upperBound) and sides must be \(sideBounds.lowerBound)-\(sideBounds.upperBound)."
+			return String(
+				format: NSLocalizedString("error.input.outOfBounds", comment: "Prompt for notation bounds violation"),
+				locale: .current,
+				diceBounds.lowerBound,
+				diceBounds.upperBound,
+				sideBounds.lowerBound,
+				sideBounds.upperBound
+			)
 		}
 	}
 }

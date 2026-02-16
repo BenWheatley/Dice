@@ -42,10 +42,10 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	override var keyCommands: [UIKeyCommand]? {
 		[
-			UIKeyCommand(title: "Roll", action: #selector(rollFromInput), input: "r", modifierFlags: .command),
-			UIKeyCommand(title: "Reset Stats", action: #selector(resetStats), input: "\u{8}", modifierFlags: .command),
-			UIKeyCommand(title: "Focus Notation", action: #selector(focusNotationField), input: "f", modifierFlags: .command),
-			UIKeyCommand(title: "History", action: #selector(showHistory), input: "h", modifierFlags: .command),
+			UIKeyCommand(title: NSLocalizedString("shortcut.roll", comment: "Roll keyboard shortcut title"), action: #selector(rollFromInput), input: "r", modifierFlags: .command),
+			UIKeyCommand(title: NSLocalizedString("shortcut.reset", comment: "Reset stats keyboard shortcut title"), action: #selector(resetStats), input: "\u{8}", modifierFlags: .command),
+			UIKeyCommand(title: NSLocalizedString("shortcut.focusNotation", comment: "Focus notation keyboard shortcut title"), action: #selector(focusNotationField), input: "f", modifierFlags: .command),
+			UIKeyCommand(title: NSLocalizedString("shortcut.history", comment: "History keyboard shortcut title"), action: #selector(showHistory), input: "h", modifierFlags: .command),
 		]
 	}
 
@@ -106,47 +106,47 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		self.controlsContainer = controlsContainer
 
 		notationField.translatesAutoresizingMaskIntoConstraints = false
-		notationField.placeholder = "e.g. 6d6, 12d10, 6d6i"
+		notationField.placeholder = NSLocalizedString("notation.placeholder", comment: "Dice notation input placeholder")
 		notationField.autocapitalizationType = .none
 		notationField.autocorrectionType = .no
 		notationField.clearButtonMode = .whileEditing
 		notationField.borderStyle = .roundedRect
 		notationField.delegate = self
-		notationField.accessibilityLabel = "Dice notation input"
-		notationField.accessibilityHint = "Enter notation like 6d6 or 6d6i"
+		notationField.accessibilityLabel = NSLocalizedString("a11y.notation.label", comment: "Notation field accessibility label")
+		notationField.accessibilityHint = NSLocalizedString("a11y.notation.hint", comment: "Notation field accessibility hint")
 		notationField.accessibilityIdentifier = "notationField"
 		notationField.addTarget(self, action: #selector(notationEditingChanged), for: .editingChanged)
 		configureNotationInputAccessory()
 
 		rollButton.translatesAutoresizingMaskIntoConstraints = false
-		rollButton.setTitle("Roll", for: .normal)
+		rollButton.setTitle(NSLocalizedString("button.roll", comment: "Roll button title"), for: .normal)
 		rollButton.addTarget(self, action: #selector(rollFromInput), for: .touchUpInside)
-		rollButton.accessibilityLabel = "Roll dice"
+		rollButton.accessibilityLabel = NSLocalizedString("a11y.roll.label", comment: "Roll button accessibility label")
 		rollButton.accessibilityIdentifier = "rollButton"
 		rollButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
 		rollButton.titleLabel?.adjustsFontForContentSizeCategory = true
 
 		presetsButton.translatesAutoresizingMaskIntoConstraints = false
-		presetsButton.setTitle("Presets", for: .normal)
+		presetsButton.setTitle(NSLocalizedString("button.presets", comment: "Presets button title"), for: .normal)
 		presetsButton.showsMenuAsPrimaryAction = true
 		presetsButton.menu = makePresetMenu()
-		presetsButton.accessibilityLabel = "Dice presets"
+		presetsButton.accessibilityLabel = NSLocalizedString("a11y.presets.label", comment: "Presets button accessibility label")
 		presetsButton.accessibilityIdentifier = "presetsButton"
 		presetsButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
 		presetsButton.titleLabel?.adjustsFontForContentSizeCategory = true
 
 		historyButton.translatesAutoresizingMaskIntoConstraints = false
-		historyButton.setTitle("History", for: .normal)
+		historyButton.setTitle(NSLocalizedString("button.history", comment: "History button title"), for: .normal)
 		historyButton.addTarget(self, action: #selector(showHistory), for: .touchUpInside)
-		historyButton.accessibilityLabel = "Roll history"
-		historyButton.accessibilityHint = "Open session history and export options"
+		historyButton.accessibilityLabel = NSLocalizedString("a11y.history.label", comment: "History button accessibility label")
+		historyButton.accessibilityHint = NSLocalizedString("a11y.history.hint", comment: "History button accessibility hint")
 		historyButton.accessibilityIdentifier = "historyButton"
 		historyButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
 		historyButton.titleLabel?.adjustsFontForContentSizeCategory = true
 
 		animationButton.translatesAutoresizingMaskIntoConstraints = false
 		animationButton.addTarget(self, action: #selector(toggleAnimations), for: .touchUpInside)
-		animationButton.accessibilityLabel = "Toggle dice animations"
+		animationButton.accessibilityLabel = NSLocalizedString("a11y.animation.label", comment: "Animation toggle accessibility label")
 		animationButton.accessibilityIdentifier = "animationButton"
 		animationButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
 		animationButton.titleLabel?.adjustsFontForContentSizeCategory = true
@@ -164,7 +164,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		validationLabel.numberOfLines = 2
 		validationLabel.isHidden = true
 		validationLabel.accessibilityTraits = .staticText
-		validationLabel.accessibilityLabel = "Input validation message"
+		validationLabel.accessibilityLabel = NSLocalizedString("a11y.validation.label", comment: "Validation message accessibility label")
 
 		totalsContainer.translatesAutoresizingMaskIntoConstraints = false
 		totalsContainer.backgroundColor = UIColor(white: 1.0, alpha: 0.9)
@@ -180,12 +180,12 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		totalsLabel.textColor = .darkGray
 		totalsLabel.textAlignment = .left
 		totalsLabel.accessibilityIdentifier = "totalsLabel"
-		totalsLabel.accessibilityLabel = "Roll statistics"
+		totalsLabel.accessibilityLabel = NSLocalizedString("a11y.totals.label", comment: "Totals accessibility label")
 
 		resetStatsButton.translatesAutoresizingMaskIntoConstraints = false
-		resetStatsButton.setTitle("Reset", for: .normal)
+		resetStatsButton.setTitle(NSLocalizedString("button.reset", comment: "Reset stats button title"), for: .normal)
 		resetStatsButton.addTarget(self, action: #selector(resetStats), for: .touchUpInside)
-		resetStatsButton.accessibilityLabel = "Reset statistics"
+		resetStatsButton.accessibilityLabel = NSLocalizedString("a11y.reset.label", comment: "Reset stats button accessibility label")
 		resetStatsButton.accessibilityIdentifier = "resetStatsButton"
 		resetStatsButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
 		resetStatsButton.titleLabel?.adjustsFontForContentSizeCategory = true
@@ -346,12 +346,12 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		}
 		var sections: [UIMenu] = []
 		if !recentActions.isEmpty {
-			sections.append(UIMenu(title: "Recent", options: .displayInline, children: recentActions))
+			sections.append(UIMenu(title: NSLocalizedString("menu.presets.recent", comment: "Recent presets section title"), options: .displayInline, children: recentActions))
 		}
-		sections.append(UIMenu(title: "Normal", options: .displayInline, children: normalActions))
-		sections.append(UIMenu(title: "Intuitive", options: .displayInline, children: intuitiveActions))
+		sections.append(UIMenu(title: NSLocalizedString("menu.presets.normal", comment: "Normal presets section title"), options: .displayInline, children: normalActions))
+		sections.append(UIMenu(title: NSLocalizedString("menu.presets.intuitive", comment: "Intuitive presets section title"), options: .displayInline, children: intuitiveActions))
 
-		return UIMenu(title: "eDice Presets", children: sections)
+		return UIMenu(title: NSLocalizedString("menu.presets.title", comment: "Preset menu title"), children: sections)
 	}
 
 	private func presetIcon(diceCount: Int, intuitive: Bool) -> UIImage? {
@@ -393,11 +393,11 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	private func showInvalidNotationAlert(message: String) {
 		let alert = UIAlertController(
-			title: "Invalid dice input",
+			title: NSLocalizedString("alert.invalid.title", comment: "Invalid notation alert title"),
 			message: message,
 			preferredStyle: .alert
 		)
-		alert.addAction(UIAlertAction(title: "OK", style: .default))
+		alert.addAction(UIAlertAction(title: NSLocalizedString("button.ok", comment: "Generic confirmation button"), style: .default))
 		present(alert, animated: true)
 	}
 
@@ -417,20 +417,20 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	@objc private func showHistory() {
 		let entries = viewModel.historyEntries
 		let alert = UIAlertController(
-			title: "Roll History",
+			title: NSLocalizedString("history.title", comment: "Roll history title"),
 			message: formattedHistoryMessage(entries),
 			preferredStyle: .actionSheet
 		)
-		alert.addAction(UIAlertAction(title: "Export Text", style: .default) { _ in
+		alert.addAction(UIAlertAction(title: NSLocalizedString("history.export.text", comment: "Export history text action"), style: .default) { _ in
 			self.presentExportSheet(content: self.viewModel.exportHistory(format: .text), filename: "dice-history.txt")
 		})
-		alert.addAction(UIAlertAction(title: "Export CSV", style: .default) { _ in
+		alert.addAction(UIAlertAction(title: NSLocalizedString("history.export.csv", comment: "Export history csv action"), style: .default) { _ in
 			self.presentExportSheet(content: self.viewModel.exportHistory(format: .csv), filename: "dice-history.csv")
 		})
-		alert.addAction(UIAlertAction(title: "Clear History", style: .destructive) { _ in
+		alert.addAction(UIAlertAction(title: NSLocalizedString("history.clear", comment: "Clear history action"), style: .destructive) { _ in
 			self.viewModel.clearHistory()
 		})
-		alert.addAction(UIAlertAction(title: "Close", style: .cancel))
+		alert.addAction(UIAlertAction(title: NSLocalizedString("button.close", comment: "Close button title"), style: .cancel))
 		if let popover = alert.popoverPresentationController {
 			popover.sourceView = historyButton
 			popover.sourceRect = historyButton.bounds
@@ -440,7 +440,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	private func formattedHistoryMessage(_ entries: [RollHistoryEntry]) -> String {
 		guard !entries.isEmpty else {
-			return "No rolls in this session yet."
+			return NSLocalizedString("history.empty", comment: "Empty history message")
 		}
 		let formatter = DateFormatter()
 		formatter.dateStyle = .none
@@ -462,15 +462,19 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			}
 			present(activity, animated: true)
 		} catch {
-			let alert = UIAlertController(title: "Export failed", message: "Could not prepare export file.", preferredStyle: .alert)
-			alert.addAction(UIAlertAction(title: "OK", style: .default))
+			let alert = UIAlertController(
+				title: NSLocalizedString("alert.exportFailed.title", comment: "Export failed alert title"),
+				message: NSLocalizedString("alert.exportFailed.message", comment: "Export failed alert message"),
+				preferredStyle: .alert
+			)
+			alert.addAction(UIAlertAction(title: NSLocalizedString("button.ok", comment: "Generic confirmation button"), style: .default))
 			present(alert, animated: true)
 		}
 	}
 
 	@objc private func resetStats() {
 		viewModel.resetStats()
-		totalsLabel.text = "  Stats reset"
+		totalsLabel.text = "  \(NSLocalizedString("stats.reset", comment: "Stats reset confirmation"))"
 	}
 
 	private func updateTotalsText(outcome: RollOutcome) {
@@ -483,7 +487,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		notationField.layer.borderColor = UIColor.systemRed.cgColor
 		notationField.layer.borderWidth = 1
 		notationField.layer.cornerRadius = 6
-		UIAccessibility.post(notification: .announcement, argument: "Invalid dice notation. \(message)")
+		let prefix = NSLocalizedString("alert.invalid.announcement", comment: "Accessibility announcement for invalid notation")
+		UIAccessibility.post(notification: .announcement, argument: "\(prefix) \(message)")
 	}
 
 	private func clearValidationFeedback() {
@@ -498,7 +503,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let toolbar = UIToolbar()
 		toolbar.sizeToFit()
 		toolbar.items = [
-			UIBarButtonItem(title: "Roll", style: .done, target: self, action: #selector(rollFromInput)),
+			UIBarButtonItem(title: NSLocalizedString("toolbar.roll", comment: "Notation keyboard accessory roll action"), style: .done, target: self, action: #selector(rollFromInput)),
 			UIBarButtonItem.flexibleSpace(),
 			UIBarButtonItem(barButtonSystemItem: .done, target: notationField, action: #selector(UIResponder.resignFirstResponder)),
 		]
@@ -517,9 +522,13 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	private func updateAnimationButtonState() {
-		let title = viewModel.animationsEnabled ? "Anim On" : "Anim Off"
+		let title = viewModel.animationsEnabled
+			? NSLocalizedString("button.anim.on", comment: "Animations enabled button title")
+			: NSLocalizedString("button.anim.off", comment: "Animations disabled button title")
 		animationButton.setTitle(title, for: .normal)
-		animationButton.accessibilityValue = viewModel.animationsEnabled ? "On" : "Off"
+		animationButton.accessibilityValue = viewModel.animationsEnabled
+			? NSLocalizedString("state.on", comment: "Enabled state label")
+			: NSLocalizedString("state.off", comment: "Disabled state label")
 	}
 }
 
@@ -568,8 +577,13 @@ class DiceCollectionViewCell: UICollectionViewCell {
 
 	func configure(faceValue: Int, sideCount: Int, index: Int) {
 		diceButton.accessibilityIdentifier = "dieButton_\(index)"
-		diceButton.accessibilityLabel = "Die \(index + 1), value \(faceValue)"
-		diceButton.accessibilityHint = "Reroll this die"
+		diceButton.accessibilityLabel = String(
+			format: NSLocalizedString("a11y.die.label", comment: "Die button accessibility label format"),
+			locale: .current,
+			index + 1,
+			faceValue
+		)
+		diceButton.accessibilityHint = NSLocalizedString("a11y.die.hint", comment: "Die button accessibility hint")
 		diceButton.accessibilityTraits = .button
 		setFaceValue(faceValue, sideCount: sideCount)
 	}

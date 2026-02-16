@@ -131,23 +131,47 @@ final class DiceViewModel {
 
 	func formattedTotalsText(outcome: RollOutcome, boardSupportedSides: Set<Int>) -> String {
 		var lines: [String] = []
-		lines.append("Mode: \(appState.configuration.notation)")
+		lines.append(String(
+			format: NSLocalizedString("stats.mode", comment: "Current mode and notation"),
+			locale: .current,
+			appState.configuration.notation
+		))
 
 		if appState.configuration.diceCount > 1 {
 			let localCounts = formattedCounts(outcome.localTotals)
 			if !localCounts.isEmpty {
-				lines.append("Roll counts: \(localCounts)")
+				lines.append(String(
+					format: NSLocalizedString("stats.rollCounts", comment: "Per-roll counts line"),
+					locale: .current,
+					localCounts
+				))
 			}
-			lines.append("Roll sum: \(outcome.sum)")
+			lines.append(String(
+				format: NSLocalizedString("stats.rollSum", comment: "Per-roll sum line"),
+				locale: .current,
+				outcome.sum
+			))
 		}
 
 		let sessionCounts = formattedCounts(outcome.sessionTotals)
 		if !sessionCounts.isEmpty {
-			lines.append("Session counts: \(sessionCounts)")
+			lines.append(String(
+				format: NSLocalizedString("stats.sessionCounts", comment: "Session counts line"),
+				locale: .current,
+				sessionCounts
+			))
 		}
-		lines.append("Session total dice rolled: \(outcome.totalRolls)")
+		lines.append(String(
+			format: NSLocalizedString("stats.sessionTotalDice", comment: "Session total dice line"),
+			locale: .current,
+			outcome.totalRolls
+		))
 		if !boardSupportedSides.contains(appState.configuration.sideCount) {
-			lines.append("3D board preview unavailable for d\(appState.configuration.sideCount)")
+			lines.append(String(
+				format: NSLocalizedString("stats.boardUnavailable", comment: "3D board unsupported sides message"),
+				locale: .current,
+				appState.configuration.sideCount
+			))
 		}
 
 		return "  " + lines.joined(separator: "\n  ")
