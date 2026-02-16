@@ -20,7 +20,11 @@ final class DiceRollSession {
 	private var sortedTotals: [Int] = []
 	private var totalRolls = 0
 	private var wasIntuitive = false
-	private let intuitiveRoller = IntuitiveRoller()
+	private let intuitiveRoller: IntuitiveRoller
+
+	init(intuitiveRoller: IntuitiveRoller = IntuitiveRoller()) {
+		self.intuitiveRoller = intuitiveRoller
+	}
 
 	func roll(_ configuration: RollConfiguration) -> RollOutcome {
 		if configuration.intuitive != wasIntuitive {
@@ -79,4 +83,3 @@ final class DiceRollSession {
 		return intuitiveRoller.roll(context: context, intuitive: intuitive)
 	}
 }
-

@@ -191,4 +191,46 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(high, 3)
 	}
 
+	func testRollSessionTracksTotalsAcrossRollsInSameMode() {
+		let session = DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { _ in 1 }, randomDouble: { 0.0 }))
+
+		let first = session.roll(RollConfiguration(diceCount: 2, sideCount: 6, intuitive: false))
+		XCTAssertEqual(first.totalRolls, 2)
+		XCTAssertEqual(first.sum, 2)
+		XCTAssertEqual(first.sessionTotals.first, 2)
+
+		let second = session.roll(RollConfiguration(diceCount: 3, sideCount: 6, intuitive: false))
+		XCTAssertEqual(second.totalRolls, 5)
+		XCTAssertEqual(second.sum, 3)
+		XCTAssertEqual(second.sessionTotals.first, 5)
+	}
+
+	func testRollSessionResetClearsState() {
+		let session = DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { _ in 1 }, randomDouble: { 0.0 }))
+		_ = session.roll(RollConfiguration(diceCount: 4, sideCount: 6, intuitive: false))
+		session.reset()
+
+		let afterReset = session.roll(RollConfiguration(diceCount: 1, sideCount: 6, intuitive: false))
+		XCTAssertEqual(afterReset.totalRolls, 1)
+		XCTAssertEqual(afterReset.sessionTotals.first, 1)
+	}
+
+	func testRollSessionResetsWhenModeChanges() {
+		let session = DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { _ in 1 }, randomDouble: { 0.0 }))
+		_ = session.roll(RollConfiguration(diceCount: 3, sideCount: 6, intuitive: false))
+
+		let switched = session.roll(RollConfiguration(diceCount: 1, sideCount: 6, intuitive: true))
+		XCTAssertEqual(switched.totalRolls, 1)
+		XCTAssertEqual(switched.sessionTotals.first, 1)
+	}
+
+	func testRollSessionLocalTotalsMatchSingleRollOutput() {
+		let session = DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { _ in 1 }, randomDouble: { 0.0 }))
+		let outcome = session.roll(RollConfiguration(diceCount: 5, sideCount: 6, intuitive: false))
+
+		XCTAssertEqual(outcome.values, Array(repeating: 1, count: 5))
+		XCTAssertEqual(outcome.localTotals[0], 5)
+		XCTAssertEqual(outcome.localTotals.dropFirst().reduce(0, +), 0)
+	}
+
 }
