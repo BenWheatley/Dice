@@ -29,6 +29,7 @@
 		C0DE00032F44003200D1CE00 /* TrueRandomRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00022F44003200D1CE00 /* TrueRandomRoller.swift */; };
 		C0DE00052F44005400D1CE00 /* IntuitiveRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00042F44005400D1CE00 /* IntuitiveRoller.swift */; };
 		C0DE00072F44007600D1CE00 /* DiceRollSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00062F44007600D1CE00 /* DiceRollSession.swift */; };
+		C0DE00092F44009800D1CE00 /* DiceAppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00082F44009800D1CE00 /* DiceAppState.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -118,6 +119,7 @@
 		C0DE00022F44003200D1CE00 /* TrueRandomRoller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrueRandomRoller.swift; sourceTree = "<group>"; };
 		C0DE00042F44005400D1CE00 /* IntuitiveRoller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntuitiveRoller.swift; sourceTree = "<group>"; };
 		C0DE00062F44007600D1CE00 /* DiceRollSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceRollSession.swift; sourceTree = "<group>"; };
+		C0DE00082F44009800D1CE00 /* DiceAppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceAppState.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -186,6 +188,7 @@
 				C0DE00022F44003200D1CE00 /* TrueRandomRoller.swift */,
 				C0DE00042F44005400D1CE00 /* IntuitiveRoller.swift */,
 				C0DE00062F44007600D1CE00 /* DiceRollSession.swift */,
+				C0DE00082F44009800D1CE00 /* DiceAppState.swift */,
 				B57DA5B92F4228E00057BC3A /* DiceCubeView.swift */,
 				B50B44D4215D803D00A6399B /* Main.storyboard */,
 				B50B44D7215D804100A6399B /* Assets.xcassets */,
@@ -438,6 +441,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0DE00092F44009800D1CE00 /* DiceAppState.swift in Sources */,
 				C0DE00072F44007600D1CE00 /* DiceRollSession.swift in Sources */,
 				C0DE00052F44005400D1CE00 /* IntuitiveRoller.swift in Sources */,
 				C0DE00032F44003200D1CE00 /* TrueRandomRoller.swift in Sources */,

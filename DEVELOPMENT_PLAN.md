@@ -27,7 +27,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 ## 3. App State and Persistence
 
-- [ ] Introduce shared app-state model for active notation, mode, dice values, and stats.
+- [x] Introduce shared app-state model for active notation, mode, dice values, and stats.
 - [ ] Add persistence service for user preferences and recent presets (AppStorage/UserDefaults wrapper).
 - [ ] Write tests first for persistence round-trip and migration defaults.
 - [ ] Design roll history domain model and retention policy (per-window active history + persisted recent history).
