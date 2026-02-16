@@ -311,4 +311,36 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(history.persistedRecentEntries.isEmpty)
 	}
 
+	func testRollHistoryStoreRoundTrip() {
+		let suiteName = "DiceTests.history.store.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let store = DiceRollHistoryStore(defaults: defaults)
+		let entries = [
+			RollHistoryEntry(timestamp: Date(timeIntervalSince1970: 1), notation: "6d6", values: [1, 2, 3, 4, 5, 6], sum: 21, intuitive: false),
+			RollHistoryEntry(timestamp: Date(timeIntervalSince1970: 2), notation: "6d6i", values: [1, 1, 1, 1, 1, 1], sum: 6, intuitive: true),
+		]
+
+		store.savePersistedEntries(entries)
+		XCTAssertEqual(store.loadPersistedEntries(), entries)
+	}
+
+	func testRollHistoryExporterCSVAndText() {
+		let exporter = RollHistoryExporter()
+		let entry = RollHistoryEntry(
+			timestamp: Date(timeIntervalSince1970: 0),
+			notation: "2d6",
+			values: [3, 4],
+			sum: 7,
+			intuitive: true
+		)
+		let text = exporter.export([entry], format: .text)
+		let csv = exporter.export([entry], format: .csv)
+
+		XCTAssertTrue(text.contains("2d6"))
+		XCTAssertTrue(text.contains("intuitive"))
+		XCTAssertTrue(csv.contains("timestamp,notation,mode,values,sum"))
+		XCTAssertTrue(csv.contains("2d6"))
+	}
+
 }

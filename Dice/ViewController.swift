@@ -14,8 +14,10 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 	private let notationParser = DiceNotationParser()
 	private let preferencesStore = DicePreferencesStore()
+	private let historyStore = DiceRollHistoryStore()
 	private let appState = DiceAppState()
 	private let rollSession = DiceRollSession()
+	private var rollHistory = DiceRollHistory()
 
 	private let notationField = UITextField()
 	private let totalsLabel = UILabel()
@@ -28,6 +30,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		restorePreferences()
+		restoreRollHistory()
 
 		collectionView.backgroundColor = UIColor(patternImage: UIImage(named: "stripes")!)
 		collectionView.keyboardDismissMode = .onDrag
@@ -64,6 +67,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			guard let newValue = outcome.values.first else { return }
 			self.appState.diceValues[indexPath.row] = newValue
 			self.appState.stats = DiceStats(outcome: outcome)
+			self.appendHistory(for: singleRoll, outcome: outcome)
 			self.updateTotalsText(outcome: outcome)
 			collectionView?.reloadItems(at: [indexPath])
 			collectionView?.layoutIfNeeded()
@@ -200,6 +204,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private func performRoll() {
 		let outcome = rollSession.roll(appState.configuration)
 		appState.applyRollOutcome(outcome)
+		appendHistory(for: appState.configuration, outcome: outcome)
 		updateNotationField()
 		updateTotalsText(outcome: outcome)
 		collectionView.collectionViewLayout.invalidateLayout()
@@ -363,6 +368,23 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			recentPresets: preferencesStore.load().recentPresets
 		)
 		preferencesStore.save(preferences)
+	}
+
+	private func restoreRollHistory() {
+		let persisted = historyStore.loadPersistedEntries()
+		rollHistory = DiceRollHistory(persistedRecentEntries: persisted)
+	}
+
+	private func appendHistory(for configuration: RollConfiguration, outcome: RollOutcome) {
+		let entry = RollHistoryEntry(
+			timestamp: Date(),
+			notation: configuration.notation,
+			values: outcome.values,
+			sum: outcome.sum,
+			intuitive: configuration.intuitive
+		)
+		rollHistory.append(entry)
+		historyStore.savePersistedEntries(rollHistory.persistedRecentEntries)
 	}
 }
 
