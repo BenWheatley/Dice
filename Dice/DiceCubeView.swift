@@ -636,8 +636,9 @@ final class DiceCubeView: UIView {
 			let u1 = 2 + ((i + 1) % 5)
 			let l0 = 7 + i
 			let l1 = 7 + ((i + 1) % 5)
-			faces.append([0, u0, u1, l0])
-			faces.append([1, l0, l1, u1])
+			// Connect each kite through adjacent upper/lower vertices to avoid twisted quads.
+			faces.append([0, u0, l0, u1])
+			faces.append([1, l0, u1, l1])
 		}
 		return (vertices, faces)
 	}
