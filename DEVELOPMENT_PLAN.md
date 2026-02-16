@@ -29,6 +29,9 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [ ] Introduce shared app-state model for active notation, mode, dice values, and stats.
 - [ ] Add persistence service for user preferences and recent presets (AppStorage/UserDefaults wrapper).
 - [ ] Write tests first for persistence round-trip and migration defaults.
+- [ ] Design roll history domain model and retention policy (per-window active history + persisted recent history).
+- [ ] Write tests first for roll history append, ordering, truncation, and clear behavior.
+- [ ] Implement roll history persistence and export formatting service (share/export text or CSV).
 - [ ] Define and implement error/reporting strategy for invalid input and unsupported dice configurations.
 - [ ] Add lightweight analytics/logging hooks for roll events and failure diagnostics.
 
@@ -36,6 +39,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 - [ ] Refactor iOS/iPadOS UI to consume shared state + engine with clear view-model boundaries.
 - [ ] Add tests first for view-model behavior (roll, reroll single die, shake-to-roll, reset stats).
+- [ ] Add roll history UI (session view, clear action, export action) with accessibility coverage.
 - [ ] Implement/update adaptive layout for iPhone and iPad (size class, split view, dynamic type).
 - [ ] Harden input UX: notation editing, presets, validation feedback, keyboard/accessibility flow.
 - [ ] Improve dice board rendering integration (supported polyhedra, animation toggles, fallback behavior).
@@ -55,6 +59,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [ ] Create macOS target scaffolding and integrate shared domain module.
 - [ ] Enable multiple Catalyst windows/scenes with isolated dice state per window.
 - [ ] Implement macOS primary UI flows (roll, reroll, notation input, presets, stats, mode toggle).
+- [ ] Add macOS roll history panel and export flow parity with iOS.
 - [ ] Add keyboard shortcuts and pointer interactions for macOS ergonomics.
 - [ ] Add macOS unit/UI tests for core behavior parity with iOS.
 
@@ -86,6 +91,6 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 - [x] Confirm exact definition of "intuitive" mode behavior and acceptable bias boundaries (use existing implementation).
 - [x] Confirm maximum supported dice notation ranges (max 30 dice, max 100 sides).
-- [ ] Confirm whether roll history/export is required for v1.
+- [x] Confirm whether roll history/export is required for v1 (include in v1).
 - [ ] Confirm whether cloud sync/shared settings across iPhone, iPad, Mac, and Watch is required.
 - [ ] Confirm visual/design direction and whether to preserve current art assets in v1.
