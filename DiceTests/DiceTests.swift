@@ -233,4 +233,43 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(outcome.localTotals.dropFirst().reduce(0, +), 0)
 	}
 
+	func testPreferencesStoreReturnsDefaultsWhenUnset() {
+		let suiteName = "DiceTests.defaults.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let store = DicePreferencesStore(defaults: defaults)
+
+		let loaded = store.load()
+		XCTAssertEqual(loaded, .default)
+	}
+
+	func testPreferencesStoreRoundTripSaveLoad() {
+		let suiteName = "DiceTests.roundtrip.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let store = DicePreferencesStore(defaults: defaults)
+		let expected = DiceUserPreferences(lastNotation: "12d10i", recentPresets: ["12d10i", "6d6"])
+
+		store.save(expected)
+
+		let loaded = store.load()
+		XCTAssertEqual(loaded, expected)
+	}
+
+	func testPreferencesStoreRecentPresetOrderingDedupAndLimit() {
+		let suiteName = "DiceTests.recent.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let store = DicePreferencesStore(defaults: defaults, maxRecentPresets: 3)
+
+		store.addRecentPreset("6d6")
+		store.addRecentPreset("8d10")
+		store.addRecentPreset("6d6")
+		store.addRecentPreset("4d4")
+		store.addRecentPreset("20d6")
+
+		let loaded = store.load()
+		XCTAssertEqual(loaded.recentPresets, ["20d6", "4d4", "6d6"])
+	}
+
 }
