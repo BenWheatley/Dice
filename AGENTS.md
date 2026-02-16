@@ -27,10 +27,10 @@ These rules apply to all agents working in this repository.
 2. Preserve and support both rolling modes:
    - true-random mode
    - intuitive mode
-3. Do not remove existing working functionality unless explicitly requested.
+3. v1 delivery constraint: simulator-only testing and validation; avoid features requiring Apple Developer Team provisioning.
+4. Do not remove existing working functionality unless explicitly requested.
 
 ## Quality Gate Per Commit
 
 Before each commit, agents should run the narrowest relevant automated tests and confirm they pass.
 If full test runs are not possible, document what was run and what remains.
-

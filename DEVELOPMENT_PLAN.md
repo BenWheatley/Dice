@@ -1,7 +1,7 @@
 # Dice App Development Plan
 
 This plan targets completion for iOS/iPadOS 18+, watchOS 10.2+, and macOS 15.7+, with both true-random and intuitive roll modes.
-Confirmed decisions: macOS delivery via Mac Catalyst, multi-window enabled with independent dice state per window, intuitive mode behavior uses existing implementation, notation cap is 30d100.
+Confirmed decisions: macOS delivery via Mac Catalyst, multi-window enabled with independent dice state per window, intuitive mode behavior uses existing implementation, notation cap is 30d100, and v1 must be testable via simulators only (no Apple Developer Team-required features).
 Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 ## 1. Project Foundation
@@ -9,6 +9,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [ ] Audit current codebase and produce a gap report against platform/version targets and feature requirements.
 - [ ] Confirm product definition (MVP vs v1) and acceptance criteria for iOS/iPadOS, watchOS, and macOS.
 - [ ] Define architecture decision record (ADR): shared dice engine package/module + per-platform UI layers.
+- [ ] Document v1 testing constraint: simulator-only test matrix, no provisioning-dependent features.
 - [ ] Create and document branch/commit workflow: one completed checklist unit per commit, with test evidence in commit message.
 - [ ] Set up CI pipeline skeleton for build + unit tests for all targets.
 - [ ] Add lint/format/static analysis baseline and document local developer commands.
@@ -92,5 +93,5 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Confirm exact definition of "intuitive" mode behavior and acceptable bias boundaries (use existing implementation).
 - [x] Confirm maximum supported dice notation ranges (max 30 dice, max 100 sides).
 - [x] Confirm whether roll history/export is required for v1 (include in v1).
-- [ ] Confirm whether cloud sync/shared settings across iPhone, iPad, Mac, and Watch is required.
+- [x] Confirm whether cloud sync/shared settings across iPhone, iPad, Mac, and Watch is required (deferred from v1 to avoid Apple Developer Team dependency).
 - [ ] Confirm visual/design direction and whether to preserve current art assets in v1.
