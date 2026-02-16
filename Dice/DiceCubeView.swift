@@ -476,6 +476,9 @@ final class DiceCubeView: UIView {
 		var lastTime: TimeInterval = 0
 		var pos = start
 		var vel = SCNVector3(Float.random(in: -420...420), Float.random(in: -330...330), 0)
+		let liftAmplitude = Float(sideLength * 1.35)
+		let oscillationAmplitude = Float(sideLength * 0.28)
+		let oscillationFrequency: Float = 9.0
 
 		return SCNAction.customAction(duration: duration) { node, elapsed in
 			let t = TimeInterval(elapsed)
@@ -497,8 +500,12 @@ final class DiceCubeView: UIView {
 			vel.y *= damping
 
 			let progress = min(1, Float(t / duration))
-			let blend = powf(progress, 3.0)
-			node.position = SCNVector3(pos.x * (1 - blend) + target.x * blend, pos.y * (1 - blend) + target.y * blend, 0)
+			let settle = expf(-4.0 * progress)
+			let lift = liftAmplitude * expf(-3.0 * progress)
+			let oscillation = oscillationAmplitude * expf(-6.0 * progress) * abs(sinf(oscillationFrequency * progress))
+			let x = target.x + (pos.x - target.x) * settle
+			let y = target.y + (pos.y - target.y) * settle + lift + oscillation
+			node.position = SCNVector3(x, y, 0)
 		}
 	}
 
