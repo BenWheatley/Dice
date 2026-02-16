@@ -1,2 +1,2 @@
 - [x] D10 geometry does not render all faces correctly.
-- [ ] History popup shows "16:27" before list of numbers, unclear why
+- [x] History popup shows "16:27" before list of numbers, unclear why

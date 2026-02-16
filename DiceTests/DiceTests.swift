@@ -651,4 +651,21 @@ final class DiceTests: XCTestCase {
 		}
 	}
 
+	func testHistoryRowFormatterIncludesExplicitTimeAndValuesLabels() {
+		let formatter = DateFormatter()
+		formatter.locale = Locale(identifier: "en_US_POSIX")
+		formatter.timeZone = TimeZone(secondsFromGMT: 0)
+		formatter.dateFormat = "HH:mm"
+		let entry = RollHistoryEntry(
+			timestamp: Date(timeIntervalSince1970: 16 * 3600 + 27 * 60),
+			notation: "6d10",
+			values: [2, 4, 6, 8, 10, 1],
+			sum: 31,
+			intuitive: false
+		)
+
+		let detail = HistoryRowFormatter.subtitle(for: entry, dateFormatter: formatter)
+		XCTAssertEqual(detail, "Time: 16:27 • Values: 2, 4, 6, 8, 10, 1")
+	}
+
 }

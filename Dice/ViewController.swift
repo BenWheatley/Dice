@@ -10,6 +10,20 @@ import UIKit
 
 private let reuseIdentifier = "DiceCell"
 
+struct HistoryRowFormatter {
+	static func subtitle(for entry: RollHistoryEntry, dateFormatter: DateFormatter) -> String {
+		let time = String(
+			format: NSLocalizedString("history.row.time", comment: "History row time label"),
+			dateFormatter.string(from: entry.timestamp)
+		)
+		let values = String(
+			format: NSLocalizedString("history.row.values", comment: "History row values label"),
+			entry.values.map(String.init).joined(separator: ", ")
+		)
+		return "\(time) • \(values)"
+	}
+}
+
 class DiceCollectionViewController: UICollectionViewController, UITextFieldDelegate {
 	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 	private let viewModel = DiceViewModel()
@@ -611,7 +625,7 @@ private final class RollHistoryViewController: UITableViewController {
 		let entry = entries[indexPath.row]
 		var content = UIListContentConfiguration.subtitleCell()
 		content.text = "\(entry.notation) = \(entry.sum)"
-		content.secondaryText = "\(dateFormatter.string(from: entry.timestamp))  \(entry.values.map(String.init).joined(separator: ", "))"
+		content.secondaryText = HistoryRowFormatter.subtitle(for: entry, dateFormatter: dateFormatter)
 		cell.contentConfiguration = content
 		cell.selectionStyle = .none
 		return cell
