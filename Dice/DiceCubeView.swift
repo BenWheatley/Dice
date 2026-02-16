@@ -42,15 +42,24 @@ final class DiceCubeView: UIView {
 	private var meshCache: [MeshCacheKey: BuiltMesh] = [:]
 	private var badgeImageCache: [BadgeCacheKey: UIImage] = [:]
 	private var labelValueCache: [ObjectIdentifier: Int] = [:]
+	private var lifecycleObservers: [NSObjectProtocol] = []
 
 	override init(frame: CGRect) {
 		super.init(frame: frame)
 		configureScene()
+		configureLifecycleObservers()
 	}
 
 	required init?(coder: NSCoder) {
 		super.init(coder: coder)
 		configureScene()
+		configureLifecycleObservers()
+	}
+
+	deinit {
+		for observer in lifecycleObservers {
+			NotificationCenter.default.removeObserver(observer)
+		}
 	}
 
 	override func layoutSubviews() {
@@ -144,6 +153,25 @@ final class DiceCubeView: UIView {
 		fillLight.light?.type = .ambient
 		fillLight.light?.intensity = 350
 		scene.rootNode.addChildNode(fillLight)
+	}
+
+	private func configureLifecycleObservers() {
+		let center = NotificationCenter.default
+		let resignObserver = center.addObserver(
+			forName: UIApplication.willResignActiveNotification,
+			object: nil,
+			queue: .main
+		) { [weak self] _ in
+			self?.scnView.isPlaying = false
+		}
+		let becomeObserver = center.addObserver(
+			forName: UIApplication.didBecomeActiveNotification,
+			object: nil,
+			queue: .main
+		) { [weak self] _ in
+			self?.scnView.isPlaying = true
+		}
+		lifecycleObservers = [resignObserver, becomeObserver]
 	}
 
 	private func updateCamera() {
