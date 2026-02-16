@@ -70,7 +70,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Add localization-ready string extraction and baseline English string catalog structure.
 - [x] Run performance pass for animation/render loops and optimize hot paths.
 - [x] Execute battery/resource usage checks on watchOS and iOS (profiling + quick fixes).
-- [ ] Perform cross-device manual QA matrix run and log defects with severity/owner.
+- [x] Perform cross-device manual QA matrix run and log defects with severity/owner.
 
 ## 8. Documentation and Developer Experience
 
