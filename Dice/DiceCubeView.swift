@@ -8,14 +8,27 @@
 
 import UIKit
 import SceneKit
+import simd
 
 final class DiceCubeView: UIView {
+	private struct MeshData {
+		let vertices: [SIMD3<Float>]
+		let faces: [[Int]]
+	}
+
+	private struct BuiltMesh {
+		let geometry: SCNGeometry
+		let faceNormals: [SIMD3<Float>]
+		let faceUps: [SIMD3<Float>]
+	}
+
 	private let scnView = SCNView()
 	private let scene = SCNScene()
 	private let cameraNode = SCNNode()
-	private var cubeNodes: [SCNNode] = []
-	private var cubeValues: [Int] = []
+	private var dieNodes: [SCNNode] = []
 	private var currentSideLength: CGFloat = 0
+	private var currentSideCount: Int = 6
+	private var orientationCache: [Int: [Int: SCNVector3]] = [:]
 
 	override init(frame: CGRect) {
 		super.init(frame: frame)
@@ -32,33 +45,46 @@ final class DiceCubeView: UIView {
 		updateCamera()
 	}
 
-	func setDice(values: [Int], centers: [CGPoint], sideLength: CGFloat, animated: Bool) {
+	func setDice(values: [Int], centers: [CGPoint], sideLength: CGFloat, sideCount: Int, animated: Bool) {
 		guard values.count == centers.count else { return }
 		ensureNodeCount(values.count)
 
-		if abs(currentSideLength - sideLength) > 0.5 {
+		let sideChanged = sideCount != currentSideCount
+		let sizeChanged = abs(currentSideLength - sideLength) > 0.5
+		if sideChanged || sizeChanged {
+			currentSideCount = sideCount
 			currentSideLength = sideLength
-			for node in cubeNodes {
-				node.geometry = makeGeometry(sideLength: sideLength)
+			orientationCache.removeValue(forKey: sideCount)
+			for node in dieNodes {
+				let body = node.childNode(withName: "body", recursively: false)
+				body?.geometry = buildGeometry(sideLength: sideLength, sideCount: sideCount).geometry
+				let label = node.childNode(withName: "label", recursively: false)
+				label?.geometry = makeLabelGeometry(sideLength: sideLength)
+				label?.position = SCNVector3(0, 0, Float(sideLength * 0.65))
 			}
 		}
 
+		let showLabel = sideCount != 6
 		for index in values.indices {
-			let node = cubeNodes[index]
+			let container = dieNodes[index]
+			let labelNode = container.childNode(withName: "label", recursively: false)
+			labelNode?.isHidden = !showLabel
+			if showLabel {
+				(labelNode?.geometry as? SCNPlane)?.firstMaterial?.diffuse.contents = valueBadgeImage(values[index], sideLength: sideLength)
+			}
+
 			let targetPosition = scenePosition(for: centers[index])
 			let targetFace = values[index]
-			let startPosition = SCNVector3(node.presentation.position.x, node.presentation.position.y, 0)
+			let startPosition = SCNVector3(container.presentation.position.x, container.presentation.position.y, 0)
 
 			if animated {
-				animateRoll(node: node, from: startPosition, to: targetPosition, faceValue: targetFace, sideLength: sideLength)
+				animateRoll(node: container, from: startPosition, to: targetPosition, faceValue: targetFace, sideLength: sideLength, sideCount: sideCount)
 			} else {
-				node.removeAllActions()
-				node.position = targetPosition
-				node.eulerAngles = orientation(for: targetFace)
+				container.removeAllActions()
+				container.position = targetPosition
+				container.eulerAngles = orientation(for: targetFace, sideCount: sideCount)
 			}
 		}
-
-		cubeValues = values
 	}
 
 	private func configureScene() {
@@ -83,7 +109,7 @@ final class DiceCubeView: UIView {
 		cameraNode.camera = SCNCamera()
 		cameraNode.camera?.usesOrthographicProjection = true
 		cameraNode.camera?.zNear = 1
-		cameraNode.camera?.zFar = 10000
+		cameraNode.camera?.zFar = 10_000
 		cameraNode.position = SCNVector3(0, 0, 800)
 		scene.rootNode.addChildNode(cameraNode)
 
@@ -106,77 +132,218 @@ final class DiceCubeView: UIView {
 	}
 
 	private func ensureNodeCount(_ count: Int) {
-		if cubeNodes.count > count {
-			for node in cubeNodes[count...] {
+		if dieNodes.count > count {
+			for node in dieNodes[count...] {
 				node.removeFromParentNode()
 			}
-			cubeNodes = Array(cubeNodes.prefix(count))
+			dieNodes = Array(dieNodes.prefix(count))
 		}
 
-		while cubeNodes.count < count {
-			let node = SCNNode()
-			node.geometry = makeGeometry(sideLength: max(currentSideLength, 60))
-			scene.rootNode.addChildNode(node)
-			cubeNodes.append(node)
+		while dieNodes.count < count {
+			let container = SCNNode()
+			container.name = "die"
+
+			let body = SCNNode()
+			body.name = "body"
+			body.geometry = buildGeometry(sideLength: max(currentSideLength, 60), sideCount: currentSideCount).geometry
+			container.addChildNode(body)
+
+			let label = SCNNode()
+			label.name = "label"
+			label.geometry = makeLabelGeometry(sideLength: max(currentSideLength, 60))
+			label.position = SCNVector3(0, 0, Float(max(currentSideLength, 60) * 0.65))
+			let bb = SCNBillboardConstraint()
+			bb.freeAxes = .all
+			label.constraints = [bb]
+			container.addChildNode(label)
+
+			scene.rootNode.addChildNode(container)
+			dieNodes.append(container)
 		}
 	}
 
-	private func makeGeometry(sideLength: CGFloat) -> SCNGeometry {
-		let valuesForFaces = [1, 3, 6, 4, 2, 5] // front, right, back, left, top, bottom
-		let materials = valuesForFaces.map { value -> SCNMaterial in
-			let material = SCNMaterial()
-			material.diffuse.contents = zoomedTexture(named: "\(value)", factor: 1.25)
-			material.locksAmbientWithDiffuse = true
-			return material
+	private func meshData(for sideCount: Int) -> MeshData {
+		switch sideCount {
+		case 4:
+			return MeshData(vertices: tetrahedronVertices(), faces: tetrahedronFaces())
+		case 6:
+			return MeshData(vertices: cubeVertices(), faces: cubeFaces())
+		case 8:
+			return MeshData(vertices: octahedronVertices(), faces: octahedronFaces())
+		case 10:
+			let d10 = pentagonalTrapezohedron()
+			return MeshData(vertices: d10.vertices, faces: d10.faces)
+		case 12:
+			let d12 = dodecahedronFromIcosahedronDual()
+			return MeshData(vertices: d12.vertices, faces: d12.faces)
+		case 20:
+			let d20 = icosahedron()
+			return MeshData(vertices: d20.vertices, faces: d20.faces)
+		default:
+			return MeshData(vertices: cubeVertices(), faces: cubeFaces())
+		}
+	}
+
+	private func buildGeometry(sideLength: CGFloat, sideCount: Int) -> BuiltMesh {
+		let mesh = meshData(for: sideCount)
+		let maxNorm = mesh.vertices.map { simd_length($0) }.max() ?? 1
+		let scale = Float(sideLength * 0.5) / maxNorm
+		let scaledVerts = mesh.vertices.map { $0 * scale }
+
+		var finalVertices: [SCNVector3] = []
+		var finalUVs: [CGPoint] = []
+		var elements: [SCNGeometryElement] = []
+		var materials: [SCNMaterial] = []
+		var faceNormals: [SIMD3<Float>] = []
+		var faceUps: [SIMD3<Float>] = []
+
+		for (faceIndex, face) in mesh.faces.enumerated() {
+			guard face.count >= 3 else { continue }
+
+			let points = face.map { scaledVerts[$0] }
+			let center = points.reduce(SIMD3<Float>(repeating: 0), +) / Float(points.count)
+			let n = simd_normalize(simd_cross(points[1] - points[0], points[2] - points[0]))
+			let up = simd_normalize(points[1] - points[0])
+			faceNormals.append(n)
+			faceUps.append(up)
+
+			let u = up
+			let v = simd_normalize(simd_cross(n, u))
+			var maxProj: Float = 0.001
+			for p in points {
+				let d = p - center
+				maxProj = max(maxProj, abs(simd_dot(d, u)), abs(simd_dot(d, v)))
+			}
+
+			var faceTriIndices: [Int32] = []
+			for i in 1..<(face.count - 1) {
+				let tri = [points[0], points[i], points[i + 1]]
+				let base = Int32(finalVertices.count)
+				for p in tri {
+					let d = p - center
+					let px = simd_dot(d, u) / maxProj
+					let py = simd_dot(d, v) / maxProj
+					finalVertices.append(SCNVector3(p.x, p.y, p.z))
+					finalUVs.append(CGPoint(x: 0.5 + CGFloat(px) * 0.45, y: 0.5 + CGFloat(py) * 0.45))
+				}
+				faceTriIndices += [base, base + 1, base + 2]
+			}
+
+			elements.append(SCNGeometryElement(indices: faceTriIndices, primitiveType: .triangles))
+			materials.append(faceMaterial(value: faceIndex + 1, sideCount: sideCount))
 		}
 
-		let box = SCNBox(
-			width: sideLength,
-			height: sideLength,
-			length: sideLength,
-			chamferRadius: sideLength * 0.06
-		)
-		box.materials = materials
-		return box
+		let vSource = SCNGeometrySource(vertices: finalVertices)
+		let uvSource = SCNGeometrySource(textureCoordinates: finalUVs)
+		let geometry = SCNGeometry(sources: [vSource, uvSource], elements: elements)
+		geometry.materials = materials
+		return BuiltMesh(geometry: geometry, faceNormals: faceNormals, faceUps: faceUps)
+	}
+
+	private func faceMaterial(value: Int, sideCount: Int) -> SCNMaterial {
+		let material = SCNMaterial()
+		if sideCount == 6 {
+			material.diffuse.contents = zoomedTexture(named: "\(value)", factor: 1.25)
+		} else {
+			material.diffuse.contents = faceValueTexture(value: value, sideCount: sideCount)
+		}
+		material.locksAmbientWithDiffuse = true
+		material.isDoubleSided = false
+		return material
+	}
+
+	private func faceValueTexture(value: Int, sideCount: Int) -> UIImage {
+		let size = CGSize(width: 256, height: 256)
+		let renderer = UIGraphicsImageRenderer(size: size)
+		return renderer.image { ctx in
+			let rect = CGRect(origin: .zero, size: size)
+			ctx.cgContext.setFillColor(UIColor(white: 0.96, alpha: 1).cgColor)
+			ctx.cgContext.fill(rect)
+			ctx.cgContext.setStrokeColor(UIColor(white: 0.70, alpha: 1).cgColor)
+			ctx.cgContext.setLineWidth(8)
+			ctx.cgContext.stroke(rect.insetBy(dx: 6, dy: 6))
+
+			let text = "\(value)" as NSString
+			let attrs: [NSAttributedString.Key: Any] = [
+				.font: UIFont.boldSystemFont(ofSize: 146),
+				.foregroundColor: UIColor.black
+			]
+			let tSize = text.size(withAttributes: attrs)
+			let tRect = CGRect(x: (size.width - tSize.width) / 2, y: (size.height - tSize.height) / 2 - 4, width: tSize.width, height: tSize.height)
+			text.draw(in: tRect, withAttributes: attrs)
+
+			let subtitle = "d\(sideCount)" as NSString
+			let subAttrs: [NSAttributedString.Key: Any] = [
+				.font: UIFont.systemFont(ofSize: 30, weight: .medium),
+				.foregroundColor: UIColor.darkGray
+			]
+			let sSize = subtitle.size(withAttributes: subAttrs)
+			let sRect = CGRect(x: (size.width - sSize.width) / 2, y: size.height * 0.78, width: sSize.width, height: sSize.height)
+			subtitle.draw(in: sRect, withAttributes: subAttrs)
+		}
+	}
+
+	private func makeLabelGeometry(sideLength: CGFloat) -> SCNGeometry {
+		let plane = SCNPlane(width: sideLength * 0.45, height: sideLength * 0.45)
+		let material = SCNMaterial()
+		material.isDoubleSided = true
+		material.diffuse.contents = UIColor.clear
+		material.transparent.contents = UIColor.clear
+		plane.materials = [material]
+		return plane
+	}
+
+	private func valueBadgeImage(_ value: Int, sideLength: CGFloat) -> UIImage {
+		let size = CGSize(width: sideLength * 0.45, height: sideLength * 0.45)
+		let renderer = UIGraphicsImageRenderer(size: size)
+		return renderer.image { ctx in
+			let rect = CGRect(origin: .zero, size: size)
+			ctx.cgContext.setFillColor(UIColor(white: 1.0, alpha: 0.92).cgColor)
+			ctx.cgContext.fillEllipse(in: rect)
+
+			let text = "\(value)" as NSString
+			let attrs: [NSAttributedString.Key: Any] = [
+				.font: UIFont.boldSystemFont(ofSize: size.height * 0.56),
+				.foregroundColor: UIColor.black
+			]
+			let textSize = text.size(withAttributes: attrs)
+			let textRect = CGRect(x: (size.width - textSize.width) / 2, y: (size.height - textSize.height) / 2, width: textSize.width, height: textSize.height)
+			text.draw(in: textRect, withAttributes: attrs)
+		}
 	}
 
 	private func scenePosition(for center: CGPoint) -> SCNVector3 {
-		SCNVector3(
-			center.x - bounds.midX,
-			bounds.midY - center.y,
-			0
-		)
+		SCNVector3(center.x - bounds.midX, bounds.midY - center.y, 0)
 	}
 
-	private func animateRoll(node: SCNNode, from start: SCNVector3, to target: SCNVector3, faceValue: Int, sideLength: CGFloat) {
+	private func animateRoll(node: SCNNode, from start: SCNVector3, to target: SCNVector3, faceValue: Int, sideLength: CGFloat, sideCount: Int) {
 		node.removeAllActions()
-
 		let duration: TimeInterval = 1.6
 		let moveAction = makeBounceMoveAction(start: start, target: target, sideLength: sideLength, duration: duration)
-		let rotateAction = makeRotateAction(node: node, targetFace: faceValue, duration: duration)
-		let settle = SCNAction.run { n in
-			n.position = target
-			n.eulerAngles = self.orientation(for: faceValue)
-		}
-
-		node.runAction(.sequence([.group([moveAction, rotateAction]), settle]))
+		let rotateAction = makeRotateAction(node: node, targetFace: faceValue, sideCount: sideCount, duration: duration)
+		node.runAction(.group([moveAction, rotateAction]))
 	}
 
-	private func makeRotateAction(node: SCNNode, targetFace: Int, duration: TimeInterval) -> SCNAction {
-		let target = orientation(for: targetFace)
+	private func makeRotateAction(node: SCNNode, targetFace: Int, sideCount: Int, duration: TimeInterval) -> SCNAction {
+		let target = orientation(for: targetFace, sideCount: sideCount)
 		let current = node.presentation.eulerAngles
 		let peakTime = duration * 0.16
 		let decayWindow = max(0.001, duration - peakTime)
 		let rampSharpness = 5.0
 		let decaySharpness = 6.0
 
+		func randomTurns(min: Int, max: Int) -> Float {
+			let turns = Float(Int.random(in: min...max))
+			let sign: Float = Bool.random() ? 1 : -1
+			return turns * sign
+		}
+
 		let spinTarget = SCNVector3(
-			target.x + Float.random(in: Float.pi * 4 ... Float.pi * 8),
-			target.y + Float.random(in: Float.pi * 4 ... Float.pi * 8),
-			target.z + Float.random(in: Float.pi * 2 ... Float.pi * 5)
+			target.x + randomTurns(min: 2, max: 4) * Float.pi * 2,
+			target.y + randomTurns(min: 2, max: 4) * Float.pi * 2,
+			target.z + randomTurns(min: 1, max: 3) * Float.pi * 2
 		)
 
-		// Normalize integrated angular velocity so progress reaches exactly 1 at t=duration.
 		let eRamp = exp(-rampSharpness)
 		let rampIntegralAtPeak = peakTime * (1.0 / (1.0 - eRamp) - 1.0 / rampSharpness)
 		let decayIntegralFull = decayWindow * (1.0 - exp(-decaySharpness)) / decaySharpness
@@ -186,13 +353,11 @@ final class DiceCubeView: UIView {
 			let t = TimeInterval(elapsed)
 			let progress: Double
 			if t <= peakTime {
-				// Fast ramp-up of angular velocity.
 				let scaled = t / peakTime
 				let expTerm = exp(-rampSharpness * scaled)
 				let rampIntegral = (t / (1.0 - eRamp)) + (peakTime / rampSharpness) * (expTerm - 1.0) / (1.0 - eRamp)
 				progress = max(0, min(1, omegaMax * rampIntegral))
 			} else {
-				// Exponential decay of angular velocity after peak.
 				let x = t - peakTime
 				let decayIntegral = decayWindow * (1.0 - exp(-decaySharpness * (x / decayWindow))) / decaySharpness
 				progress = max(0, min(1, omegaMax * (rampIntegralAtPeak + decayIntegral)))
@@ -210,13 +375,12 @@ final class DiceCubeView: UIView {
 		guard let source = UIImage(named: name) else { return nil }
 		let size = source.size
 		let renderer = UIGraphicsImageRenderer(size: size)
-		let zoomed = renderer.image { _ in
+		return renderer.image { _ in
 			let w = size.width * factor
 			let h = size.height * factor
 			let rect = CGRect(x: (size.width - w) / 2, y: (size.height - h) / 2, width: w, height: h)
 			source.draw(in: rect)
 		}
-		return zoomed
 	}
 
 	private func makeBounceMoveAction(start: SCNVector3, target: SCNVector3, sideLength: CGFloat, duration: TimeInterval) -> SCNAction {
@@ -230,11 +394,7 @@ final class DiceCubeView: UIView {
 
 		var lastTime: TimeInterval = 0
 		var pos = start
-		var vel = SCNVector3(
-			Float.random(in: -420...420),
-			Float.random(in: -330...330),
-			0
-		)
+		var vel = SCNVector3(Float.random(in: -420...420), Float.random(in: -330...330), 0)
 
 		return SCNAction.customAction(duration: duration) { node, elapsed in
 			let t = TimeInterval(elapsed)
@@ -245,21 +405,11 @@ final class DiceCubeView: UIView {
 			pos.x += vel.x * Float(dt)
 			pos.y += vel.y * Float(dt)
 
-			if pos.x < minX {
-				pos.x = minX
-				vel.x = -vel.x * 0.84
-			} else if pos.x > maxX {
-				pos.x = maxX
-				vel.x = -vel.x * 0.84
-			}
+			if pos.x < minX { pos.x = minX; vel.x = -vel.x * 0.84 }
+			else if pos.x > maxX { pos.x = maxX; vel.x = -vel.x * 0.84 }
 
-			if pos.y < minY {
-				pos.y = minY
-				vel.y = -vel.y * 0.84
-			} else if pos.y > maxY {
-				pos.y = maxY
-				vel.y = -vel.y * 0.84
-			}
+			if pos.y < minY { pos.y = minY; vel.y = -vel.y * 0.84 }
+			else if pos.y > maxY { pos.y = maxY; vel.y = -vel.y * 0.84 }
 
 			let damping = powf(0.988, Float(dt * 60))
 			vel.x *= damping
@@ -267,21 +417,145 @@ final class DiceCubeView: UIView {
 
 			let progress = min(1, Float(t / duration))
 			let blend = powf(progress, 3.0)
-			let x = pos.x * (1 - blend) + target.x * blend
-			let y = pos.y * (1 - blend) + target.y * blend
-			node.position = SCNVector3(x, y, 0)
+			node.position = SCNVector3(pos.x * (1 - blend) + target.x * blend, pos.y * (1 - blend) + target.y * blend, 0)
 		}
 	}
 
-	private func orientation(for value: Int) -> SCNVector3 {
-		switch value {
-		case 1: return SCNVector3(0, 0, 0)
-		case 2: return SCNVector3(Float.pi / 2, 0, 0)
-		case 3: return SCNVector3(0, -Float.pi / 2, 0)
-		case 4: return SCNVector3(0, Float.pi / 2, 0)
-		case 5: return SCNVector3(-Float.pi / 2, 0, 0)
-		case 6: return SCNVector3(0, Float.pi, 0)
-		default: return SCNVector3(0, 0, 0)
+	private func orientation(for value: Int, sideCount: Int) -> SCNVector3 {
+		if let cached = orientationCache[sideCount]?[value] { return cached }
+
+		let mesh = buildGeometry(sideLength: 120, sideCount: sideCount)
+		var map: [Int: SCNVector3] = [:]
+		let targetNormal = SIMD3<Float>(0, 0, 1)
+		let worldUp = SIMD3<Float>(0, 1, 0)
+
+		for i in 0..<mesh.faceNormals.count {
+			let faceValue = i + 1
+			let n = simd_normalize(mesh.faceNormals[i])
+			let up = simd_normalize(mesh.faceUps[i])
+
+			let q1 = simd_quatf(from: n, to: targetNormal)
+			let up1 = simd_act(q1, up)
+			let upProjected = simd_normalize(SIMD3<Float>(up1.x, up1.y, 0))
+			let dotVal = simd_dot(upProjected, worldUp)
+			let clampedDot = max(-1 as Float, min(1 as Float, dotVal))
+			let crossZ = upProjected.x * worldUp.y - upProjected.y * worldUp.x
+			let angle = atan2(crossZ, clampedDot)
+			let q2 = simd_quatf(angle: angle, axis: targetNormal)
+			let q = simd_normalize(q2 * q1)
+
+			let tmp = SCNNode()
+			tmp.simdOrientation = q
+			map[faceValue] = tmp.eulerAngles
 		}
+
+		orientationCache[sideCount] = map
+		return map[value] ?? SCNVector3(0, 0, 0)
+	}
+
+	// MARK: - Polyhedra
+	private func cubeVertices() -> [SIMD3<Float>] {
+		[
+			SIMD3(-1, -1, -1), SIMD3(1, -1, -1), SIMD3(1, 1, -1), SIMD3(-1, 1, -1),
+			SIMD3(-1, -1, 1), SIMD3(1, -1, 1), SIMD3(1, 1, 1), SIMD3(-1, 1, 1)
+		]
+	}
+
+	private func cubeFaces() -> [[Int]] {
+		// front, right, back, left, top, bottom
+		[[4, 5, 6, 7], [5, 1, 2, 6], [1, 0, 3, 2], [0, 4, 7, 3], [7, 6, 2, 3], [0, 1, 5, 4]]
+	}
+
+	private func tetrahedronVertices() -> [SIMD3<Float>] {
+		[SIMD3(1, 1, 1), SIMD3(-1, -1, 1), SIMD3(-1, 1, -1), SIMD3(1, -1, -1)]
+	}
+
+	private func tetrahedronFaces() -> [[Int]] {
+		[[0, 1, 2], [0, 3, 1], [0, 2, 3], [1, 3, 2]]
+	}
+
+	private func octahedronVertices() -> [SIMD3<Float>] {
+		[
+			SIMD3(1, 0, 0), SIMD3(-1, 0, 0),
+			SIMD3(0, 1, 0), SIMD3(0, -1, 0),
+			SIMD3(0, 0, 1), SIMD3(0, 0, -1)
+		]
+	}
+
+	private func octahedronFaces() -> [[Int]] {
+		[[0, 2, 4], [4, 2, 1], [1, 2, 5], [5, 2, 0], [4, 3, 0], [1, 3, 4], [5, 3, 1], [0, 3, 5]]
+	}
+
+	private func icosahedron() -> (vertices: [SIMD3<Float>], faces: [[Int]]) {
+		let t = Float((1.0 + sqrt(5.0)) / 2.0)
+		let verts: [SIMD3<Float>] = [
+			SIMD3(-1, t, 0), SIMD3(1, t, 0), SIMD3(-1, -t, 0), SIMD3(1, -t, 0),
+			SIMD3(0, -1, t), SIMD3(0, 1, t), SIMD3(0, -1, -t), SIMD3(0, 1, -t),
+			SIMD3(t, 0, -1), SIMD3(t, 0, 1), SIMD3(-t, 0, -1), SIMD3(-t, 0, 1)
+		]
+		let faces = [
+			[0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11],
+			[1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8],
+			[3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9],
+			[4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1]
+		]
+		return (verts, faces)
+	}
+
+	private func dodecahedronFromIcosahedronDual() -> (vertices: [SIMD3<Float>], faces: [[Int]]) {
+		let ico = icosahedron()
+		let iv = ico.vertices
+		let ifaces = ico.faces
+
+		var centroids: [SIMD3<Float>] = []
+		for f in ifaces {
+			let c = (iv[f[0]] + iv[f[1]] + iv[f[2]]) / 3
+			centroids.append(simd_normalize(c))
+		}
+
+		var faces: [[Int]] = []
+		for vi in iv.indices {
+			let v = simd_normalize(iv[vi])
+			let axis = abs(v.y) < 0.9 ? SIMD3<Float>(0, 1, 0) : SIMD3<Float>(1, 0, 0)
+			let u = simd_normalize(simd_cross(v, axis))
+			let w = simd_normalize(simd_cross(v, u))
+
+			var around: [(Int, Float)] = []
+			for fi in ifaces.indices where ifaces[fi].contains(vi) {
+				let c = simd_normalize(centroids[fi])
+				around.append((fi, atan2(simd_dot(c, w), simd_dot(c, u))))
+			}
+			around.sort { $0.1 < $1.1 }
+			faces.append(around.map { $0.0 })
+		}
+
+		return (centroids, faces)
+	}
+
+	private func pentagonalTrapezohedron() -> (vertices: [SIMD3<Float>], faces: [[Int]]) {
+		let r: Float = 1.0
+		let k: Float = 0.42
+		let h: Float = 1.35
+
+		var vertices: [SIMD3<Float>] = [SIMD3(0, h, 0), SIMD3(0, -h, 0)]
+		for i in 0..<5 {
+			let a = Float(i) * 2 * .pi / 5
+			vertices.append(SIMD3(r * cos(a), k, r * sin(a)))
+		}
+		for i in 0..<5 {
+			let a = (Float(i) + 0.5) * 2 * .pi / 5
+			vertices.append(SIMD3(r * cos(a), -k, r * sin(a)))
+		}
+
+		var faces: [[Int]] = []
+		for i in 0..<5 {
+			let u0 = 2 + i
+			let u1 = 2 + ((i + 1) % 5)
+			let l0 = 7 + i
+			let l1 = 7 + ((i + 1) % 5)
+			faces.append([0, u0, l0, u1])
+			faces.append([1, l0, u1, l1])
+		}
+		return (vertices, faces)
 	}
 }

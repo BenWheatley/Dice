@@ -124,6 +124,7 @@ private final class DiceRollSession {
 }
 
 class DiceCollectionViewController: UICollectionViewController, UITextFieldDelegate {
+	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 	private var configuration = RollConfiguration(diceCount: 6, sideCount: 6, intuitive: false)
 	private var diceValues = Array(repeating: 1, count: 6)
 	private let rollSession = DiceRollSession()
@@ -176,8 +177,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			self.updateTotalsText(outcome: outcome)
 			collectionView?.reloadItems(at: [indexPath])
 			collectionView?.layoutIfNeeded()
-			self.updateDiceBoard(animated: self.configuration.sideCount == 6)
-		}
+				self.updateDiceBoard(animated: self.boardSupportedSides.contains(self.configuration.sideCount))
+			}
 		return cell
 	}
 
@@ -312,11 +313,11 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		collectionView.collectionViewLayout.invalidateLayout()
 		collectionView.reloadData()
 		collectionView.layoutIfNeeded()
-		updateDiceBoard(animated: configuration.sideCount == 6)
+		updateDiceBoard(animated: boardSupportedSides.contains(configuration.sideCount))
 	}
 
 	private func updateDiceBoard(animated: Bool) {
-		guard configuration.sideCount == 6 else {
+		guard boardSupportedSides.contains(configuration.sideCount) else {
 			diceBoardView.isHidden = true
 			return
 		}
@@ -347,7 +348,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			values.append(diceValues[row])
 		}
 
-		diceBoardView.setDice(values: values, centers: centers, sideLength: sideLength, animated: animated)
+		diceBoardView.setDice(values: values, centers: centers, sideLength: sideLength, sideCount: configuration.sideCount, animated: animated)
 	}
 
 	private func parseRollConfiguration(from text: String) -> RollConfiguration? {
@@ -501,6 +502,7 @@ extension DiceCollectionViewController: UICollectionViewDelegateFlowLayout {
 }
 
 class DiceCollectionViewCell: UICollectionViewCell {
+	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 	var onRequestReroll: (() -> Void)?
 
 	@IBOutlet weak var diceButton: UIButton!
@@ -515,7 +517,7 @@ class DiceCollectionViewCell: UICollectionViewCell {
 	}
 
 	private func setFaceValue(_ value: Int, sideCount: Int) {
-		if sideCount == 6, (1...6).contains(value) {
+		if boardSupportedSides.contains(sideCount) {
 			diceButton.setTitle(nil, for: .normal)
 			diceButton.setImage(nil, for: .normal)
 			diceButton.layer.borderWidth = 0
