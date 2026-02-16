@@ -75,7 +75,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 ## 8. Documentation and Developer Experience
 
 - [x] Write architecture overview with module boundaries, data flow, and mode algorithm notes.
-- [ ] Add inline code comments for non-obvious logic in dice algorithms and SceneKit geometry generation.
+- [x] Add inline code comments for non-obvious logic in dice algorithms and SceneKit geometry generation.
 - [ ] Document testing strategy (TDD rules, test pyramid, required checks before commit).
 - [ ] Document release process (versioning, signing, TestFlight/internal distribution steps).
 - [ ] Create onboarding guide with local setup, build commands, and troubleshooting.

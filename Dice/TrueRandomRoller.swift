@@ -8,6 +8,7 @@
 import Foundation
 
 struct TrueRandomRoller {
+	// Injectable source keeps tests deterministic while production stays unbiased.
 	let randomInt: (ClosedRange<Int>) -> Int
 
 	init(randomInt: @escaping (ClosedRange<Int>) -> Int = { Int.random(in: $0) }) {
@@ -18,4 +19,3 @@ struct TrueRandomRoller {
 		randomInt(1...sideCount)
 	}
 }
-

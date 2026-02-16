@@ -28,6 +28,7 @@ struct IntuitiveRoller {
 	}
 
 	func roll(context: IntuitiveRollContext, intuitive: Bool) -> Int {
+		// Intuitive mode only applies once we have roll history; otherwise preserve baseline randomness.
 		if context.totalRolls == 0 || !intuitive {
 			return fallbackRoller.roll(sideCount: context.sideCount)
 		}
@@ -44,8 +45,10 @@ struct IntuitiveRoller {
 		for index in 0..<context.sideCount {
 			let count = context.persistentTotals[index]
 			let observedProbability = Double(count) / Double(localTotalRolls)
+			// Invert observed frequency so overrepresented faces lose weight over time.
 			var intuitiveProbability = 1.0 - observedProbability
 			if count - leastRolled >= context.numDiceBeingRolled {
+				// If a face is already ahead by at least one full roll, temporarily suppress it.
 				intuitiveProbability = 0
 			}
 			rollBoundaries[index] = intuitiveProbability
@@ -62,6 +65,7 @@ struct IntuitiveRoller {
 
 		var sample = randomDouble()
 		var index = 0
+		// Convert normalized weights into a cumulative boundary walk.
 		while index < context.sideCount - 1 && sample >= rollBoundaries[index] {
 			sample -= rollBoundaries[index]
 			index += 1

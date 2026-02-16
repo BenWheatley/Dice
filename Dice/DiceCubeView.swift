@@ -255,6 +255,7 @@ final class DiceCubeView: UIView {
 			var points = workingFace.map { scaledVerts[$0] }
 			let center = points.reduce(SIMD3<Float>(repeating: 0), +) / Float(points.count)
 			var n = simd_normalize(simd_cross(points[1] - points[0], points[2] - points[0]))
+			// Force outward normals so face orientation and texturing remain consistent.
 			if simd_dot(n, center) < 0 {
 				workingFace = Array(workingFace.reversed())
 				points = workingFace.map { scaledVerts[$0] }
@@ -280,6 +281,7 @@ final class DiceCubeView: UIView {
 					let d = p - center
 					let px = simd_dot(d, u) / maxProj
 					let py = simd_dot(d, v) / maxProj
+					// Project each face to a local 2D plane for stable UV placement.
 					finalVertices.append(SCNVector3(p.x, p.y, p.z))
 					finalUVs.append(CGPoint(
 						x: 0.5 + CGFloat(py) * 0.45,
@@ -513,6 +515,7 @@ final class DiceCubeView: UIView {
 			let n = simd_normalize(mesh.faceNormals[i])
 			let up = simd_normalize(mesh.faceUps[i])
 
+			// First rotate the selected face toward camera.
 			let q1 = simd_quatf(from: n, to: targetNormal)
 			let up1 = simd_act(q1, up)
 			let upProjected = simd_normalize(SIMD3<Float>(up1.x, up1.y, 0))
@@ -520,6 +523,7 @@ final class DiceCubeView: UIView {
 			let clampedDot = max(-1 as Float, min(1 as Float, dotVal))
 			let crossZ = upProjected.x * worldUp.y - upProjected.y * worldUp.x
 			let angle = atan2(crossZ, clampedDot)
+			// Then spin around camera axis so face numbering remains upright.
 			let q2 = simd_quatf(angle: angle, axis: targetNormal)
 			let q = simd_normalize(q2 * q1)
 
