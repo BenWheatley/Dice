@@ -78,7 +78,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Add inline code comments for non-obvious logic in dice algorithms and SceneKit geometry generation.
 - [x] Document testing strategy (TDD rules, test pyramid, required checks before commit).
 - [x] Document release process (versioning, signing, TestFlight/internal distribution steps).
-- [ ] Create onboarding guide with local setup, build commands, and troubleshooting.
+- [x] Create onboarding guide with local setup, build commands, and troubleshooting.
 
 ## 9. Release Hardening
 
