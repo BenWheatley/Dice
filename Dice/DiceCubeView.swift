@@ -284,7 +284,7 @@ final class DiceCubeView: UIView {
 					// Project each face to a local 2D plane for stable UV placement.
 					finalVertices.append(SCNVector3(p.x, p.y, p.z))
 					finalUVs.append(CGPoint(
-						x: 0.5 + CGFloat(py) * 0.45,
+						x: 0.5 - CGFloat(py) * 0.45,
 						y: 0.5 - CGFloat(px) * 0.45
 					))
 				}
