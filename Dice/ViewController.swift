@@ -23,6 +23,7 @@ private final class DiceRollSession {
 	private var sortedTotals: [Int] = []
 	private var totalRolls = 0
 	private var wasIntuitive = false
+	private let trueRandomRoller = TrueRandomRoller()
 
 	func roll(_ configuration: RollConfiguration) -> RollOutcome {
 		if configuration.intuitive != wasIntuitive {
@@ -72,12 +73,12 @@ private final class DiceRollSession {
 
 	private func getDiceRoll(sideCount: Int, numDiceBeingRolled: Int, intuitive: Bool) -> Int {
 		if totalRolls == 0 || !intuitive {
-			return Int.random(in: 1...sideCount)
+			return trueRandomRoller.roll(sideCount: sideCount)
 		}
 
 		let localTotalRolls = persistentTotals.prefix(sideCount).reduce(0, +)
 		if localTotalRolls == 0 {
-			return Int.random(in: 1...sideCount)
+			return trueRandomRoller.roll(sideCount: sideCount)
 		}
 
 		let leastRolled = sortedTotals.count >= sideCount ? sortedTotals[sideCount - 1] : 0
@@ -96,7 +97,7 @@ private final class DiceRollSession {
 		}
 
 		if scaleFactor <= 0 {
-			return Int.random(in: 1...sideCount)
+			return trueRandomRoller.roll(sideCount: sideCount)
 		}
 
 		for index in 0..<sideCount {
