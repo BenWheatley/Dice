@@ -13,6 +13,7 @@ private let reuseIdentifier = "DiceCell"
 class DiceCollectionViewController: UICollectionViewController, UITextFieldDelegate {
 	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 	private let notationParser = DiceNotationParser()
+	private let preferencesStore = DicePreferencesStore()
 	private let appState = DiceAppState()
 	private let rollSession = DiceRollSession()
 
@@ -26,6 +27,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
+		restorePreferences()
 
 		collectionView.backgroundColor = UIColor(patternImage: UIImage(named: "stripes")!)
 		collectionView.keyboardDismissMode = .onDrag
@@ -190,6 +192,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		}
 		appState.configuration = parsed
 		notationField.resignFirstResponder()
+		preferencesStore.addRecentPreset(parsed.notation)
+		persistPreferences()
 		performRoll()
 	}
 
@@ -243,12 +247,16 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let normalActions = (1...10).map { count in
 			UIAction(title: "\(count)d6", image: presetIcon(diceCount: count, intuitive: false)) { _ in
 				self.appState.configuration = RollConfiguration(diceCount: count, sideCount: 6, intuitive: false)
+				self.preferencesStore.addRecentPreset(self.appState.configuration.notation)
+				self.persistPreferences()
 				self.performRoll()
 			}
 		}
 		let intuitiveActions = (1...10).map { count in
 			UIAction(title: "\(count)d6i", image: presetIcon(diceCount: count, intuitive: true)) { _ in
 				self.appState.configuration = RollConfiguration(diceCount: count, sideCount: 6, intuitive: true)
+				self.preferencesStore.addRecentPreset(self.appState.configuration.notation)
+				self.persistPreferences()
 				self.performRoll()
 			}
 		}
@@ -340,6 +348,21 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			return top.map { "\($0.offset + 1)s:\($0.element)" }.joined(separator: " ")
 		}
 		return totals.enumerated().map { "\($0.offset + 1)s:\($0.element)" }.joined(separator: " ")
+	}
+
+	private func restorePreferences() {
+		let preferences = preferencesStore.load()
+		if let parsed = notationParser.parse(preferences.lastNotation) {
+			appState.configuration = parsed
+		}
+	}
+
+	private func persistPreferences() {
+		let preferences = DiceUserPreferences(
+			lastNotation: appState.configuration.notation,
+			recentPresets: preferencesStore.load().recentPresets
+		)
+		preferencesStore.save(preferences)
 	}
 }
 
