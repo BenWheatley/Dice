@@ -1,6 +1,7 @@
 # Dice App Development Plan
 
 This plan targets completion for iOS/iPadOS 18+, watchOS 10.2+, and macOS 15.7+, with both true-random and intuitive roll modes.
+Confirmed decisions: macOS delivery via Mac Catalyst, multi-window enabled with independent dice state per window, intuitive mode behavior uses existing implementation, notation cap is 30d100.
 Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 ## 1. Project Foundation
@@ -50,8 +51,9 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 ## 6. macOS Experience
 
-- [ ] Define macOS app strategy (Mac Catalyst vs native AppKit/SwiftUI shell) and document decision.
+- [x] Define macOS app strategy (Mac Catalyst) and document decision.
 - [ ] Create macOS target scaffolding and integrate shared domain module.
+- [ ] Enable multiple Catalyst windows/scenes with isolated dice state per window.
 - [ ] Implement macOS primary UI flows (roll, reroll, notation input, presets, stats, mode toggle).
 - [ ] Add keyboard shortcuts and pointer interactions for macOS ergonomics.
 - [ ] Add macOS unit/UI tests for core behavior parity with iOS.
@@ -82,9 +84,8 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 ## 10. Product Questions (Resolve Before/While Implementing)
 
-- [ ] Confirm exact definition of "intuitive" mode behavior and acceptable bias boundaries.
-- [ ] Confirm maximum supported dice notation ranges (max dice count, max sides).
+- [x] Confirm exact definition of "intuitive" mode behavior and acceptable bias boundaries (use existing implementation).
+- [x] Confirm maximum supported dice notation ranges (max 30 dice, max 100 sides).
 - [ ] Confirm whether roll history/export is required for v1.
 - [ ] Confirm whether cloud sync/shared settings across iPhone, iPad, Mac, and Watch is required.
 - [ ] Confirm visual/design direction and whether to preserve current art assets in v1.
-
