@@ -200,9 +200,15 @@ final class DiceCubeView: UIView {
 		for (faceIndex, face) in mesh.faces.enumerated() {
 			guard face.count >= 3 else { continue }
 
-			let points = face.map { scaledVerts[$0] }
+			var workingFace = face
+			var points = workingFace.map { scaledVerts[$0] }
 			let center = points.reduce(SIMD3<Float>(repeating: 0), +) / Float(points.count)
-			let n = simd_normalize(simd_cross(points[1] - points[0], points[2] - points[0]))
+			var n = simd_normalize(simd_cross(points[1] - points[0], points[2] - points[0]))
+			if simd_dot(n, center) < 0 {
+				workingFace = Array(workingFace.reversed())
+				points = workingFace.map { scaledVerts[$0] }
+				n = simd_normalize(simd_cross(points[1] - points[0], points[2] - points[0]))
+			}
 			let up = simd_normalize(points[1] - points[0])
 			faceNormals.append(n)
 			faceUps.append(up)
@@ -224,7 +230,10 @@ final class DiceCubeView: UIView {
 					let px = simd_dot(d, u) / maxProj
 					let py = simd_dot(d, v) / maxProj
 					finalVertices.append(SCNVector3(p.x, p.y, p.z))
-					finalUVs.append(CGPoint(x: 0.5 + CGFloat(px) * 0.45, y: 0.5 + CGFloat(py) * 0.45))
+					finalUVs.append(CGPoint(
+						x: 0.5 + CGFloat(py) * 0.45,
+						y: 0.5 - CGFloat(px) * 0.45
+					))
 				}
 				faceTriIndices += [base, base + 1, base + 2]
 			}
@@ -265,7 +274,7 @@ final class DiceCubeView: UIView {
 
 			let text = "\(value)" as NSString
 			let attrs: [NSAttributedString.Key: Any] = [
-				.font: UIFont.boldSystemFont(ofSize: 146),
+				.font: UIFont.boldSystemFont(ofSize: 73),
 				.foregroundColor: UIColor.black
 			]
 			let tSize = text.size(withAttributes: attrs)
@@ -274,7 +283,7 @@ final class DiceCubeView: UIView {
 
 			let subtitle = "d\(sideCount)" as NSString
 			let subAttrs: [NSAttributedString.Key: Any] = [
-				.font: UIFont.systemFont(ofSize: 30, weight: .medium),
+				.font: UIFont.systemFont(ofSize: 15, weight: .medium),
 				.foregroundColor: UIColor.darkGray
 			]
 			let sSize = subtitle.size(withAttributes: subAttrs)
@@ -553,8 +562,8 @@ final class DiceCubeView: UIView {
 			let u1 = 2 + ((i + 1) % 5)
 			let l0 = 7 + i
 			let l1 = 7 + ((i + 1) % 5)
-			faces.append([0, u0, l0, u1])
-			faces.append([1, l0, u1, l1])
+			faces.append([0, u0, u1, l0])
+			faces.append([1, l0, l1, u1])
 		}
 		return (vertices, faces)
 	}
