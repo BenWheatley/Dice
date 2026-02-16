@@ -94,4 +94,4 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Confirm maximum supported dice notation ranges (max 30 dice, max 100 sides).
 - [x] Confirm whether roll history/export is required for v1 (include in v1).
 - [x] Confirm whether cloud sync/shared settings across iPhone, iPad, Mac, and Watch is required (deferred from v1 to avoid Apple Developer Team dependency).
-- [ ] Confirm visual/design direction and whether to preserve current art assets in v1.
+- [x] Confirm visual/design direction and whether to preserve current art assets in v1 (preserve current assets for now).
