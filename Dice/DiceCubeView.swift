@@ -246,6 +246,24 @@ final class DiceCubeView: UIView {
 		let view = DiceCubeView(frame: .zero)
 		return view.tetrahedronFaces().map { view.d4VertexLabels(forFace: $0) }
 	}
+
+	static func debugD4TopVertex(for value: Int) -> Int {
+		let view = DiceCubeView(frame: .zero)
+		let orientation = view.orientation(for: value, sideCount: 4)
+		let node = SCNNode()
+		node.eulerAngles = orientation
+		let vertices = view.tetrahedronVertices()
+		var bestIndex = 0
+		var bestY = -Float.greatestFiniteMagnitude
+		for (index, vertex) in vertices.enumerated() {
+			let transformed = node.simdConvertPosition(vertex, to: nil)
+			if transformed.y > bestY {
+				bestY = transformed.y
+				bestIndex = index
+			}
+		}
+		return bestIndex + 1
+	}
 #endif
 
 	private func buildGeometry(sideLength: CGFloat, sideCount: Int) -> BuiltMesh {
@@ -290,7 +308,20 @@ final class DiceCubeView: UIView {
 			for i in 1..<(face.count - 1) {
 				let tri = [points[0], points[i], points[i + 1]]
 				let base = Int32(finalVertices.count)
-				for p in tri {
+				for (vertexIndex, p) in tri.enumerated() {
+					// D4 labels represent vertex values; map texture coordinates directly to
+					// triangle corners so each face corner can carry one vertex number.
+					if sideCount == 4 {
+						let d4UVs = [
+							CGPoint(x: 0.5, y: 0.10),
+							CGPoint(x: 0.14, y: 0.86),
+							CGPoint(x: 0.86, y: 0.86),
+						]
+						finalVertices.append(SCNVector3(p.x, p.y, p.z))
+						finalUVs.append(d4UVs[vertexIndex])
+						continue
+					}
+
 					let d = p - center
 					let px = simd_dot(d, u) / maxProj
 					let py = simd_dot(d, v) / maxProj
@@ -349,20 +380,13 @@ final class DiceCubeView: UIView {
 		let size = CGSize(width: 256, height: 256)
 		let renderer = UIGraphicsImageRenderer(size: size)
 		return renderer.image { ctx in
-			let rect = CGRect(origin: .zero, size: size)
-			ctx.cgContext.setFillColor(UIColor(white: 0.96, alpha: 1).cgColor)
-			ctx.cgContext.fill(rect)
-			ctx.cgContext.setStrokeColor(UIColor(white: 0.70, alpha: 1).cgColor)
-			ctx.cgContext.setLineWidth(8)
-			ctx.cgContext.stroke(rect.insetBy(dx: 6, dy: 6))
-
 			let points = [
-				CGPoint(x: size.width * 0.5, y: size.height * 0.2),
-				CGPoint(x: size.width * 0.23, y: size.height * 0.72),
-				CGPoint(x: size.width * 0.77, y: size.height * 0.72),
+				CGPoint(x: size.width * 0.50, y: size.height * 0.22),
+				CGPoint(x: size.width * 0.23, y: size.height * 0.73),
+				CGPoint(x: size.width * 0.77, y: size.height * 0.73),
 			]
 			let attrs: [NSAttributedString.Key: Any] = [
-				.font: UIFont.boldSystemFont(ofSize: 52),
+				.font: UIFont.boldSystemFont(ofSize: 54),
 				.foregroundColor: UIColor.black
 			]
 			for (index, point) in points.enumerated() where index < vertexLabels.count {
@@ -564,6 +588,9 @@ final class DiceCubeView: UIView {
 	}
 
 	private func orientation(for value: Int, sideCount: Int) -> SCNVector3 {
+		if sideCount == 4 {
+			return d4Orientation(for: value)
+		}
 		if let cached = orientationCache[sideCount]?[value] { return cached }
 
 		let mesh = builtMesh(sideLength: 120, sideCount: sideCount)
@@ -595,6 +622,42 @@ final class DiceCubeView: UIView {
 
 		orientationCache[sideCount] = map
 		return map[value] ?? SCNVector3(0, 0, 0)
+	}
+
+	private func d4Orientation(for value: Int) -> SCNVector3 {
+		if let cached = orientationCache[4]?[value] {
+			return cached
+		}
+
+		let vertices = tetrahedronVertices()
+		let targetTop = simd_normalize(SIMD3<Float>(0, 1, 0.65))
+		var map: [Int: SCNVector3] = [:]
+
+		for topValue in 1...4 {
+			let topIndex = topValue - 1
+			let topVertex = simd_normalize(vertices[topIndex])
+			let q1 = simd_quatf(from: topVertex, to: targetTop)
+
+			let neighborIndex = (topIndex + 1) % 4
+			let neighborDir = simd_normalize(vertices[neighborIndex] - vertices[topIndex])
+			let rotatedNeighbor = simd_act(q1, neighborDir)
+			let projectedNeighbor = simd_normalize(rotatedNeighbor - simd_dot(rotatedNeighbor, targetTop) * targetTop)
+
+			let worldRight = SIMD3<Float>(1, 0, 0)
+			let projectedRight = simd_normalize(worldRight - simd_dot(worldRight, targetTop) * targetTop)
+			let crossVec = simd_cross(projectedNeighbor, projectedRight)
+			let signed = simd_dot(crossVec, targetTop)
+			let angle = atan2(signed, simd_dot(projectedNeighbor, projectedRight))
+			let q2 = simd_quatf(angle: angle, axis: targetTop)
+
+			let q = simd_normalize(q2 * q1)
+			let node = SCNNode()
+			node.simdOrientation = q
+			map[topValue] = node.eulerAngles
+		}
+
+		orientationCache[4] = map
+		return map[value] ?? SCNVector3Zero
 	}
 
 	// MARK: - Polyhedra
