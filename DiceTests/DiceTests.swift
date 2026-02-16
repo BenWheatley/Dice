@@ -683,4 +683,46 @@ final class DiceTests: XCTestCase {
 		}
 	}
 
+	func testD4LabelLayoutInsetsAndOrientsTowardOppositeEdgeMidpoints() {
+		let size = CGSize(width: 256, height: 256)
+		let layout = DiceCubeView.debugD4LabelLayout(size: size)
+		XCTAssertEqual(layout.triangle.count, 3)
+		XCTAssertEqual(layout.placements.count, 3)
+
+		func normalized(_ point: CGPoint) -> CGPoint {
+			let length = sqrt((point.x * point.x) + (point.y * point.y))
+			guard length > 0.0001 else { return CGPoint(x: 0, y: 0) }
+			return CGPoint(x: point.x / length, y: point.y / length)
+		}
+
+		func wrapAngle(_ angle: CGFloat) -> CGFloat {
+			var wrapped = angle
+			while wrapped > .pi { wrapped -= 2 * .pi }
+			while wrapped < -.pi { wrapped += 2 * .pi }
+			return wrapped
+		}
+
+		for index in 0..<3 {
+			let vertex = layout.triangle[index]
+			let otherA = layout.triangle[(index + 1) % 3]
+			let otherB = layout.triangle[(index + 2) % 3]
+			let oppositeMid = CGPoint(x: (otherA.x + otherB.x) * 0.5, y: (otherA.y + otherB.y) * 0.5)
+			let towardOpposite = CGPoint(x: oppositeMid.x - vertex.x, y: oppositeMid.y - vertex.y)
+			let placement = layout.placements[index]
+			let toLabel = CGPoint(x: placement.position.x - vertex.x, y: placement.position.y - vertex.y)
+
+			// Labels should be inset from each vertex by roughly one-third of the altitude.
+			let insetRatio = sqrt((toLabel.x * toLabel.x) + (toLabel.y * toLabel.y)) / sqrt((towardOpposite.x * towardOpposite.x) + (towardOpposite.y * towardOpposite.y))
+			XCTAssertEqual(insetRatio, 0.34, accuracy: 0.02)
+
+			let expectedDown = normalized(towardOpposite)
+			let renderedDown = CGPoint(x: -sin(placement.angle), y: cos(placement.angle))
+			XCTAssertEqual(renderedDown.x, expectedDown.x, accuracy: 0.02)
+			XCTAssertEqual(renderedDown.y, expectedDown.y, accuracy: 0.02)
+
+			let expectedAngle = atan2(towardOpposite.y, towardOpposite.x) - (.pi / 2)
+			XCTAssertEqual(wrapAngle(placement.angle - expectedAngle), 0, accuracy: 0.02)
+		}
+	}
+
 }

@@ -264,6 +264,13 @@ final class DiceCubeView: UIView {
 		}
 		return bestIndex + 1
 	}
+
+	static func debugD4LabelLayout(size: CGSize) -> (triangle: [CGPoint], placements: [(position: CGPoint, angle: CGFloat)]) {
+		let view = DiceCubeView(frame: .zero)
+		let triangle = view.d4TrianglePoints(size: size)
+		let placements = view.d4LabelPlacements(triangle: triangle)
+		return (triangle: triangle, placements: placements)
+	}
 #endif
 
 	private func buildGeometry(sideLength: CGFloat, sideCount: Int) -> BuiltMesh {
@@ -384,10 +391,11 @@ final class DiceCubeView: UIView {
 			ctx.cgContext.setFillColor(UIColor(white: 0.96, alpha: 1.0).cgColor)
 			ctx.cgContext.fill(rect)
 
+			let trianglePoints = d4TrianglePoints(size: size)
 			let triangle = UIBezierPath()
-			triangle.move(to: CGPoint(x: size.width * 0.50, y: size.height * 0.10))
-			triangle.addLine(to: CGPoint(x: size.width * 0.14, y: size.height * 0.86))
-			triangle.addLine(to: CGPoint(x: size.width * 0.86, y: size.height * 0.86))
+			triangle.move(to: trianglePoints[0])
+			triangle.addLine(to: trianglePoints[1])
+			triangle.addLine(to: trianglePoints[2])
 			triangle.close()
 			UIColor(white: 0.88, alpha: 1.0).setFill()
 			triangle.fill()
@@ -395,26 +403,52 @@ final class DiceCubeView: UIView {
 			triangle.lineWidth = 6
 			triangle.stroke()
 
-			let points = [
-				CGPoint(x: size.width * 0.50, y: size.height * 0.22),
-				CGPoint(x: size.width * 0.23, y: size.height * 0.73),
-				CGPoint(x: size.width * 0.77, y: size.height * 0.73),
-			]
+			let placements = d4LabelPlacements(triangle: trianglePoints)
 			let attrs: [NSAttributedString.Key: Any] = [
 				.font: UIFont.boldSystemFont(ofSize: 54),
 				.foregroundColor: UIColor.black
 			]
-			for (index, point) in points.enumerated() where index < vertexLabels.count {
+			for (index, placement) in placements.enumerated() where index < vertexLabels.count {
 				let text = "\(vertexLabels[index])" as NSString
 				let textSize = text.size(withAttributes: attrs)
 				let textRect = CGRect(
-					x: point.x - textSize.width / 2,
-					y: point.y - textSize.height / 2,
+					x: -textSize.width / 2,
+					y: -textSize.height / 2,
 					width: textSize.width,
 					height: textSize.height
 				)
+				ctx.cgContext.saveGState()
+				ctx.cgContext.translateBy(x: placement.position.x, y: placement.position.y)
+				ctx.cgContext.rotate(by: placement.angle)
 				text.draw(in: textRect, withAttributes: attrs)
+				ctx.cgContext.restoreGState()
 			}
+		}
+	}
+
+	private func d4TrianglePoints(size: CGSize) -> [CGPoint] {
+		[
+			CGPoint(x: size.width * 0.50, y: size.height * 0.10),
+			CGPoint(x: size.width * 0.14, y: size.height * 0.86),
+			CGPoint(x: size.width * 0.86, y: size.height * 0.86),
+		]
+	}
+
+	private func d4LabelPlacements(triangle: [CGPoint]) -> [(position: CGPoint, angle: CGFloat)] {
+		guard triangle.count == 3 else { return [] }
+		let inset: CGFloat = 0.34
+		return (0..<3).map { index in
+			let vertex = triangle[index]
+			let otherA = triangle[(index + 1) % 3]
+			let otherB = triangle[(index + 2) % 3]
+			let oppositeMid = CGPoint(x: (otherA.x + otherB.x) * 0.5, y: (otherA.y + otherB.y) * 0.5)
+			let towardOpposite = CGPoint(x: oppositeMid.x - vertex.x, y: oppositeMid.y - vertex.y)
+			let position = CGPoint(
+				x: vertex.x + towardOpposite.x * inset,
+				y: vertex.y + towardOpposite.y * inset
+			)
+			let angle = atan2(towardOpposite.y, towardOpposite.x) - (.pi / 2)
+			return (position: position, angle: angle)
 		}
 	}
 
