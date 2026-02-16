@@ -485,4 +485,35 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(csv.contains("timestamp,notation,mode,values,sum"))
 	}
 
+	func testViewModelRecentPresetsReflectLatestNotation() {
+		let suiteName = "DiceTests.viewmodel.presets.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		_ = viewModel.rollFromInput("7d8")
+		_ = viewModel.rollFromInput("2d20")
+
+		XCTAssertEqual(viewModel.recentPresets.prefix(2), ["2d20", "7d8"])
+	}
+
+	func testViewModelRollFromInputInvalidNotationReturnsStructuredError() {
+		let suiteName = "DiceTests.viewmodel.invalid.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		let result = viewModel.rollFromInput("200d6")
+		guard case .failure(let error) = result else {
+			return XCTFail("Expected failure for out-of-bounds input")
+		}
+		XCTAssertEqual(error, .outOfBounds(diceBounds: 1...30, sideBounds: 2...100))
+	}
+
 }

@@ -50,6 +50,10 @@ final class DiceViewModel {
 		rollHistory.sessionEntries
 	}
 
+	var recentPresets: [String] {
+		preferencesStore.load().recentPresets
+	}
+
 	func restore() {
 		let preferences = preferencesStore.load()
 		if let parsed = notationParser.parse(preferences.lastNotation) {

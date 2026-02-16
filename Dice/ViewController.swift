@@ -15,6 +15,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let viewModel = DiceViewModel()
 
 	private let notationField = UITextField()
+	private let validationLabel = UILabel()
 	private let totalsLabel = UILabel()
 	private let totalsContainer = UIView()
 	private let resetStatsButton = UIButton(type: .system)
@@ -100,6 +101,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		notationField.delegate = self
 		notationField.accessibilityLabel = "Dice notation input"
 		notationField.accessibilityHint = "Enter notation like 6d6 or 6d6i"
+		notationField.addTarget(self, action: #selector(notationEditingChanged), for: .editingChanged)
+		configureNotationInputAccessory()
 
 		let rollButton = UIButton(type: .system)
 		rollButton.translatesAutoresizingMaskIntoConstraints = false
@@ -131,6 +134,14 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		row.spacing = 8
 		row.alignment = .fill
 
+		validationLabel.translatesAutoresizingMaskIntoConstraints = false
+		validationLabel.font = UIFont.preferredFont(forTextStyle: .footnote)
+		validationLabel.adjustsFontForContentSizeCategory = true
+		validationLabel.textColor = .systemRed
+		validationLabel.numberOfLines = 2
+		validationLabel.isHidden = true
+		validationLabel.accessibilityTraits = .staticText
+
 		totalsContainer.translatesAutoresizingMaskIntoConstraints = false
 		totalsContainer.backgroundColor = UIColor(white: 1.0, alpha: 0.9)
 		totalsContainer.layer.cornerRadius = 10
@@ -156,6 +167,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		totalsContainer.addSubview(resetStatsButton)
 
 		controlsContainer.addSubview(row)
+		controlsContainer.addSubview(validationLabel)
 
 		NSLayoutConstraint.activate([
 			controlsContainer.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
@@ -165,7 +177,10 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			row.topAnchor.constraint(equalTo: controlsContainer.topAnchor, constant: 8),
 			row.leadingAnchor.constraint(equalTo: controlsContainer.leadingAnchor, constant: 8),
 			row.trailingAnchor.constraint(equalTo: controlsContainer.trailingAnchor, constant: -8),
-			row.bottomAnchor.constraint(equalTo: controlsContainer.bottomAnchor, constant: -8),
+			validationLabel.topAnchor.constraint(equalTo: row.bottomAnchor, constant: 6),
+			validationLabel.leadingAnchor.constraint(equalTo: controlsContainer.leadingAnchor, constant: 10),
+			validationLabel.trailingAnchor.constraint(equalTo: controlsContainer.trailingAnchor, constant: -10),
+			validationLabel.bottomAnchor.constraint(equalTo: controlsContainer.bottomAnchor, constant: -8),
 
 			totalsContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
 			totalsContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
@@ -211,14 +226,16 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		switch viewModel.rollFromInput(text) {
 		case let .success(outcome):
 			notationField.resignFirstResponder()
+			clearValidationFeedback()
 			updateNotationField()
+			presetsButton.menu = makePresetMenu()
 			updateTotalsText(outcome: outcome)
 			collectionView.collectionViewLayout.invalidateLayout()
 			collectionView.reloadData()
 			collectionView.layoutIfNeeded()
 			updateDiceBoard(animated: boardSupportedSides.contains(viewModel.configuration.sideCount))
 		case let .failure(error):
-			showInvalidNotationAlert(message: error.userMessage)
+			showValidationError(message: error.userMessage)
 		}
 	}
 
@@ -272,6 +289,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			UIAction(title: "\(count)d6", image: presetIcon(diceCount: count, intuitive: false)) { _ in
 				let outcome = self.viewModel.selectPreset(diceCount: count, intuitive: false)
 				self.updateNotationField()
+				self.clearValidationFeedback()
+				self.presetsButton.menu = self.makePresetMenu()
 				self.updateTotalsText(outcome: outcome)
 				self.collectionView.reloadData()
 				self.collectionView.layoutIfNeeded()
@@ -282,6 +301,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			UIAction(title: "\(count)d6i", image: presetIcon(diceCount: count, intuitive: true)) { _ in
 				let outcome = self.viewModel.selectPreset(diceCount: count, intuitive: true)
 				self.updateNotationField()
+				self.clearValidationFeedback()
+				self.presetsButton.menu = self.makePresetMenu()
 				self.updateTotalsText(outcome: outcome)
 				self.collectionView.reloadData()
 				self.collectionView.layoutIfNeeded()
@@ -289,10 +310,20 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			}
 		}
 
-		return UIMenu(title: "eDice Presets", children: [
-			UIMenu(title: "Normal", options: .displayInline, children: normalActions),
-			UIMenu(title: "Intuitive", options: .displayInline, children: intuitiveActions),
-		])
+		let recentActions = viewModel.recentPresets.prefix(6).map { notation in
+			UIAction(title: notation) { _ in
+				self.notationField.text = notation
+				self.rollFromInput()
+			}
+		}
+		var sections: [UIMenu] = []
+		if !recentActions.isEmpty {
+			sections.append(UIMenu(title: "Recent", options: .displayInline, children: recentActions))
+		}
+		sections.append(UIMenu(title: "Normal", options: .displayInline, children: normalActions))
+		sections.append(UIMenu(title: "Intuitive", options: .displayInline, children: intuitiveActions))
+
+		return UIMenu(title: "eDice Presets", children: sections)
 	}
 
 	private func presetIcon(diceCount: Int, intuitive: Bool) -> UIImage? {
@@ -340,6 +371,10 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		)
 		alert.addAction(UIAlertAction(title: "OK", style: .default))
 		present(alert, animated: true)
+	}
+
+	@objc private func notationEditingChanged() {
+		clearValidationFeedback()
 	}
 
 	@objc private func showHistory() {
@@ -403,6 +438,34 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	private func updateTotalsText(outcome: RollOutcome) {
 		totalsLabel.text = viewModel.formattedTotalsText(outcome: outcome, boardSupportedSides: boardSupportedSides)
+	}
+
+	private func showValidationError(message: String) {
+		validationLabel.text = message
+		validationLabel.isHidden = false
+		notationField.layer.borderColor = UIColor.systemRed.cgColor
+		notationField.layer.borderWidth = 1
+		notationField.layer.cornerRadius = 6
+		UIAccessibility.post(notification: .announcement, argument: "Invalid dice notation. \(message)")
+	}
+
+	private func clearValidationFeedback() {
+		validationLabel.isHidden = true
+		validationLabel.text = nil
+		notationField.layer.borderWidth = 0
+		notationField.layer.cornerRadius = 0
+		notationField.layer.borderColor = UIColor.clear.cgColor
+	}
+
+	private func configureNotationInputAccessory() {
+		let toolbar = UIToolbar()
+		toolbar.sizeToFit()
+		toolbar.items = [
+			UIBarButtonItem(title: "Roll", style: .done, target: self, action: #selector(rollFromInput)),
+			UIBarButtonItem.flexibleSpace(),
+			UIBarButtonItem(barButtonSystemItem: .done, target: notationField, action: #selector(UIResponder.resignFirstResponder)),
+		]
+		notationField.inputAccessoryView = toolbar
 	}
 }
 
