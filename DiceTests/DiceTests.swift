@@ -565,4 +565,27 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(viewModel.statusText(rollCount: 4), "1d6i • 4")
 	}
 
+	func testIndependentViewModelsMaintainIsolatedActiveDiceSets() {
+		let suiteName = "DiceTests.multiwindow.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+
+		let first = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults),
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { _ in 1 }, randomDouble: { 0.5 }))
+		)
+		let second = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults),
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { _ in 2 }, randomDouble: { 0.5 }))
+		)
+
+		_ = first.rollFromInput("2d6")
+		_ = second.rollFromInput("4d6")
+
+		XCTAssertEqual(first.diceValues, [1, 1])
+		XCTAssertEqual(second.diceValues, [2, 2, 2, 2])
+	}
+
 }
