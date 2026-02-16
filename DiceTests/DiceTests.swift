@@ -433,4 +433,56 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(outcome.sessionTotals[0], 3)
 	}
 
+	func testViewModelHistoryEntriesTrackSessionRolls() {
+		let suiteName = "DiceTests.viewmodel.history.entries.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults),
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { _ in 2 }, randomDouble: { 0.5 }))
+		)
+
+		_ = viewModel.rollFromInput("1d6")
+		_ = viewModel.rollCurrent()
+
+		XCTAssertEqual(viewModel.historyEntries.count, 2)
+	}
+
+	func testViewModelClearHistoryRemovesSessionAndPersistedEntries() {
+		let suiteName = "DiceTests.viewmodel.history.clear.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let historyStore = DiceRollHistoryStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: historyStore,
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { _ in 3 }, randomDouble: { 0.5 }))
+		)
+
+		_ = viewModel.rollFromInput("2d6")
+		viewModel.clearHistory()
+
+		XCTAssertTrue(viewModel.historyEntries.isEmpty)
+		XCTAssertTrue(historyStore.loadPersistedEntries().isEmpty)
+	}
+
+	func testViewModelExportHistoryProvidesTextAndCSV() {
+		let suiteName = "DiceTests.viewmodel.history.export.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults),
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { _ in 4 }, randomDouble: { 0.5 }))
+		)
+
+		_ = viewModel.rollFromInput("2d6")
+		let text = viewModel.exportHistory(format: .text)
+		let csv = viewModel.exportHistory(format: .csv)
+
+		XCTAssertTrue(text.contains("2d6"))
+		XCTAssertTrue(csv.contains("timestamp,notation,mode,values,sum"))
+	}
+
 }

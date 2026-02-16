@@ -13,6 +13,7 @@ final class DiceViewModel {
 	private let historyStore: DiceRollHistoryStore
 	private let telemetry: DiceTelemetry
 	private let rollSession: DiceRollSession
+	private let historyExporter: RollHistoryExporter
 
 	private(set) var appState: DiceAppState
 	private var rollHistory: DiceRollHistory
@@ -23,6 +24,7 @@ final class DiceViewModel {
 		historyStore: DiceRollHistoryStore = DiceRollHistoryStore(),
 		telemetry: DiceTelemetry = DiceTelemetry(),
 		rollSession: DiceRollSession = DiceRollSession(),
+		historyExporter: RollHistoryExporter = RollHistoryExporter(),
 		appState: DiceAppState = DiceAppState(),
 		rollHistory: DiceRollHistory = DiceRollHistory()
 	) {
@@ -31,6 +33,7 @@ final class DiceViewModel {
 		self.historyStore = historyStore
 		self.telemetry = telemetry
 		self.rollSession = rollSession
+		self.historyExporter = historyExporter
 		self.appState = appState
 		self.rollHistory = rollHistory
 	}
@@ -41,6 +44,10 @@ final class DiceViewModel {
 
 	var diceValues: [Int] {
 		appState.diceValues
+	}
+
+	var historyEntries: [RollHistoryEntry] {
+		rollHistory.sessionEntries
 	}
 
 	func restore() {
@@ -96,6 +103,16 @@ final class DiceViewModel {
 		rollSession.reset()
 		appState.stats = .empty
 		telemetry.logStatsReset()
+	}
+
+	func clearHistory() {
+		rollHistory.clearSession()
+		rollHistory.clearPersistedRecent()
+		historyStore.savePersistedEntries([])
+	}
+
+	func exportHistory(format: RollHistoryExportFormat) -> String {
+		historyExporter.export(rollHistory.sessionEntries, format: format)
 	}
 
 	func formattedTotalsText(outcome: RollOutcome, boardSupportedSides: Set<Int>) -> String {

@@ -19,6 +19,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let totalsContainer = UIView()
 	private let resetStatsButton = UIButton(type: .system)
 	private let presetsButton = UIButton(type: .system)
+	private let historyButton = UIButton(type: .system)
 	private let diceBoardView = DiceCubeView()
 	private var controlsContainer: UIView?
 
@@ -97,18 +98,28 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		notationField.clearButtonMode = .whileEditing
 		notationField.borderStyle = .roundedRect
 		notationField.delegate = self
+		notationField.accessibilityLabel = "Dice notation input"
+		notationField.accessibilityHint = "Enter notation like 6d6 or 6d6i"
 
 		let rollButton = UIButton(type: .system)
 		rollButton.translatesAutoresizingMaskIntoConstraints = false
 		rollButton.setTitle("Roll", for: .normal)
 		rollButton.addTarget(self, action: #selector(rollFromInput), for: .touchUpInside)
+		rollButton.accessibilityLabel = "Roll dice"
 
 		presetsButton.translatesAutoresizingMaskIntoConstraints = false
 		presetsButton.setTitle("Presets", for: .normal)
 		presetsButton.showsMenuAsPrimaryAction = true
 		presetsButton.menu = makePresetMenu()
+		presetsButton.accessibilityLabel = "Dice presets"
 
-		let row = UIStackView(arrangedSubviews: [notationField, rollButton, presetsButton])
+		historyButton.translatesAutoresizingMaskIntoConstraints = false
+		historyButton.setTitle("History", for: .normal)
+		historyButton.addTarget(self, action: #selector(showHistory), for: .touchUpInside)
+		historyButton.accessibilityLabel = "Roll history"
+		historyButton.accessibilityHint = "Open session history and export options"
+
+		let row = UIStackView(arrangedSubviews: [notationField, rollButton, presetsButton, historyButton])
 		row.translatesAutoresizingMaskIntoConstraints = false
 		row.axis = .horizontal
 		row.spacing = 8
@@ -130,6 +141,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		resetStatsButton.translatesAutoresizingMaskIntoConstraints = false
 		resetStatsButton.setTitle("Reset", for: .normal)
 		resetStatsButton.addTarget(self, action: #selector(resetStats), for: .touchUpInside)
+		resetStatsButton.accessibilityLabel = "Reset statistics"
 
 		totalsContainer.addSubview(totalsLabel)
 		totalsContainer.addSubview(resetStatsButton)
@@ -162,6 +174,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 			rollButton.widthAnchor.constraint(equalToConstant: 52),
 			presetsButton.widthAnchor.constraint(equalToConstant: 72),
+			historyButton.widthAnchor.constraint(equalToConstant: 72),
 		])
 	}
 
@@ -318,6 +331,60 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		)
 		alert.addAction(UIAlertAction(title: "OK", style: .default))
 		present(alert, animated: true)
+	}
+
+	@objc private func showHistory() {
+		let entries = viewModel.historyEntries
+		let alert = UIAlertController(
+			title: "Roll History",
+			message: formattedHistoryMessage(entries),
+			preferredStyle: .actionSheet
+		)
+		alert.addAction(UIAlertAction(title: "Export Text", style: .default) { _ in
+			self.presentExportSheet(content: self.viewModel.exportHistory(format: .text), filename: "dice-history.txt")
+		})
+		alert.addAction(UIAlertAction(title: "Export CSV", style: .default) { _ in
+			self.presentExportSheet(content: self.viewModel.exportHistory(format: .csv), filename: "dice-history.csv")
+		})
+		alert.addAction(UIAlertAction(title: "Clear History", style: .destructive) { _ in
+			self.viewModel.clearHistory()
+		})
+		alert.addAction(UIAlertAction(title: "Close", style: .cancel))
+		if let popover = alert.popoverPresentationController {
+			popover.sourceView = historyButton
+			popover.sourceRect = historyButton.bounds
+		}
+		present(alert, animated: true)
+	}
+
+	private func formattedHistoryMessage(_ entries: [RollHistoryEntry]) -> String {
+		guard !entries.isEmpty else {
+			return "No rolls in this session yet."
+		}
+		let formatter = DateFormatter()
+		formatter.dateStyle = .none
+		formatter.timeStyle = .short
+		return entries.prefix(10).map { entry in
+			let mode = entry.intuitive ? "i" : "r"
+			return "\(formatter.string(from: entry.timestamp)) \(entry.notation) [\(mode)] = \(entry.sum)"
+		}.joined(separator: "\n")
+	}
+
+	private func presentExportSheet(content: String, filename: String) {
+		let temporaryURL = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
+		do {
+			try content.write(to: temporaryURL, atomically: true, encoding: .utf8)
+			let activity = UIActivityViewController(activityItems: [temporaryURL], applicationActivities: nil)
+			if let popover = activity.popoverPresentationController {
+				popover.sourceView = historyButton
+				popover.sourceRect = historyButton.bounds
+			}
+			present(activity, animated: true)
+		} catch {
+			let alert = UIAlertController(title: "Export failed", message: "Could not prepare export file.", preferredStyle: .alert)
+			alert.addAction(UIAlertAction(title: "OK", style: .default))
+			present(alert, animated: true)
+		}
 	}
 
 	@objc private func resetStats() {
