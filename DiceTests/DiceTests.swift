@@ -82,6 +82,41 @@ final class DiceTests: XCTestCase {
 		])
 	}
 
+	func testParsePropertyBasedMixedSeparatorsAndWhitespace() {
+		var state: UInt64 = 0xD1CE_2026
+		func nextInt(_ upperBound: Int) -> Int {
+			state = state &* 6364136223846793005 &+ 1442695040888963407
+			return Int(state % UInt64(upperBound))
+		}
+
+		let separators = ["+", " + ", " ", "  ", ",", ", ", " & ", "&"]
+		for _ in 0..<200 {
+			let poolCount = 2 + nextInt(3) // 2...4 pools
+			var expectedPools: [DicePool] = []
+			var terms: [String] = []
+			for _ in 0..<poolCount {
+				let diceCount = 1 + nextInt(6)
+				let sideCount = [4, 6, 8, 10, 12, 20][nextInt(6)]
+				expectedPools.append(DicePool(diceCount: diceCount, sideCount: sideCount))
+				let useImplicitOne = diceCount == 1 && nextInt(2) == 0
+				let dToken = nextInt(2) == 0 ? "d" : "D"
+				let term = useImplicitOne ? "\(dToken)\(sideCount)" : "\(diceCount)\(dToken)\(sideCount)"
+				terms.append(term)
+			}
+
+			var notation = terms[0]
+			for index in 1..<terms.count {
+				notation += separators[nextInt(separators.count)] + terms[index]
+			}
+			if nextInt(2) == 0 { notation = "  " + notation }
+			if nextInt(2) == 0 { notation += "   " }
+
+			let parsed = parser.parse(notation)
+			XCTAssertNotNil(parsed, "Expected parse success for notation: \(notation)")
+			XCTAssertEqual(parsed?.pools, expectedPools, "Unexpected pools for notation: \(notation)")
+		}
+	}
+
 	func testParseResultReturnsStructuredErrors() {
 		if case let .failure(error) = parser.parseResult("") {
 			XCTAssertEqual(error, .emptyInput)
