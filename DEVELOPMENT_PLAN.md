@@ -161,3 +161,29 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [ ] Add property-based parser tests for mixed separators and whitespace/edge formatting.
 - [ ] Add startup performance budget checks and automated alerting for regressions in CI.
 - [ ] Add crash/telemetry event aggregation dashboard document for release triage workflow.
+
+## 12. watchOS Small-Screen Interface Plan
+
+### Constraints and Layout Model (Harsh Size Limits)
+
+- [ ] Define watch layout budget (44mm/45mm/49mm targets): max tap zones, max text length, and hierarchy depth.
+- [ ] Create single-screen information architecture for watch roll flow (one primary action, one secondary mode action).
+- [ ] Replace dense text with glanceable status tokens (notation, mode, last value) tuned for watch legibility.
+- [ ] Add dynamic type and accessibility size pass specific to watch small-screen clipping cases.
+- [ ] Add watch UI snapshot checklist for edge-case strings and long localized labels.
+
+### SceneKit Feasibility and Reuse
+
+- [ ] Confirm watchOS SceneKit approach using `WKInterfaceSCNScene` and document API constraints vs `SCNView`.
+- [ ] Extract minimal shared D6 SceneKit render config (geometry/material/orientation) reusable by iOS + watchOS.
+- [ ] Implement watch single-die D6 SceneKit preview (one die only, no board grid) for performance safety.
+- [ ] Map roll result to D6 face orientation using shared orientation helper to keep iOS/watch parity.
+- [ ] Add fallback path to static image mode if SceneKit view is unavailable or disabled by settings.
+
+### Performance and Interaction Safety
+
+- [ ] Add watch frame-rate/perf budget target for SceneKit D6 (steady interaction on simulator profile).
+- [ ] Add low-power mode behavior (reduced animation intensity and reduced SceneKit update frequency).
+- [ ] Add watch haptic/audio sync to final face settle event for clearer result confirmation.
+- [ ] Add tests for mode switching and repeated rolls with SceneKit enabled to catch state desync regressions.
+- [ ] Add watch-specific QA pass for crown interaction, wake/resume, and scene lifecycle handling.
