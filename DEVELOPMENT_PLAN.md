@@ -116,7 +116,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 ### UX and Interaction Improvements
 
-- [ ] Add notation helper chips (d4, d6, d8, d10, d12, d20, +, i) above keyboard for faster input.
+- [x] Add notation helper chips (d4, d6, d8, d10, d12, d20, +, i) above keyboard for faster input.
 - [ ] Add inline notation parser hints that explain invalid segments instead of generic invalid-format errors.
 - [ ] Add advanced preset manager (create, rename, reorder, delete, pin favorites).
 - [ ] Add "repeat last roll" action and shortcut across iOS/iPadOS/macOS/watchOS.

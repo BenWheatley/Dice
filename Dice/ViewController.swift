@@ -414,14 +414,67 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	private func configureNotationInputAccessory() {
-		let toolbar = UIToolbar()
-		toolbar.sizeToFit()
-		toolbar.items = [
-			UIBarButtonItem(title: NSLocalizedString("toolbar.roll", comment: "Notation keyboard accessory roll action"), style: .done, target: self, action: #selector(rollFromInput)),
-			UIBarButtonItem.flexibleSpace(),
-			UIBarButtonItem(barButtonSystemItem: .done, target: notationField, action: #selector(UIResponder.resignFirstResponder)),
-		]
-		notationField.inputAccessoryView = toolbar
+		let accessory = UIScrollView()
+		accessory.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 44)
+		accessory.showsHorizontalScrollIndicator = false
+		accessory.alwaysBounceHorizontal = true
+		accessory.backgroundColor = UIColor.secondarySystemBackground
+
+		let stack = UIStackView()
+		stack.axis = .horizontal
+		stack.spacing = 6
+		stack.alignment = .center
+		stack.translatesAutoresizingMaskIntoConstraints = false
+		accessory.addSubview(stack)
+
+		NSLayoutConstraint.activate([
+			stack.leadingAnchor.constraint(equalTo: accessory.leadingAnchor, constant: 10),
+			stack.trailingAnchor.constraint(equalTo: accessory.trailingAnchor, constant: -10),
+			stack.topAnchor.constraint(equalTo: accessory.topAnchor, constant: 5),
+			stack.bottomAnchor.constraint(equalTo: accessory.bottomAnchor, constant: -5),
+			stack.heightAnchor.constraint(equalTo: accessory.heightAnchor, constant: -10),
+		])
+
+		let tokens = ["d4", "d6", "d8", "d10", "d12", "d20", "+", "i"]
+		for token in tokens {
+			let button = makeAccessoryTokenButton(title: token)
+			stack.addArrangedSubview(button)
+		}
+		stack.addArrangedSubview(makeAccessoryTokenButton(title: NSLocalizedString("toolbar.roll", comment: "Notation keyboard accessory roll action"), isPrimary: true, action: #selector(rollFromInput)))
+		stack.addArrangedSubview(makeAccessoryTokenButton(title: NSLocalizedString("button.close", comment: "Close button title"), action: #selector(closeNotationAccessory)))
+		notationField.inputAccessoryView = accessory
+	}
+
+	private func makeAccessoryTokenButton(title: String, isPrimary: Bool = false, action: Selector = #selector(insertNotationTokenButtonTapped(_:))) -> UIButton {
+		let button = UIButton(type: .system)
+		button.setTitle(title, for: .normal)
+		button.titleLabel?.font = .systemFont(ofSize: 14, weight: isPrimary ? .semibold : .medium)
+		button.setContentHuggingPriority(.required, for: .horizontal)
+		button.contentEdgeInsets = UIEdgeInsets(top: 6, left: 10, bottom: 6, right: 10)
+		button.backgroundColor = isPrimary ? UIColor.systemBlue : UIColor.tertiarySystemFill
+		button.setTitleColor(isPrimary ? .white : .label, for: .normal)
+		button.layer.cornerRadius = 8
+		button.accessibilityIdentifier = "notationToken_\(title)"
+		button.addTarget(self, action: action, for: .touchUpInside)
+		return button
+	}
+
+	@objc private func insertNotationTokenButtonTapped(_ sender: UIButton) {
+		guard let token = sender.currentTitle, !token.isEmpty else { return }
+		insertNotationToken(token)
+	}
+
+	private func insertNotationToken(_ token: String) {
+		if let selectedRange = notationField.selectedTextRange {
+			notationField.replace(selectedRange, withText: token)
+		} else {
+			notationField.text = (notationField.text ?? "") + token
+		}
+		notationEditingChanged()
+	}
+
+	@objc private func closeNotationAccessory() {
+		notationField.resignFirstResponder()
 	}
 
 	private func configurePointerInteractionsIfNeeded() {
