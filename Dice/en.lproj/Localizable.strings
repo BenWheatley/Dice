@@ -3,6 +3,7 @@
 "button.presets" = "Presets";
 "button.history" = "History";
 "button.reset" = "Reset";
+"button.cancel" = "Cancel";
 "button.ok" = "OK";
 "button.close" = "Close";
 "button.anim.on" = "Anim On";
@@ -27,6 +28,7 @@
 "menu.control.dieColors" = "Die Colors";
 "menu.control.dieColor.side" = "d%d";
 "menu.control.edgeOutlines" = "Edge Outlines";
+"menu.control.previewStyle" = "Preview Style";
 "menu.control.resetVisuals" = "Reset Visual Style";
 "theme.classic" = "Classic";
 "theme.darkSlate" = "Dark Slate";
@@ -54,6 +56,8 @@
 "alert.invalid.announcement" = "Invalid dice notation.";
 "alert.resetVisuals.title" = "Reset visual style?";
 "alert.resetVisuals.message" = "This will restore theme, texture, die finish, outlines, die colors, d6 pip style, and numeral font defaults.";
+"preview.title" = "Style Preview";
+"preview.summary" = "Texture: %@  •  Finish: %@\nD6 pips: %@  •  Numerals: %@";
 "history.title" = "Roll History";
 "history.export.text" = "Export Text";
 "history.export.csv" = "Export CSV";

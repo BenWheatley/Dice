@@ -571,6 +571,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		) { [weak self] _ in
 			self?.toggleEdgeOutlines()
 		}
+		let previewStyleAction = UIAction(title: NSLocalizedString("menu.control.previewStyle", comment: "Preview style action title")) { [weak self] _ in
+			self?.presentStylePreview()
+		}
 		let resetVisualsAction = UIAction(
 			title: NSLocalizedString("menu.control.resetVisuals", comment: "Reset visual settings menu title"),
 			attributes: .destructive
@@ -580,7 +583,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let resetAction = UIAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), attributes: .destructive) { [weak self] _ in
 			self?.resetStats()
 		}
-		menuButton.menu = UIMenu(children: [historyAction, themeMenu, textureMenu, finishMenu, pipStyleMenu, numeralFontMenu, dieColorsMenu, outlinesAction, resetVisualsAction, animationAction, statsAction, resetAction])
+		menuButton.menu = UIMenu(children: [historyAction, themeMenu, textureMenu, finishMenu, pipStyleMenu, numeralFontMenu, dieColorsMenu, outlinesAction, previewStyleAction, resetVisualsAction, animationAction, statsAction, resetAction])
 	}
 
 	@objc private func toggleStatsVisibility() {
@@ -675,6 +678,26 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.setFaceNumeralFont(viewModel.faceNumeralFont)
 		updateDiceBoard(animated: false)
 		updateControlMenu()
+	}
+
+	private func presentStylePreview() {
+		let previewState = DiceStylePreviewState(
+			theme: viewModel.theme,
+			texture: viewModel.tableTexture,
+			dieFinish: viewModel.dieFinish,
+			edgeOutlinesEnabled: viewModel.edgeOutlinesEnabled,
+			dieColors: viewModel.dieColorPreferences,
+			d6PipStyle: viewModel.d6PipStyle,
+			faceNumeralFont: viewModel.faceNumeralFont
+		)
+		let preview = DiceStylePreviewViewController(state: previewState)
+		let navigation = UINavigationController(rootViewController: preview)
+		navigation.modalPresentationStyle = .formSheet
+		if let popover = navigation.popoverPresentationController {
+			popover.sourceView = menuButton
+			popover.sourceRect = menuButton.bounds
+		}
+		present(navigation, animated: true)
 	}
 
 	private func applyTheme() {
@@ -783,6 +806,127 @@ private final class PresetPickerViewController: UIViewController, UITableViewDat
 		let intuitive = tableView.tag == 1
 		onSelectPreset?(diceCount, intuitive)
 		dismiss(animated: true)
+	}
+
+	@objc private func close() {
+		dismiss(animated: true)
+	}
+}
+
+private struct DiceStylePreviewState {
+	let theme: DiceTheme
+	let texture: DiceTableTexture
+	let dieFinish: DiceDieFinish
+	let edgeOutlinesEnabled: Bool
+	let dieColors: DiceDieColorPreferences
+	let d6PipStyle: DiceD6PipStyle
+	let faceNumeralFont: DiceFaceNumeralFont
+}
+
+private final class DiceStylePreviewViewController: UIViewController {
+	private let state: DiceStylePreviewState
+	private let previewBoard = DiceCubeView()
+	private let summaryLabel = UILabel()
+
+	init(state: DiceStylePreviewState) {
+		self.state = state
+		super.init(nibName: nil, bundle: nil)
+	}
+
+	required init?(coder: NSCoder) {
+		fatalError("init(coder:) has not been implemented")
+	}
+
+	override func viewDidLoad() {
+		super.viewDidLoad()
+		title = NSLocalizedString("preview.title", comment: "Style preview screen title")
+		navigationItem.leftBarButtonItem = UIBarButtonItem(
+			title: NSLocalizedString("button.close", comment: "Close button title"),
+			style: .plain,
+			target: self,
+			action: #selector(close)
+		)
+
+		let palette = state.theme.palette
+		view.backgroundColor = palette.screenBackgroundColor
+
+		let texturePanel = UIView()
+		texturePanel.translatesAutoresizingMaskIntoConstraints = false
+		texturePanel.backgroundColor = DiceTextureProvider.shared.patternColor(for: state.texture)
+		texturePanel.layer.cornerRadius = 12
+		texturePanel.clipsToBounds = true
+
+		previewBoard.translatesAutoresizingMaskIntoConstraints = false
+		previewBoard.setDieFinish(state.dieFinish)
+		previewBoard.setEdgeOutlinesEnabled(state.edgeOutlinesEnabled)
+		previewBoard.setDieColorPreferences(state.dieColors)
+		previewBoard.setD6PipStyle(state.d6PipStyle)
+		previewBoard.setFaceNumeralFont(state.faceNumeralFont)
+
+		summaryLabel.translatesAutoresizingMaskIntoConstraints = false
+		summaryLabel.font = .systemFont(ofSize: 13, weight: .medium)
+		summaryLabel.textColor = palette.secondaryTextColor
+		summaryLabel.numberOfLines = 0
+		summaryLabel.textAlignment = .center
+		summaryLabel.text = summaryText()
+
+		texturePanel.addSubview(previewBoard)
+		view.addSubview(texturePanel)
+		view.addSubview(summaryLabel)
+
+		NSLayoutConstraint.activate([
+			texturePanel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+			texturePanel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+			texturePanel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+			texturePanel.heightAnchor.constraint(equalTo: texturePanel.widthAnchor, multiplier: 0.64),
+
+			previewBoard.topAnchor.constraint(equalTo: texturePanel.topAnchor),
+			previewBoard.leadingAnchor.constraint(equalTo: texturePanel.leadingAnchor),
+			previewBoard.trailingAnchor.constraint(equalTo: texturePanel.trailingAnchor),
+			previewBoard.bottomAnchor.constraint(equalTo: texturePanel.bottomAnchor),
+
+			summaryLabel.topAnchor.constraint(equalTo: texturePanel.bottomAnchor, constant: 12),
+			summaryLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+			summaryLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+			summaryLabel.bottomAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -12),
+		])
+
+		preferredContentSize = CGSize(width: 420, height: 430)
+	}
+
+	override func viewDidLayoutSubviews() {
+		super.viewDidLayoutSubviews()
+		let panelBounds = previewBoard.bounds
+		guard panelBounds.width > 80, panelBounds.height > 80 else { return }
+		let side = max(52, min(96, min(panelBounds.width / 4.2, panelBounds.height / 2.6)))
+		let y = panelBounds.midY
+		let centers = [
+			CGPoint(x: panelBounds.width * 0.20, y: y),
+			CGPoint(x: panelBounds.width * 0.40, y: y),
+			CGPoint(x: panelBounds.width * 0.60, y: y),
+			CGPoint(x: panelBounds.width * 0.80, y: y),
+		]
+		previewBoard.setDice(
+			values: [2, 5, 8, 14],
+			centers: centers,
+			sideLength: side,
+			sideCounts: [4, 6, 10, 20],
+			animated: false
+		)
+	}
+
+	private func summaryText() -> String {
+		let texture = NSLocalizedString(state.texture.menuTitleKey, comment: "Texture title")
+		let finish = NSLocalizedString(state.dieFinish.menuTitleKey, comment: "Finish title")
+		let pip = NSLocalizedString(state.d6PipStyle.menuTitleKey, comment: "Pip style title")
+		let font = NSLocalizedString(state.faceNumeralFont.menuTitleKey, comment: "Font title")
+		return String(
+			format: NSLocalizedString("preview.summary", comment: "Style preview summary text"),
+			texture,
+			finish,
+			pip,
+			font
+		)
 	}
 
 	@objc private func close() {
