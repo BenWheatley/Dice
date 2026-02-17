@@ -18,6 +18,7 @@ class InterfaceController: WKInterfaceController {
 	private var d6Node = SCNNode()
 	private var usesSceneRenderer = false
 	private var lowPowerObserver: NSObjectProtocol?
+	private let feedbackDevice = WKInterfaceDevice.current()
 
 	@IBOutlet weak var diceButton: WKInterfaceButton!
 	@IBOutlet weak var diceView: WKInterfaceImage!
@@ -52,23 +53,26 @@ class InterfaceController: WKInterfaceController {
 		let outcome = viewModel.roll()
 		guard let value = outcome.values.first else { return }
 		rollCount += 1
+		playRollStartFeedback()
 		if usesSceneRenderer {
-			animateD6(to: value)
+			animateD6(to: value) { [weak self] in
+				self?.playRollSettleFeedback()
+			}
 			diceSceneView.setAccessibilityValue("Value \(value)")
 			diceView.setHidden(true)
 		} else {
 			diceView.setImageNamed("\(value)")
 			diceView.setAccessibilityValue("Value \(value)")
 			diceView.setHidden(false)
+			playRollSettleFeedback()
 		}
 		diceButton.setTitle(viewModel.statusText(lastValue: value))
-		WKInterfaceDevice.current().play(.click)
 	}
 
 	@objc private func toggleMode() {
 		viewModel.toggleMode()
 		rollCount = 0
-		WKInterfaceDevice.current().play(.success)
+		feedbackDevice.play(.success)
 		roll()
 	}
 
@@ -208,12 +212,21 @@ class InterfaceController: WKInterfaceController {
 		return UIImage(cgImage: image)
 	}
 
-	private func animateD6(to value: Int) {
+	private func animateD6(to value: Int, completion: (() -> Void)? = nil) {
 		let target = orientation(for: value)
 		SCNTransaction.begin()
 		SCNTransaction.animationDuration = ProcessInfo.processInfo.isLowPowerModeEnabled ? 0.2 : 0.4
+		SCNTransaction.completionBlock = completion
 		d6Node.eulerAngles = target
 		SCNTransaction.commit()
+	}
+
+	private func playRollStartFeedback() {
+		feedbackDevice.play(.start)
+	}
+
+	private func playRollSettleFeedback() {
+		feedbackDevice.play(.click)
 	}
 
 	private func orientation(for value: Int) -> SCNVector3 {
