@@ -49,7 +49,6 @@ final class DiceCubeView: UIView {
 	private var activeDieColorPreferences: DiceDieColorPreferences = .default
 	private var activeD6PipStyle: DiceD6PipStyle = .round
 	private var activeFaceNumeralFont: DiceFaceNumeralFont = .classic
-	private var activeCameraPreset: DiceBoardCameraPreset = .slightTilt
 	private var activeAnimationIntensity: DiceAnimationIntensity = .full
 	private var activeMotionBlurEnabled = false
 	private var activeAnimationSeed: Int?
@@ -169,12 +168,6 @@ final class DiceCubeView: UIView {
 		needsMeshRefresh = true
 	}
 
-	func setCameraPreset(_ preset: DiceBoardCameraPreset, animated: Bool) {
-		guard activeCameraPreset != preset else { return }
-		activeCameraPreset = preset
-		updateCamera(animated: animated)
-	}
-
 	func setAnimationIntensity(_ intensity: DiceAnimationIntensity) {
 		activeAnimationIntensity = intensity
 	}
@@ -252,15 +245,7 @@ final class DiceCubeView: UIView {
 
 	private func updateCamera(animated: Bool) {
 		cameraNode.camera?.orthographicScale = Double(bounds.height / 2)
-		let target: (position: SCNVector3, euler: SCNVector3)
-		switch activeCameraPreset {
-		case .top:
-			target = (SCNVector3(0, 0, 800), SCNVector3(0, 0, 0))
-		case .slightTilt:
-			target = (SCNVector3(0, 120, 860), SCNVector3(-0.35, 0, 0))
-		case .dramatic:
-			target = (SCNVector3(0, 240, 920), SCNVector3(-0.58, 0, 0))
-		}
+		let target = (position: SCNVector3(0, 120, 860), euler: SCNVector3(-0.35, 0, 0))
 		guard animated else {
 			cameraNode.position = target.position
 			cameraNode.eulerAngles = target.euler
@@ -661,8 +646,8 @@ final class DiceCubeView: UIView {
 			node.eulerAngles = orientation(for: faceValue, sideCount: sideCount)
 			return
 		}
-		let duration: TimeInterval = activeAnimationIntensity == .subtle ? 0.8 : 1.6
-		let motionScale: Float = activeAnimationIntensity == .subtle ? 0.45 : 1.0
+		let duration: TimeInterval = 1.6
+		let motionScale: Float = 1.0
 		let moveAction = makeBounceMoveAction(start: start, target: target, sideLength: sideLength, duration: duration, motionScale: motionScale)
 		let rotateAction = makeRotateAction(node: node, targetFace: faceValue, sideCount: sideCount, duration: duration, motionScale: motionScale)
 		node.runAction(.group([moveAction, rotateAction]))

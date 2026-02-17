@@ -37,10 +37,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let menuButton = UIButton(type: .system)
 	private let diceBoardView = DiceCubeView()
 	private var controlsContainer: UIView?
-	private var currentPalette = DiceTheme.classic.palette
+	private var currentPalette = DiceTheme.system.palette
 	private var currentTexture: DiceTableTexture = .neutral
 	private var currentDieFinish: DiceDieFinish = .matte
-	private let customizableSideCounts = DiceDieColorPreferences.supportedSideCounts
 	private let statsVisibilityKey = "Dice.showStats"
 	private var statsVisible = true
 
@@ -92,13 +91,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let faceValue = viewModel.diceValues[indexPath.row]
 		let sideCount = viewModel.diceSideCounts[indexPath.row]
 		cell.configure(faceValue: faceValue, sideCount: sideCount, index: indexPath.row, palette: currentPalette, isLocked: viewModel.isDieLocked(at: indexPath.row))
-		cell.onRequestReroll = { [weak self, weak collectionView] in
-			guard let self else { return }
-			guard let outcome = self.viewModel.rerollDie(at: indexPath.row) else { return }
-			self.updateTotalsText(outcome: outcome)
-			collectionView?.reloadItems(at: [indexPath])
-			collectionView?.layoutIfNeeded()
-			self.updateDiceBoard(animated: self.shouldAnimateBoard)
+		cell.onTapDie = { [weak self, weak cell] in
+			guard let self, let cell else { return }
+			self.presentDieOptions(for: indexPath.row, sourceView: cell)
 		}
 		cell.onToggleLock = { [weak self, weak collectionView] in
 			guard let self else { return }
@@ -289,6 +284,123 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		updateDiceBoard(animated: shouldAnimateBoard)
 	}
 
+	private func presentDieOptions(for index: Int, sourceView: UIView) {
+		guard viewModel.diceValues.indices.contains(index) else { return }
+		guard viewModel.diceSideCounts.indices.contains(index) else { return }
+		let sideCount = viewModel.diceSideCounts[index]
+		let faceValue = viewModel.diceValues[index]
+		let lockTitleKey = viewModel.isDieLocked(at: index) ? "die.options.unlock" : "die.options.lock"
+
+		let alert = UIAlertController(
+			title: String(format: NSLocalizedString("die.options.title", comment: "Per-die options title"), index + 1, sideCount),
+			message: String(format: NSLocalizedString("die.options.message", comment: "Per-die options message"), faceValue),
+			preferredStyle: .actionSheet
+		)
+		alert.addAction(UIAlertAction(title: NSLocalizedString("die.options.reroll", comment: "Reroll one die action"), style: .default) { [weak self] _ in
+			self?.rerollDie(at: index)
+		})
+		alert.addAction(UIAlertAction(title: NSLocalizedString(lockTitleKey, comment: "Toggle lock action"), style: .default) { [weak self] _ in
+			self?.toggleDieLock(at: index)
+		})
+		alert.addAction(UIAlertAction(title: NSLocalizedString("die.options.color", comment: "Change die color action"), style: .default) { [weak self] _ in
+			self?.presentDieColorOptions(for: sideCount, sourceView: sourceView)
+		})
+		if sideCount == 6 {
+			alert.addAction(UIAlertAction(title: NSLocalizedString("die.options.pips", comment: "Change d6 pip style action"), style: .default) { [weak self] _ in
+				self?.presentD6PipStyleOptions(sourceView: sourceView)
+			})
+		} else {
+			alert.addAction(UIAlertAction(title: NSLocalizedString("die.options.font", comment: "Change numeral font action"), style: .default) { [weak self] _ in
+				self?.presentNumeralFontOptions(sourceView: sourceView)
+			})
+		}
+		alert.addAction(UIAlertAction(title: NSLocalizedString("button.cancel", comment: "Cancel action"), style: .cancel))
+		if let popover = alert.popoverPresentationController {
+			popover.sourceView = sourceView
+			popover.sourceRect = sourceView.bounds
+		}
+		present(alert, animated: true)
+	}
+
+	private func presentDieColorOptions(for sideCount: Int, sourceView: UIView) {
+		let alert = UIAlertController(
+			title: String(format: NSLocalizedString("die.options.color.title", comment: "Die color sheet title"), sideCount),
+			message: nil,
+			preferredStyle: .actionSheet
+		)
+		for preset in DiceDieColorPreset.allCases {
+			let isCurrent = viewModel.dieColorPreset(for: sideCount) == preset
+			let marker = isCurrent ? " ✓" : ""
+			let title = NSLocalizedString(preset.menuTitleKey, comment: "Die color option") + marker
+			alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
+				self?.selectDieColorPreset(preset, sideCount: sideCount)
+			})
+		}
+		alert.addAction(UIAlertAction(title: NSLocalizedString("button.cancel", comment: "Cancel action"), style: .cancel))
+		if let popover = alert.popoverPresentationController {
+			popover.sourceView = sourceView
+			popover.sourceRect = sourceView.bounds
+		}
+		present(alert, animated: true)
+	}
+
+	private func presentD6PipStyleOptions(sourceView: UIView) {
+		let alert = UIAlertController(
+			title: NSLocalizedString("die.options.pips.title", comment: "D6 pip style sheet title"),
+			message: nil,
+			preferredStyle: .actionSheet
+		)
+		for style in DiceD6PipStyle.allCases {
+			let isCurrent = viewModel.d6PipStyle == style
+			let marker = isCurrent ? " ✓" : ""
+			let title = NSLocalizedString(style.menuTitleKey, comment: "D6 pip style option") + marker
+			alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
+				self?.selectD6PipStyle(style)
+			})
+		}
+		alert.addAction(UIAlertAction(title: NSLocalizedString("button.cancel", comment: "Cancel action"), style: .cancel))
+		if let popover = alert.popoverPresentationController {
+			popover.sourceView = sourceView
+			popover.sourceRect = sourceView.bounds
+		}
+		present(alert, animated: true)
+	}
+
+	private func presentNumeralFontOptions(sourceView: UIView) {
+		let alert = UIAlertController(
+			title: NSLocalizedString("die.options.font.title", comment: "Numeral font sheet title"),
+			message: nil,
+			preferredStyle: .actionSheet
+		)
+		for font in DiceFaceNumeralFont.allCases {
+			let isCurrent = viewModel.faceNumeralFont == font
+			let marker = isCurrent ? " ✓" : ""
+			let title = NSLocalizedString(font.menuTitleKey, comment: "Numeral font option") + marker
+			alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
+				self?.selectFaceNumeralFont(font)
+			})
+		}
+		alert.addAction(UIAlertAction(title: NSLocalizedString("button.cancel", comment: "Cancel action"), style: .cancel))
+		if let popover = alert.popoverPresentationController {
+			popover.sourceView = sourceView
+			popover.sourceRect = sourceView.bounds
+		}
+		present(alert, animated: true)
+	}
+
+	private func rerollDie(at index: Int) {
+		guard let outcome = viewModel.rerollDie(at: index) else { return }
+		updateTotalsText(outcome: outcome)
+		collectionView.reloadItems(at: [IndexPath(row: index, section: 0)])
+		collectionView.layoutIfNeeded()
+		updateDiceBoard(animated: shouldAnimateBoard)
+	}
+
+	private func toggleDieLock(at index: Int) {
+		viewModel.toggleDieLock(at: index)
+		collectionView.reloadItems(at: [IndexPath(row: index, section: 0)])
+	}
+
 	private func updateDiceBoard(animated: Bool) {
 		let sideCounts = viewModel.diceSideCounts
 		guard !sideCounts.isEmpty,
@@ -303,7 +415,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.setDieColorPreferences(viewModel.dieColorPreferences)
 		diceBoardView.setD6PipStyle(viewModel.d6PipStyle)
 		diceBoardView.setFaceNumeralFont(viewModel.faceNumeralFont)
-		diceBoardView.setCameraPreset(viewModel.boardCameraPreset, animated: false)
 		diceBoardView.setAnimationIntensity(viewModel.animationIntensity)
 		diceBoardView.setMotionBlurEnabled(viewModel.motionBlurEnabled)
 		diceBoardView.setAnimationSeed(viewModel.animationSeed)
@@ -313,8 +424,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		switch viewModel.boardLayoutPreset {
 		case .compact:
 			baseScale = mixed ? 0.24 : 0.27
-		case .balanced:
-			baseScale = mixed ? 0.22 : 0.25
 		case .spacious:
 			baseScale = mixed ? 0.19 : 0.22
 		}
@@ -611,7 +720,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		}
 		let themeActions = DiceTheme.allCases.map { theme in
 			UIAction(
-				title: self.themeTitle(for: theme),
+				title: NSLocalizedString(theme.menuTitleKey, comment: "Theme option title"),
 				state: self.viewModel.theme == theme ? .on : .off
 			) { [weak self] _ in
 				self?.selectTheme(theme)
@@ -634,19 +743,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			title: NSLocalizedString("menu.control.texture", comment: "Texture submenu title"),
 			options: .displayInline,
 			children: textureActions
-		)
-		let cameraActions = DiceBoardCameraPreset.allCases.map { preset in
-			UIAction(
-				title: NSLocalizedString(preset.menuTitleKey, comment: "Board camera preset option"),
-				state: viewModel.boardCameraPreset == preset ? .on : .off
-			) { [weak self] _ in
-				self?.selectBoardCameraPreset(preset)
-			}
-		}
-		let cameraMenu = UIMenu(
-			title: NSLocalizedString("menu.control.camera", comment: "Camera submenu title"),
-			options: .displayInline,
-			children: cameraActions
 		)
 		let layoutActions = DiceBoardLayoutPreset.allCases.map { preset in
 			UIAction(
@@ -673,52 +769,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			title: NSLocalizedString("menu.control.finish", comment: "Die finish submenu title"),
 			options: .displayInline,
 			children: finishActions
-		)
-		let pipStyleActions = DiceD6PipStyle.allCases.map { style in
-			UIAction(
-				title: NSLocalizedString(style.menuTitleKey, comment: "D6 pip style option"),
-				state: viewModel.d6PipStyle == style ? .on : .off
-			) { [weak self] _ in
-				self?.selectD6PipStyle(style)
-			}
-		}
-		let pipStyleMenu = UIMenu(
-			title: NSLocalizedString("menu.control.pipStyle", comment: "D6 pip style submenu title"),
-			options: .displayInline,
-			children: pipStyleActions
-		)
-		let numeralFontActions = DiceFaceNumeralFont.allCases.map { font in
-			UIAction(
-				title: NSLocalizedString(font.menuTitleKey, comment: "Numeral font option"),
-				state: viewModel.faceNumeralFont == font ? .on : .off
-			) { [weak self] _ in
-				self?.selectFaceNumeralFont(font)
-			}
-		}
-		let numeralFontMenu = UIMenu(
-			title: NSLocalizedString("menu.control.numeralFont", comment: "Numeral font submenu title"),
-			options: .displayInline,
-			children: numeralFontActions
-		)
-		let dieColorMenus = customizableSideCounts.map { sideCount in
-			let actions = DiceDieColorPreset.allCases.map { preset in
-				UIAction(
-					title: NSLocalizedString(preset.menuTitleKey, comment: "Die color preset option"),
-					state: viewModel.dieColorPreset(for: sideCount) == preset ? .on : .off
-				) { [weak self] _ in
-					self?.selectDieColorPreset(preset, sideCount: sideCount)
-				}
-			}
-			return UIMenu(
-				title: String(format: NSLocalizedString("menu.control.dieColor.side", comment: "Die color submenu title for side count"), sideCount),
-				options: .displayInline,
-				children: actions
-			)
-		}
-		let dieColorsMenu = UIMenu(
-			title: NSLocalizedString("menu.control.dieColors", comment: "Die colors submenu title"),
-			options: .displayInline,
-			children: dieColorMenus
 		)
 		let outlinesAction = UIAction(
 			title: NSLocalizedString("menu.control.edgeOutlines", comment: "Edge outlines toggle menu title"),
@@ -755,7 +805,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let resetAction = UIAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), attributes: .destructive) { [weak self] _ in
 			self?.resetStats()
 		}
-		menuButton.menu = UIMenu(children: [historyAction, repeatAction, themeMenu, textureMenu, cameraMenu, layoutMenu, finishMenu, pipStyleMenu, numeralFontMenu, dieColorsMenu, outlinesAction, motionBlurAction, setAnimationSeedAction, clearAnimationSeedAction, previewStyleAction, resetVisualsAction, animationAction, animationIntensityMenu, statsAction, resetAction])
+		menuButton.menu = UIMenu(children: [historyAction, repeatAction, animationAction, animationIntensityMenu, resetAction, statsAction, themeMenu, textureMenu, layoutMenu, finishMenu, outlinesAction, motionBlurAction, setAnimationSeedAction, clearAnimationSeedAction, previewStyleAction, resetVisualsAction])
 	}
 
 	@objc private func toggleStatsVisibility() {
@@ -787,12 +837,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private func selectTexture(_ texture: DiceTableTexture) {
 		viewModel.setTableTexture(texture)
 		applyTexture()
-		updateControlMenu()
-	}
-
-	private func selectBoardCameraPreset(_ preset: DiceBoardCameraPreset) {
-		viewModel.setBoardCameraPreset(preset)
-		diceBoardView.setCameraPreset(preset, animated: true)
 		updateControlMenu()
 	}
 
@@ -899,7 +943,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.setDieColorPreferences(viewModel.dieColorPreferences)
 		diceBoardView.setD6PipStyle(viewModel.d6PipStyle)
 		diceBoardView.setFaceNumeralFont(viewModel.faceNumeralFont)
-		diceBoardView.setCameraPreset(viewModel.boardCameraPreset, animated: false)
 		diceBoardView.setAnimationIntensity(viewModel.animationIntensity)
 		diceBoardView.setMotionBlurEnabled(viewModel.motionBlurEnabled)
 		diceBoardView.setAnimationSeed(viewModel.animationSeed)
@@ -928,6 +971,14 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	private func applyTheme() {
+		switch viewModel.theme {
+		case .lightMode:
+			overrideUserInterfaceStyle = .light
+		case .darkMode:
+			overrideUserInterfaceStyle = .dark
+		case .system:
+			overrideUserInterfaceStyle = .unspecified
+		}
 		let palette = viewModel.theme.palette
 		currentPalette = palette
 		currentTexture = viewModel.tableTexture
@@ -939,7 +990,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		totalsLabel.textColor = palette.secondaryTextColor
 		validationLabel.textColor = palette.validationColor
 		notationField.textColor = palette.primaryTextColor
-		notationField.keyboardAppearance = viewModel.theme == .classic ? .default : .dark
+		notationField.keyboardAppearance = keyboardAppearance(for: viewModel.theme)
 		let buttonColor = palette.primaryTextColor
 		rollButton.setTitleColor(buttonColor, for: .normal)
 		presetsButton.setTitleColor(buttonColor, for: .normal)
@@ -952,14 +1003,14 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		collectionView.backgroundColor = DiceTextureProvider.shared.patternColor(for: currentTexture)
 	}
 
-	private func themeTitle(for theme: DiceTheme) -> String {
+	private func keyboardAppearance(for theme: DiceTheme) -> UIKeyboardAppearance {
 		switch theme {
-		case .classic:
-			return NSLocalizedString("theme.classic", comment: "Classic theme title")
-		case .darkSlate:
-			return NSLocalizedString("theme.darkSlate", comment: "Dark slate theme title")
-		case .highContrast:
-			return NSLocalizedString("theme.highContrast", comment: "High contrast theme title")
+		case .lightMode:
+			return .light
+		case .darkMode:
+			return .dark
+		case .system:
+			return traitCollection.userInterfaceStyle == .dark ? .dark : .light
 		}
 	}
 }
@@ -1467,8 +1518,6 @@ extension DiceCollectionViewController: UICollectionViewDelegateFlowLayout {
 		switch viewModel.boardLayoutPreset {
 		case .compact:
 			return traitCollection.horizontalSizeClass == .regular ? 6 : 3
-		case .balanced:
-			return traitCollection.horizontalSizeClass == .regular ? 8 : 4
 		case .spacious:
 			let regular = mixed ? 14 : 12
 			let compact = mixed ? 8 : 6
@@ -1481,16 +1530,12 @@ extension DiceCollectionViewController: UICollectionViewDelegateFlowLayout {
 			switch viewModel.boardLayoutPreset {
 			case .compact:
 				return max(4, min(9, Int(availableWidth / (mixed ? 118 : 110))))
-			case .balanced:
-				return max(4, min(8, Int(availableWidth / (mixed ? 126 : 120))))
 			case .spacious:
 				return max(3, min(7, Int(availableWidth / (mixed ? 150 : 138))))
 			}
 		}
 		switch viewModel.boardLayoutPreset {
 		case .compact:
-			return availableWidth > 460 ? 4 : 3
-		case .balanced:
 			return availableWidth > 460 ? 4 : 3
 		case .spacious:
 			return availableWidth > 460 ? 3 : 2
@@ -1500,9 +1545,9 @@ extension DiceCollectionViewController: UICollectionViewDelegateFlowLayout {
 
 class DiceCollectionViewCell: UICollectionViewCell {
 	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
-	var onRequestReroll: (() -> Void)?
+	var onTapDie: (() -> Void)?
 	var onToggleLock: (() -> Void)?
-	private var currentPalette = DiceTheme.classic.palette
+	private var currentPalette = DiceTheme.system.palette
 	private var isLocked = false
 	private var lockGestureConfigured = false
 
@@ -1581,6 +1626,6 @@ class DiceCollectionViewCell: UICollectionViewCell {
 	}
 
 	@IBAction func reroll(_ sender: Any) {
-		onRequestReroll?()
+		onTapDie?()
 	}
 }

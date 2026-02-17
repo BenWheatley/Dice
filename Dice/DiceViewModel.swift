@@ -102,10 +102,6 @@ final class DiceViewModel {
 		appState.lockedDieIndices
 	}
 
-	var boardCameraPreset: DiceBoardCameraPreset {
-		appState.boardCameraPreset
-	}
-
 	var motionBlurEnabled: Bool {
 		appState.motionBlurEnabled
 	}
@@ -132,7 +128,6 @@ final class DiceViewModel {
 		appState.dieColorPreferences = preferences.dieColorPreferences
 		appState.d6PipStyle = preferences.d6PipStyle
 		appState.faceNumeralFont = preferences.faceNumeralFont
-		appState.boardCameraPreset = preferences.boardCameraPreset
 		appState.motionBlurEnabled = preferences.motionBlurEnabled
 		appState.animationSeed = preferences.animationSeed
 		appState.boardLayoutPreset = preferences.boardLayoutPreset
@@ -297,11 +292,6 @@ final class DiceViewModel {
 		persistPreferences()
 	}
 
-	func setBoardCameraPreset(_ preset: DiceBoardCameraPreset) {
-		appState.boardCameraPreset = preset
-		persistPreferences()
-	}
-
 	func setMotionBlurEnabled(_ enabled: Bool) {
 		appState.motionBlurEnabled = enabled
 		persistPreferences()
@@ -331,14 +321,13 @@ final class DiceViewModel {
 	}
 
 	func resetVisualPreferences() {
-		appState.theme = .classic
+		appState.theme = .system
 		appState.tableTexture = .neutral
 		appState.dieFinish = .matte
 		appState.edgeOutlinesEnabled = false
 		appState.dieColorPreferences = .default
 		appState.d6PipStyle = .round
 		appState.faceNumeralFont = .classic
-		appState.boardCameraPreset = .slightTilt
 		appState.motionBlurEnabled = false
 		persistPreferences()
 	}
@@ -453,7 +442,6 @@ final class DiceViewModel {
 			d6PipStyle: appState.d6PipStyle,
 			faceNumeralFont: appState.faceNumeralFont,
 			customPresets: preferencesStore.load().customPresets,
-			boardCameraPreset: appState.boardCameraPreset,
 			motionBlurEnabled: appState.motionBlurEnabled,
 			animationSeed: appState.animationSeed,
 			boardLayoutPreset: appState.boardLayoutPreset

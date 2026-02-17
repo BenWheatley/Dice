@@ -50,7 +50,6 @@ final class DiceAppState {
 	var faceNumeralFont: DiceFaceNumeralFont
 	var lastRolledConfiguration: RollConfiguration?
 	var lockedDieIndices: Set<Int>
-	var boardCameraPreset: DiceBoardCameraPreset
 	var motionBlurEnabled: Bool
 	var animationSeed: Int?
 	var boardLayoutPreset: DiceBoardLayoutPreset
@@ -62,7 +61,7 @@ final class DiceAppState {
 		self.stats = .empty
 		self.animationsEnabled = true
 		self.animationIntensity = .full
-		self.theme = .classic
+		self.theme = .system
 		self.tableTexture = .neutral
 		self.dieFinish = .matte
 		self.edgeOutlinesEnabled = false
@@ -71,10 +70,9 @@ final class DiceAppState {
 		self.faceNumeralFont = .classic
 		self.lastRolledConfiguration = nil
 		self.lockedDieIndices = []
-		self.boardCameraPreset = .slightTilt
 		self.motionBlurEnabled = false
 		self.animationSeed = nil
-		self.boardLayoutPreset = .balanced
+		self.boardLayoutPreset = .compact
 	}
 
 	func applyRollOutcome(_ outcome: RollOutcome) {

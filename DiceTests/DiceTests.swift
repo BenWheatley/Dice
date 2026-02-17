@@ -421,7 +421,7 @@ final class DiceTests: XCTestCase {
 			lastNotation: "12d10i",
 			recentPresets: ["12d10i", "6d6"],
 			animationsEnabled: false,
-			theme: .darkSlate,
+			theme: .darkMode,
 			tableTexture: .wood,
 			dieFinish: .stone,
 			edgeOutlinesEnabled: true,
@@ -451,6 +451,21 @@ final class DiceTests: XCTestCase {
 
 		let loaded = store.load()
 		XCTAssertEqual(loaded.recentPresets, ["20d6", "4d4", "6d6"])
+	}
+
+	func testPreferencesStoreMigratesLegacyVisualRawValues() {
+		let suiteName = "DiceTests.preferences.migration.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		defaults.set("subtle", forKey: "Dice.animationIntensity")
+		defaults.set("classic", forKey: "Dice.theme")
+		defaults.set("balanced", forKey: "Dice.boardLayoutPreset")
+		let store = DicePreferencesStore(defaults: defaults)
+
+		let loaded = store.load()
+		XCTAssertEqual(loaded.animationIntensity, .full)
+		XCTAssertEqual(loaded.theme, .lightMode)
+		XCTAssertEqual(loaded.boardLayoutPreset, .compact)
 	}
 
 	func testRollHistoryAppendsInNewestFirstOrder() {
@@ -776,10 +791,10 @@ final class DiceTests: XCTestCase {
 			historyStore: DiceRollHistoryStore(defaults: defaults)
 		)
 
-		viewModel.setAnimationIntensity(.subtle)
-		XCTAssertEqual(viewModel.animationIntensity, .subtle)
+		viewModel.setAnimationIntensity(.full)
+		XCTAssertEqual(viewModel.animationIntensity, .full)
 		XCTAssertTrue(viewModel.animationsEnabled)
-		XCTAssertEqual(preferencesStore.load().animationIntensity, .subtle)
+		XCTAssertEqual(preferencesStore.load().animationIntensity, .full)
 	}
 
 	func testViewModelThemeSelectionPersistsToPreferences() {
@@ -792,10 +807,10 @@ final class DiceTests: XCTestCase {
 			historyStore: DiceRollHistoryStore(defaults: defaults)
 		)
 
-		XCTAssertEqual(viewModel.theme, .classic)
-		viewModel.setTheme(.highContrast)
-		XCTAssertEqual(viewModel.theme, .highContrast)
-		XCTAssertEqual(preferencesStore.load().theme, .highContrast)
+		XCTAssertEqual(viewModel.theme, .system)
+		viewModel.setTheme(.darkMode)
+		XCTAssertEqual(viewModel.theme, .darkMode)
+		XCTAssertEqual(preferencesStore.load().theme, .darkMode)
 	}
 
 	func testViewModelTextureSelectionPersistsToPreferences() {
@@ -894,22 +909,6 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(preferencesStore.load().faceNumeralFont, .serif)
 	}
 
-	func testViewModelBoardCameraPresetPersistsToPreferences() {
-		let suiteName = "DiceTests.viewmodel.camerapreset.\(UUID().uuidString)"
-		let defaults = UserDefaults(suiteName: suiteName)!
-		defer { defaults.removePersistentDomain(forName: suiteName) }
-		let preferencesStore = DicePreferencesStore(defaults: defaults)
-		let viewModel = DiceViewModel(
-			preferencesStore: preferencesStore,
-			historyStore: DiceRollHistoryStore(defaults: defaults)
-		)
-
-		XCTAssertEqual(viewModel.boardCameraPreset, .slightTilt)
-		viewModel.setBoardCameraPreset(.dramatic)
-		XCTAssertEqual(viewModel.boardCameraPreset, .dramatic)
-		XCTAssertEqual(preferencesStore.load().boardCameraPreset, .dramatic)
-	}
-
 	func testViewModelMotionBlurTogglePersistsToPreferences() {
 		let suiteName = "DiceTests.viewmodel.motionblur.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!
@@ -936,12 +935,12 @@ final class DiceTests: XCTestCase {
 			historyStore: DiceRollHistoryStore(defaults: defaults)
 		)
 
-		XCTNil(viewModel.animationSeed)
+		XCTAssertNil(viewModel.animationSeed)
 		viewModel.setAnimationSeed(42)
 		XCTAssertEqual(viewModel.animationSeed, 42)
 		XCTAssertEqual(preferencesStore.load().animationSeed, 42)
 		viewModel.setAnimationSeed(nil)
-		XCTNil(preferencesStore.load().animationSeed)
+		XCTAssertNil(preferencesStore.load().animationSeed)
 	}
 
 	func testViewModelBoardLayoutPresetPersistsToPreferences() {
@@ -954,7 +953,7 @@ final class DiceTests: XCTestCase {
 			historyStore: DiceRollHistoryStore(defaults: defaults)
 		)
 
-		XCTAssertEqual(viewModel.boardLayoutPreset, .balanced)
+		XCTAssertEqual(viewModel.boardLayoutPreset, .compact)
 		viewModel.setBoardLayoutPreset(.spacious)
 		XCTAssertEqual(viewModel.boardLayoutPreset, .spacious)
 		XCTAssertEqual(preferencesStore.load().boardLayoutPreset, .spacious)
@@ -970,26 +969,24 @@ final class DiceTests: XCTestCase {
 			historyStore: DiceRollHistoryStore(defaults: defaults)
 		)
 
-		viewModel.setTheme(.darkSlate)
+		viewModel.setTheme(.darkMode)
 		viewModel.setTableTexture(.wood)
 		viewModel.setDieFinish(.stone)
 		viewModel.setEdgeOutlinesEnabled(true)
 		viewModel.setDieColorPreset(.sapphire, for: 20)
 		viewModel.setD6PipStyle(.inset)
 		viewModel.setFaceNumeralFont(.mono)
-		viewModel.setBoardCameraPreset(.dramatic)
 		viewModel.setMotionBlurEnabled(true)
 
 		viewModel.resetVisualPreferences()
 
-		XCTAssertEqual(viewModel.theme, .classic)
+		XCTAssertEqual(viewModel.theme, .system)
 		XCTAssertEqual(viewModel.tableTexture, .neutral)
 		XCTAssertEqual(viewModel.dieFinish, .matte)
 		XCTAssertFalse(viewModel.edgeOutlinesEnabled)
 		XCTAssertEqual(viewModel.dieColorPreset(for: 20), .ivory)
 		XCTAssertEqual(viewModel.d6PipStyle, .round)
 		XCTAssertEqual(viewModel.faceNumeralFont, .classic)
-		XCTAssertEqual(viewModel.boardCameraPreset, .slightTilt)
 		XCTAssertFalse(viewModel.motionBlurEnabled)
 	}
 
@@ -1002,8 +999,8 @@ final class DiceTests: XCTestCase {
 			historyStore: DiceRollHistoryStore(defaults: defaults)
 		)
 
-		XCTNil(viewModel.notationHint(for: "3d6+2d4"))
-		XCTNotNil(viewModel.notationHint(for: "3x6"))
+		XCTAssertNil(viewModel.notationHint(for: "3d6+2d4"))
+		XCTAssertNotNil(viewModel.notationHint(for: "3x6"))
 	}
 
 	func testDieFinishPresetAppliesDistinctMaterialParameters() {
