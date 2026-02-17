@@ -103,7 +103,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Add user-selectable color themes (Classic, Dark Slate, High Contrast) backed by app-wide style tokens.
 - [x] Add selectable table/background textures (felt, wood, neutral) with performance-safe asset loading.
 - [x] Add configurable die body finish presets (matte, gloss, stone) via SceneKit material parameters.
-- [ ] Add optional edge-outline rendering toggle to improve readability of lighter dice.
+- [x] Add optional edge-outline rendering toggle to improve readability of lighter dice.
 - [ ] Add per-face contrast calibration so numerals/pips remain legible across theme and texture combinations.
 
 ### Dice Visual Customization

@@ -14,18 +14,20 @@ struct DiceUserPreferences: Equatable {
 	var theme: DiceTheme
 	var tableTexture: DiceTableTexture
 	var dieFinish: DiceDieFinish
+	var edgeOutlinesEnabled: Bool
 
-	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, theme: DiceTheme = .classic, tableTexture: DiceTableTexture = .neutral, dieFinish: DiceDieFinish = .matte) {
+	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, theme: DiceTheme = .classic, tableTexture: DiceTableTexture = .neutral, dieFinish: DiceDieFinish = .matte, edgeOutlinesEnabled: Bool = false) {
 		self.lastNotation = lastNotation
 		self.recentPresets = recentPresets
 		self.animationsEnabled = animationsEnabled
 		self.theme = theme
 		self.tableTexture = tableTexture
 		self.dieFinish = dieFinish
+		self.edgeOutlinesEnabled = edgeOutlinesEnabled
 	}
 
 	static var `default`: DiceUserPreferences {
-		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, theme: .classic, tableTexture: .neutral, dieFinish: .matte)
+		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, theme: .classic, tableTexture: .neutral, dieFinish: .matte, edgeOutlinesEnabled: false)
 	}
 }
 
@@ -37,6 +39,7 @@ final class DicePreferencesStore {
 		static let theme = "Dice.theme"
 		static let tableTexture = "Dice.tableTexture"
 		static let dieFinish = "Dice.dieFinish"
+		static let edgeOutlinesEnabled = "Dice.edgeOutlinesEnabled"
 	}
 
 	private let defaults: UserDefaults
@@ -57,13 +60,15 @@ final class DicePreferencesStore {
 		let tableTexture = rawTexture.flatMap(DiceTableTexture.init(rawValue:)) ?? DiceUserPreferences.default.tableTexture
 		let rawFinish = defaults.string(forKey: Keys.dieFinish)
 		let dieFinish = rawFinish.flatMap(DiceDieFinish.init(rawValue:)) ?? DiceUserPreferences.default.dieFinish
+		let edgeOutlinesEnabled = defaults.object(forKey: Keys.edgeOutlinesEnabled) as? Bool ?? DiceUserPreferences.default.edgeOutlinesEnabled
 		return DiceUserPreferences(
 			lastNotation: notation,
 			recentPresets: presets,
 			animationsEnabled: animationsEnabled,
 			theme: theme,
 			tableTexture: tableTexture,
-			dieFinish: dieFinish
+			dieFinish: dieFinish,
+			edgeOutlinesEnabled: edgeOutlinesEnabled
 		)
 	}
 
@@ -74,6 +79,7 @@ final class DicePreferencesStore {
 		defaults.set(preferences.theme.rawValue, forKey: Keys.theme)
 		defaults.set(preferences.tableTexture.rawValue, forKey: Keys.tableTexture)
 		defaults.set(preferences.dieFinish.rawValue, forKey: Keys.dieFinish)
+		defaults.set(preferences.edgeOutlinesEnabled, forKey: Keys.edgeOutlinesEnabled)
 	}
 
 	func addRecentPreset(_ notation: String) {

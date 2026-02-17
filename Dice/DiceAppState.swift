@@ -43,6 +43,7 @@ final class DiceAppState {
 	var theme: DiceTheme
 	var tableTexture: DiceTableTexture
 	var dieFinish: DiceDieFinish
+	var edgeOutlinesEnabled: Bool
 
 	init(configuration: RollConfiguration = RollConfiguration(diceCount: 6, sideCount: 6, intuitive: false)) {
 		self.configuration = configuration
@@ -53,6 +54,7 @@ final class DiceAppState {
 		self.theme = .classic
 		self.tableTexture = .neutral
 		self.dieFinish = .matte
+		self.edgeOutlinesEnabled = false
 	}
 
 	func applyRollOutcome(_ outcome: RollOutcome) {

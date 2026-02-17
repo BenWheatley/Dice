@@ -282,6 +282,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 		diceBoardView.isHidden = false
 		diceBoardView.setDieFinish(viewModel.dieFinish)
+		diceBoardView.setEdgeOutlinesEnabled(viewModel.edgeOutlinesEnabled)
 
 		let sideLength = 0.25 * min(collectionView.bounds.width, collectionView.bounds.height)
 		let itemCount = collectionView.numberOfItems(inSection: 0)
@@ -514,10 +515,16 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			options: .displayInline,
 			children: finishActions
 		)
+		let outlinesAction = UIAction(
+			title: NSLocalizedString("menu.control.edgeOutlines", comment: "Edge outlines toggle menu title"),
+			state: viewModel.edgeOutlinesEnabled ? .on : .off
+		) { [weak self] _ in
+			self?.toggleEdgeOutlines()
+		}
 		let resetAction = UIAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), attributes: .destructive) { [weak self] _ in
 			self?.resetStats()
 		}
-		menuButton.menu = UIMenu(children: [historyAction, themeMenu, textureMenu, finishMenu, animationAction, statsAction, resetAction])
+		menuButton.menu = UIMenu(children: [historyAction, themeMenu, textureMenu, finishMenu, outlinesAction, animationAction, statsAction, resetAction])
 	}
 
 	@objc private func toggleStatsVisibility() {
@@ -556,6 +563,13 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		viewModel.setDieFinish(finish)
 		currentDieFinish = finish
 		diceBoardView.setDieFinish(finish)
+		updateDiceBoard(animated: false)
+		updateControlMenu()
+	}
+
+	private func toggleEdgeOutlines() {
+		viewModel.setEdgeOutlinesEnabled(!viewModel.edgeOutlinesEnabled)
+		diceBoardView.setEdgeOutlinesEnabled(viewModel.edgeOutlinesEnabled)
 		updateDiceBoard(animated: false)
 		updateControlMenu()
 	}

@@ -409,7 +409,8 @@ final class DiceTests: XCTestCase {
 			animationsEnabled: false,
 			theme: .darkSlate,
 			tableTexture: .wood,
-			dieFinish: .stone
+			dieFinish: .stone,
+			edgeOutlinesEnabled: true
 		)
 
 		store.save(expected)
@@ -726,6 +727,22 @@ final class DiceTests: XCTestCase {
 		viewModel.setDieFinish(.gloss)
 		XCTAssertEqual(viewModel.dieFinish, .gloss)
 		XCTAssertEqual(preferencesStore.load().dieFinish, .gloss)
+	}
+
+	func testViewModelEdgeOutlineTogglePersistsToPreferences() {
+		let suiteName = "DiceTests.viewmodel.outlines.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		XCTAssertFalse(viewModel.edgeOutlinesEnabled)
+		viewModel.setEdgeOutlinesEnabled(true)
+		XCTAssertTrue(viewModel.edgeOutlinesEnabled)
+		XCTAssertTrue(preferencesStore.load().edgeOutlinesEnabled)
 	}
 
 	func testDieFinishPresetAppliesDistinctMaterialParameters() {

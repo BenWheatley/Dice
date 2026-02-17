@@ -22,6 +22,7 @@
 "menu.control.theme" = "Theme";
 "menu.control.texture" = "Table Texture";
 "menu.control.finish" = "Die Finish";
+"menu.control.edgeOutlines" = "Edge Outlines";
 "theme.classic" = "Classic";
 "theme.darkSlate" = "Dark Slate";
 "theme.highContrast" = "High Contrast";

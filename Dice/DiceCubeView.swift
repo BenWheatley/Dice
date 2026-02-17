@@ -45,6 +45,7 @@ final class DiceCubeView: UIView {
 	private var labelValueCache: [ObjectIdentifier: Int] = [:]
 	private var lifecycleObservers: [NSObjectProtocol] = []
 	private var activeDieFinish: DiceDieFinish = .matte
+	private var activeEdgeOutlinesEnabled = false
 	private var needsMeshRefresh = false
 
 	override init(frame: CGRect) {
@@ -91,7 +92,11 @@ final class DiceCubeView: UIView {
 			let didSideChange = dieSideCounts[index] != sideCount
 			if didSideChange || sizeChanged || styleChanged {
 				let body = container.childNode(withName: "body", recursively: false)
-				body?.geometry = builtMesh(sideLength: sideLength, sideCount: sideCount).geometry
+				let mesh = builtMesh(sideLength: sideLength, sideCount: sideCount)
+				body?.geometry = mesh.geometry
+				let outline = container.childNode(withName: "outline", recursively: false)
+				outline?.geometry = makeOutlineGeometry(from: mesh.geometry)
+				outline?.isHidden = !activeEdgeOutlinesEnabled
 				dieSideCounts[index] = sideCount
 			}
 
@@ -125,6 +130,12 @@ final class DiceCubeView: UIView {
 	func setDieFinish(_ finish: DiceDieFinish) {
 		guard activeDieFinish != finish else { return }
 		activeDieFinish = finish
+		needsMeshRefresh = true
+	}
+
+	func setEdgeOutlinesEnabled(_ enabled: Bool) {
+		guard activeEdgeOutlinesEnabled != enabled else { return }
+		activeEdgeOutlinesEnabled = enabled
 		needsMeshRefresh = true
 	}
 
@@ -211,6 +222,12 @@ final class DiceCubeView: UIView {
 			body.name = "body"
 			body.geometry = builtMesh(sideLength: max(currentSideLength, 60), sideCount: 6).geometry
 			container.addChildNode(body)
+
+			let outline = SCNNode()
+			outline.name = "outline"
+			outline.geometry = makeOutlineGeometry(from: body.geometry!)
+			outline.isHidden = !activeEdgeOutlinesEnabled
+			container.addChildNode(outline)
 
 			let label = SCNNode()
 			label.name = "label"
@@ -401,6 +418,21 @@ final class DiceCubeView: UIView {
 		material.isDoubleSided = false
 		activeDieFinish.apply(to: material)
 		return material
+	}
+
+	private func makeOutlineGeometry(from source: SCNGeometry) -> SCNGeometry {
+		let outline = source.copy() as! SCNGeometry
+		let outlineMaterialCount = max(1, outline.materials.count)
+		outline.materials = (0..<outlineMaterialCount).map { _ in
+			let material = SCNMaterial()
+			material.lightingModel = .constant
+			material.diffuse.contents = UIColor.clear
+			material.emission.contents = UIColor(white: 0.05, alpha: 1.0)
+			material.fillMode = .lines
+			material.isDoubleSided = true
+			return material
+		}
+		return outline
 	}
 
 	private func d4VertexLabels(forFace face: [Int]) -> [Int] {
