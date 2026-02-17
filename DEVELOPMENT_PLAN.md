@@ -167,7 +167,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 ### Constraints and Layout Model (Harsh Size Limits)
 
 - [ ] Define watch layout budget (44mm/45mm/49mm targets): max tap zones, max text length, and hierarchy depth.
-- [ ] Create single-screen information architecture for watch roll flow (one primary action, one secondary mode action).
+- [x] Create single-screen information architecture for watch roll flow (one primary action, one secondary mode action).
 - [ ] Replace dense text with glanceable status tokens (notation, mode, last value) tuned for watch legibility.
 - [ ] Add dynamic type and accessibility size pass specific to watch small-screen clipping cases.
 - [ ] Add watch UI snapshot checklist for edge-case strings and long localized labels.
