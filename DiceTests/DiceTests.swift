@@ -724,6 +724,15 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(viewModel.statusText(rollCount: 4), "1d6i • 4")
 	}
 
+	func testD6FaceOrientationProvidesDistinctExpectedMappings() {
+		XCTAssertEqual(D6FaceOrientation.eulerAngles(for: 1).y, 0, accuracy: 0.0001)
+		XCTAssertEqual(D6FaceOrientation.eulerAngles(for: 2).y, -Float.pi / 2, accuracy: 0.0001)
+		XCTAssertEqual(D6FaceOrientation.eulerAngles(for: 3).y, Float.pi, accuracy: 0.0001)
+		XCTAssertEqual(D6FaceOrientation.eulerAngles(for: 4).y, Float.pi / 2, accuracy: 0.0001)
+		XCTAssertEqual(D6FaceOrientation.eulerAngles(for: 5).x, Float.pi / 2, accuracy: 0.0001)
+		XCTAssertEqual(D6FaceOrientation.eulerAngles(for: 6).x, -Float.pi / 2, accuracy: 0.0001)
+	}
+
 	func testIndependentViewModelsMaintainIsolatedActiveDiceSets() {
 		let suiteName = "DiceTests.multiwindow.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!

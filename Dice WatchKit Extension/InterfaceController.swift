@@ -189,21 +189,7 @@ class InterfaceController: WKInterfaceController {
 	}
 
 	private func orientation(for value: Int) -> SCNVector3 {
-		switch value {
-		case 1:
-			return SCNVector3Zero
-		case 2:
-			return SCNVector3(0, -Float.pi / 2, 0)
-		case 3:
-			return SCNVector3(0, Float.pi, 0)
-		case 4:
-			return SCNVector3(0, Float.pi / 2, 0)
-		case 5:
-			return SCNVector3(Float.pi / 2, 0, 0)
-		case 6:
-			return SCNVector3(-Float.pi / 2, 0, 0)
-		default:
-			return SCNVector3Zero
-		}
+		let angles = D6FaceOrientation.eulerAngles(for: value)
+		return SCNVector3(angles.x, angles.y, angles.z)
 	}
 }

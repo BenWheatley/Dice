@@ -690,6 +690,10 @@ final class DiceCubeView: UIView {
 	}
 
 	private func orientation(for value: Int, sideCount: Int) -> SCNVector3 {
+		if sideCount == 6 {
+			let angles = D6FaceOrientation.eulerAngles(for: value)
+			return SCNVector3(angles.x, angles.y, angles.z)
+		}
 		if sideCount == 4 {
 			return d4Orientation(for: value)
 		}
