@@ -13,17 +13,19 @@ struct DiceUserPreferences: Equatable {
 	var animationsEnabled: Bool
 	var theme: DiceTheme
 	var tableTexture: DiceTableTexture
+	var dieFinish: DiceDieFinish
 
-	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, theme: DiceTheme = .classic, tableTexture: DiceTableTexture = .neutral) {
+	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, theme: DiceTheme = .classic, tableTexture: DiceTableTexture = .neutral, dieFinish: DiceDieFinish = .matte) {
 		self.lastNotation = lastNotation
 		self.recentPresets = recentPresets
 		self.animationsEnabled = animationsEnabled
 		self.theme = theme
 		self.tableTexture = tableTexture
+		self.dieFinish = dieFinish
 	}
 
 	static var `default`: DiceUserPreferences {
-		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, theme: .classic, tableTexture: .neutral)
+		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, theme: .classic, tableTexture: .neutral, dieFinish: .matte)
 	}
 }
 
@@ -34,6 +36,7 @@ final class DicePreferencesStore {
 		static let animationsEnabled = "Dice.animationsEnabled"
 		static let theme = "Dice.theme"
 		static let tableTexture = "Dice.tableTexture"
+		static let dieFinish = "Dice.dieFinish"
 	}
 
 	private let defaults: UserDefaults
@@ -52,7 +55,16 @@ final class DicePreferencesStore {
 		let theme = rawTheme.flatMap(DiceTheme.init(rawValue:)) ?? DiceUserPreferences.default.theme
 		let rawTexture = defaults.string(forKey: Keys.tableTexture)
 		let tableTexture = rawTexture.flatMap(DiceTableTexture.init(rawValue:)) ?? DiceUserPreferences.default.tableTexture
-		return DiceUserPreferences(lastNotation: notation, recentPresets: presets, animationsEnabled: animationsEnabled, theme: theme, tableTexture: tableTexture)
+		let rawFinish = defaults.string(forKey: Keys.dieFinish)
+		let dieFinish = rawFinish.flatMap(DiceDieFinish.init(rawValue:)) ?? DiceUserPreferences.default.dieFinish
+		return DiceUserPreferences(
+			lastNotation: notation,
+			recentPresets: presets,
+			animationsEnabled: animationsEnabled,
+			theme: theme,
+			tableTexture: tableTexture,
+			dieFinish: dieFinish
+		)
 	}
 
 	func save(_ preferences: DiceUserPreferences) {
@@ -61,6 +73,7 @@ final class DicePreferencesStore {
 		defaults.set(preferences.animationsEnabled, forKey: Keys.animationsEnabled)
 		defaults.set(preferences.theme.rawValue, forKey: Keys.theme)
 		defaults.set(preferences.tableTexture.rawValue, forKey: Keys.tableTexture)
+		defaults.set(preferences.dieFinish.rawValue, forKey: Keys.dieFinish)
 	}
 
 	func addRecentPreset(_ notation: String) {

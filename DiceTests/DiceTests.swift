@@ -8,6 +8,7 @@
 
 import XCTest
 import UIKit
+import SceneKit
 import simd
 @testable import Dice
 
@@ -407,7 +408,8 @@ final class DiceTests: XCTestCase {
 			recentPresets: ["12d10i", "6d6"],
 			animationsEnabled: false,
 			theme: .darkSlate,
-			tableTexture: .wood
+			tableTexture: .wood,
+			dieFinish: .stone
 		)
 
 		store.save(expected)
@@ -708,6 +710,33 @@ final class DiceTests: XCTestCase {
 		viewModel.setTableTexture(.felt)
 		XCTAssertEqual(viewModel.tableTexture, .felt)
 		XCTAssertEqual(preferencesStore.load().tableTexture, .felt)
+	}
+
+	func testViewModelDieFinishSelectionPersistsToPreferences() {
+		let suiteName = "DiceTests.viewmodel.finish.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		XCTAssertEqual(viewModel.dieFinish, .matte)
+		viewModel.setDieFinish(.gloss)
+		XCTAssertEqual(viewModel.dieFinish, .gloss)
+		XCTAssertEqual(preferencesStore.load().dieFinish, .gloss)
+	}
+
+	func testDieFinishPresetAppliesDistinctMaterialParameters() {
+		let gloss = SCNMaterial()
+		let stone = SCNMaterial()
+		DiceDieFinish.gloss.apply(to: gloss)
+		DiceDieFinish.stone.apply(to: stone)
+
+		XCTAssertEqual(gloss.lightingModel, .blinn)
+		XCTAssertEqual(stone.lightingModel, .lambert)
+		XCTAssertGreaterThan(gloss.shininess, stone.shininess)
 	}
 
 	func testViewModelFormattedTotalsOmitsBoardWarningForSupportedMixedDice() {

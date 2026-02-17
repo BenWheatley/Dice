@@ -21,12 +21,16 @@
 "menu.control.actions" = "Actions";
 "menu.control.theme" = "Theme";
 "menu.control.texture" = "Table Texture";
+"menu.control.finish" = "Die Finish";
 "theme.classic" = "Classic";
 "theme.darkSlate" = "Dark Slate";
 "theme.highContrast" = "High Contrast";
 "texture.felt" = "Felt";
 "texture.wood" = "Wood";
 "texture.neutral" = "Neutral";
+"finish.matte" = "Matte";
+"finish.gloss" = "Gloss";
+"finish.stone" = "Stone";
 "alert.invalid.title" = "Invalid dice input";
 "alert.invalid.announcement" = "Invalid dice notation.";
 "history.title" = "Roll History";

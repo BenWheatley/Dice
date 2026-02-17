@@ -14,6 +14,7 @@ final class DiceCubeView: UIView {
 	private struct MeshCacheKey: Hashable {
 		let sideCount: Int
 		let roundedSideLength: Int
+		let dieFinish: DiceDieFinish
 	}
 
 	private struct BadgeCacheKey: Hashable {
@@ -43,6 +44,8 @@ final class DiceCubeView: UIView {
 	private var badgeImageCache: [BadgeCacheKey: UIImage] = [:]
 	private var labelValueCache: [ObjectIdentifier: Int] = [:]
 	private var lifecycleObservers: [NSObjectProtocol] = []
+	private var activeDieFinish: DiceDieFinish = .matte
+	private var needsMeshRefresh = false
 
 	override init(frame: CGRect) {
 		super.init(frame: frame)
@@ -81,11 +84,12 @@ final class DiceCubeView: UIView {
 			}
 		}
 
+		let styleChanged = needsMeshRefresh
 		for index in values.indices {
 			let container = dieNodes[index]
 			let sideCount = sideCounts[index]
 			let didSideChange = dieSideCounts[index] != sideCount
-			if didSideChange || sizeChanged {
+			if didSideChange || sizeChanged || styleChanged {
 				let body = container.childNode(withName: "body", recursively: false)
 				body?.geometry = builtMesh(sideLength: sideLength, sideCount: sideCount).geometry
 				dieSideCounts[index] = sideCount
@@ -115,6 +119,13 @@ final class DiceCubeView: UIView {
 				container.eulerAngles = orientation(for: targetFace, sideCount: sideCount)
 			}
 		}
+		needsMeshRefresh = false
+	}
+
+	func setDieFinish(_ finish: DiceDieFinish) {
+		guard activeDieFinish != finish else { return }
+		activeDieFinish = finish
+		needsMeshRefresh = true
 	}
 
 	private func configureScene() {
@@ -367,7 +378,7 @@ final class DiceCubeView: UIView {
 
 	private func builtMesh(sideLength: CGFloat, sideCount: Int) -> BuiltMesh {
 		let roundedSideLength = Int(sideLength.rounded())
-		let key = MeshCacheKey(sideCount: sideCount, roundedSideLength: roundedSideLength)
+		let key = MeshCacheKey(sideCount: sideCount, roundedSideLength: roundedSideLength, dieFinish: activeDieFinish)
 		if let cached = meshCache[key] {
 			return cached
 		}
@@ -388,6 +399,7 @@ final class DiceCubeView: UIView {
 		}
 		material.locksAmbientWithDiffuse = true
 		material.isDoubleSided = false
+		activeDieFinish.apply(to: material)
 		return material
 	}
 

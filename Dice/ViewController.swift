@@ -39,6 +39,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private var controlsContainer: UIView?
 	private var currentPalette = DiceTheme.classic.palette
 	private var currentTexture: DiceTableTexture = .neutral
+	private var currentDieFinish: DiceDieFinish = .matte
 	private let statsVisibilityKey = "Dice.showStats"
 	private var statsVisible = true
 
@@ -280,6 +281,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		}
 
 		diceBoardView.isHidden = false
+		diceBoardView.setDieFinish(viewModel.dieFinish)
 
 		let sideLength = 0.25 * min(collectionView.bounds.width, collectionView.bounds.height)
 		let itemCount = collectionView.numberOfItems(inSection: 0)
@@ -499,10 +501,23 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			options: .displayInline,
 			children: textureActions
 		)
+		let finishActions = DiceDieFinish.allCases.map { finish in
+			UIAction(
+				title: NSLocalizedString(finish.menuTitleKey, comment: "Die finish option"),
+				state: self.viewModel.dieFinish == finish ? .on : .off
+			) { [weak self] _ in
+				self?.selectDieFinish(finish)
+			}
+		}
+		let finishMenu = UIMenu(
+			title: NSLocalizedString("menu.control.finish", comment: "Die finish submenu title"),
+			options: .displayInline,
+			children: finishActions
+		)
 		let resetAction = UIAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), attributes: .destructive) { [weak self] _ in
 			self?.resetStats()
 		}
-		menuButton.menu = UIMenu(children: [historyAction, themeMenu, textureMenu, animationAction, statsAction, resetAction])
+		menuButton.menu = UIMenu(children: [historyAction, themeMenu, textureMenu, finishMenu, animationAction, statsAction, resetAction])
 	}
 
 	@objc private func toggleStatsVisibility() {
@@ -537,10 +552,19 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		updateControlMenu()
 	}
 
+	private func selectDieFinish(_ finish: DiceDieFinish) {
+		viewModel.setDieFinish(finish)
+		currentDieFinish = finish
+		diceBoardView.setDieFinish(finish)
+		updateDiceBoard(animated: false)
+		updateControlMenu()
+	}
+
 	private func applyTheme() {
 		let palette = viewModel.theme.palette
 		currentPalette = palette
 		currentTexture = viewModel.tableTexture
+		currentDieFinish = viewModel.dieFinish
 		view.backgroundColor = palette.screenBackgroundColor
 		applyTexture()
 		controlsContainer?.backgroundColor = palette.panelBackgroundColor
@@ -553,6 +577,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		rollButton.setTitleColor(buttonColor, for: .normal)
 		presetsButton.setTitleColor(buttonColor, for: .normal)
 		menuButton.tintColor = buttonColor
+		diceBoardView.setDieFinish(currentDieFinish)
 	}
 
 	private func applyTexture() {
