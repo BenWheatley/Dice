@@ -174,7 +174,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 ### SceneKit Feasibility and Reuse
 
-- [ ] Confirm watchOS SceneKit approach using `WKInterfaceSCNScene` and document API constraints vs `SCNView`.
+- [x] Confirm watchOS SceneKit approach using `WKInterfaceSCNScene` and document API constraints vs `SCNView`.
 - [ ] Extract minimal shared D6 SceneKit render config (geometry/material/orientation) reusable by iOS + watchOS.
 - [ ] Implement watch single-die D6 SceneKit preview (one die only, no board grid) for performance safety.
 - [ ] Map roll result to D6 face orientation using shared orientation helper to keep iOS/watch parity.
