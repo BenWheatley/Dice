@@ -1,3 +1,14 @@
-/Dice.xcodeproj/xcuserdata
-/Dice.xcodeproj/project.xcworkspace/xcuserdata
-/Dice.xcodeproj/xcuserdata
+.DS_Store
+
+# Xcode user-local state
+**/xcuserdata/
+*.xcuserstate
+
+# Xcode / Swift build artifacts
+DerivedData/
+build/
+.build/
+
+# Test and profiling outputs
+*.xcresult
+*.trace
