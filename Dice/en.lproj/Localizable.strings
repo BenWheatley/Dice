@@ -20,9 +20,13 @@
 "menu.control.showStats" = "Show Stats";
 "menu.control.actions" = "Actions";
 "menu.control.theme" = "Theme";
+"menu.control.texture" = "Table Texture";
 "theme.classic" = "Classic";
 "theme.darkSlate" = "Dark Slate";
 "theme.highContrast" = "High Contrast";
+"texture.felt" = "Felt";
+"texture.wood" = "Wood";
+"texture.neutral" = "Neutral";
 "alert.invalid.title" = "Invalid dice input";
 "alert.invalid.announcement" = "Invalid dice notation.";
 "history.title" = "Roll History";

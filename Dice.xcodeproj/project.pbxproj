@@ -39,6 +39,7 @@
 		C0DE00132F44014200D1CE00 /* DiceViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00122F44014200D1CE00 /* DiceViewModel.swift */; };
 		C0DE00152F44016400D1CE00 /* WatchRollViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00142F44016400D1CE00 /* WatchRollViewModel.swift */; };
 		C0DE00332F44035300D1CE00 /* DiceTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00322F44035300D1CE00 /* DiceTheme.swift */; };
+		C0DE00352F4403A100D1CE00 /* DiceTableTexture.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00342F4403A100D1CE00 /* DiceTableTexture.swift */; };
 		C0DE00212F44022100D1CE00 /* DiceNotationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00002F44000100D1CE00 /* DiceNotationParser.swift */; };
 		C0DE00232F44022300D1CE00 /* TrueRandomRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00022F44003200D1CE00 /* TrueRandomRoller.swift */; };
 		C0DE00252F44022500D1CE00 /* IntuitiveRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00042F44005400D1CE00 /* IntuitiveRoller.swift */; };
@@ -141,6 +142,7 @@
 		C0DE00102F44012000D1CE00 /* DiceTelemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceTelemetry.swift; sourceTree = "<group>"; };
 		C0DE00122F44014200D1CE00 /* DiceViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceViewModel.swift; sourceTree = "<group>"; };
 		C0DE00322F44035300D1CE00 /* DiceTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceTheme.swift; sourceTree = "<group>"; };
+		C0DE00342F4403A100D1CE00 /* DiceTableTexture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceTableTexture.swift; sourceTree = "<group>"; };
 		C0DE00302F44033100D1CE00 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C0DE00142F44016400D1CE00 /* WatchRollViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRollViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -219,6 +221,7 @@
 				C0DE00102F44012000D1CE00 /* DiceTelemetry.swift */,
 				C0DE00122F44014200D1CE00 /* DiceViewModel.swift */,
 				C0DE00322F44035300D1CE00 /* DiceTheme.swift */,
+				C0DE00342F4403A100D1CE00 /* DiceTableTexture.swift */,
 				C0DE00142F44016400D1CE00 /* WatchRollViewModel.swift */,
 				B57DA5B92F4228E00057BC3A /* DiceCubeView.swift */,
 				B50B44D4215D803D00A6399B /* Main.storyboard */,
@@ -477,6 +480,7 @@
 				C0DE00132F44014200D1CE00 /* DiceViewModel.swift in Sources */,
 				C0DE00152F44016400D1CE00 /* WatchRollViewModel.swift in Sources */,
 				C0DE00332F44035300D1CE00 /* DiceTheme.swift in Sources */,
+				C0DE00352F4403A100D1CE00 /* DiceTableTexture.swift in Sources */,
 				C0DE00112F44012000D1CE00 /* DiceTelemetry.swift in Sources */,
 				C0DE000F2F4400FE00D1CE00 /* DiceRollHistoryStore.swift in Sources */,
 				C0DE000D2F4400DC00D1CE00 /* DiceRollHistory.swift in Sources */,

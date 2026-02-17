@@ -38,6 +38,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let diceBoardView = DiceCubeView()
 	private var controlsContainer: UIView?
 	private var currentPalette = DiceTheme.classic.palette
+	private var currentTexture: DiceTableTexture = .neutral
 	private let statsVisibilityKey = "Dice.showStats"
 	private var statsVisible = true
 
@@ -45,7 +46,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		super.viewDidLoad()
 		viewModel.restore()
 
-		collectionView.backgroundColor = UIColor(patternImage: UIImage(named: "stripes")!)
 		collectionView.keyboardDismissMode = .onDrag
 		configureControls()
 		configureDiceBoard()
@@ -486,10 +486,23 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			options: .displayInline,
 			children: themeActions
 		)
+		let textureActions = DiceTableTexture.allCases.map { texture in
+			UIAction(
+				title: NSLocalizedString(texture.menuTitleKey, comment: "Table texture option"),
+				state: self.viewModel.tableTexture == texture ? .on : .off
+			) { [weak self] _ in
+				self?.selectTexture(texture)
+			}
+		}
+		let textureMenu = UIMenu(
+			title: NSLocalizedString("menu.control.texture", comment: "Texture submenu title"),
+			options: .displayInline,
+			children: textureActions
+		)
 		let resetAction = UIAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), attributes: .destructive) { [weak self] _ in
 			self?.resetStats()
 		}
-		menuButton.menu = UIMenu(children: [historyAction, themeMenu, animationAction, statsAction, resetAction])
+		menuButton.menu = UIMenu(children: [historyAction, themeMenu, textureMenu, animationAction, statsAction, resetAction])
 	}
 
 	@objc private func toggleStatsVisibility() {
@@ -518,15 +531,18 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		updateControlMenu()
 	}
 
+	private func selectTexture(_ texture: DiceTableTexture) {
+		viewModel.setTableTexture(texture)
+		applyTexture()
+		updateControlMenu()
+	}
+
 	private func applyTheme() {
 		let palette = viewModel.theme.palette
 		currentPalette = palette
+		currentTexture = viewModel.tableTexture
 		view.backgroundColor = palette.screenBackgroundColor
-		if let imageName = palette.backgroundImageName, let image = UIImage(named: imageName) {
-			collectionView.backgroundColor = UIColor(patternImage: image)
-		} else {
-			collectionView.backgroundColor = palette.screenBackgroundColor
-		}
+		applyTexture()
 		controlsContainer?.backgroundColor = palette.panelBackgroundColor
 		totalsContainer.backgroundColor = palette.panelBackgroundColor
 		totalsLabel.textColor = palette.secondaryTextColor
@@ -537,6 +553,11 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		rollButton.setTitleColor(buttonColor, for: .normal)
 		presetsButton.setTitleColor(buttonColor, for: .normal)
 		menuButton.tintColor = buttonColor
+	}
+
+	private func applyTexture() {
+		currentTexture = viewModel.tableTexture
+		collectionView.backgroundColor = DiceTextureProvider.shared.patternColor(for: currentTexture)
 	}
 
 	private func themeTitle(for theme: DiceTheme) -> String {

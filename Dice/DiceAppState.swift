@@ -41,6 +41,7 @@ final class DiceAppState {
 	var stats: DiceStats
 	var animationsEnabled: Bool
 	var theme: DiceTheme
+	var tableTexture: DiceTableTexture
 
 	init(configuration: RollConfiguration = RollConfiguration(diceCount: 6, sideCount: 6, intuitive: false)) {
 		self.configuration = configuration
@@ -49,6 +50,7 @@ final class DiceAppState {
 		self.stats = .empty
 		self.animationsEnabled = true
 		self.theme = .classic
+		self.tableTexture = .neutral
 	}
 
 	func applyRollOutcome(_ outcome: RollOutcome) {

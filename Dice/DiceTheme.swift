@@ -16,7 +16,6 @@ enum DiceTheme: String, CaseIterable {
 		switch self {
 		case .classic:
 			return DiceThemePalette(
-				backgroundImageName: "stripes",
 				screenBackgroundColor: .systemBackground,
 				panelBackgroundColor: UIColor(white: 1.0, alpha: 0.9),
 				primaryTextColor: .label,
@@ -29,7 +28,6 @@ enum DiceTheme: String, CaseIterable {
 			)
 		case .darkSlate:
 			return DiceThemePalette(
-				backgroundImageName: nil,
 				screenBackgroundColor: UIColor(red: 0.12, green: 0.15, blue: 0.18, alpha: 1.0),
 				panelBackgroundColor: UIColor(red: 0.20, green: 0.24, blue: 0.28, alpha: 0.94),
 				primaryTextColor: UIColor(red: 0.94, green: 0.96, blue: 0.98, alpha: 1.0),
@@ -42,7 +40,6 @@ enum DiceTheme: String, CaseIterable {
 			)
 		case .highContrast:
 			return DiceThemePalette(
-				backgroundImageName: nil,
 				screenBackgroundColor: .black,
 				panelBackgroundColor: UIColor(white: 0.08, alpha: 1.0),
 				primaryTextColor: .white,
@@ -58,7 +55,6 @@ enum DiceTheme: String, CaseIterable {
 }
 
 struct DiceThemePalette {
-	let backgroundImageName: String?
 	let screenBackgroundColor: UIColor
 	let panelBackgroundColor: UIColor
 	let primaryTextColor: UIColor
