@@ -48,6 +48,7 @@ final class DiceCubeView: UIView {
 	private var activeEdgeOutlinesEnabled = false
 	private var activeDieColorPreferences: DiceDieColorPreferences = .default
 	private var activeD6PipStyle: DiceD6PipStyle = .round
+	private var activeFaceNumeralFont: DiceFaceNumeralFont = .classic
 	private var needsMeshRefresh = false
 
 	override init(frame: CGRect) {
@@ -152,6 +153,14 @@ final class DiceCubeView: UIView {
 		guard activeD6PipStyle != style else { return }
 		activeD6PipStyle = style
 		meshCache.removeAll()
+		needsMeshRefresh = true
+	}
+
+	func setFaceNumeralFont(_ font: DiceFaceNumeralFont) {
+		guard activeFaceNumeralFont != font else { return }
+		activeFaceNumeralFont = font
+		meshCache.removeAll()
+		badgeImageCache.removeAll()
 		needsMeshRefresh = true
 	}
 
@@ -479,7 +488,7 @@ final class DiceCubeView: UIView {
 
 			let placements = d4LabelPlacements(triangle: trianglePoints)
 			let attrs: [NSAttributedString.Key: Any] = [
-				.font: UIFont.boldSystemFont(ofSize: 54),
+				.font: activeFaceNumeralFont.numeralFont(ofSize: 54),
 				.foregroundColor: style.primaryInkColor
 			]
 			for (index, placement) in placements.enumerated() where index < vertexLabels.count {
@@ -540,7 +549,7 @@ final class DiceCubeView: UIView {
 
 			let text = "\(value)" as NSString
 			let attrs: [NSAttributedString.Key: Any] = [
-				.font: UIFont.boldSystemFont(ofSize: 73),
+				.font: activeFaceNumeralFont.numeralFont(ofSize: 73),
 				.foregroundColor: style.primaryInkColor
 			]
 			let tSize = text.size(withAttributes: attrs)
@@ -549,7 +558,7 @@ final class DiceCubeView: UIView {
 
 			let subtitle = "d\(sideCount)" as NSString
 			let subAttrs: [NSAttributedString.Key: Any] = [
-				.font: UIFont.systemFont(ofSize: 15, weight: .medium),
+				.font: activeFaceNumeralFont.captionFont(ofSize: 15),
 				.foregroundColor: style.secondaryInkColor
 			]
 			let sSize = subtitle.size(withAttributes: subAttrs)
@@ -584,7 +593,7 @@ final class DiceCubeView: UIView {
 
 			let text = "\(value)" as NSString
 			let attrs: [NSAttributedString.Key: Any] = [
-				.font: UIFont.boldSystemFont(ofSize: size.height * 0.56),
+				.font: activeFaceNumeralFont.numeralFont(ofSize: size.height * 0.56),
 				.foregroundColor: UIColor.black
 			]
 			let textSize = text.size(withAttributes: attrs)

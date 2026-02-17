@@ -46,6 +46,7 @@ final class DiceAppState {
 	var edgeOutlinesEnabled: Bool
 	var dieColorPreferences: DiceDieColorPreferences
 	var d6PipStyle: DiceD6PipStyle
+	var faceNumeralFont: DiceFaceNumeralFont
 
 	init(configuration: RollConfiguration = RollConfiguration(diceCount: 6, sideCount: 6, intuitive: false)) {
 		self.configuration = configuration
@@ -59,6 +60,7 @@ final class DiceAppState {
 		self.edgeOutlinesEnabled = false
 		self.dieColorPreferences = .default
 		self.d6PipStyle = .round
+		self.faceNumeralFont = .classic
 	}
 
 	func applyRollOutcome(_ outcome: RollOutcome) {

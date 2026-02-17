@@ -778,6 +778,22 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(preferencesStore.load().d6PipStyle, .inset)
 	}
 
+	func testViewModelFaceNumeralFontSelectionPersistsToPreferences() {
+		let suiteName = "DiceTests.viewmodel.numeralfont.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		XCTAssertEqual(viewModel.faceNumeralFont, .classic)
+		viewModel.setFaceNumeralFont(.serif)
+		XCTAssertEqual(viewModel.faceNumeralFont, .serif)
+		XCTAssertEqual(preferencesStore.load().faceNumeralFont, .serif)
+	}
+
 	func testDieFinishPresetAppliesDistinctMaterialParameters() {
 		let gloss = SCNMaterial()
 		let stone = SCNMaterial()
@@ -945,6 +961,20 @@ final class DiceTests: XCTestCase {
 		XCTAssertNotEqual(roundData, squareData)
 		XCTAssertNotEqual(roundData, insetData)
 		XCTAssertNotEqual(squareData, insetData)
+	}
+
+	func testNonD6NumeralFontsRemainReadableAtSmallSizes() {
+		let canvas = CGSize(width: 100, height: 100)
+		for font in DiceFaceNumeralFont.allCases {
+			XCTAssertTrue(
+				font.isReadable(sampleText: "100", pointSize: 28, canvas: canvas, inset: 10),
+				"Font \(font) should remain readable for three-digit faces"
+			)
+			XCTAssertTrue(
+				font.isReadable(sampleText: "20", pointSize: 24, canvas: CGSize(width: 70, height: 70), inset: 8),
+				"Font \(font) should remain readable for badge labels"
+			)
+		}
 	}
 
 	func testFaceContrastCalibrationKeepsReadableInkAcrossFaceFills() {

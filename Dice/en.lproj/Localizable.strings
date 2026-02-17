@@ -23,6 +23,7 @@
 "menu.control.texture" = "Table Texture";
 "menu.control.finish" = "Die Finish";
 "menu.control.pipStyle" = "D6 Pip Style";
+"menu.control.numeralFont" = "Numeral Font";
 "menu.control.dieColors" = "Die Colors";
 "menu.control.dieColor.side" = "d%d";
 "menu.control.edgeOutlines" = "Edge Outlines";
@@ -44,6 +45,10 @@
 "pipStyle.round" = "Round";
 "pipStyle.square" = "Square";
 "pipStyle.inset" = "Inset";
+"font.classic" = "Classic";
+"font.serif" = "Serif";
+"font.rounded" = "Rounded";
+"font.mono" = "Mono";
 "alert.invalid.title" = "Invalid dice input";
 "alert.invalid.announcement" = "Invalid dice notation.";
 "history.title" = "Roll History";

@@ -286,6 +286,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.setEdgeOutlinesEnabled(viewModel.edgeOutlinesEnabled)
 		diceBoardView.setDieColorPreferences(viewModel.dieColorPreferences)
 		diceBoardView.setD6PipStyle(viewModel.d6PipStyle)
+		diceBoardView.setFaceNumeralFont(viewModel.faceNumeralFont)
 
 		let sideLength = 0.25 * min(collectionView.bounds.width, collectionView.bounds.height)
 		let itemCount = collectionView.numberOfItems(inSection: 0)
@@ -531,6 +532,19 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			options: .displayInline,
 			children: pipStyleActions
 		)
+		let numeralFontActions = DiceFaceNumeralFont.allCases.map { font in
+			UIAction(
+				title: NSLocalizedString(font.menuTitleKey, comment: "Numeral font option"),
+				state: viewModel.faceNumeralFont == font ? .on : .off
+			) { [weak self] _ in
+				self?.selectFaceNumeralFont(font)
+			}
+		}
+		let numeralFontMenu = UIMenu(
+			title: NSLocalizedString("menu.control.numeralFont", comment: "Numeral font submenu title"),
+			options: .displayInline,
+			children: numeralFontActions
+		)
 		let dieColorMenus = customizableSideCounts.map { sideCount in
 			let actions = DiceDieColorPreset.allCases.map { preset in
 				UIAction(
@@ -560,7 +574,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let resetAction = UIAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), attributes: .destructive) { [weak self] _ in
 			self?.resetStats()
 		}
-		menuButton.menu = UIMenu(children: [historyAction, themeMenu, textureMenu, finishMenu, pipStyleMenu, dieColorsMenu, outlinesAction, animationAction, statsAction, resetAction])
+		menuButton.menu = UIMenu(children: [historyAction, themeMenu, textureMenu, finishMenu, pipStyleMenu, numeralFontMenu, dieColorsMenu, outlinesAction, animationAction, statsAction, resetAction])
 	}
 
 	@objc private func toggleStatsVisibility() {
@@ -620,6 +634,13 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private func selectD6PipStyle(_ style: DiceD6PipStyle) {
 		viewModel.setD6PipStyle(style)
 		diceBoardView.setD6PipStyle(style)
+		updateDiceBoard(animated: false)
+		updateControlMenu()
+	}
+
+	private func selectFaceNumeralFont(_ font: DiceFaceNumeralFont) {
+		viewModel.setFaceNumeralFont(font)
+		diceBoardView.setFaceNumeralFont(font)
 		updateDiceBoard(animated: false)
 		updateControlMenu()
 	}
