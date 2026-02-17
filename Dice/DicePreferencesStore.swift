@@ -16,8 +16,9 @@ struct DiceUserPreferences: Equatable {
 	var dieFinish: DiceDieFinish
 	var edgeOutlinesEnabled: Bool
 	var dieColorPreferences: DiceDieColorPreferences
+	var d6PipStyle: DiceD6PipStyle
 
-	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, theme: DiceTheme = .classic, tableTexture: DiceTableTexture = .neutral, dieFinish: DiceDieFinish = .matte, edgeOutlinesEnabled: Bool = false, dieColorPreferences: DiceDieColorPreferences = .default) {
+	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, theme: DiceTheme = .classic, tableTexture: DiceTableTexture = .neutral, dieFinish: DiceDieFinish = .matte, edgeOutlinesEnabled: Bool = false, dieColorPreferences: DiceDieColorPreferences = .default, d6PipStyle: DiceD6PipStyle = .round) {
 		self.lastNotation = lastNotation
 		self.recentPresets = recentPresets
 		self.animationsEnabled = animationsEnabled
@@ -26,10 +27,11 @@ struct DiceUserPreferences: Equatable {
 		self.dieFinish = dieFinish
 		self.edgeOutlinesEnabled = edgeOutlinesEnabled
 		self.dieColorPreferences = dieColorPreferences
+		self.d6PipStyle = d6PipStyle
 	}
 
 	static var `default`: DiceUserPreferences {
-		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, theme: .classic, tableTexture: .neutral, dieFinish: .matte, edgeOutlinesEnabled: false, dieColorPreferences: .default)
+		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, theme: .classic, tableTexture: .neutral, dieFinish: .matte, edgeOutlinesEnabled: false, dieColorPreferences: .default, d6PipStyle: .round)
 	}
 }
 
@@ -43,6 +45,7 @@ final class DicePreferencesStore {
 		static let dieFinish = "Dice.dieFinish"
 		static let edgeOutlinesEnabled = "Dice.edgeOutlinesEnabled"
 		static let dieColors = "Dice.dieColors"
+		static let d6PipStyle = "Dice.d6PipStyle"
 	}
 
 	private let defaults: UserDefaults
@@ -66,6 +69,8 @@ final class DicePreferencesStore {
 		let edgeOutlinesEnabled = defaults.object(forKey: Keys.edgeOutlinesEnabled) as? Bool ?? DiceUserPreferences.default.edgeOutlinesEnabled
 		let rawDieColors = defaults.dictionary(forKey: Keys.dieColors) as? [String: String] ?? [:]
 		let dieColorPreferences = DiceDieColorPreferences.deserialize(rawDieColors)
+		let rawPipStyle = defaults.string(forKey: Keys.d6PipStyle)
+		let d6PipStyle = rawPipStyle.flatMap(DiceD6PipStyle.init(rawValue:)) ?? DiceUserPreferences.default.d6PipStyle
 		return DiceUserPreferences(
 			lastNotation: notation,
 			recentPresets: presets,
@@ -74,7 +79,8 @@ final class DicePreferencesStore {
 			tableTexture: tableTexture,
 			dieFinish: dieFinish,
 			edgeOutlinesEnabled: edgeOutlinesEnabled,
-			dieColorPreferences: dieColorPreferences
+			dieColorPreferences: dieColorPreferences,
+			d6PipStyle: d6PipStyle
 		)
 	}
 
@@ -87,6 +93,7 @@ final class DicePreferencesStore {
 		defaults.set(preferences.dieFinish.rawValue, forKey: Keys.dieFinish)
 		defaults.set(preferences.edgeOutlinesEnabled, forKey: Keys.edgeOutlinesEnabled)
 		defaults.set(preferences.dieColorPreferences.serialized(), forKey: Keys.dieColors)
+		defaults.set(preferences.d6PipStyle.rawValue, forKey: Keys.d6PipStyle)
 	}
 
 	func addRecentPreset(_ notation: String) {

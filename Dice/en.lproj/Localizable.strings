@@ -22,6 +22,7 @@
 "menu.control.theme" = "Theme";
 "menu.control.texture" = "Table Texture";
 "menu.control.finish" = "Die Finish";
+"menu.control.pipStyle" = "D6 Pip Style";
 "menu.control.dieColors" = "Die Colors";
 "menu.control.dieColor.side" = "d%d";
 "menu.control.edgeOutlines" = "Edge Outlines";
@@ -40,6 +41,9 @@
 "dieColor.sapphire" = "Sapphire";
 "dieColor.amber" = "Amber";
 "dieColor.slate" = "Slate";
+"pipStyle.round" = "Round";
+"pipStyle.square" = "Square";
+"pipStyle.inset" = "Inset";
 "alert.invalid.title" = "Invalid dice input";
 "alert.invalid.announcement" = "Invalid dice notation.";
 "history.title" = "Roll History";

@@ -82,6 +82,10 @@ final class DiceViewModel {
 		appState.dieColorPreferences
 	}
 
+	var d6PipStyle: DiceD6PipStyle {
+		appState.d6PipStyle
+	}
+
 	func restore() {
 		let preferences = preferencesStore.load()
 		if let parsed = notationParser.parse(preferences.lastNotation) {
@@ -93,6 +97,7 @@ final class DiceViewModel {
 		appState.dieFinish = preferences.dieFinish
 		appState.edgeOutlinesEnabled = preferences.edgeOutlinesEnabled
 		appState.dieColorPreferences = preferences.dieColorPreferences
+		appState.d6PipStyle = preferences.d6PipStyle
 		let persisted = historyStore.loadPersistedEntries()
 		rollHistory = DiceRollHistory(persistedRecentEntries: persisted)
 	}
@@ -191,6 +196,11 @@ final class DiceViewModel {
 		persistPreferences()
 	}
 
+	func setD6PipStyle(_ style: DiceD6PipStyle) {
+		appState.d6PipStyle = style
+		persistPreferences()
+	}
+
 	func formattedTotalsText(outcome: RollOutcome, boardSupportedSides: Set<Int>) -> String {
 		var lines: [String] = []
 		lines.append(String(
@@ -259,7 +269,8 @@ final class DiceViewModel {
 			tableTexture: appState.tableTexture,
 			dieFinish: appState.dieFinish,
 			edgeOutlinesEnabled: appState.edgeOutlinesEnabled,
-			dieColorPreferences: appState.dieColorPreferences
+			dieColorPreferences: appState.dieColorPreferences,
+			d6PipStyle: appState.d6PipStyle
 		)
 		preferencesStore.save(preferences)
 	}

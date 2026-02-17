@@ -47,6 +47,7 @@ final class DiceCubeView: UIView {
 	private var activeDieFinish: DiceDieFinish = .matte
 	private var activeEdgeOutlinesEnabled = false
 	private var activeDieColorPreferences: DiceDieColorPreferences = .default
+	private var activeD6PipStyle: DiceD6PipStyle = .round
 	private var needsMeshRefresh = false
 
 	override init(frame: CGRect) {
@@ -143,6 +144,13 @@ final class DiceCubeView: UIView {
 	func setDieColorPreferences(_ preferences: DiceDieColorPreferences) {
 		guard activeDieColorPreferences != preferences else { return }
 		activeDieColorPreferences = preferences
+		meshCache.removeAll()
+		needsMeshRefresh = true
+	}
+
+	func setD6PipStyle(_ style: DiceD6PipStyle) {
+		guard activeD6PipStyle != style else { return }
+		activeD6PipStyle = style
 		meshCache.removeAll()
 		needsMeshRefresh = true
 	}
@@ -417,7 +425,7 @@ final class DiceCubeView: UIView {
 		let value = faceIndex + 1
 		let fillColor = activeDieColorPreferences.fillColor(for: sideCount)
 		if sideCount == 6 {
-			material.diffuse.contents = D6SceneKitRenderConfig.faceTexture(value: value, fillColor: fillColor)
+			material.diffuse.contents = D6SceneKitRenderConfig.faceTexture(value: value, fillColor: fillColor, pipStyle: activeD6PipStyle)
 		} else if sideCount == 4 {
 			material.diffuse.contents = d4FaceTexture(vertexLabels: d4VertexLabels(forFace: face), fillColor: fillColor)
 		} else {

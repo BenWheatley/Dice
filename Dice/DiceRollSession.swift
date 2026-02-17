@@ -43,15 +43,15 @@ struct D6SceneKitRenderConfig {
 		return box
 	}
 
-	static func faceMaterial(value: Int, fillColor: UIColor = UIColor(white: 0.96, alpha: 1.0)) -> SCNMaterial {
+	static func faceMaterial(value: Int, fillColor: UIColor = UIColor(white: 0.96, alpha: 1.0), pipStyle: DiceD6PipStyle = .round) -> SCNMaterial {
 		let material = SCNMaterial()
-		material.diffuse.contents = faceTexture(value: value, fillColor: fillColor)
+		material.diffuse.contents = faceTexture(value: value, fillColor: fillColor, pipStyle: pipStyle)
 		material.locksAmbientWithDiffuse = true
 		material.isDoubleSided = false
 		return material
 	}
 
-	static func faceTexture(value: Int, fillColor: UIColor = UIColor(white: 0.96, alpha: 1.0)) -> UIImage {
+	static func faceTexture(value: Int, fillColor: UIColor = UIColor(white: 0.96, alpha: 1.0), pipStyle: DiceD6PipStyle = .round) -> UIImage {
 		let size = CGSize(width: 256, height: 256)
 		let width = Int(size.width)
 		let height = Int(size.height)
@@ -98,7 +98,6 @@ struct D6SceneKitRenderConfig {
 		]
 
 		let radius = size.width * 0.08
-		context.setFillColor(style.primaryInkColor.cgColor)
 		for index in indexesByValue[value] ?? [] {
 			let center = pipPositions[index]
 			let pipRect = CGRect(
@@ -107,7 +106,20 @@ struct D6SceneKitRenderConfig {
 				width: radius * 2,
 				height: radius * 2
 			)
-			context.fillEllipse(in: pipRect)
+			switch pipStyle {
+			case .round:
+				context.setFillColor(style.primaryInkColor.cgColor)
+				context.fillEllipse(in: pipRect)
+			case .square:
+				context.setFillColor(style.primaryInkColor.cgColor)
+				context.fill(pipRect.insetBy(dx: radius * 0.08, dy: radius * 0.08))
+			case .inset:
+				context.setFillColor(style.borderColor.cgColor)
+				context.fillEllipse(in: pipRect)
+				let inner = pipRect.insetBy(dx: radius * 0.42, dy: radius * 0.42)
+				context.setFillColor(style.primaryInkColor.cgColor)
+				context.fillEllipse(in: inner)
+			}
 		}
 
 		guard let image = context.makeImage() else { return UIImage() }

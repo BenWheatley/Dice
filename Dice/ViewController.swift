@@ -285,6 +285,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.setDieFinish(viewModel.dieFinish)
 		diceBoardView.setEdgeOutlinesEnabled(viewModel.edgeOutlinesEnabled)
 		diceBoardView.setDieColorPreferences(viewModel.dieColorPreferences)
+		diceBoardView.setD6PipStyle(viewModel.d6PipStyle)
 
 		let sideLength = 0.25 * min(collectionView.bounds.width, collectionView.bounds.height)
 		let itemCount = collectionView.numberOfItems(inSection: 0)
@@ -517,6 +518,19 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			options: .displayInline,
 			children: finishActions
 		)
+		let pipStyleActions = DiceD6PipStyle.allCases.map { style in
+			UIAction(
+				title: NSLocalizedString(style.menuTitleKey, comment: "D6 pip style option"),
+				state: viewModel.d6PipStyle == style ? .on : .off
+			) { [weak self] _ in
+				self?.selectD6PipStyle(style)
+			}
+		}
+		let pipStyleMenu = UIMenu(
+			title: NSLocalizedString("menu.control.pipStyle", comment: "D6 pip style submenu title"),
+			options: .displayInline,
+			children: pipStyleActions
+		)
 		let dieColorMenus = customizableSideCounts.map { sideCount in
 			let actions = DiceDieColorPreset.allCases.map { preset in
 				UIAction(
@@ -546,7 +560,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let resetAction = UIAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), attributes: .destructive) { [weak self] _ in
 			self?.resetStats()
 		}
-		menuButton.menu = UIMenu(children: [historyAction, themeMenu, textureMenu, finishMenu, dieColorsMenu, outlinesAction, animationAction, statsAction, resetAction])
+		menuButton.menu = UIMenu(children: [historyAction, themeMenu, textureMenu, finishMenu, pipStyleMenu, dieColorsMenu, outlinesAction, animationAction, statsAction, resetAction])
 	}
 
 	@objc private func toggleStatsVisibility() {
@@ -599,6 +613,13 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private func selectDieColorPreset(_ preset: DiceDieColorPreset, sideCount: Int) {
 		viewModel.setDieColorPreset(preset, for: sideCount)
 		diceBoardView.setDieColorPreferences(viewModel.dieColorPreferences)
+		updateDiceBoard(animated: false)
+		updateControlMenu()
+	}
+
+	private func selectD6PipStyle(_ style: DiceD6PipStyle) {
+		viewModel.setD6PipStyle(style)
+		diceBoardView.setD6PipStyle(style)
 		updateDiceBoard(animated: false)
 		updateControlMenu()
 	}

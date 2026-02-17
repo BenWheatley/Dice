@@ -762,6 +762,22 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(preferencesStore.load().dieColorPreferences.preset(for: 20), .sapphire)
 	}
 
+	func testViewModelD6PipStyleSelectionPersistsToPreferences() {
+		let suiteName = "DiceTests.viewmodel.pipstyle.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		XCTAssertEqual(viewModel.d6PipStyle, .round)
+		viewModel.setD6PipStyle(.inset)
+		XCTAssertEqual(viewModel.d6PipStyle, .inset)
+		XCTAssertEqual(preferencesStore.load().d6PipStyle, .inset)
+	}
+
 	func testDieFinishPresetAppliesDistinctMaterialParameters() {
 		let gloss = SCNMaterial()
 		let stone = SCNMaterial()
@@ -912,6 +928,23 @@ final class DiceTests: XCTestCase {
 		let texture = D6SceneKitRenderConfig.faceTexture(value: 6)
 		XCTAssertEqual(texture.size.width, 256, accuracy: 0.1)
 		XCTAssertEqual(texture.size.height, 256, accuracy: 0.1)
+	}
+
+	func testD6PipStylesGenerateDistinctTexturesForSameFaceValue() {
+		let round = D6SceneKitRenderConfig.faceTexture(value: 5, pipStyle: .round)
+		let square = D6SceneKitRenderConfig.faceTexture(value: 5, pipStyle: .square)
+		let inset = D6SceneKitRenderConfig.faceTexture(value: 5, pipStyle: .inset)
+
+		let roundData = round.pngData()
+		let squareData = square.pngData()
+		let insetData = inset.pngData()
+
+		XCTAssertNotNil(roundData)
+		XCTAssertNotNil(squareData)
+		XCTAssertNotNil(insetData)
+		XCTAssertNotEqual(roundData, squareData)
+		XCTAssertNotEqual(roundData, insetData)
+		XCTAssertNotEqual(squareData, insetData)
 	}
 
 	func testFaceContrastCalibrationKeepsReadableInkAcrossFaceFills() {
