@@ -129,87 +129,10 @@ class InterfaceController: WKInterfaceController {
 
 	private func makeD6Node() -> SCNNode {
 		let sideLength: CGFloat = 1.8
-		let geometry = SCNBox(
-			width: sideLength,
-			height: sideLength,
-			length: sideLength,
-			chamferRadius: sideLength * 0.08
-		)
-		geometry.chamferSegmentCount = 4
-		geometry.materials = (1...6).map { faceMaterial(value: $0) }
+		let geometry = D6SceneKitRenderConfig.beveledCube(sideLength: sideLength)
 
 		let node = SCNNode(geometry: geometry)
 		return node
-	}
-
-	private func faceMaterial(value: Int) -> SCNMaterial {
-		let material = SCNMaterial()
-		material.diffuse.contents = d6FaceTexture(value: value)
-		material.locksAmbientWithDiffuse = true
-		material.isDoubleSided = false
-		return material
-	}
-
-	private func d6FaceTexture(value: Int) -> UIImage {
-		let size = CGSize(width: 256, height: 256)
-		let width = Int(size.width)
-		let height = Int(size.height)
-		guard let colorSpace = CGColorSpace(name: CGColorSpace.sRGB),
-			  let context = CGContext(
-				data: nil,
-				width: width,
-				height: height,
-				bitsPerComponent: 8,
-				bytesPerRow: 0,
-				space: colorSpace,
-				bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-			  ) else {
-			return UIImage()
-		}
-
-		let rect = CGRect(origin: .zero, size: size)
-		context.setFillColor(CGColor(red: 0.96, green: 0.96, blue: 0.96, alpha: 1.0))
-		context.fill(rect)
-		context.setStrokeColor(CGColor(red: 0.70, green: 0.70, blue: 0.70, alpha: 1.0))
-		context.setLineWidth(8)
-		context.stroke(rect.insetBy(dx: 6, dy: 6))
-
-		let pipPositions: [CGPoint] = [
-			CGPoint(x: size.width * 0.28, y: size.height * 0.28),
-			CGPoint(x: size.width * 0.50, y: size.height * 0.28),
-			CGPoint(x: size.width * 0.72, y: size.height * 0.28),
-			CGPoint(x: size.width * 0.28, y: size.height * 0.50),
-			CGPoint(x: size.width * 0.50, y: size.height * 0.50),
-			CGPoint(x: size.width * 0.72, y: size.height * 0.50),
-			CGPoint(x: size.width * 0.28, y: size.height * 0.72),
-			CGPoint(x: size.width * 0.50, y: size.height * 0.72),
-			CGPoint(x: size.width * 0.72, y: size.height * 0.72),
-		]
-
-		let indexesByValue: [Int: [Int]] = [
-			1: [4],
-			2: [0, 8],
-			3: [0, 4, 8],
-			4: [0, 2, 6, 8],
-			5: [0, 2, 4, 6, 8],
-			6: [0, 2, 3, 5, 6, 8],
-		]
-
-		let radius = size.width * 0.08
-		context.setFillColor(CGColor(red: 0, green: 0, blue: 0, alpha: 1.0))
-		for index in indexesByValue[value] ?? [] {
-			let center = pipPositions[index]
-			let pipRect = CGRect(
-				x: center.x - radius,
-				y: center.y - radius,
-				width: radius * 2,
-				height: radius * 2
-			)
-			context.fillEllipse(in: pipRect)
-		}
-
-		guard let image = context.makeImage() else { return UIImage() }
-		return UIImage(cgImage: image)
 	}
 
 	private func animateD6(to value: Int, completion: (() -> Void)? = nil) {

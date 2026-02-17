@@ -355,13 +355,7 @@ final class DiceCubeView: UIView {
 		let geometry: SCNGeometry
 		if sideCount == 6 {
 			// D6 uses a beveled cube body while preserving the same face ordering.
-			let box = SCNBox(
-				width: sideLength,
-				height: sideLength,
-				length: sideLength,
-				chamferRadius: sideLength * 0.08
-			)
-			box.chamferSegmentCount = 4
+			let box = D6SceneKitRenderConfig.beveledCube(sideLength: sideLength)
 			box.materials = materials
 			geometry = box
 		} else {
@@ -386,7 +380,7 @@ final class DiceCubeView: UIView {
 		let material = SCNMaterial()
 		let value = faceIndex + 1
 		if sideCount == 6 {
-			material.diffuse.contents = d6FaceTexture(value: value)
+			material.diffuse.contents = D6SceneKitRenderConfig.faceTexture(value: value)
 		} else if sideCount == 4 {
 			material.diffuse.contents = d4FaceTexture(vertexLabels: d4VertexLabels(forFace: face))
 		} else {
@@ -498,53 +492,6 @@ final class DiceCubeView: UIView {
 			let sSize = subtitle.size(withAttributes: subAttrs)
 			let sRect = CGRect(x: (size.width - sSize.width) / 2, y: size.height * 0.78, width: sSize.width, height: sSize.height)
 			subtitle.draw(in: sRect, withAttributes: subAttrs)
-		}
-	}
-
-	private func d6FaceTexture(value: Int) -> UIImage {
-		let size = CGSize(width: 256, height: 256)
-		let renderer = UIGraphicsImageRenderer(size: size)
-		return renderer.image { ctx in
-			let rect = CGRect(origin: .zero, size: size)
-			ctx.cgContext.setFillColor(UIColor(white: 0.96, alpha: 1).cgColor)
-			ctx.cgContext.fill(rect)
-			ctx.cgContext.setStrokeColor(UIColor(white: 0.70, alpha: 1).cgColor)
-			ctx.cgContext.setLineWidth(8)
-			ctx.cgContext.stroke(rect.insetBy(dx: 6, dy: 6))
-
-			let pipPositions: [CGPoint] = [
-				CGPoint(x: size.width * 0.28, y: size.height * 0.28), // top-left
-				CGPoint(x: size.width * 0.50, y: size.height * 0.28), // top-center
-				CGPoint(x: size.width * 0.72, y: size.height * 0.28), // top-right
-				CGPoint(x: size.width * 0.28, y: size.height * 0.50), // middle-left
-				CGPoint(x: size.width * 0.50, y: size.height * 0.50), // center
-				CGPoint(x: size.width * 0.72, y: size.height * 0.50), // middle-right
-				CGPoint(x: size.width * 0.28, y: size.height * 0.72), // bottom-left
-				CGPoint(x: size.width * 0.50, y: size.height * 0.72), // bottom-center
-				CGPoint(x: size.width * 0.72, y: size.height * 0.72), // bottom-right
-			]
-
-			let indexesByValue: [Int: [Int]] = [
-				1: [4],
-				2: [0, 8],
-				3: [0, 4, 8],
-				4: [0, 2, 6, 8],
-				5: [0, 2, 4, 6, 8],
-				6: [0, 2, 3, 5, 6, 8],
-			]
-
-			let radius = size.width * 0.08
-			ctx.cgContext.setFillColor(UIColor.black.cgColor)
-			for index in indexesByValue[value] ?? [] {
-				let center = pipPositions[index]
-				let pipRect = CGRect(
-					x: center.x - radius,
-					y: center.y - radius,
-					width: radius * 2,
-					height: radius * 2
-				)
-				ctx.cgContext.fillEllipse(in: pipRect)
-			}
 		}
 	}
 

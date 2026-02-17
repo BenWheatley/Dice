@@ -740,6 +740,17 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(D6FaceOrientation.eulerAngles(for: 6).x, -Float.pi / 2, accuracy: 0.0001)
 	}
 
+	func testSharedD6RenderConfigUsesBeveledCubeAndSixFaceMaterials() {
+		let geometry = D6SceneKitRenderConfig.beveledCube(sideLength: 2.0)
+		XCTAssertEqual(geometry.materials.count, 6)
+		XCTAssertGreaterThan(geometry.chamferRadius, 0)
+		XCTAssertEqual(geometry.chamferSegmentCount, 4)
+
+		let texture = D6SceneKitRenderConfig.faceTexture(value: 6)
+		XCTAssertEqual(texture.size.width, 256, accuracy: 0.1)
+		XCTAssertEqual(texture.size.height, 256, accuracy: 0.1)
+	}
+
 	func testIndependentViewModelsMaintainIsolatedActiveDiceSets() {
 		let suiteName = "DiceTests.multiwindow.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!
