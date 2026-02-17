@@ -69,9 +69,11 @@ struct D6SceneKitRenderConfig {
 		}
 
 		let rect = CGRect(origin: .zero, size: size)
-		context.setFillColor(CGColor(red: 0.96, green: 0.96, blue: 0.96, alpha: 1.0))
+		let faceFill = UIColor(white: value.isMultiple(of: 2) ? 0.94 : 0.97, alpha: 1.0)
+		let style = DiceFaceContrast.style(for: faceFill)
+		context.setFillColor(style.fillColor.cgColor)
 		context.fill(rect)
-		context.setStrokeColor(CGColor(red: 0.70, green: 0.70, blue: 0.70, alpha: 1.0))
+		context.setStrokeColor(style.borderColor.cgColor)
 		context.setLineWidth(8)
 		context.stroke(rect.insetBy(dx: 6, dy: 6))
 
@@ -97,7 +99,7 @@ struct D6SceneKitRenderConfig {
 		]
 
 		let radius = size.width * 0.08
-		context.setFillColor(CGColor(red: 0, green: 0, blue: 0, alpha: 1.0))
+		context.setFillColor(style.primaryInkColor.cgColor)
 		for index in indexesByValue[value] ?? [] {
 			let center = pipPositions[index]
 			let pipRect = CGRect(

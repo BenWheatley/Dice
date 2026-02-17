@@ -444,7 +444,8 @@ final class DiceCubeView: UIView {
 		let renderer = UIGraphicsImageRenderer(size: size)
 		return renderer.image { ctx in
 			let rect = CGRect(origin: .zero, size: size)
-			ctx.cgContext.setFillColor(UIColor(white: 0.96, alpha: 1.0).cgColor)
+			let style = DiceFaceContrast.style(for: UIColor(white: 0.96, alpha: 1.0))
+			ctx.cgContext.setFillColor(style.fillColor.cgColor)
 			ctx.cgContext.fill(rect)
 
 			let trianglePoints = d4TrianglePoints(size: size)
@@ -455,14 +456,14 @@ final class DiceCubeView: UIView {
 			triangle.close()
 			UIColor(white: 0.88, alpha: 1.0).setFill()
 			triangle.fill()
-			UIColor(white: 0.70, alpha: 1.0).setStroke()
+			style.borderColor.setStroke()
 			triangle.lineWidth = 6
 			triangle.stroke()
 
 			let placements = d4LabelPlacements(triangle: trianglePoints)
 			let attrs: [NSAttributedString.Key: Any] = [
 				.font: UIFont.boldSystemFont(ofSize: 54),
-				.foregroundColor: UIColor.black
+				.foregroundColor: style.primaryInkColor
 			]
 			for (index, placement) in placements.enumerated() where index < vertexLabels.count {
 				let text = "\(vertexLabels[index])" as NSString
@@ -513,16 +514,18 @@ final class DiceCubeView: UIView {
 		let renderer = UIGraphicsImageRenderer(size: size)
 		return renderer.image { ctx in
 			let rect = CGRect(origin: .zero, size: size)
-			ctx.cgContext.setFillColor(UIColor(white: 0.96, alpha: 1).cgColor)
+			let baseFill = UIColor(white: value.isMultiple(of: 2) ? 0.95 : 0.97, alpha: 1.0)
+			let style = DiceFaceContrast.style(for: baseFill)
+			ctx.cgContext.setFillColor(style.fillColor.cgColor)
 			ctx.cgContext.fill(rect)
-			ctx.cgContext.setStrokeColor(UIColor(white: 0.70, alpha: 1).cgColor)
+			ctx.cgContext.setStrokeColor(style.borderColor.cgColor)
 			ctx.cgContext.setLineWidth(8)
 			ctx.cgContext.stroke(rect.insetBy(dx: 6, dy: 6))
 
 			let text = "\(value)" as NSString
 			let attrs: [NSAttributedString.Key: Any] = [
 				.font: UIFont.boldSystemFont(ofSize: 73),
-				.foregroundColor: UIColor.black
+				.foregroundColor: style.primaryInkColor
 			]
 			let tSize = text.size(withAttributes: attrs)
 			let tRect = CGRect(x: (size.width - tSize.width) / 2, y: (size.height - tSize.height) / 2 - 4, width: tSize.width, height: tSize.height)
@@ -531,7 +534,7 @@ final class DiceCubeView: UIView {
 			let subtitle = "d\(sideCount)" as NSString
 			let subAttrs: [NSAttributedString.Key: Any] = [
 				.font: UIFont.systemFont(ofSize: 15, weight: .medium),
-				.foregroundColor: UIColor.darkGray
+				.foregroundColor: style.secondaryInkColor
 			]
 			let sSize = subtitle.size(withAttributes: subAttrs)
 			let sRect = CGRect(x: (size.width - sSize.width) / 2, y: size.height * 0.78, width: sSize.width, height: sSize.height)

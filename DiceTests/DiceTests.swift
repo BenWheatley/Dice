@@ -897,6 +897,22 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(texture.size.height, 256, accuracy: 0.1)
 	}
 
+	func testFaceContrastCalibrationKeepsReadableInkAcrossFaceFills() {
+		let fills: [UIColor] = [
+			UIColor(white: 0.98, alpha: 1.0),
+			UIColor(white: 0.80, alpha: 1.0),
+			UIColor(white: 0.35, alpha: 1.0),
+			UIColor(white: 0.08, alpha: 1.0),
+			UIColor(red: 0.70, green: 0.18, blue: 0.18, alpha: 1.0),
+		]
+
+		for fill in fills {
+			let style = DiceFaceContrast.style(for: fill)
+			XCTAssertGreaterThanOrEqual(DiceFaceContrast.contrastRatio(style.primaryInkColor, style.fillColor), 4.5)
+			XCTAssertGreaterThanOrEqual(DiceFaceContrast.contrastRatio(style.borderColor, style.fillColor), 1.5)
+		}
+	}
+
 	func testIndependentViewModelsMaintainIsolatedActiveDiceSets() {
 		let suiteName = "DiceTests.multiwindow.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!
