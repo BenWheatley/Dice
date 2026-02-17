@@ -38,6 +38,7 @@
 "menu.control.theme" = "Theme";
 "menu.control.texture" = "Table Texture";
 "menu.control.camera" = "Board Camera";
+"menu.control.layout" = "Board Layout";
 "menu.control.finish" = "Die Finish";
 "menu.control.pipStyle" = "D6 Pip Style";
 "menu.control.numeralFont" = "Numeral Font";
@@ -58,6 +59,9 @@
 "camera.top" = "Top";
 "camera.slightTilt" = "Slight Tilt";
 "camera.dramatic" = "Dramatic";
+"layout.compact" = "Compact";
+"layout.balanced" = "Balanced";
+"layout.spacious" = "Spacious";
 "animation.off" = "Off";
 "animation.subtle" = "Subtle";
 "animation.full" = "Full";

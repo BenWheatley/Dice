@@ -37,8 +37,9 @@ struct DiceUserPreferences: Equatable {
 	var boardCameraPreset: DiceBoardCameraPreset
 	var motionBlurEnabled: Bool
 	var animationSeed: Int?
+	var boardLayoutPreset: DiceBoardLayoutPreset
 
-	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, animationIntensity: DiceAnimationIntensity = .full, theme: DiceTheme = .classic, tableTexture: DiceTableTexture = .neutral, dieFinish: DiceDieFinish = .matte, edgeOutlinesEnabled: Bool = false, dieColorPreferences: DiceDieColorPreferences = .default, d6PipStyle: DiceD6PipStyle = .round, faceNumeralFont: DiceFaceNumeralFont = .classic, customPresets: [DiceSavedPreset] = [], boardCameraPreset: DiceBoardCameraPreset = .slightTilt, motionBlurEnabled: Bool = false, animationSeed: Int? = nil) {
+	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, animationIntensity: DiceAnimationIntensity = .full, theme: DiceTheme = .classic, tableTexture: DiceTableTexture = .neutral, dieFinish: DiceDieFinish = .matte, edgeOutlinesEnabled: Bool = false, dieColorPreferences: DiceDieColorPreferences = .default, d6PipStyle: DiceD6PipStyle = .round, faceNumeralFont: DiceFaceNumeralFont = .classic, customPresets: [DiceSavedPreset] = [], boardCameraPreset: DiceBoardCameraPreset = .slightTilt, motionBlurEnabled: Bool = false, animationSeed: Int? = nil, boardLayoutPreset: DiceBoardLayoutPreset = .balanced) {
 		self.lastNotation = lastNotation
 		self.recentPresets = recentPresets
 		self.animationsEnabled = animationsEnabled
@@ -54,10 +55,11 @@ struct DiceUserPreferences: Equatable {
 		self.boardCameraPreset = boardCameraPreset
 		self.motionBlurEnabled = motionBlurEnabled
 		self.animationSeed = animationSeed
+		self.boardLayoutPreset = boardLayoutPreset
 	}
 
 	static var `default`: DiceUserPreferences {
-		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, animationIntensity: .full, theme: .classic, tableTexture: .neutral, dieFinish: .matte, edgeOutlinesEnabled: false, dieColorPreferences: .default, d6PipStyle: .round, faceNumeralFont: .classic, customPresets: [], boardCameraPreset: .slightTilt, motionBlurEnabled: false, animationSeed: nil)
+		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, animationIntensity: .full, theme: .classic, tableTexture: .neutral, dieFinish: .matte, edgeOutlinesEnabled: false, dieColorPreferences: .default, d6PipStyle: .round, faceNumeralFont: .classic, customPresets: [], boardCameraPreset: .slightTilt, motionBlurEnabled: false, animationSeed: nil, boardLayoutPreset: .balanced)
 	}
 }
 
@@ -78,6 +80,7 @@ final class DicePreferencesStore {
 		static let boardCameraPreset = "Dice.boardCameraPreset"
 		static let motionBlurEnabled = "Dice.motionBlurEnabled"
 		static let animationSeed = "Dice.animationSeed"
+		static let boardLayoutPreset = "Dice.boardLayoutPreset"
 	}
 
 	private let defaults: UserDefaults
@@ -113,6 +116,8 @@ final class DicePreferencesStore {
 		let boardCameraPreset = rawCameraPreset.flatMap(DiceBoardCameraPreset.init(rawValue:)) ?? DiceUserPreferences.default.boardCameraPreset
 		let motionBlurEnabled = defaults.object(forKey: Keys.motionBlurEnabled) as? Bool ?? DiceUserPreferences.default.motionBlurEnabled
 		let animationSeed = defaults.object(forKey: Keys.animationSeed) as? Int
+		let rawLayoutPreset = defaults.string(forKey: Keys.boardLayoutPreset)
+		let boardLayoutPreset = rawLayoutPreset.flatMap(DiceBoardLayoutPreset.init(rawValue:)) ?? DiceUserPreferences.default.boardLayoutPreset
 		return DiceUserPreferences(
 			lastNotation: notation,
 			recentPresets: presets,
@@ -128,7 +133,8 @@ final class DicePreferencesStore {
 			customPresets: customPresets,
 			boardCameraPreset: boardCameraPreset,
 			motionBlurEnabled: motionBlurEnabled,
-			animationSeed: animationSeed
+			animationSeed: animationSeed,
+			boardLayoutPreset: boardLayoutPreset
 		)
 	}
 
@@ -148,6 +154,7 @@ final class DicePreferencesStore {
 		defaults.set(preferences.boardCameraPreset.rawValue, forKey: Keys.boardCameraPreset)
 		defaults.set(preferences.motionBlurEnabled, forKey: Keys.motionBlurEnabled)
 		defaults.set(preferences.animationSeed, forKey: Keys.animationSeed)
+		defaults.set(preferences.boardLayoutPreset.rawValue, forKey: Keys.boardLayoutPreset)
 	}
 
 	func addRecentPreset(_ notation: String) {

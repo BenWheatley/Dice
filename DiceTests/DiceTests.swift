@@ -944,6 +944,22 @@ final class DiceTests: XCTestCase {
 		XCTNil(preferencesStore.load().animationSeed)
 	}
 
+	func testViewModelBoardLayoutPresetPersistsToPreferences() {
+		let suiteName = "DiceTests.viewmodel.layoutpreset.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		XCTAssertEqual(viewModel.boardLayoutPreset, .balanced)
+		viewModel.setBoardLayoutPreset(.spacious)
+		XCTAssertEqual(viewModel.boardLayoutPreset, .spacious)
+		XCTAssertEqual(preferencesStore.load().boardLayoutPreset, .spacious)
+	}
+
 	func testViewModelResetVisualPreferencesRestoresDefaults() {
 		let suiteName = "DiceTests.viewmodel.resetvisuals.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!

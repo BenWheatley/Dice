@@ -114,6 +114,10 @@ final class DiceViewModel {
 		appState.animationSeed
 	}
 
+	var boardLayoutPreset: DiceBoardLayoutPreset {
+		appState.boardLayoutPreset
+	}
+
 	func restore() {
 		let preferences = preferencesStore.load()
 		if let parsed = notationParser.parse(preferences.lastNotation) {
@@ -131,6 +135,7 @@ final class DiceViewModel {
 		appState.boardCameraPreset = preferences.boardCameraPreset
 		appState.motionBlurEnabled = preferences.motionBlurEnabled
 		appState.animationSeed = preferences.animationSeed
+		appState.boardLayoutPreset = preferences.boardLayoutPreset
 		let persisted = historyStore.loadPersistedEntries()
 		rollHistory = DiceRollHistory(persistedRecentEntries: persisted)
 	}
@@ -307,6 +312,11 @@ final class DiceViewModel {
 		persistPreferences()
 	}
 
+	func setBoardLayoutPreset(_ preset: DiceBoardLayoutPreset) {
+		appState.boardLayoutPreset = preset
+		persistPreferences()
+	}
+
 	func isDieLocked(at index: Int) -> Bool {
 		appState.lockedDieIndices.contains(index)
 	}
@@ -445,7 +455,8 @@ final class DiceViewModel {
 			customPresets: preferencesStore.load().customPresets,
 			boardCameraPreset: appState.boardCameraPreset,
 			motionBlurEnabled: appState.motionBlurEnabled,
-			animationSeed: appState.animationSeed
+			animationSeed: appState.animationSeed,
+			boardLayoutPreset: appState.boardLayoutPreset
 		)
 		preferencesStore.save(preferences)
 	}

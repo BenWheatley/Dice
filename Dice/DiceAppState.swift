@@ -53,6 +53,7 @@ final class DiceAppState {
 	var boardCameraPreset: DiceBoardCameraPreset
 	var motionBlurEnabled: Bool
 	var animationSeed: Int?
+	var boardLayoutPreset: DiceBoardLayoutPreset
 
 	init(configuration: RollConfiguration = RollConfiguration(diceCount: 6, sideCount: 6, intuitive: false)) {
 		self.configuration = configuration
@@ -73,6 +74,7 @@ final class DiceAppState {
 		self.boardCameraPreset = .slightTilt
 		self.motionBlurEnabled = false
 		self.animationSeed = nil
+		self.boardLayoutPreset = .balanced
 	}
 
 	func applyRollOutcome(_ outcome: RollOutcome) {

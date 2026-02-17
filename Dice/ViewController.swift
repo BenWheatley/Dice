@@ -308,7 +308,17 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.setMotionBlurEnabled(viewModel.motionBlurEnabled)
 		diceBoardView.setAnimationSeed(viewModel.animationSeed)
 
-		let sideLength = 0.25 * min(collectionView.bounds.width, collectionView.bounds.height)
+		let mixed = Set(sideCounts).count > 1
+		let baseScale: CGFloat
+		switch viewModel.boardLayoutPreset {
+		case .compact:
+			baseScale = mixed ? 0.24 : 0.27
+		case .balanced:
+			baseScale = mixed ? 0.22 : 0.25
+		case .spacious:
+			baseScale = mixed ? 0.19 : 0.22
+		}
+		let sideLength = baseScale * min(collectionView.bounds.width, collectionView.bounds.height)
 		let itemCount = collectionView.numberOfItems(inSection: 0)
 		var centers: [CGPoint] = []
 		var values: [Int] = []
@@ -638,6 +648,19 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			options: .displayInline,
 			children: cameraActions
 		)
+		let layoutActions = DiceBoardLayoutPreset.allCases.map { preset in
+			UIAction(
+				title: NSLocalizedString(preset.menuTitleKey, comment: "Board layout preset option"),
+				state: viewModel.boardLayoutPreset == preset ? .on : .off
+			) { [weak self] _ in
+				self?.selectBoardLayoutPreset(preset)
+			}
+		}
+		let layoutMenu = UIMenu(
+			title: NSLocalizedString("menu.control.layout", comment: "Layout submenu title"),
+			options: .displayInline,
+			children: layoutActions
+		)
 		let finishActions = DiceDieFinish.allCases.map { finish in
 			UIAction(
 				title: NSLocalizedString(finish.menuTitleKey, comment: "Die finish option"),
@@ -732,7 +755,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let resetAction = UIAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), attributes: .destructive) { [weak self] _ in
 			self?.resetStats()
 		}
-		menuButton.menu = UIMenu(children: [historyAction, repeatAction, themeMenu, textureMenu, cameraMenu, finishMenu, pipStyleMenu, numeralFontMenu, dieColorsMenu, outlinesAction, motionBlurAction, setAnimationSeedAction, clearAnimationSeedAction, previewStyleAction, resetVisualsAction, animationAction, animationIntensityMenu, statsAction, resetAction])
+		menuButton.menu = UIMenu(children: [historyAction, repeatAction, themeMenu, textureMenu, cameraMenu, layoutMenu, finishMenu, pipStyleMenu, numeralFontMenu, dieColorsMenu, outlinesAction, motionBlurAction, setAnimationSeedAction, clearAnimationSeedAction, previewStyleAction, resetVisualsAction, animationAction, animationIntensityMenu, statsAction, resetAction])
 	}
 
 	@objc private func toggleStatsVisibility() {
@@ -770,6 +793,14 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private func selectBoardCameraPreset(_ preset: DiceBoardCameraPreset) {
 		viewModel.setBoardCameraPreset(preset)
 		diceBoardView.setCameraPreset(preset, animated: true)
+		updateControlMenu()
+	}
+
+	private func selectBoardLayoutPreset(_ preset: DiceBoardLayoutPreset) {
+		viewModel.setBoardLayoutPreset(preset)
+		collectionView.collectionViewLayout.invalidateLayout()
+		collectionView.reloadData()
+		updateDiceBoard(animated: false)
 		updateControlMenu()
 	}
 
@@ -1413,33 +1444,57 @@ private final class RollHistoryViewController: UITableViewController {
 
 extension DiceCollectionViewController: UICollectionViewDelegateFlowLayout {
 	func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-		layoutSpacing(for: collectionView)
+		layoutSpacing(for: collectionView, mixed: Set(viewModel.diceSideCounts).count > 1)
 	}
 
 	func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
-		layoutSpacing(for: collectionView)
+		layoutSpacing(for: collectionView, mixed: Set(viewModel.diceSideCounts).count > 1)
 	}
 
 	func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-		let spacing = layoutSpacing(for: collectionView)
+		let mixed = Set(viewModel.diceSideCounts).count > 1
+		let spacing = layoutSpacing(for: collectionView, mixed: mixed)
 		let inset = collectionView.adjustedContentInset.left + collectionView.adjustedContentInset.right
 		let availableWidth = max(0, collectionView.bounds.width - inset)
-		let columns = targetColumnCount(for: availableWidth)
+		let columns = targetColumnCount(for: availableWidth, mixed: mixed)
 		let totalSpacing = CGFloat(columns - 1) * spacing
 		let sideLength = floor((availableWidth - totalSpacing) / CGFloat(columns))
 		let clamped = max(56, min(160, sideLength))
 		return CGSize(width: clamped, height: clamped)
 	}
 
-	private func layoutSpacing(for collectionView: UICollectionView) -> CGFloat {
-		traitCollection.horizontalSizeClass == .regular ? 8 : 4
+	private func layoutSpacing(for collectionView: UICollectionView, mixed: Bool) -> CGFloat {
+		switch viewModel.boardLayoutPreset {
+		case .compact:
+			return traitCollection.horizontalSizeClass == .regular ? 6 : 3
+		case .balanced:
+			return traitCollection.horizontalSizeClass == .regular ? 8 : 4
+		case .spacious:
+			let regular = mixed ? 14 : 12
+			let compact = mixed ? 8 : 6
+			return traitCollection.horizontalSizeClass == .regular ? CGFloat(regular) : CGFloat(compact)
+		}
 	}
 
-	private func targetColumnCount(for availableWidth: CGFloat) -> Int {
+	private func targetColumnCount(for availableWidth: CGFloat, mixed: Bool) -> Int {
 		if traitCollection.horizontalSizeClass == .regular {
-			return max(4, min(8, Int(availableWidth / 120)))
+			switch viewModel.boardLayoutPreset {
+			case .compact:
+				return max(4, min(9, Int(availableWidth / (mixed ? 118 : 110))))
+			case .balanced:
+				return max(4, min(8, Int(availableWidth / (mixed ? 126 : 120))))
+			case .spacious:
+				return max(3, min(7, Int(availableWidth / (mixed ? 150 : 138))))
+			}
 		}
-		return availableWidth > 460 ? 4 : 3
+		switch viewModel.boardLayoutPreset {
+		case .compact:
+			return availableWidth > 460 ? 4 : 3
+		case .balanced:
+			return availableWidth > 460 ? 4 : 3
+		case .spacious:
+			return availableWidth > 460 ? 3 : 2
+		}
 	}
 }
 
