@@ -36,6 +36,7 @@
 "menu.control.repeatLast" = "Repeat Last Roll";
 "menu.control.theme" = "Theme";
 "menu.control.texture" = "Table Texture";
+"menu.control.camera" = "Board Camera";
 "menu.control.finish" = "Die Finish";
 "menu.control.pipStyle" = "D6 Pip Style";
 "menu.control.numeralFont" = "Numeral Font";
@@ -50,6 +51,9 @@
 "texture.felt" = "Felt";
 "texture.wood" = "Wood";
 "texture.neutral" = "Neutral";
+"camera.top" = "Top";
+"camera.slightTilt" = "Slight Tilt";
+"camera.dramatic" = "Dramatic";
 "finish.matte" = "Matte";
 "finish.gloss" = "Gloss";
 "finish.stone" = "Stone";

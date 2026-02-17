@@ -124,7 +124,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 ### Board and Animation Enhancements
 
-- [ ] Add board camera presets (top, slight tilt, dramatic angle) with animated transitions.
+- [x] Add board camera presets (top, slight tilt, dramatic angle) with animated transitions.
 - [ ] Add animation intensity settings (off, subtle, full) mapped to duration and bounce parameters.
 - [ ] Add optional motion blur/trail effect for rolling dice while maintaining 60fps target.
 - [ ] Add deterministic seed mode for board animation replay/debug of specific roll sequences.

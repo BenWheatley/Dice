@@ -49,6 +49,7 @@ final class DiceCubeView: UIView {
 	private var activeDieColorPreferences: DiceDieColorPreferences = .default
 	private var activeD6PipStyle: DiceD6PipStyle = .round
 	private var activeFaceNumeralFont: DiceFaceNumeralFont = .classic
+	private var activeCameraPreset: DiceBoardCameraPreset = .slightTilt
 	private var needsMeshRefresh = false
 
 	override init(frame: CGRect) {
@@ -71,7 +72,7 @@ final class DiceCubeView: UIView {
 
 	override func layoutSubviews() {
 		super.layoutSubviews()
-		updateCamera()
+		updateCamera(animated: false)
 	}
 
 	func setDice(values: [Int], centers: [CGPoint], sideLength: CGFloat, sideCounts: [Int], animated: Bool) {
@@ -164,6 +165,12 @@ final class DiceCubeView: UIView {
 		needsMeshRefresh = true
 	}
 
+	func setCameraPreset(_ preset: DiceBoardCameraPreset, animated: Bool) {
+		guard activeCameraPreset != preset else { return }
+		activeCameraPreset = preset
+		updateCamera(animated: animated)
+	}
+
 	private func configureScene() {
 		backgroundColor = .clear
 		isUserInteractionEnabled = false
@@ -187,7 +194,8 @@ final class DiceCubeView: UIView {
 		cameraNode.camera?.usesOrthographicProjection = true
 		cameraNode.camera?.zNear = 1
 		cameraNode.camera?.zFar = 10_000
-		cameraNode.position = SCNVector3(0, 0, 800)
+		cameraNode.position = SCNVector3(0, 120, 860)
+		cameraNode.eulerAngles = SCNVector3(-0.35, 0, 0)
 		scene.rootNode.addChildNode(cameraNode)
 
 		let keyLight = SCNNode()
@@ -223,8 +231,27 @@ final class DiceCubeView: UIView {
 		lifecycleObservers = [resignObserver, becomeObserver]
 	}
 
-	private func updateCamera() {
+	private func updateCamera(animated: Bool) {
 		cameraNode.camera?.orthographicScale = Double(bounds.height / 2)
+		let target: (position: SCNVector3, euler: SCNVector3)
+		switch activeCameraPreset {
+		case .top:
+			target = (SCNVector3(0, 0, 800), SCNVector3(0, 0, 0))
+		case .slightTilt:
+			target = (SCNVector3(0, 120, 860), SCNVector3(-0.35, 0, 0))
+		case .dramatic:
+			target = (SCNVector3(0, 240, 920), SCNVector3(-0.58, 0, 0))
+		}
+		guard animated else {
+			cameraNode.position = target.position
+			cameraNode.eulerAngles = target.euler
+			return
+		}
+		SCNTransaction.begin()
+		SCNTransaction.animationDuration = 0.28
+		cameraNode.position = target.position
+		cameraNode.eulerAngles = target.euler
+		SCNTransaction.commit()
 	}
 
 	private func ensureNodeCount(_ count: Int) {

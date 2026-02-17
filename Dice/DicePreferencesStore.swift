@@ -33,8 +33,9 @@ struct DiceUserPreferences: Equatable {
 	var d6PipStyle: DiceD6PipStyle
 	var faceNumeralFont: DiceFaceNumeralFont
 	var customPresets: [DiceSavedPreset]
+	var boardCameraPreset: DiceBoardCameraPreset
 
-	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, theme: DiceTheme = .classic, tableTexture: DiceTableTexture = .neutral, dieFinish: DiceDieFinish = .matte, edgeOutlinesEnabled: Bool = false, dieColorPreferences: DiceDieColorPreferences = .default, d6PipStyle: DiceD6PipStyle = .round, faceNumeralFont: DiceFaceNumeralFont = .classic, customPresets: [DiceSavedPreset] = []) {
+	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, theme: DiceTheme = .classic, tableTexture: DiceTableTexture = .neutral, dieFinish: DiceDieFinish = .matte, edgeOutlinesEnabled: Bool = false, dieColorPreferences: DiceDieColorPreferences = .default, d6PipStyle: DiceD6PipStyle = .round, faceNumeralFont: DiceFaceNumeralFont = .classic, customPresets: [DiceSavedPreset] = [], boardCameraPreset: DiceBoardCameraPreset = .slightTilt) {
 		self.lastNotation = lastNotation
 		self.recentPresets = recentPresets
 		self.animationsEnabled = animationsEnabled
@@ -46,10 +47,11 @@ struct DiceUserPreferences: Equatable {
 		self.d6PipStyle = d6PipStyle
 		self.faceNumeralFont = faceNumeralFont
 		self.customPresets = customPresets
+		self.boardCameraPreset = boardCameraPreset
 	}
 
 	static var `default`: DiceUserPreferences {
-		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, theme: .classic, tableTexture: .neutral, dieFinish: .matte, edgeOutlinesEnabled: false, dieColorPreferences: .default, d6PipStyle: .round, faceNumeralFont: .classic, customPresets: [])
+		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, theme: .classic, tableTexture: .neutral, dieFinish: .matte, edgeOutlinesEnabled: false, dieColorPreferences: .default, d6PipStyle: .round, faceNumeralFont: .classic, customPresets: [], boardCameraPreset: .slightTilt)
 	}
 }
 
@@ -66,6 +68,7 @@ final class DicePreferencesStore {
 		static let d6PipStyle = "Dice.d6PipStyle"
 		static let faceNumeralFont = "Dice.faceNumeralFont"
 		static let customPresets = "Dice.customPresets"
+		static let boardCameraPreset = "Dice.boardCameraPreset"
 	}
 
 	private let defaults: UserDefaults
@@ -94,6 +97,8 @@ final class DicePreferencesStore {
 		let rawFaceNumeralFont = defaults.string(forKey: Keys.faceNumeralFont)
 		let faceNumeralFont = rawFaceNumeralFont.flatMap(DiceFaceNumeralFont.init(rawValue:)) ?? DiceUserPreferences.default.faceNumeralFont
 		let customPresets = decodeCustomPresets(from: defaults.data(forKey: Keys.customPresets))
+		let rawCameraPreset = defaults.string(forKey: Keys.boardCameraPreset)
+		let boardCameraPreset = rawCameraPreset.flatMap(DiceBoardCameraPreset.init(rawValue:)) ?? DiceUserPreferences.default.boardCameraPreset
 		return DiceUserPreferences(
 			lastNotation: notation,
 			recentPresets: presets,
@@ -105,7 +110,8 @@ final class DicePreferencesStore {
 			dieColorPreferences: dieColorPreferences,
 			d6PipStyle: d6PipStyle,
 			faceNumeralFont: faceNumeralFont,
-			customPresets: customPresets
+			customPresets: customPresets,
+			boardCameraPreset: boardCameraPreset
 		)
 	}
 
@@ -121,6 +127,7 @@ final class DicePreferencesStore {
 		defaults.set(preferences.d6PipStyle.rawValue, forKey: Keys.d6PipStyle)
 		defaults.set(preferences.faceNumeralFont.rawValue, forKey: Keys.faceNumeralFont)
 		defaults.set(encodeCustomPresets(preferences.customPresets), forKey: Keys.customPresets)
+		defaults.set(preferences.boardCameraPreset.rawValue, forKey: Keys.boardCameraPreset)
 	}
 
 	func addRecentPreset(_ notation: String) {

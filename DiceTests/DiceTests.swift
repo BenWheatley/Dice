@@ -877,6 +877,22 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(preferencesStore.load().faceNumeralFont, .serif)
 	}
 
+	func testViewModelBoardCameraPresetPersistsToPreferences() {
+		let suiteName = "DiceTests.viewmodel.camerapreset.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		XCTAssertEqual(viewModel.boardCameraPreset, .slightTilt)
+		viewModel.setBoardCameraPreset(.dramatic)
+		XCTAssertEqual(viewModel.boardCameraPreset, .dramatic)
+		XCTAssertEqual(preferencesStore.load().boardCameraPreset, .dramatic)
+	}
+
 	func testViewModelResetVisualPreferencesRestoresDefaults() {
 		let suiteName = "DiceTests.viewmodel.resetvisuals.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!
@@ -894,6 +910,7 @@ final class DiceTests: XCTestCase {
 		viewModel.setDieColorPreset(.sapphire, for: 20)
 		viewModel.setD6PipStyle(.inset)
 		viewModel.setFaceNumeralFont(.mono)
+		viewModel.setBoardCameraPreset(.dramatic)
 
 		viewModel.resetVisualPreferences()
 
@@ -904,6 +921,7 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(viewModel.dieColorPreset(for: 20), .ivory)
 		XCTAssertEqual(viewModel.d6PipStyle, .round)
 		XCTAssertEqual(viewModel.faceNumeralFont, .classic)
+		XCTAssertEqual(viewModel.boardCameraPreset, .slightTilt)
 	}
 
 	func testViewModelNotationHintReturnsInlineMessageForInvalidInput() {

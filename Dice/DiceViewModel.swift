@@ -98,6 +98,10 @@ final class DiceViewModel {
 		appState.lockedDieIndices
 	}
 
+	var boardCameraPreset: DiceBoardCameraPreset {
+		appState.boardCameraPreset
+	}
+
 	func restore() {
 		let preferences = preferencesStore.load()
 		if let parsed = notationParser.parse(preferences.lastNotation) {
@@ -111,6 +115,7 @@ final class DiceViewModel {
 		appState.dieColorPreferences = preferences.dieColorPreferences
 		appState.d6PipStyle = preferences.d6PipStyle
 		appState.faceNumeralFont = preferences.faceNumeralFont
+		appState.boardCameraPreset = preferences.boardCameraPreset
 		let persisted = historyStore.loadPersistedEntries()
 		rollHistory = DiceRollHistory(persistedRecentEntries: persisted)
 	}
@@ -260,6 +265,11 @@ final class DiceViewModel {
 		persistPreferences()
 	}
 
+	func setBoardCameraPreset(_ preset: DiceBoardCameraPreset) {
+		appState.boardCameraPreset = preset
+		persistPreferences()
+	}
+
 	func isDieLocked(at index: Int) -> Bool {
 		appState.lockedDieIndices.contains(index)
 	}
@@ -281,6 +291,7 @@ final class DiceViewModel {
 		appState.dieColorPreferences = .default
 		appState.d6PipStyle = .round
 		appState.faceNumeralFont = .classic
+		appState.boardCameraPreset = .slightTilt
 		persistPreferences()
 	}
 
@@ -391,7 +402,9 @@ final class DiceViewModel {
 			edgeOutlinesEnabled: appState.edgeOutlinesEnabled,
 			dieColorPreferences: appState.dieColorPreferences,
 			d6PipStyle: appState.d6PipStyle,
-			faceNumeralFont: appState.faceNumeralFont
+			faceNumeralFont: appState.faceNumeralFont,
+			customPresets: preferencesStore.load().customPresets,
+			boardCameraPreset: appState.boardCameraPreset
 		)
 		preferencesStore.save(preferences)
 	}

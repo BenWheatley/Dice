@@ -303,6 +303,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.setDieColorPreferences(viewModel.dieColorPreferences)
 		diceBoardView.setD6PipStyle(viewModel.d6PipStyle)
 		diceBoardView.setFaceNumeralFont(viewModel.faceNumeralFont)
+		diceBoardView.setCameraPreset(viewModel.boardCameraPreset, animated: false)
 
 		let sideLength = 0.25 * min(collectionView.bounds.width, collectionView.bounds.height)
 		let itemCount = collectionView.numberOfItems(inSection: 0)
@@ -601,6 +602,19 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			options: .displayInline,
 			children: textureActions
 		)
+		let cameraActions = DiceBoardCameraPreset.allCases.map { preset in
+			UIAction(
+				title: NSLocalizedString(preset.menuTitleKey, comment: "Board camera preset option"),
+				state: viewModel.boardCameraPreset == preset ? .on : .off
+			) { [weak self] _ in
+				self?.selectBoardCameraPreset(preset)
+			}
+		}
+		let cameraMenu = UIMenu(
+			title: NSLocalizedString("menu.control.camera", comment: "Camera submenu title"),
+			options: .displayInline,
+			children: cameraActions
+		)
 		let finishActions = DiceDieFinish.allCases.map { finish in
 			UIAction(
 				title: NSLocalizedString(finish.menuTitleKey, comment: "Die finish option"),
@@ -678,7 +692,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let resetAction = UIAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), attributes: .destructive) { [weak self] _ in
 			self?.resetStats()
 		}
-		menuButton.menu = UIMenu(children: [historyAction, repeatAction, themeMenu, textureMenu, finishMenu, pipStyleMenu, numeralFontMenu, dieColorsMenu, outlinesAction, previewStyleAction, resetVisualsAction, animationAction, statsAction, resetAction])
+		menuButton.menu = UIMenu(children: [historyAction, repeatAction, themeMenu, textureMenu, cameraMenu, finishMenu, pipStyleMenu, numeralFontMenu, dieColorsMenu, outlinesAction, previewStyleAction, resetVisualsAction, animationAction, statsAction, resetAction])
 	}
 
 	@objc private func toggleStatsVisibility() {
@@ -710,6 +724,12 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private func selectTexture(_ texture: DiceTableTexture) {
 		viewModel.setTableTexture(texture)
 		applyTexture()
+		updateControlMenu()
+	}
+
+	private func selectBoardCameraPreset(_ preset: DiceBoardCameraPreset) {
+		viewModel.setBoardCameraPreset(preset)
+		diceBoardView.setCameraPreset(preset, animated: true)
 		updateControlMenu()
 	}
 
@@ -771,6 +791,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.setDieColorPreferences(viewModel.dieColorPreferences)
 		diceBoardView.setD6PipStyle(viewModel.d6PipStyle)
 		diceBoardView.setFaceNumeralFont(viewModel.faceNumeralFont)
+		diceBoardView.setCameraPreset(viewModel.boardCameraPreset, animated: false)
 		updateDiceBoard(animated: false)
 		updateControlMenu()
 	}

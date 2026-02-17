@@ -49,6 +49,7 @@ final class DiceAppState {
 	var faceNumeralFont: DiceFaceNumeralFont
 	var lastRolledConfiguration: RollConfiguration?
 	var lockedDieIndices: Set<Int>
+	var boardCameraPreset: DiceBoardCameraPreset
 
 	init(configuration: RollConfiguration = RollConfiguration(diceCount: 6, sideCount: 6, intuitive: false)) {
 		self.configuration = configuration
@@ -65,6 +66,7 @@ final class DiceAppState {
 		self.faceNumeralFont = .classic
 		self.lastRolledConfiguration = nil
 		self.lockedDieIndices = []
+		self.boardCameraPreset = .slightTilt
 	}
 
 	func applyRollOutcome(_ outcome: RollOutcome) {
