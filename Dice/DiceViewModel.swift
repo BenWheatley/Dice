@@ -211,6 +211,17 @@ final class DiceViewModel {
 		persistPreferences()
 	}
 
+	func resetVisualPreferences() {
+		appState.theme = .classic
+		appState.tableTexture = .neutral
+		appState.dieFinish = .matte
+		appState.edgeOutlinesEnabled = false
+		appState.dieColorPreferences = .default
+		appState.d6PipStyle = .round
+		appState.faceNumeralFont = .classic
+		persistPreferences()
+	}
+
 	func formattedTotalsText(outcome: RollOutcome, boardSupportedSides: Set<Int>) -> String {
 		var lines: [String] = []
 		lines.append(String(

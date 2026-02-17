@@ -112,7 +112,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Add optional pip style variants for d6 (classic round, square, inset) with A/B visual tests.
 - [x] Add numeral font selection for non-d6 dice faces with readability validation at small sizes.
 - [ ] Add a "preview current style" panel to test selected theme/material before applying globally.
-- [ ] Add reset-to-default controls for all visual customizations with confirmation UX.
+- [x] Add reset-to-default controls for all visual customizations with confirmation UX.
 
 ### UX and Interaction Improvements
 

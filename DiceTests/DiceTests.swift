@@ -794,6 +794,35 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(preferencesStore.load().faceNumeralFont, .serif)
 	}
 
+	func testViewModelResetVisualPreferencesRestoresDefaults() {
+		let suiteName = "DiceTests.viewmodel.resetvisuals.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		viewModel.setTheme(.darkSlate)
+		viewModel.setTableTexture(.wood)
+		viewModel.setDieFinish(.stone)
+		viewModel.setEdgeOutlinesEnabled(true)
+		viewModel.setDieColorPreset(.sapphire, for: 20)
+		viewModel.setD6PipStyle(.inset)
+		viewModel.setFaceNumeralFont(.mono)
+
+		viewModel.resetVisualPreferences()
+
+		XCTAssertEqual(viewModel.theme, .classic)
+		XCTAssertEqual(viewModel.tableTexture, .neutral)
+		XCTAssertEqual(viewModel.dieFinish, .matte)
+		XCTAssertFalse(viewModel.edgeOutlinesEnabled)
+		XCTAssertEqual(viewModel.dieColorPreset(for: 20), .ivory)
+		XCTAssertEqual(viewModel.d6PipStyle, .round)
+		XCTAssertEqual(viewModel.faceNumeralFont, .classic)
+	}
+
 	func testDieFinishPresetAppliesDistinctMaterialParameters() {
 		let gloss = SCNMaterial()
 		let stone = SCNMaterial()

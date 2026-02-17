@@ -27,6 +27,7 @@
 "menu.control.dieColors" = "Die Colors";
 "menu.control.dieColor.side" = "d%d";
 "menu.control.edgeOutlines" = "Edge Outlines";
+"menu.control.resetVisuals" = "Reset Visual Style";
 "theme.classic" = "Classic";
 "theme.darkSlate" = "Dark Slate";
 "theme.highContrast" = "High Contrast";
@@ -51,6 +52,8 @@
 "font.mono" = "Mono";
 "alert.invalid.title" = "Invalid dice input";
 "alert.invalid.announcement" = "Invalid dice notation.";
+"alert.resetVisuals.title" = "Reset visual style?";
+"alert.resetVisuals.message" = "This will restore theme, texture, die finish, outlines, die colors, d6 pip style, and numeral font defaults.";
 "history.title" = "Roll History";
 "history.export.text" = "Export Text";
 "history.export.csv" = "Export CSV";

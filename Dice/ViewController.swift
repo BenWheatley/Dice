@@ -571,10 +571,16 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		) { [weak self] _ in
 			self?.toggleEdgeOutlines()
 		}
+		let resetVisualsAction = UIAction(
+			title: NSLocalizedString("menu.control.resetVisuals", comment: "Reset visual settings menu title"),
+			attributes: .destructive
+		) { [weak self] _ in
+			self?.confirmVisualReset()
+		}
 		let resetAction = UIAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), attributes: .destructive) { [weak self] _ in
 			self?.resetStats()
 		}
-		menuButton.menu = UIMenu(children: [historyAction, themeMenu, textureMenu, finishMenu, pipStyleMenu, numeralFontMenu, dieColorsMenu, outlinesAction, animationAction, statsAction, resetAction])
+		menuButton.menu = UIMenu(children: [historyAction, themeMenu, textureMenu, finishMenu, pipStyleMenu, numeralFontMenu, dieColorsMenu, outlinesAction, resetVisualsAction, animationAction, statsAction, resetAction])
 	}
 
 	@objc private func toggleStatsVisibility() {
@@ -641,6 +647,32 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private func selectFaceNumeralFont(_ font: DiceFaceNumeralFont) {
 		viewModel.setFaceNumeralFont(font)
 		diceBoardView.setFaceNumeralFont(font)
+		updateDiceBoard(animated: false)
+		updateControlMenu()
+	}
+
+	private func confirmVisualReset() {
+		let alert = UIAlertController(
+			title: NSLocalizedString("alert.resetVisuals.title", comment: "Reset visual settings confirmation title"),
+			message: NSLocalizedString("alert.resetVisuals.message", comment: "Reset visual settings confirmation message"),
+			preferredStyle: .alert
+		)
+		alert.addAction(UIAlertAction(title: NSLocalizedString("button.cancel", comment: "Cancel action"), style: .cancel))
+		alert.addAction(UIAlertAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), style: .destructive) { [weak self] _ in
+			self?.resetVisualPreferences()
+		})
+		present(alert, animated: true)
+	}
+
+	private func resetVisualPreferences() {
+		viewModel.resetVisualPreferences()
+		applyTheme()
+		applyTexture()
+		diceBoardView.setDieFinish(viewModel.dieFinish)
+		diceBoardView.setEdgeOutlinesEnabled(viewModel.edgeOutlinesEnabled)
+		diceBoardView.setDieColorPreferences(viewModel.dieColorPreferences)
+		diceBoardView.setD6PipStyle(viewModel.d6PipStyle)
+		diceBoardView.setFaceNumeralFont(viewModel.faceNumeralFont)
 		updateDiceBoard(animated: false)
 		updateControlMenu()
 	}
