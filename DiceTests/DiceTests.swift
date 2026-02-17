@@ -719,16 +719,43 @@ final class DiceTests: XCTestCase {
 
 	func testWatchRollViewModelStatusTextReflectsModeAndCount() {
 		let viewModel = WatchRollViewModel()
-		XCTAssertEqual(viewModel.statusText(rollCount: 1), "1d6 • 1")
+		XCTAssertEqual(viewModel.statusText(rollCount: 1), "TR·1d6\nr1")
 		viewModel.toggleMode()
-		XCTAssertEqual(viewModel.statusText(rollCount: 4), "1d6i • 4")
+		XCTAssertEqual(viewModel.statusText(rollCount: 4), "INT·1d6i\nr4")
 	}
 
 	func testWatchRollViewModelStatusTextUsesGlanceableTokensWithLastValue() {
 		let viewModel = WatchRollViewModel()
-		XCTAssertEqual(viewModel.statusText(lastValue: 5), "TR • 1d6 • v5")
+		XCTAssertEqual(viewModel.statusText(lastValue: 5), "TR·1d6\nv5")
 		viewModel.toggleMode()
-		XCTAssertEqual(viewModel.statusText(lastValue: 2), "INT • 1d6i • v2")
+		XCTAssertEqual(viewModel.statusText(lastValue: 2), "INT·1d6i\nv2")
+	}
+
+	func testWatchSceneKitFlowRemainsInSyncAcrossModeSwitchAndRepeatedRolls() {
+		var scripted = [1, 2, 3, 4, 5]
+		let session = DiceRollSession(
+			intuitiveRoller: IntuitiveRoller(
+				fallbackRoller: TrueRandomRoller { _ in scripted.removeFirst() },
+				randomDouble: { 0.5 }
+			)
+		)
+		let viewModel = WatchRollViewModel(rollSession: session)
+
+		let first = viewModel.roll().values[0]
+		let second = viewModel.roll().values[0]
+		let third = viewModel.roll().values[0]
+		XCTAssertEqual([first, second, third], [1, 2, 3])
+		XCTAssertEqual(viewModel.statusText(lastValue: third), "TR·1d6\nv3")
+		_ = D6FaceOrientation.eulerAngles(for: first)
+		_ = D6FaceOrientation.eulerAngles(for: second)
+		_ = D6FaceOrientation.eulerAngles(for: third)
+
+		viewModel.toggleMode()
+		let afterToggle = viewModel.roll()
+		XCTAssertEqual(afterToggle.totalRolls, 1)
+		XCTAssertEqual(afterToggle.values, [4])
+		XCTAssertEqual(viewModel.statusText(lastValue: 4), "INT·1d6i\nv4")
+		_ = D6FaceOrientation.eulerAngles(for: 4)
 	}
 
 	func testD6FaceOrientationProvidesDistinctExpectedMappings() {
