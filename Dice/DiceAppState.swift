@@ -52,6 +52,7 @@ final class DiceAppState {
 	var lockedDieIndices: Set<Int>
 	var boardCameraPreset: DiceBoardCameraPreset
 	var motionBlurEnabled: Bool
+	var animationSeed: Int?
 
 	init(configuration: RollConfiguration = RollConfiguration(diceCount: 6, sideCount: 6, intuitive: false)) {
 		self.configuration = configuration
@@ -71,6 +72,7 @@ final class DiceAppState {
 		self.lockedDieIndices = []
 		self.boardCameraPreset = .slightTilt
 		self.motionBlurEnabled = false
+		self.animationSeed = nil
 	}
 
 	func applyRollOutcome(_ outcome: RollOutcome) {

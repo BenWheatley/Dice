@@ -45,6 +45,8 @@
 "menu.control.dieColor.side" = "d%d";
 "menu.control.edgeOutlines" = "Edge Outlines";
 "menu.control.motionBlur" = "Motion Blur";
+"menu.control.setAnimationSeed" = "Set Animation Seed";
+"menu.control.clearAnimationSeed" = "Clear Animation Seed";
 "menu.control.previewStyle" = "Preview Style";
 "menu.control.resetVisuals" = "Reset Visual Style";
 "theme.classic" = "Classic";
@@ -79,6 +81,9 @@
 "alert.invalid.announcement" = "Invalid dice notation.";
 "alert.resetVisuals.title" = "Reset visual style?";
 "alert.resetVisuals.message" = "This will restore theme, texture, die finish, outlines, die colors, d6 pip style, and numeral font defaults.";
+"alert.animationSeed.title" = "Animation Seed";
+"alert.animationSeed.message" = "Use a fixed seed to replay deterministic board animation paths.";
+"alert.animationSeed.placeholder" = "Seed (integer)";
 "preview.title" = "Style Preview";
 "preview.summary" = "Texture: %@  •  Finish: %@\nD6 pips: %@  •  Numerals: %@";
 "history.title" = "Roll History";

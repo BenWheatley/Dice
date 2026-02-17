@@ -52,6 +52,8 @@ final class DiceCubeView: UIView {
 	private var activeCameraPreset: DiceBoardCameraPreset = .slightTilt
 	private var activeAnimationIntensity: DiceAnimationIntensity = .full
 	private var activeMotionBlurEnabled = false
+	private var activeAnimationSeed: Int?
+	private var deterministicRNGState: UInt64?
 	private var needsMeshRefresh = false
 
 	override init(frame: CGRect) {
@@ -180,6 +182,11 @@ final class DiceCubeView: UIView {
 	func setMotionBlurEnabled(_ enabled: Bool) {
 		activeMotionBlurEnabled = enabled
 		cameraNode.camera?.motionBlurIntensity = enabled ? 0.45 : 0.0
+	}
+
+	func setAnimationSeed(_ seed: Int?) {
+		activeAnimationSeed = seed
+		deterministicRNGState = seed.map { UInt64(bitPattern: Int64($0)) ^ 0x9E3779B97F4A7C15 }
 	}
 
 	private func configureScene() {
@@ -670,8 +677,8 @@ final class DiceCubeView: UIView {
 		let decaySharpness = 6.0
 
 		func randomTurns(min: Int, max: Int) -> Float {
-			let turns = Float(Int.random(in: min...max))
-			let sign: Float = Bool.random() ? 1 : -1
+			let turns = Float(randomInt(in: min...max))
+			let sign: Float = randomBool() ? 1 : -1
 			return turns * sign
 		}
 
@@ -719,7 +726,7 @@ final class DiceCubeView: UIView {
 
 		var lastTime: TimeInterval = 0
 		var pos = start
-		var vel = SCNVector3(Float.random(in: -420...420) * motionScale, Float.random(in: -330...330) * motionScale, 0)
+		var vel = SCNVector3(randomFloat(in: -420...420) * motionScale, randomFloat(in: -330...330) * motionScale, 0)
 		let liftAmplitude = Float(sideLength * 1.35) * motionScale
 		let oscillationAmplitude = Float(sideLength * 0.28) * motionScale
 		let oscillationFrequency: Float = 9.0 * max(0.7, motionScale)
@@ -751,6 +758,31 @@ final class DiceCubeView: UIView {
 			let y = target.y + (pos.y - target.y) * settle + lift + oscillation
 			node.position = SCNVector3(x, y, 0)
 		}
+	}
+
+	private func randomFloat(in range: ClosedRange<Float>) -> Float {
+		let unit = nextRandomUnit()
+		return range.lowerBound + (range.upperBound - range.lowerBound) * unit
+	}
+
+	private func randomInt(in range: ClosedRange<Int>) -> Int {
+		let unit = nextRandomUnit()
+		let span = range.upperBound - range.lowerBound + 1
+		let offset = min(span - 1, Int(Float(span) * unit))
+		return range.lowerBound + offset
+	}
+
+	private func randomBool() -> Bool {
+		nextRandomUnit() >= 0.5
+	}
+
+	private func nextRandomUnit() -> Float {
+		guard var state = deterministicRNGState else {
+			return Float.random(in: 0...1)
+		}
+		state = state &* 6364136223846793005 &+ 1442695040888963407
+		deterministicRNGState = state
+		return Float(Double(state) / Double(UInt64.max))
 	}
 
 	private func orientation(for value: Int, sideCount: Int) -> SCNVector3 {

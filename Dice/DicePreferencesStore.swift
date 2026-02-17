@@ -36,8 +36,9 @@ struct DiceUserPreferences: Equatable {
 	var customPresets: [DiceSavedPreset]
 	var boardCameraPreset: DiceBoardCameraPreset
 	var motionBlurEnabled: Bool
+	var animationSeed: Int?
 
-	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, animationIntensity: DiceAnimationIntensity = .full, theme: DiceTheme = .classic, tableTexture: DiceTableTexture = .neutral, dieFinish: DiceDieFinish = .matte, edgeOutlinesEnabled: Bool = false, dieColorPreferences: DiceDieColorPreferences = .default, d6PipStyle: DiceD6PipStyle = .round, faceNumeralFont: DiceFaceNumeralFont = .classic, customPresets: [DiceSavedPreset] = [], boardCameraPreset: DiceBoardCameraPreset = .slightTilt, motionBlurEnabled: Bool = false) {
+	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, animationIntensity: DiceAnimationIntensity = .full, theme: DiceTheme = .classic, tableTexture: DiceTableTexture = .neutral, dieFinish: DiceDieFinish = .matte, edgeOutlinesEnabled: Bool = false, dieColorPreferences: DiceDieColorPreferences = .default, d6PipStyle: DiceD6PipStyle = .round, faceNumeralFont: DiceFaceNumeralFont = .classic, customPresets: [DiceSavedPreset] = [], boardCameraPreset: DiceBoardCameraPreset = .slightTilt, motionBlurEnabled: Bool = false, animationSeed: Int? = nil) {
 		self.lastNotation = lastNotation
 		self.recentPresets = recentPresets
 		self.animationsEnabled = animationsEnabled
@@ -52,10 +53,11 @@ struct DiceUserPreferences: Equatable {
 		self.customPresets = customPresets
 		self.boardCameraPreset = boardCameraPreset
 		self.motionBlurEnabled = motionBlurEnabled
+		self.animationSeed = animationSeed
 	}
 
 	static var `default`: DiceUserPreferences {
-		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, animationIntensity: .full, theme: .classic, tableTexture: .neutral, dieFinish: .matte, edgeOutlinesEnabled: false, dieColorPreferences: .default, d6PipStyle: .round, faceNumeralFont: .classic, customPresets: [], boardCameraPreset: .slightTilt, motionBlurEnabled: false)
+		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, animationIntensity: .full, theme: .classic, tableTexture: .neutral, dieFinish: .matte, edgeOutlinesEnabled: false, dieColorPreferences: .default, d6PipStyle: .round, faceNumeralFont: .classic, customPresets: [], boardCameraPreset: .slightTilt, motionBlurEnabled: false, animationSeed: nil)
 	}
 }
 
@@ -75,6 +77,7 @@ final class DicePreferencesStore {
 		static let customPresets = "Dice.customPresets"
 		static let boardCameraPreset = "Dice.boardCameraPreset"
 		static let motionBlurEnabled = "Dice.motionBlurEnabled"
+		static let animationSeed = "Dice.animationSeed"
 	}
 
 	private let defaults: UserDefaults
@@ -109,6 +112,7 @@ final class DicePreferencesStore {
 		let rawCameraPreset = defaults.string(forKey: Keys.boardCameraPreset)
 		let boardCameraPreset = rawCameraPreset.flatMap(DiceBoardCameraPreset.init(rawValue:)) ?? DiceUserPreferences.default.boardCameraPreset
 		let motionBlurEnabled = defaults.object(forKey: Keys.motionBlurEnabled) as? Bool ?? DiceUserPreferences.default.motionBlurEnabled
+		let animationSeed = defaults.object(forKey: Keys.animationSeed) as? Int
 		return DiceUserPreferences(
 			lastNotation: notation,
 			recentPresets: presets,
@@ -123,7 +127,8 @@ final class DicePreferencesStore {
 			faceNumeralFont: faceNumeralFont,
 			customPresets: customPresets,
 			boardCameraPreset: boardCameraPreset,
-			motionBlurEnabled: motionBlurEnabled
+			motionBlurEnabled: motionBlurEnabled,
+			animationSeed: animationSeed
 		)
 	}
 
@@ -142,6 +147,7 @@ final class DicePreferencesStore {
 		defaults.set(encodeCustomPresets(preferences.customPresets), forKey: Keys.customPresets)
 		defaults.set(preferences.boardCameraPreset.rawValue, forKey: Keys.boardCameraPreset)
 		defaults.set(preferences.motionBlurEnabled, forKey: Keys.motionBlurEnabled)
+		defaults.set(preferences.animationSeed, forKey: Keys.animationSeed)
 	}
 
 	func addRecentPreset(_ notation: String) {

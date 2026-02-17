@@ -110,6 +110,10 @@ final class DiceViewModel {
 		appState.motionBlurEnabled
 	}
 
+	var animationSeed: Int? {
+		appState.animationSeed
+	}
+
 	func restore() {
 		let preferences = preferencesStore.load()
 		if let parsed = notationParser.parse(preferences.lastNotation) {
@@ -126,6 +130,7 @@ final class DiceViewModel {
 		appState.faceNumeralFont = preferences.faceNumeralFont
 		appState.boardCameraPreset = preferences.boardCameraPreset
 		appState.motionBlurEnabled = preferences.motionBlurEnabled
+		appState.animationSeed = preferences.animationSeed
 		let persisted = historyStore.loadPersistedEntries()
 		rollHistory = DiceRollHistory(persistedRecentEntries: persisted)
 	}
@@ -297,6 +302,11 @@ final class DiceViewModel {
 		persistPreferences()
 	}
 
+	func setAnimationSeed(_ seed: Int?) {
+		appState.animationSeed = seed
+		persistPreferences()
+	}
+
 	func isDieLocked(at index: Int) -> Bool {
 		appState.lockedDieIndices.contains(index)
 	}
@@ -434,7 +444,8 @@ final class DiceViewModel {
 			faceNumeralFont: appState.faceNumeralFont,
 			customPresets: preferencesStore.load().customPresets,
 			boardCameraPreset: appState.boardCameraPreset,
-			motionBlurEnabled: appState.motionBlurEnabled
+			motionBlurEnabled: appState.motionBlurEnabled,
+			animationSeed: appState.animationSeed
 		)
 		preferencesStore.save(preferences)
 	}

@@ -926,6 +926,24 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(preferencesStore.load().motionBlurEnabled)
 	}
 
+	func testViewModelAnimationSeedPersistsToPreferences() {
+		let suiteName = "DiceTests.viewmodel.animationseed.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		XCTNil(viewModel.animationSeed)
+		viewModel.setAnimationSeed(42)
+		XCTAssertEqual(viewModel.animationSeed, 42)
+		XCTAssertEqual(preferencesStore.load().animationSeed, 42)
+		viewModel.setAnimationSeed(nil)
+		XCTNil(preferencesStore.load().animationSeed)
+	}
+
 	func testViewModelResetVisualPreferencesRestoresDefaults() {
 		let suiteName = "DiceTests.viewmodel.resetvisuals.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!
