@@ -724,6 +724,13 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(viewModel.statusText(rollCount: 4), "1d6i • 4")
 	}
 
+	func testWatchRollViewModelStatusTextUsesGlanceableTokensWithLastValue() {
+		let viewModel = WatchRollViewModel()
+		XCTAssertEqual(viewModel.statusText(lastValue: 5), "TR • 1d6 • v5")
+		viewModel.toggleMode()
+		XCTAssertEqual(viewModel.statusText(lastValue: 2), "INT • 1d6i • v2")
+	}
+
 	func testD6FaceOrientationProvidesDistinctExpectedMappings() {
 		XCTAssertEqual(D6FaceOrientation.eulerAngles(for: 1).y, 0, accuracy: 0.0001)
 		XCTAssertEqual(D6FaceOrientation.eulerAngles(for: 2).y, -Float.pi / 2, accuracy: 0.0001)

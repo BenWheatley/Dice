@@ -53,7 +53,7 @@ class InterfaceController: WKInterfaceController {
 			diceView.setAccessibilityValue("Value \(value)")
 			diceView.setHidden(false)
 		}
-		diceButton.setTitle(viewModel.statusText(rollCount: rollCount))
+		diceButton.setTitle(viewModel.statusText(lastValue: value))
 		WKInterfaceDevice.current().play(.click)
 	}
 
