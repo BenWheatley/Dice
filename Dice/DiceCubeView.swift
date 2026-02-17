@@ -46,6 +46,7 @@ final class DiceCubeView: UIView {
 	private var lifecycleObservers: [NSObjectProtocol] = []
 	private var activeDieFinish: DiceDieFinish = .matte
 	private var activeEdgeOutlinesEnabled = false
+	private var activeDieColorPreferences: DiceDieColorPreferences = .default
 	private var needsMeshRefresh = false
 
 	override init(frame: CGRect) {
@@ -136,6 +137,13 @@ final class DiceCubeView: UIView {
 	func setEdgeOutlinesEnabled(_ enabled: Bool) {
 		guard activeEdgeOutlinesEnabled != enabled else { return }
 		activeEdgeOutlinesEnabled = enabled
+		needsMeshRefresh = true
+	}
+
+	func setDieColorPreferences(_ preferences: DiceDieColorPreferences) {
+		guard activeDieColorPreferences != preferences else { return }
+		activeDieColorPreferences = preferences
+		meshCache.removeAll()
 		needsMeshRefresh = true
 	}
 
@@ -407,12 +415,13 @@ final class DiceCubeView: UIView {
 	private func faceMaterial(faceIndex: Int, face: [Int], sideCount: Int) -> SCNMaterial {
 		let material = SCNMaterial()
 		let value = faceIndex + 1
+		let fillColor = activeDieColorPreferences.fillColor(for: sideCount)
 		if sideCount == 6 {
-			material.diffuse.contents = D6SceneKitRenderConfig.faceTexture(value: value)
+			material.diffuse.contents = D6SceneKitRenderConfig.faceTexture(value: value, fillColor: fillColor)
 		} else if sideCount == 4 {
-			material.diffuse.contents = d4FaceTexture(vertexLabels: d4VertexLabels(forFace: face))
+			material.diffuse.contents = d4FaceTexture(vertexLabels: d4VertexLabels(forFace: face), fillColor: fillColor)
 		} else {
-			material.diffuse.contents = faceValueTexture(value: value, sideCount: sideCount)
+			material.diffuse.contents = faceValueTexture(value: value, sideCount: sideCount, fillColor: fillColor)
 		}
 		material.locksAmbientWithDiffuse = true
 		material.isDoubleSided = false
@@ -439,12 +448,12 @@ final class DiceCubeView: UIView {
 		face.map { $0 + 1 }
 	}
 
-	private func d4FaceTexture(vertexLabels: [Int]) -> UIImage {
+	private func d4FaceTexture(vertexLabels: [Int], fillColor: UIColor) -> UIImage {
 		let size = CGSize(width: 256, height: 256)
 		let renderer = UIGraphicsImageRenderer(size: size)
 		return renderer.image { ctx in
 			let rect = CGRect(origin: .zero, size: size)
-			let style = DiceFaceContrast.style(for: UIColor(white: 0.96, alpha: 1.0))
+			let style = DiceFaceContrast.style(for: fillColor)
 			ctx.cgContext.setFillColor(style.fillColor.cgColor)
 			ctx.cgContext.fill(rect)
 
@@ -509,13 +518,12 @@ final class DiceCubeView: UIView {
 		}
 	}
 
-	private func faceValueTexture(value: Int, sideCount: Int) -> UIImage {
+	private func faceValueTexture(value: Int, sideCount: Int, fillColor: UIColor) -> UIImage {
 		let size = CGSize(width: 256, height: 256)
 		let renderer = UIGraphicsImageRenderer(size: size)
 		return renderer.image { ctx in
 			let rect = CGRect(origin: .zero, size: size)
-			let baseFill = UIColor(white: value.isMultiple(of: 2) ? 0.95 : 0.97, alpha: 1.0)
-			let style = DiceFaceContrast.style(for: baseFill)
+			let style = DiceFaceContrast.style(for: fillColor)
 			ctx.cgContext.setFillColor(style.fillColor.cgColor)
 			ctx.cgContext.fill(rect)
 			ctx.cgContext.setStrokeColor(style.borderColor.cgColor)

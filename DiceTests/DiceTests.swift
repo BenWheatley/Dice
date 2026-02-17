@@ -410,7 +410,8 @@ final class DiceTests: XCTestCase {
 			theme: .darkSlate,
 			tableTexture: .wood,
 			dieFinish: .stone,
-			edgeOutlinesEnabled: true
+			edgeOutlinesEnabled: true,
+			dieColorPreferences: DiceDieColorPreferences.default.updated(sideCount: 20, preset: .crimson)
 		)
 
 		store.save(expected)
@@ -743,6 +744,22 @@ final class DiceTests: XCTestCase {
 		viewModel.setEdgeOutlinesEnabled(true)
 		XCTAssertTrue(viewModel.edgeOutlinesEnabled)
 		XCTAssertTrue(preferencesStore.load().edgeOutlinesEnabled)
+	}
+
+	func testViewModelDieColorSelectionPersistsToPreferences() {
+		let suiteName = "DiceTests.viewmodel.diecolors.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		XCTAssertEqual(viewModel.dieColorPreset(for: 20), .ivory)
+		viewModel.setDieColorPreset(.sapphire, for: 20)
+		XCTAssertEqual(viewModel.dieColorPreset(for: 20), .sapphire)
+		XCTAssertEqual(preferencesStore.load().dieColorPreferences.preset(for: 20), .sapphire)
 	}
 
 	func testDieFinishPresetAppliesDistinctMaterialParameters() {

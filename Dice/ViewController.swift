@@ -40,6 +40,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private var currentPalette = DiceTheme.classic.palette
 	private var currentTexture: DiceTableTexture = .neutral
 	private var currentDieFinish: DiceDieFinish = .matte
+	private let customizableSideCounts = DiceDieColorPreferences.supportedSideCounts
 	private let statsVisibilityKey = "Dice.showStats"
 	private var statsVisible = true
 
@@ -283,6 +284,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.isHidden = false
 		diceBoardView.setDieFinish(viewModel.dieFinish)
 		diceBoardView.setEdgeOutlinesEnabled(viewModel.edgeOutlinesEnabled)
+		diceBoardView.setDieColorPreferences(viewModel.dieColorPreferences)
 
 		let sideLength = 0.25 * min(collectionView.bounds.width, collectionView.bounds.height)
 		let itemCount = collectionView.numberOfItems(inSection: 0)
@@ -515,6 +517,26 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			options: .displayInline,
 			children: finishActions
 		)
+		let dieColorMenus = customizableSideCounts.map { sideCount in
+			let actions = DiceDieColorPreset.allCases.map { preset in
+				UIAction(
+					title: NSLocalizedString(preset.menuTitleKey, comment: "Die color preset option"),
+					state: viewModel.dieColorPreset(for: sideCount) == preset ? .on : .off
+				) { [weak self] _ in
+					self?.selectDieColorPreset(preset, sideCount: sideCount)
+				}
+			}
+			return UIMenu(
+				title: String(format: NSLocalizedString("menu.control.dieColor.side", comment: "Die color submenu title for side count"), sideCount),
+				options: .displayInline,
+				children: actions
+			)
+		}
+		let dieColorsMenu = UIMenu(
+			title: NSLocalizedString("menu.control.dieColors", comment: "Die colors submenu title"),
+			options: .displayInline,
+			children: dieColorMenus
+		)
 		let outlinesAction = UIAction(
 			title: NSLocalizedString("menu.control.edgeOutlines", comment: "Edge outlines toggle menu title"),
 			state: viewModel.edgeOutlinesEnabled ? .on : .off
@@ -524,7 +546,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let resetAction = UIAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), attributes: .destructive) { [weak self] _ in
 			self?.resetStats()
 		}
-		menuButton.menu = UIMenu(children: [historyAction, themeMenu, textureMenu, finishMenu, outlinesAction, animationAction, statsAction, resetAction])
+		menuButton.menu = UIMenu(children: [historyAction, themeMenu, textureMenu, finishMenu, dieColorsMenu, outlinesAction, animationAction, statsAction, resetAction])
 	}
 
 	@objc private func toggleStatsVisibility() {
@@ -570,6 +592,13 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private func toggleEdgeOutlines() {
 		viewModel.setEdgeOutlinesEnabled(!viewModel.edgeOutlinesEnabled)
 		diceBoardView.setEdgeOutlinesEnabled(viewModel.edgeOutlinesEnabled)
+		updateDiceBoard(animated: false)
+		updateControlMenu()
+	}
+
+	private func selectDieColorPreset(_ preset: DiceDieColorPreset, sideCount: Int) {
+		viewModel.setDieColorPreset(preset, for: sideCount)
+		diceBoardView.setDieColorPreferences(viewModel.dieColorPreferences)
 		updateDiceBoard(animated: false)
 		updateControlMenu()
 	}

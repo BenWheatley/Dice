@@ -108,7 +108,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 ### Dice Visual Customization
 
-- [ ] Add per-die-type color customization (d4/d6/d8/d10/d12/d20) with persisted preferences.
+- [x] Add per-die-type color customization (d4/d6/d8/d10/d12/d20) with persisted preferences.
 - [ ] Add optional pip style variants for d6 (classic round, square, inset) with A/B visual tests.
 - [ ] Add numeral font selection for non-d6 dice faces with readability validation at small sizes.
 - [ ] Add a "preview current style" panel to test selected theme/material before applying globally.

@@ -43,15 +43,15 @@ struct D6SceneKitRenderConfig {
 		return box
 	}
 
-	static func faceMaterial(value: Int) -> SCNMaterial {
+	static func faceMaterial(value: Int, fillColor: UIColor = UIColor(white: 0.96, alpha: 1.0)) -> SCNMaterial {
 		let material = SCNMaterial()
-		material.diffuse.contents = faceTexture(value: value)
+		material.diffuse.contents = faceTexture(value: value, fillColor: fillColor)
 		material.locksAmbientWithDiffuse = true
 		material.isDoubleSided = false
 		return material
 	}
 
-	static func faceTexture(value: Int) -> UIImage {
+	static func faceTexture(value: Int, fillColor: UIColor = UIColor(white: 0.96, alpha: 1.0)) -> UIImage {
 		let size = CGSize(width: 256, height: 256)
 		let width = Int(size.width)
 		let height = Int(size.height)
@@ -69,8 +69,7 @@ struct D6SceneKitRenderConfig {
 		}
 
 		let rect = CGRect(origin: .zero, size: size)
-		let faceFill = UIColor(white: value.isMultiple(of: 2) ? 0.94 : 0.97, alpha: 1.0)
-		let style = DiceFaceContrast.style(for: faceFill)
+		let style = DiceFaceContrast.style(for: fillColor)
 		context.setFillColor(style.fillColor.cgColor)
 		context.fill(rect)
 		context.setStrokeColor(style.borderColor.cgColor)

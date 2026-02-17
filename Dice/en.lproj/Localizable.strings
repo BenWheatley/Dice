@@ -22,6 +22,8 @@
 "menu.control.theme" = "Theme";
 "menu.control.texture" = "Table Texture";
 "menu.control.finish" = "Die Finish";
+"menu.control.dieColors" = "Die Colors";
+"menu.control.dieColor.side" = "d%d";
 "menu.control.edgeOutlines" = "Edge Outlines";
 "theme.classic" = "Classic";
 "theme.darkSlate" = "Dark Slate";
@@ -32,6 +34,12 @@
 "finish.matte" = "Matte";
 "finish.gloss" = "Gloss";
 "finish.stone" = "Stone";
+"dieColor.ivory" = "Ivory";
+"dieColor.crimson" = "Crimson";
+"dieColor.emerald" = "Emerald";
+"dieColor.sapphire" = "Sapphire";
+"dieColor.amber" = "Amber";
+"dieColor.slate" = "Slate";
 "alert.invalid.title" = "Invalid dice input";
 "alert.invalid.announcement" = "Invalid dice notation.";
 "history.title" = "Roll History";
