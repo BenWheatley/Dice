@@ -183,7 +183,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 ### Performance and Interaction Safety
 
 - [x] Add watch frame-rate/perf budget target for SceneKit D6 (steady interaction on simulator profile).
-- [ ] Add low-power mode behavior (reduced animation intensity and reduced SceneKit update frequency).
+- [x] Add low-power mode behavior (reduced animation intensity and reduced SceneKit update frequency).
 - [ ] Add watch haptic/audio sync to final face settle event for clearer result confirmation.
 - [ ] Add tests for mode switching and repeated rolls with SceneKit enabled to catch state desync regressions.
 - [ ] Add watch-specific QA pass for crown interaction, wake/resume, and scene lifecycle handling.

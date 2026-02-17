@@ -17,6 +17,7 @@ class InterfaceController: WKInterfaceController {
 	private var rollCount = 0
 	private var d6Node = SCNNode()
 	private var usesSceneRenderer = false
+	private var lowPowerObserver: NSObjectProtocol?
 
 	@IBOutlet weak var diceButton: WKInterfaceButton!
 	@IBOutlet weak var diceView: WKInterfaceImage!
@@ -28,6 +29,7 @@ class InterfaceController: WKInterfaceController {
 		diceButton.setAccessibilityHint("Double tap to roll one die")
 		diceView.setAccessibilityLabel("Latest die result")
 		configureSceneRenderer()
+		configurePowerModeObserver()
 		addMenuItem(with: .more, title: "Mode", action: #selector(toggleMode))
 		roll()
     }
@@ -39,6 +41,12 @@ class InterfaceController: WKInterfaceController {
     override func didDeactivate() {
         super.didDeactivate()
     }
+
+	deinit {
+		if let lowPowerObserver {
+			NotificationCenter.default.removeObserver(lowPowerObserver)
+		}
+	}
 
 	@IBAction func roll() {
 		let outcome = viewModel.roll()
@@ -93,6 +101,26 @@ class InterfaceController: WKInterfaceController {
 		diceSceneView.setAccessibilityLabel("Latest die result, 3D preview")
 		usesSceneRenderer = true
 		diceSceneView.setHidden(false)
+		applyPowerModeProfile()
+	}
+
+	private func configurePowerModeObserver() {
+		lowPowerObserver = NotificationCenter.default.addObserver(
+			forName: .NSProcessInfoPowerStateDidChange,
+			object: nil,
+			queue: .main
+		) { [weak self] _ in
+			self?.applyPowerModeProfile()
+		}
+	}
+
+	private func applyPowerModeProfile() {
+		guard usesSceneRenderer else { return }
+		if ProcessInfo.processInfo.isLowPowerModeEnabled {
+			diceSceneView.preferredFramesPerSecond = 15
+		} else {
+			diceSceneView.preferredFramesPerSecond = 30
+		}
 	}
 
 	private func makeD6Node() -> SCNNode {
@@ -183,7 +211,7 @@ class InterfaceController: WKInterfaceController {
 	private func animateD6(to value: Int) {
 		let target = orientation(for: value)
 		SCNTransaction.begin()
-		SCNTransaction.animationDuration = 0.4
+		SCNTransaction.animationDuration = ProcessInfo.processInfo.isLowPowerModeEnabled ? 0.2 : 0.4
 		d6Node.eulerAngles = target
 		SCNTransaction.commit()
 	}
