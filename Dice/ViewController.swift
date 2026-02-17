@@ -304,6 +304,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.setD6PipStyle(viewModel.d6PipStyle)
 		diceBoardView.setFaceNumeralFont(viewModel.faceNumeralFont)
 		diceBoardView.setCameraPreset(viewModel.boardCameraPreset, animated: false)
+		diceBoardView.setAnimationIntensity(viewModel.animationIntensity)
 
 		let sideLength = 0.25 * min(collectionView.bounds.width, collectionView.bounds.height)
 		let itemCount = collectionView.numberOfItems(inSection: 0)
@@ -363,6 +364,13 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	@objc private func toggleAnimations() {
 		viewModel.setAnimationsEnabled(!viewModel.animationsEnabled)
+		diceBoardView.setAnimationIntensity(viewModel.animationIntensity)
+		updateControlMenu()
+	}
+
+	private func selectAnimationIntensity(_ intensity: DiceAnimationIntensity) {
+		viewModel.setAnimationIntensity(intensity)
+		diceBoardView.setAnimationIntensity(intensity)
 		updateControlMenu()
 	}
 
@@ -511,7 +519,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	private var shouldAnimateBoard: Bool {
 		let sideCounts = viewModel.diceSideCounts
-		return !sideCounts.isEmpty && sideCounts.allSatisfy({ boardSupportedSides.contains($0) }) && viewModel.animationsEnabled
+		return !sideCounts.isEmpty && sideCounts.allSatisfy({ boardSupportedSides.contains($0) }) && viewModel.animationIntensity != .off
 	}
 
 	@objc private func showPresetPicker() {
@@ -564,6 +572,19 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		) { [weak self] _ in
 			self?.toggleAnimations()
 		}
+		let animationIntensityActions = DiceAnimationIntensity.allCases.map { intensity in
+			UIAction(
+				title: NSLocalizedString(intensity.menuTitleKey, comment: "Animation intensity option"),
+				state: viewModel.animationIntensity == intensity ? .on : .off
+			) { [weak self] _ in
+				self?.selectAnimationIntensity(intensity)
+			}
+		}
+		let animationIntensityMenu = UIMenu(
+			title: NSLocalizedString("menu.control.animationIntensity", comment: "Animation intensity submenu title"),
+			options: .displayInline,
+			children: animationIntensityActions
+		)
 		let statsAction = UIAction(
 			title: NSLocalizedString("menu.control.showStats", comment: "Show stats toggle menu title"),
 			state: statsVisible ? .on : .off
@@ -692,7 +713,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let resetAction = UIAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), attributes: .destructive) { [weak self] _ in
 			self?.resetStats()
 		}
-		menuButton.menu = UIMenu(children: [historyAction, repeatAction, themeMenu, textureMenu, cameraMenu, finishMenu, pipStyleMenu, numeralFontMenu, dieColorsMenu, outlinesAction, previewStyleAction, resetVisualsAction, animationAction, statsAction, resetAction])
+		menuButton.menu = UIMenu(children: [historyAction, repeatAction, themeMenu, textureMenu, cameraMenu, finishMenu, pipStyleMenu, numeralFontMenu, dieColorsMenu, outlinesAction, previewStyleAction, resetVisualsAction, animationAction, animationIntensityMenu, statsAction, resetAction])
 	}
 
 	@objc private func toggleStatsVisibility() {
@@ -792,6 +813,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.setD6PipStyle(viewModel.d6PipStyle)
 		diceBoardView.setFaceNumeralFont(viewModel.faceNumeralFont)
 		diceBoardView.setCameraPreset(viewModel.boardCameraPreset, animated: false)
+		diceBoardView.setAnimationIntensity(viewModel.animationIntensity)
 		updateDiceBoard(animated: false)
 		updateControlMenu()
 	}

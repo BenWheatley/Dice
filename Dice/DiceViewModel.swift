@@ -66,6 +66,10 @@ final class DiceViewModel {
 		appState.animationsEnabled
 	}
 
+	var animationIntensity: DiceAnimationIntensity {
+		appState.animationIntensity
+	}
+
 	var theme: DiceTheme {
 		appState.theme
 	}
@@ -105,9 +109,10 @@ final class DiceViewModel {
 	func restore() {
 		let preferences = preferencesStore.load()
 		if let parsed = notationParser.parse(preferences.lastNotation) {
-			appState.configuration = parsed
+		appState.configuration = parsed
 		}
 		appState.animationsEnabled = preferences.animationsEnabled
+		appState.animationIntensity = preferences.animationIntensity
 		appState.theme = preferences.theme
 		appState.tableTexture = preferences.tableTexture
 		appState.dieFinish = preferences.dieFinish
@@ -223,6 +228,18 @@ final class DiceViewModel {
 
 	func setAnimationsEnabled(_ enabled: Bool) {
 		appState.animationsEnabled = enabled
+		if enabled && appState.animationIntensity == .off {
+			appState.animationIntensity = .full
+		}
+		if !enabled {
+			appState.animationIntensity = .off
+		}
+		persistPreferences()
+	}
+
+	func setAnimationIntensity(_ intensity: DiceAnimationIntensity) {
+		appState.animationIntensity = intensity
+		appState.animationsEnabled = intensity != .off
 		persistPreferences()
 	}
 
@@ -396,6 +413,7 @@ final class DiceViewModel {
 			lastNotation: appState.configuration.notation,
 			recentPresets: preferencesStore.load().recentPresets,
 			animationsEnabled: appState.animationsEnabled,
+			animationIntensity: appState.animationIntensity,
 			theme: appState.theme,
 			tableTexture: appState.tableTexture,
 			dieFinish: appState.dieFinish,

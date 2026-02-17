@@ -40,6 +40,7 @@ final class DiceAppState {
 	var diceSideCounts: [Int]
 	var stats: DiceStats
 	var animationsEnabled: Bool
+	var animationIntensity: DiceAnimationIntensity
 	var theme: DiceTheme
 	var tableTexture: DiceTableTexture
 	var dieFinish: DiceDieFinish
@@ -57,6 +58,7 @@ final class DiceAppState {
 		self.diceSideCounts = configuration.sideCountsPerDie
 		self.stats = .empty
 		self.animationsEnabled = true
+		self.animationIntensity = .full
 		self.theme = .classic
 		self.tableTexture = .neutral
 		self.dieFinish = .matte

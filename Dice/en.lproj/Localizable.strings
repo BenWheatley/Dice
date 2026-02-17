@@ -34,6 +34,7 @@
 "menu.control.showStats" = "Show Stats";
 "menu.control.actions" = "Actions";
 "menu.control.repeatLast" = "Repeat Last Roll";
+"menu.control.animationIntensity" = "Animation Intensity";
 "menu.control.theme" = "Theme";
 "menu.control.texture" = "Table Texture";
 "menu.control.camera" = "Board Camera";
@@ -54,6 +55,9 @@
 "camera.top" = "Top";
 "camera.slightTilt" = "Slight Tilt";
 "camera.dramatic" = "Dramatic";
+"animation.off" = "Off";
+"animation.subtle" = "Subtle";
+"animation.full" = "Full";
 "finish.matte" = "Matte";
 "finish.gloss" = "Gloss";
 "finish.stone" = "Stone";

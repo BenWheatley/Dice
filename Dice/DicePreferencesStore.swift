@@ -25,6 +25,7 @@ struct DiceUserPreferences: Equatable {
 	var lastNotation: String
 	var recentPresets: [String]
 	var animationsEnabled: Bool
+	var animationIntensity: DiceAnimationIntensity
 	var theme: DiceTheme
 	var tableTexture: DiceTableTexture
 	var dieFinish: DiceDieFinish
@@ -35,10 +36,11 @@ struct DiceUserPreferences: Equatable {
 	var customPresets: [DiceSavedPreset]
 	var boardCameraPreset: DiceBoardCameraPreset
 
-	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, theme: DiceTheme = .classic, tableTexture: DiceTableTexture = .neutral, dieFinish: DiceDieFinish = .matte, edgeOutlinesEnabled: Bool = false, dieColorPreferences: DiceDieColorPreferences = .default, d6PipStyle: DiceD6PipStyle = .round, faceNumeralFont: DiceFaceNumeralFont = .classic, customPresets: [DiceSavedPreset] = [], boardCameraPreset: DiceBoardCameraPreset = .slightTilt) {
+	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, animationIntensity: DiceAnimationIntensity = .full, theme: DiceTheme = .classic, tableTexture: DiceTableTexture = .neutral, dieFinish: DiceDieFinish = .matte, edgeOutlinesEnabled: Bool = false, dieColorPreferences: DiceDieColorPreferences = .default, d6PipStyle: DiceD6PipStyle = .round, faceNumeralFont: DiceFaceNumeralFont = .classic, customPresets: [DiceSavedPreset] = [], boardCameraPreset: DiceBoardCameraPreset = .slightTilt) {
 		self.lastNotation = lastNotation
 		self.recentPresets = recentPresets
 		self.animationsEnabled = animationsEnabled
+		self.animationIntensity = animationIntensity
 		self.theme = theme
 		self.tableTexture = tableTexture
 		self.dieFinish = dieFinish
@@ -51,7 +53,7 @@ struct DiceUserPreferences: Equatable {
 	}
 
 	static var `default`: DiceUserPreferences {
-		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, theme: .classic, tableTexture: .neutral, dieFinish: .matte, edgeOutlinesEnabled: false, dieColorPreferences: .default, d6PipStyle: .round, faceNumeralFont: .classic, customPresets: [], boardCameraPreset: .slightTilt)
+		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, animationIntensity: .full, theme: .classic, tableTexture: .neutral, dieFinish: .matte, edgeOutlinesEnabled: false, dieColorPreferences: .default, d6PipStyle: .round, faceNumeralFont: .classic, customPresets: [], boardCameraPreset: .slightTilt)
 	}
 }
 
@@ -60,6 +62,7 @@ final class DicePreferencesStore {
 		static let lastNotation = "Dice.lastNotation"
 		static let recentPresets = "Dice.recentPresets"
 		static let animationsEnabled = "Dice.animationsEnabled"
+		static let animationIntensity = "Dice.animationIntensity"
 		static let theme = "Dice.theme"
 		static let tableTexture = "Dice.tableTexture"
 		static let dieFinish = "Dice.dieFinish"
@@ -83,6 +86,9 @@ final class DicePreferencesStore {
 		let notation = defaults.string(forKey: Keys.lastNotation) ?? DiceUserPreferences.default.lastNotation
 		let presets = defaults.array(forKey: Keys.recentPresets) as? [String] ?? []
 		let animationsEnabled = defaults.object(forKey: Keys.animationsEnabled) as? Bool ?? DiceUserPreferences.default.animationsEnabled
+		let rawAnimationIntensity = defaults.string(forKey: Keys.animationIntensity)
+		let animationIntensity = rawAnimationIntensity.flatMap(DiceAnimationIntensity.init(rawValue:))
+			?? (animationsEnabled ? .full : .off)
 		let rawTheme = defaults.string(forKey: Keys.theme)
 		let theme = rawTheme.flatMap(DiceTheme.init(rawValue:)) ?? DiceUserPreferences.default.theme
 		let rawTexture = defaults.string(forKey: Keys.tableTexture)
@@ -103,6 +109,7 @@ final class DicePreferencesStore {
 			lastNotation: notation,
 			recentPresets: presets,
 			animationsEnabled: animationsEnabled,
+			animationIntensity: animationIntensity,
 			theme: theme,
 			tableTexture: tableTexture,
 			dieFinish: dieFinish,
@@ -119,6 +126,7 @@ final class DicePreferencesStore {
 		defaults.set(preferences.lastNotation, forKey: Keys.lastNotation)
 		defaults.set(Array(preferences.recentPresets.prefix(maxRecentPresets)), forKey: Keys.recentPresets)
 		defaults.set(preferences.animationsEnabled, forKey: Keys.animationsEnabled)
+		defaults.set(preferences.animationIntensity.rawValue, forKey: Keys.animationIntensity)
 		defaults.set(preferences.theme.rawValue, forKey: Keys.theme)
 		defaults.set(preferences.tableTexture.rawValue, forKey: Keys.tableTexture)
 		defaults.set(preferences.dieFinish.rawValue, forKey: Keys.dieFinish)

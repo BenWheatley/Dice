@@ -763,6 +763,23 @@ final class DiceTests: XCTestCase {
 		viewModel.setAnimationsEnabled(false)
 		XCTAssertFalse(viewModel.animationsEnabled)
 		XCTAssertFalse(preferencesStore.load().animationsEnabled)
+		XCTAssertEqual(viewModel.animationIntensity, .off)
+	}
+
+	func testViewModelAnimationIntensityPersistsToPreferences() {
+		let suiteName = "DiceTests.viewmodel.animationIntensity.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		viewModel.setAnimationIntensity(.subtle)
+		XCTAssertEqual(viewModel.animationIntensity, .subtle)
+		XCTAssertTrue(viewModel.animationsEnabled)
+		XCTAssertEqual(preferencesStore.load().animationIntensity, .subtle)
 	}
 
 	func testViewModelThemeSelectionPersistsToPreferences() {

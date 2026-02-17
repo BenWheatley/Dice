@@ -50,6 +50,7 @@ final class DiceCubeView: UIView {
 	private var activeD6PipStyle: DiceD6PipStyle = .round
 	private var activeFaceNumeralFont: DiceFaceNumeralFont = .classic
 	private var activeCameraPreset: DiceBoardCameraPreset = .slightTilt
+	private var activeAnimationIntensity: DiceAnimationIntensity = .full
 	private var needsMeshRefresh = false
 
 	override init(frame: CGRect) {
@@ -169,6 +170,10 @@ final class DiceCubeView: UIView {
 		guard activeCameraPreset != preset else { return }
 		activeCameraPreset = preset
 		updateCamera(animated: animated)
+	}
+
+	func setAnimationIntensity(_ intensity: DiceAnimationIntensity) {
+		activeAnimationIntensity = intensity
 	}
 
 	private func configureScene() {
@@ -637,13 +642,19 @@ final class DiceCubeView: UIView {
 
 	private func animateRoll(node: SCNNode, from start: SCNVector3, to target: SCNVector3, faceValue: Int, sideLength: CGFloat, sideCount: Int) {
 		node.removeAllActions()
-		let duration: TimeInterval = 1.6
-		let moveAction = makeBounceMoveAction(start: start, target: target, sideLength: sideLength, duration: duration)
-		let rotateAction = makeRotateAction(node: node, targetFace: faceValue, sideCount: sideCount, duration: duration)
+		if activeAnimationIntensity == .off {
+			node.position = target
+			node.eulerAngles = orientation(for: faceValue, sideCount: sideCount)
+			return
+		}
+		let duration: TimeInterval = activeAnimationIntensity == .subtle ? 0.8 : 1.6
+		let motionScale: Float = activeAnimationIntensity == .subtle ? 0.45 : 1.0
+		let moveAction = makeBounceMoveAction(start: start, target: target, sideLength: sideLength, duration: duration, motionScale: motionScale)
+		let rotateAction = makeRotateAction(node: node, targetFace: faceValue, sideCount: sideCount, duration: duration, motionScale: motionScale)
 		node.runAction(.group([moveAction, rotateAction]))
 	}
 
-	private func makeRotateAction(node: SCNNode, targetFace: Int, sideCount: Int, duration: TimeInterval) -> SCNAction {
+	private func makeRotateAction(node: SCNNode, targetFace: Int, sideCount: Int, duration: TimeInterval, motionScale: Float) -> SCNAction {
 		let target = orientation(for: targetFace, sideCount: sideCount)
 		let current = node.presentation.eulerAngles
 		let peakTime = duration * 0.16
@@ -658,9 +669,9 @@ final class DiceCubeView: UIView {
 		}
 
 		let spinTarget = SCNVector3(
-			target.x + randomTurns(min: 2, max: 4) * Float.pi * 2,
-			target.y + randomTurns(min: 2, max: 4) * Float.pi * 2,
-			target.z + randomTurns(min: 1, max: 3) * Float.pi * 2
+			target.x + randomTurns(min: 2, max: 4) * Float.pi * 2 * motionScale,
+			target.y + randomTurns(min: 2, max: 4) * Float.pi * 2 * motionScale,
+			target.z + randomTurns(min: 1, max: 3) * Float.pi * 2 * motionScale
 		)
 
 		let eRamp = exp(-rampSharpness)
@@ -690,7 +701,7 @@ final class DiceCubeView: UIView {
 		}
 	}
 
-	private func makeBounceMoveAction(start: SCNVector3, target: SCNVector3, sideLength: CGFloat, duration: TimeInterval) -> SCNAction {
+	private func makeBounceMoveAction(start: SCNVector3, target: SCNVector3, sideLength: CGFloat, duration: TimeInterval, motionScale: Float) -> SCNAction {
 		let halfW = Float(bounds.width / 2)
 		let halfH = Float(bounds.height / 2)
 		let margin = Float(sideLength / 2 + 6)
@@ -701,10 +712,10 @@ final class DiceCubeView: UIView {
 
 		var lastTime: TimeInterval = 0
 		var pos = start
-		var vel = SCNVector3(Float.random(in: -420...420), Float.random(in: -330...330), 0)
-		let liftAmplitude = Float(sideLength * 1.35)
-		let oscillationAmplitude = Float(sideLength * 0.28)
-		let oscillationFrequency: Float = 9.0
+		var vel = SCNVector3(Float.random(in: -420...420) * motionScale, Float.random(in: -330...330) * motionScale, 0)
+		let liftAmplitude = Float(sideLength * 1.35) * motionScale
+		let oscillationAmplitude = Float(sideLength * 0.28) * motionScale
+		let oscillationFrequency: Float = 9.0 * max(0.7, motionScale)
 
 		return SCNAction.customAction(duration: duration) { node, elapsed in
 			let t = TimeInterval(elapsed)
