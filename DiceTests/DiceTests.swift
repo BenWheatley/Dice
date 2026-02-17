@@ -132,6 +132,20 @@ final class DiceTests: XCTestCase {
 		}
 	}
 
+	func testParseResultInvalidSegmentHintsForMalformedGroups() {
+		if case let .failure(error) = parser.parseResult("3x6") {
+			XCTAssertEqual(error, .invalidSegment(segment: "x", hintKey: "error.input.hint.invalidCharacter"))
+		} else {
+			XCTFail("Expected invalid character hint")
+		}
+
+		if case let .failure(error) = parser.parseResult("2d") {
+			XCTAssertEqual(error, .invalidSegment(segment: "2d", hintKey: "error.input.hint.missingSides"))
+		} else {
+			XCTFail("Expected missing sides hint")
+		}
+	}
+
 	func testParseRespectsV1Bounds() {
 		XCTAssertNil(parser.parse("0d6"))
 		XCTAssertNil(parser.parse("31d6"))
@@ -821,6 +835,19 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(viewModel.dieColorPreset(for: 20), .ivory)
 		XCTAssertEqual(viewModel.d6PipStyle, .round)
 		XCTAssertEqual(viewModel.faceNumeralFont, .classic)
+	}
+
+	func testViewModelNotationHintReturnsInlineMessageForInvalidInput() {
+		let suiteName = "DiceTests.viewmodel.notationhint.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		XCTNil(viewModel.notationHint(for: "3d6+2d4"))
+		XCTNotNil(viewModel.notationHint(for: "3x6"))
 	}
 
 	func testDieFinishPresetAppliesDistinctMaterialParameters() {

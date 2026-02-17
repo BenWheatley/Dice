@@ -120,6 +120,17 @@ final class DiceViewModel {
 		}
 	}
 
+	func notationHint(for text: String) -> String? {
+		let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+		guard !trimmed.isEmpty else { return nil }
+		switch notationParser.parseResult(text) {
+		case .success:
+			return nil
+		case let .failure(error):
+			return error.userMessage
+		}
+	}
+
 	func rollCurrent() -> RollOutcome {
 		performRoll()
 	}

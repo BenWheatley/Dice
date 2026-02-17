@@ -329,7 +329,15 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	@objc private func notationEditingChanged() {
-		clearValidationFeedback()
+		guard let text = notationField.text else {
+			clearValidationFeedback()
+			return
+		}
+		if let hint = viewModel.notationHint(for: text) {
+			showValidationError(message: hint)
+		} else {
+			clearValidationFeedback()
+		}
 	}
 
 	@objc private func focusNotationField() {

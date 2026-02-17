@@ -10,6 +10,7 @@ import Foundation
 enum DiceInputError: Error, Equatable {
 	case emptyInput
 	case invalidFormat
+	case invalidSegment(segment: String, hintKey: String)
 	case outOfBounds(diceBounds: ClosedRange<Int>, sideBounds: ClosedRange<Int>)
 
 	var userMessage: String {
@@ -18,6 +19,14 @@ enum DiceInputError: Error, Equatable {
 			return NSLocalizedString("error.input.empty", comment: "Prompt for empty notation input")
 		case .invalidFormat:
 			return NSLocalizedString("error.input.invalidFormat", comment: "Prompt for invalid notation format")
+		case let .invalidSegment(segment, hintKey):
+			let hint = NSLocalizedString(hintKey, comment: "Notation parser hint detail")
+			return String(
+				format: NSLocalizedString("error.input.invalidSegment", comment: "Prompt for segment-specific parser error"),
+				locale: .current,
+				segment,
+				hint
+			)
 		case let .outOfBounds(diceBounds, sideBounds):
 			return String(
 				format: NSLocalizedString("error.input.outOfBounds", comment: "Prompt for notation bounds violation"),
@@ -103,6 +112,12 @@ struct DiceNotationParser {
 
 		let intuitive = sanitized.contains("i")
 		let withoutIntuitiveFlag = sanitized.replacingOccurrences(of: "i", with: "")
+		if let invalidCharacter = withoutIntuitiveFlag.first(where: { !$0.isNumber && $0 != "d" && $0 != "+" && $0 != "," && $0 != "&" && !$0.isWhitespace }) {
+			throw DiceInputError.invalidSegment(
+				segment: String(invalidCharacter),
+				hintKey: "error.input.hint.invalidCharacter"
+			)
+		}
 
 		let pools: [DicePool]
 		if withoutIntuitiveFlag.allSatisfy(\.isNumber) {
@@ -121,15 +136,24 @@ struct DiceNotationParser {
 			for token in tokens {
 				let components = token.split(separator: "d", omittingEmptySubsequences: false)
 				guard components.count == 2 else {
-					throw DiceInputError.invalidFormat
+					throw DiceInputError.invalidSegment(
+						segment: token,
+						hintKey: "error.input.hint.poolShape"
+					)
 				}
 				let countPart = String(components[0])
 				let sidePart = String(components[1])
 				guard !sidePart.isEmpty, sidePart.allSatisfy(\.isNumber) else {
-					throw DiceInputError.invalidFormat
+					throw DiceInputError.invalidSegment(
+						segment: token,
+						hintKey: sidePart.isEmpty ? "error.input.hint.missingSides" : "error.input.hint.numericSides"
+					)
 				}
 				guard countPart.isEmpty || countPart.allSatisfy(\.isNumber) else {
-					throw DiceInputError.invalidFormat
+					throw DiceInputError.invalidSegment(
+						segment: token,
+						hintKey: "error.input.hint.numericDiceCount"
+					)
 				}
 				let count = countPart.isEmpty ? 1 : Int(countPart)
 				guard let parsedCount = count, let parsedSides = Int(sidePart) else {

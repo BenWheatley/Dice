@@ -77,6 +77,12 @@
 "stats.boardUnavailableMixed" = "3D board preview unavailable for mixed dice sides";
 "error.input.empty" = "Enter a dice notation like 6d6, 3d6+2d4+d20, or 6d6i.";
 "error.input.invalidFormat" = "Use NdM or mixed groups like 3d6+2d4+d20, optionally with i.";
+"error.input.invalidSegment" = "Invalid segment \"%@\": %@";
+"error.input.hint.invalidCharacter" = "Use only digits, d, separators (+ , &) and optional i.";
+"error.input.hint.poolShape" = "Each group must look like NdM (for example 3d6 or d20).";
+"error.input.hint.missingSides" = "Add sides after d (for example 2d6).";
+"error.input.hint.numericSides" = "Sides after d must be numeric (for example d10).";
+"error.input.hint.numericDiceCount" = "Dice count before d must be numeric (for example 3d6).";
 "error.input.outOfBounds" = "Dice count must be %d-%d and sides must be %d-%d.";
 "state.on" = "On";
 "state.off" = "Off";
