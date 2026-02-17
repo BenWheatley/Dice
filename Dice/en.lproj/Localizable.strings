@@ -19,6 +19,10 @@
 "menu.control.animations" = "Animations";
 "menu.control.showStats" = "Show Stats";
 "menu.control.actions" = "Actions";
+"menu.control.theme" = "Theme";
+"theme.classic" = "Classic";
+"theme.darkSlate" = "Dark Slate";
+"theme.highContrast" = "High Contrast";
 "alert.invalid.title" = "Invalid dice input";
 "alert.invalid.announcement" = "Invalid dice notation.";
 "history.title" = "Roll History";

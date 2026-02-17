@@ -62,12 +62,17 @@ final class DiceViewModel {
 		appState.animationsEnabled
 	}
 
+	var theme: DiceTheme {
+		appState.theme
+	}
+
 	func restore() {
 		let preferences = preferencesStore.load()
 		if let parsed = notationParser.parse(preferences.lastNotation) {
 			appState.configuration = parsed
 		}
 		appState.animationsEnabled = preferences.animationsEnabled
+		appState.theme = preferences.theme
 		let persisted = historyStore.loadPersistedEntries()
 		rollHistory = DiceRollHistory(persistedRecentEntries: persisted)
 	}
@@ -137,6 +142,11 @@ final class DiceViewModel {
 		persistPreferences()
 	}
 
+	func setTheme(_ theme: DiceTheme) {
+		appState.theme = theme
+		persistPreferences()
+	}
+
 	func formattedTotalsText(outcome: RollOutcome, boardSupportedSides: Set<Int>) -> String {
 		var lines: [String] = []
 		lines.append(String(
@@ -200,7 +210,8 @@ final class DiceViewModel {
 		let preferences = DiceUserPreferences(
 			lastNotation: appState.configuration.notation,
 			recentPresets: preferencesStore.load().recentPresets,
-			animationsEnabled: appState.animationsEnabled
+			animationsEnabled: appState.animationsEnabled,
+			theme: appState.theme
 		)
 		preferencesStore.save(preferences)
 	}

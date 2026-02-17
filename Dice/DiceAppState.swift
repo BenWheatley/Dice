@@ -40,6 +40,7 @@ final class DiceAppState {
 	var diceSideCounts: [Int]
 	var stats: DiceStats
 	var animationsEnabled: Bool
+	var theme: DiceTheme
 
 	init(configuration: RollConfiguration = RollConfiguration(diceCount: 6, sideCount: 6, intuitive: false)) {
 		self.configuration = configuration
@@ -47,6 +48,7 @@ final class DiceAppState {
 		self.diceSideCounts = configuration.sideCountsPerDie
 		self.stats = .empty
 		self.animationsEnabled = true
+		self.theme = .classic
 	}
 
 	func applyRollOutcome(_ outcome: RollOutcome) {

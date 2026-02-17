@@ -37,6 +37,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let menuButton = UIButton(type: .system)
 	private let diceBoardView = DiceCubeView()
 	private var controlsContainer: UIView?
+	private var currentPalette = DiceTheme.classic.palette
 	private let statsVisibilityKey = "Dice.showStats"
 	private var statsVisible = true
 
@@ -48,6 +49,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		collectionView.keyboardDismissMode = .onDrag
 		configureControls()
 		configureDiceBoard()
+		applyTheme()
 		configurePointerInteractionsIfNeeded()
 		updateNotationField()
 		restoreStatsVisibility()
@@ -86,7 +88,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! DiceCollectionViewCell
 		let faceValue = viewModel.diceValues[indexPath.row]
 		let sideCount = viewModel.diceSideCounts[indexPath.row]
-		cell.configure(faceValue: faceValue, sideCount: sideCount, index: indexPath.row)
+		cell.configure(faceValue: faceValue, sideCount: sideCount, index: indexPath.row, palette: currentPalette)
 		cell.onRequestReroll = { [weak self, weak collectionView] in
 			guard let self else { return }
 			guard let outcome = self.viewModel.rerollDie(at: indexPath.row) else { return }
@@ -118,7 +120,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private func configureControls() {
 		let controlsContainer = UIView()
 		controlsContainer.translatesAutoresizingMaskIntoConstraints = false
-		controlsContainer.backgroundColor = UIColor(white: 1.0, alpha: 0.9)
+		controlsContainer.backgroundColor = currentPalette.panelBackgroundColor
 		controlsContainer.layer.cornerRadius = 10
 		view.addSubview(controlsContainer)
 		self.controlsContainer = controlsContainer
@@ -167,14 +169,14 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		validationLabel.translatesAutoresizingMaskIntoConstraints = false
 		validationLabel.font = UIFont.preferredFont(forTextStyle: .footnote)
 		validationLabel.adjustsFontForContentSizeCategory = true
-		validationLabel.textColor = .systemRed
+		validationLabel.textColor = currentPalette.validationColor
 		validationLabel.numberOfLines = 2
 		validationLabel.isHidden = true
 		validationLabel.accessibilityTraits = .staticText
 		validationLabel.accessibilityLabel = NSLocalizedString("a11y.validation.label", comment: "Validation message accessibility label")
 
 		totalsContainer.translatesAutoresizingMaskIntoConstraints = false
-		totalsContainer.backgroundColor = UIColor(white: 1.0, alpha: 0.9)
+		totalsContainer.backgroundColor = currentPalette.panelBackgroundColor
 		totalsContainer.layer.cornerRadius = 10
 		totalsContainer.layer.masksToBounds = true
 		view.addSubview(totalsContainer)
@@ -184,7 +186,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		totalsLabel.font = UIFont.preferredFont(forTextStyle: .body)
 		totalsLabel.adjustsFontForContentSizeCategory = true
 		totalsLabel.numberOfLines = 0
-		totalsLabel.textColor = .darkGray
+		totalsLabel.textColor = currentPalette.secondaryTextColor
 		totalsLabel.textAlignment = .left
 		totalsLabel.accessibilityIdentifier = "totalsLabel"
 		totalsLabel.accessibilityLabel = NSLocalizedString("a11y.totals.label", comment: "Totals accessibility label")
@@ -389,7 +391,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private func showValidationError(message: String) {
 		validationLabel.text = message
 		validationLabel.isHidden = false
-		notationField.layer.borderColor = UIColor.systemRed.cgColor
+		notationField.layer.borderColor = currentPalette.fieldBorderErrorColor.cgColor
 		notationField.layer.borderWidth = 1
 		notationField.layer.cornerRadius = 6
 		let prefix = NSLocalizedString("alert.invalid.announcement", comment: "Accessibility announcement for invalid notation")
@@ -471,10 +473,23 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let historyAction = UIAction(title: NSLocalizedString("button.history", comment: "History button title")) { [weak self] _ in
 			self?.showHistory()
 		}
+		let themeActions = DiceTheme.allCases.map { theme in
+			UIAction(
+				title: self.themeTitle(for: theme),
+				state: self.viewModel.theme == theme ? .on : .off
+			) { [weak self] _ in
+				self?.selectTheme(theme)
+			}
+		}
+		let themeMenu = UIMenu(
+			title: NSLocalizedString("menu.control.theme", comment: "Theme submenu title"),
+			options: .displayInline,
+			children: themeActions
+		)
 		let resetAction = UIAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), attributes: .destructive) { [weak self] _ in
 			self?.resetStats()
 		}
-		menuButton.menu = UIMenu(children: [historyAction, animationAction, statsAction, resetAction])
+		menuButton.menu = UIMenu(children: [historyAction, themeMenu, animationAction, statsAction, resetAction])
 	}
 
 	@objc private func toggleStatsVisibility() {
@@ -494,6 +509,45 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		totalsContainer.isHidden = !statsVisible
 		view.setNeedsLayout()
 		view.layoutIfNeeded()
+	}
+
+	private func selectTheme(_ theme: DiceTheme) {
+		viewModel.setTheme(theme)
+		applyTheme()
+		collectionView.reloadData()
+		updateControlMenu()
+	}
+
+	private func applyTheme() {
+		let palette = viewModel.theme.palette
+		currentPalette = palette
+		view.backgroundColor = palette.screenBackgroundColor
+		if let imageName = palette.backgroundImageName, let image = UIImage(named: imageName) {
+			collectionView.backgroundColor = UIColor(patternImage: image)
+		} else {
+			collectionView.backgroundColor = palette.screenBackgroundColor
+		}
+		controlsContainer?.backgroundColor = palette.panelBackgroundColor
+		totalsContainer.backgroundColor = palette.panelBackgroundColor
+		totalsLabel.textColor = palette.secondaryTextColor
+		validationLabel.textColor = palette.validationColor
+		notationField.textColor = palette.primaryTextColor
+		notationField.keyboardAppearance = viewModel.theme == .classic ? .default : .dark
+		let buttonColor = palette.primaryTextColor
+		rollButton.setTitleColor(buttonColor, for: .normal)
+		presetsButton.setTitleColor(buttonColor, for: .normal)
+		menuButton.tintColor = buttonColor
+	}
+
+	private func themeTitle(for theme: DiceTheme) -> String {
+		switch theme {
+		case .classic:
+			return NSLocalizedString("theme.classic", comment: "Classic theme title")
+		case .darkSlate:
+			return NSLocalizedString("theme.darkSlate", comment: "Dark slate theme title")
+		case .highContrast:
+			return NSLocalizedString("theme.highContrast", comment: "High contrast theme title")
+		}
 	}
 }
 
@@ -694,6 +748,7 @@ extension DiceCollectionViewController: UICollectionViewDelegateFlowLayout {
 class DiceCollectionViewCell: UICollectionViewCell {
 	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 	var onRequestReroll: (() -> Void)?
+	private var currentPalette = DiceTheme.classic.palette
 
 	@IBOutlet weak var diceButton: UIButton!
 
@@ -702,7 +757,8 @@ class DiceCollectionViewCell: UICollectionViewCell {
 		diceButton.frame = contentView.bounds
 	}
 
-	func configure(faceValue: Int, sideCount: Int, index: Int) {
+	func configure(faceValue: Int, sideCount: Int, index: Int, palette: DiceThemePalette) {
+		currentPalette = palette
 		diceButton.accessibilityIdentifier = "dieButton_\(index)"
 		diceButton.accessibilityLabel = String(
 			format: NSLocalizedString("a11y.die.label", comment: "Die button accessibility label format"),
@@ -725,12 +781,12 @@ class DiceCollectionViewCell: UICollectionViewCell {
 		} else {
 			diceButton.setImage(nil, for: .normal)
 			diceButton.setTitle("\(value)", for: .normal)
-			diceButton.setTitleColor(.black, for: .normal)
+			diceButton.setTitleColor(currentPalette.fallbackDieTextColor, for: .normal)
 			diceButton.titleLabel?.font = UIFont.systemFont(ofSize: 36, weight: .bold)
-			diceButton.layer.borderColor = UIColor.darkGray.cgColor
+			diceButton.layer.borderColor = currentPalette.fallbackDieBorderColor.cgColor
 			diceButton.layer.borderWidth = 1
 			diceButton.layer.cornerRadius = 8
-			diceButton.backgroundColor = UIColor(white: 1.0, alpha: 0.8)
+			diceButton.backgroundColor = currentPalette.fallbackDieBackgroundColor
 		}
 	}
 

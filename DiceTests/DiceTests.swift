@@ -402,7 +402,7 @@ final class DiceTests: XCTestCase {
 		let defaults = UserDefaults(suiteName: suiteName)!
 		defer { defaults.removePersistentDomain(forName: suiteName) }
 		let store = DicePreferencesStore(defaults: defaults)
-		let expected = DiceUserPreferences(lastNotation: "12d10i", recentPresets: ["12d10i", "6d6"], animationsEnabled: false)
+		let expected = DiceUserPreferences(lastNotation: "12d10i", recentPresets: ["12d10i", "6d6"], animationsEnabled: false, theme: .darkSlate)
 
 		store.save(expected)
 
@@ -670,6 +670,22 @@ final class DiceTests: XCTestCase {
 		viewModel.setAnimationsEnabled(false)
 		XCTAssertFalse(viewModel.animationsEnabled)
 		XCTAssertFalse(preferencesStore.load().animationsEnabled)
+	}
+
+	func testViewModelThemeSelectionPersistsToPreferences() {
+		let suiteName = "DiceTests.viewmodel.theme.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		XCTAssertEqual(viewModel.theme, .classic)
+		viewModel.setTheme(.highContrast)
+		XCTAssertEqual(viewModel.theme, .highContrast)
+		XCTAssertEqual(preferencesStore.load().theme, .highContrast)
 	}
 
 	func testViewModelFormattedTotalsOmitsBoardWarningForSupportedMixedDice() {
