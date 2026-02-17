@@ -63,6 +63,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	override var keyCommands: [UIKeyCommand]? {
 		[
 			UIKeyCommand(title: NSLocalizedString("shortcut.roll", comment: "Roll keyboard shortcut title"), action: #selector(rollFromInput), input: "r", modifierFlags: .command),
+			UIKeyCommand(title: NSLocalizedString("shortcut.repeat", comment: "Repeat roll keyboard shortcut title"), action: #selector(repeatLastRoll), input: "r", modifierFlags: [.command, .shift]),
 			UIKeyCommand(title: NSLocalizedString("shortcut.reset", comment: "Reset stats keyboard shortcut title"), action: #selector(resetStats), input: "\u{8}", modifierFlags: .command),
 			UIKeyCommand(title: NSLocalizedString("shortcut.focusNotation", comment: "Focus notation keyboard shortcut title"), action: #selector(focusNotationField), input: "f", modifierFlags: .command),
 			UIKeyCommand(title: NSLocalizedString("shortcut.history", comment: "History keyboard shortcut title"), action: #selector(showHistory), input: "h", modifierFlags: .command),
@@ -261,6 +262,16 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		case let .failure(error):
 			showValidationError(message: error.userMessage)
 		}
+	}
+
+	@objc private func repeatLastRoll() {
+		let outcome = viewModel.repeatLastRoll()
+		updateNotationField()
+		clearValidationFeedback()
+		updateTotalsText(outcome: outcome)
+		collectionView.reloadData()
+		collectionView.layoutIfNeeded()
+		updateDiceBoard(animated: shouldAnimateBoard)
 	}
 
 	private func performRoll() {
@@ -556,6 +567,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let historyAction = UIAction(title: NSLocalizedString("button.history", comment: "History button title")) { [weak self] _ in
 			self?.showHistory()
 		}
+		let repeatAction = UIAction(title: NSLocalizedString("menu.control.repeatLast", comment: "Repeat last roll menu title")) { [weak self] _ in
+			self?.repeatLastRoll()
+		}
 		let themeActions = DiceTheme.allCases.map { theme in
 			UIAction(
 				title: self.themeTitle(for: theme),
@@ -659,7 +673,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let resetAction = UIAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), attributes: .destructive) { [weak self] _ in
 			self?.resetStats()
 		}
-		menuButton.menu = UIMenu(children: [historyAction, themeMenu, textureMenu, finishMenu, pipStyleMenu, numeralFontMenu, dieColorsMenu, outlinesAction, previewStyleAction, resetVisualsAction, animationAction, statsAction, resetAction])
+		menuButton.menu = UIMenu(children: [historyAction, repeatAction, themeMenu, textureMenu, finishMenu, pipStyleMenu, numeralFontMenu, dieColorsMenu, outlinesAction, previewStyleAction, resetVisualsAction, animationAction, statsAction, resetAction])
 	}
 
 	@objc private func toggleStatsVisibility() {

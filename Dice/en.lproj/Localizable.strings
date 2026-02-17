@@ -15,6 +15,7 @@
 "button.anim.on" = "Anim On";
 "button.anim.off" = "Anim Off";
 "shortcut.roll" = "Roll";
+"shortcut.repeat" = "Repeat Last Roll";
 "shortcut.reset" = "Reset Stats";
 "shortcut.focusNotation" = "Focus Notation";
 "shortcut.history" = "History";
@@ -32,6 +33,7 @@
 "menu.control.animations" = "Animations";
 "menu.control.showStats" = "Show Stats";
 "menu.control.actions" = "Actions";
+"menu.control.repeatLast" = "Repeat Last Roll";
 "menu.control.theme" = "Theme";
 "menu.control.texture" = "Table Texture";
 "menu.control.finish" = "Die Finish";

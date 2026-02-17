@@ -10,6 +10,7 @@ import Foundation
 final class WatchRollViewModel {
 	private let rollSession: DiceRollSession
 	private(set) var isIntuitiveMode: Bool
+	private var lastRollConfiguration: RollConfiguration?
 
 	init(
 		rollSession: DiceRollSession = DiceRollSession(),
@@ -37,6 +38,13 @@ final class WatchRollViewModel {
 
 	func roll() -> RollOutcome {
 		let configuration = RollConfiguration(diceCount: 1, sideCount: 6, intuitive: isIntuitiveMode)
+		lastRollConfiguration = configuration
+		return rollSession.roll(configuration)
+	}
+
+	func repeatLastRoll() -> RollOutcome {
+		let configuration = lastRollConfiguration ?? RollConfiguration(diceCount: 1, sideCount: 6, intuitive: isIntuitiveMode)
+		lastRollConfiguration = configuration
 		return rollSession.roll(configuration)
 	}
 

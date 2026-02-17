@@ -706,6 +706,25 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(error, .outOfBounds(diceBounds: 1...30, sideBounds: 2...100))
 	}
 
+	func testViewModelRepeatLastRollReusesMostRecentRolledConfiguration() {
+		let suiteName = "DiceTests.viewmodel.repeat.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults),
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { $0.lowerBound }, randomDouble: { 0.5 }))
+		)
+
+		_ = viewModel.rollFromInput("2d8")
+		_ = viewModel.rollFromInput("1d4")
+		let repeated = viewModel.repeatLastRoll()
+
+		XCTAssertEqual(viewModel.configuration.notation, "1d4")
+		XCTAssertEqual(repeated.values.count, 1)
+		XCTAssertEqual(repeated.sideCounts, [4])
+	}
+
 	func testViewModelAnimationTogglePersistsToPreferences() {
 		let suiteName = "DiceTests.viewmodel.animations.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!
@@ -1105,6 +1124,19 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(commandInputs.contains("r"))
 		XCTAssertTrue(commandInputs.contains("h"))
 		XCTAssertTrue(commandInputs.contains("f"))
+	}
+
+	func testWatchViewModelRepeatLastRollUsesPreviousModeConfiguration() {
+		let model = WatchRollViewModel(
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { $0.lowerBound }, randomDouble: { 0.5 })),
+			isIntuitiveMode: false
+		)
+		_ = model.roll()
+		model.toggleMode()
+		let repeated = model.repeatLastRoll()
+
+		XCTAssertEqual(repeated.values.count, 1)
+		XCTAssertEqual(repeated.sideCounts, [6])
 	}
 
 	func testD10MeshFacesArePlanar() {

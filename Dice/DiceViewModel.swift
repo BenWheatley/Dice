@@ -139,6 +139,13 @@ final class DiceViewModel {
 		performRoll()
 	}
 
+	func repeatLastRoll() -> RollOutcome {
+		let configuration = appState.lastRolledConfiguration ?? appState.configuration
+		appState.configuration = configuration
+		persistPreferences()
+		return performRoll(configuration: configuration)
+	}
+
 	func shakeToRoll() -> RollOutcome {
 		performRoll()
 	}
@@ -306,11 +313,13 @@ final class DiceViewModel {
 		return "  " + lines.joined(separator: "\n  ")
 	}
 
-	private func performRoll() -> RollOutcome {
-		let outcome = rollSession.roll(appState.configuration)
+	private func performRoll(configuration: RollConfiguration? = nil) -> RollOutcome {
+		let activeConfiguration = configuration ?? appState.configuration
+		let outcome = rollSession.roll(activeConfiguration)
+		appState.lastRolledConfiguration = activeConfiguration
 		appState.applyRollOutcome(outcome)
-		appendHistory(for: appState.configuration, outcome: outcome)
-		telemetry.logRoll(configuration: appState.configuration, sum: outcome.sum, diceCount: appState.configuration.diceCount)
+		appendHistory(for: activeConfiguration, outcome: outcome)
+		telemetry.logRoll(configuration: activeConfiguration, sum: outcome.sum, diceCount: activeConfiguration.diceCount)
 		return outcome
 	}
 

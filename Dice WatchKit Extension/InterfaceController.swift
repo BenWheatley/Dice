@@ -32,6 +32,7 @@ class InterfaceController: WKInterfaceController {
 		configureSceneRenderer()
 		configurePowerModeObserver()
 		addMenuItem(with: .more, title: "Mode", action: #selector(toggleMode))
+		addMenuItem(with: .repeat, title: "Repeat", action: #selector(repeatLastRoll))
 		roll()
     }
 
@@ -74,6 +75,26 @@ class InterfaceController: WKInterfaceController {
 		rollCount = 0
 		feedbackDevice.play(.success)
 		roll()
+	}
+
+	@objc private func repeatLastRoll() {
+		let outcome = viewModel.repeatLastRoll()
+		guard let value = outcome.values.first else { return }
+		rollCount += 1
+		playRollStartFeedback()
+		if usesSceneRenderer {
+			animateD6(to: value) { [weak self] in
+				self?.playRollSettleFeedback()
+			}
+			diceSceneView.setAccessibilityValue("Value \(value)")
+			diceView.setHidden(true)
+		} else {
+			diceView.setImageNamed("\(value)")
+			diceView.setAccessibilityValue("Value \(value)")
+			diceView.setHidden(false)
+			playRollSettleFeedback()
+		}
+		diceButton.setTitle(viewModel.statusText(lastValue: value))
 	}
 
 	private func configureSceneRenderer() {
