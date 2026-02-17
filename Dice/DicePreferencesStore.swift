@@ -7,6 +7,20 @@
 
 import Foundation
 
+struct DiceSavedPreset: Codable, Equatable, Identifiable {
+	let id: String
+	var title: String
+	var notation: String
+	var pinned: Bool
+
+	init(id: String = UUID().uuidString, title: String, notation: String, pinned: Bool = false) {
+		self.id = id
+		self.title = title
+		self.notation = notation
+		self.pinned = pinned
+	}
+}
+
 struct DiceUserPreferences: Equatable {
 	var lastNotation: String
 	var recentPresets: [String]
@@ -18,8 +32,9 @@ struct DiceUserPreferences: Equatable {
 	var dieColorPreferences: DiceDieColorPreferences
 	var d6PipStyle: DiceD6PipStyle
 	var faceNumeralFont: DiceFaceNumeralFont
+	var customPresets: [DiceSavedPreset]
 
-	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, theme: DiceTheme = .classic, tableTexture: DiceTableTexture = .neutral, dieFinish: DiceDieFinish = .matte, edgeOutlinesEnabled: Bool = false, dieColorPreferences: DiceDieColorPreferences = .default, d6PipStyle: DiceD6PipStyle = .round, faceNumeralFont: DiceFaceNumeralFont = .classic) {
+	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, theme: DiceTheme = .classic, tableTexture: DiceTableTexture = .neutral, dieFinish: DiceDieFinish = .matte, edgeOutlinesEnabled: Bool = false, dieColorPreferences: DiceDieColorPreferences = .default, d6PipStyle: DiceD6PipStyle = .round, faceNumeralFont: DiceFaceNumeralFont = .classic, customPresets: [DiceSavedPreset] = []) {
 		self.lastNotation = lastNotation
 		self.recentPresets = recentPresets
 		self.animationsEnabled = animationsEnabled
@@ -30,10 +45,11 @@ struct DiceUserPreferences: Equatable {
 		self.dieColorPreferences = dieColorPreferences
 		self.d6PipStyle = d6PipStyle
 		self.faceNumeralFont = faceNumeralFont
+		self.customPresets = customPresets
 	}
 
 	static var `default`: DiceUserPreferences {
-		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, theme: .classic, tableTexture: .neutral, dieFinish: .matte, edgeOutlinesEnabled: false, dieColorPreferences: .default, d6PipStyle: .round, faceNumeralFont: .classic)
+		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, theme: .classic, tableTexture: .neutral, dieFinish: .matte, edgeOutlinesEnabled: false, dieColorPreferences: .default, d6PipStyle: .round, faceNumeralFont: .classic, customPresets: [])
 	}
 }
 
@@ -49,6 +65,7 @@ final class DicePreferencesStore {
 		static let dieColors = "Dice.dieColors"
 		static let d6PipStyle = "Dice.d6PipStyle"
 		static let faceNumeralFont = "Dice.faceNumeralFont"
+		static let customPresets = "Dice.customPresets"
 	}
 
 	private let defaults: UserDefaults
@@ -76,6 +93,7 @@ final class DicePreferencesStore {
 		let d6PipStyle = rawPipStyle.flatMap(DiceD6PipStyle.init(rawValue:)) ?? DiceUserPreferences.default.d6PipStyle
 		let rawFaceNumeralFont = defaults.string(forKey: Keys.faceNumeralFont)
 		let faceNumeralFont = rawFaceNumeralFont.flatMap(DiceFaceNumeralFont.init(rawValue:)) ?? DiceUserPreferences.default.faceNumeralFont
+		let customPresets = decodeCustomPresets(from: defaults.data(forKey: Keys.customPresets))
 		return DiceUserPreferences(
 			lastNotation: notation,
 			recentPresets: presets,
@@ -86,7 +104,8 @@ final class DicePreferencesStore {
 			edgeOutlinesEnabled: edgeOutlinesEnabled,
 			dieColorPreferences: dieColorPreferences,
 			d6PipStyle: d6PipStyle,
-			faceNumeralFont: faceNumeralFont
+			faceNumeralFont: faceNumeralFont,
+			customPresets: customPresets
 		)
 	}
 
@@ -101,6 +120,7 @@ final class DicePreferencesStore {
 		defaults.set(preferences.dieColorPreferences.serialized(), forKey: Keys.dieColors)
 		defaults.set(preferences.d6PipStyle.rawValue, forKey: Keys.d6PipStyle)
 		defaults.set(preferences.faceNumeralFont.rawValue, forKey: Keys.faceNumeralFont)
+		defaults.set(encodeCustomPresets(preferences.customPresets), forKey: Keys.customPresets)
 	}
 
 	func addRecentPreset(_ notation: String) {
@@ -108,5 +128,15 @@ final class DicePreferencesStore {
 		preferences.recentPresets.removeAll { $0 == notation }
 		preferences.recentPresets.insert(notation, at: 0)
 		save(preferences)
+	}
+
+	private func decodeCustomPresets(from data: Data?) -> [DiceSavedPreset] {
+		guard let data else { return [] }
+		guard let decoded = try? JSONDecoder().decode([DiceSavedPreset].self, from: data) else { return [] }
+		return decoded
+	}
+
+	private func encodeCustomPresets(_ presets: [DiceSavedPreset]) -> Data? {
+		try? JSONEncoder().encode(presets)
 	}
 }

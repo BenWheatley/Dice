@@ -425,7 +425,10 @@ final class DiceTests: XCTestCase {
 			tableTexture: .wood,
 			dieFinish: .stone,
 			edgeOutlinesEnabled: true,
-			dieColorPreferences: DiceDieColorPreferences.default.updated(sideCount: 20, preset: .crimson)
+			dieColorPreferences: DiceDieColorPreferences.default.updated(sideCount: 20, preset: .crimson),
+			customPresets: [
+				DiceSavedPreset(id: "preset-1", title: "Boss Fight", notation: "4d12+2d8", pinned: true)
+			]
 		)
 
 		store.save(expected)
@@ -662,6 +665,29 @@ final class DiceTests: XCTestCase {
 		_ = viewModel.rollFromInput("2d20")
 
 		XCTAssertEqual(viewModel.recentPresets.prefix(2), ["2d20", "7d8"])
+	}
+
+	func testViewModelCreateCustomPresetValidatesNotationAndPersists() {
+		let suiteName = "DiceTests.viewmodel.custompresets.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		let success = viewModel.createCustomPreset(title: "Mixed", notation: "3d6+2d4")
+		XCTAssertNoThrow(try success.get())
+		XCTAssertEqual(viewModel.customPresets.count, 1)
+		XCTAssertEqual(viewModel.customPresets.first?.title, "Mixed")
+
+		let failure = viewModel.createCustomPreset(title: "Broken", notation: "3x6")
+		if case let .failure(error) = failure {
+			XCTAssertEqual(error, .invalidSegment(segment: "x", hintKey: "error.input.hint.invalidCharacter"))
+		} else {
+			XCTFail("Expected invalid notation failure")
+		}
 	}
 
 	func testViewModelRollFromInputInvalidNotationReturnsStructuredError() {

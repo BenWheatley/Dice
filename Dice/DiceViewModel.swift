@@ -58,6 +58,10 @@ final class DiceViewModel {
 		preferencesStore.load().recentPresets
 	}
 
+	var customPresets: [DiceSavedPreset] {
+		preferencesStore.load().customPresets
+	}
+
 	var animationsEnabled: Bool {
 		appState.animationsEnabled
 	}
@@ -144,6 +148,24 @@ final class DiceViewModel {
 		preferencesStore.addRecentPreset(appState.configuration.notation)
 		persistPreferences()
 		return performRoll()
+	}
+
+	func saveCustomPresets(_ presets: [DiceSavedPreset]) {
+		var preferences = preferencesStore.load()
+		preferences.customPresets = presets
+		preferencesStore.save(preferences)
+	}
+
+	func createCustomPreset(title: String, notation: String) -> Result<Void, DiceInputError> {
+		switch notationParser.parseResult(notation) {
+		case .failure(let error):
+			return .failure(error)
+		case .success:
+			var presets = customPresets
+			presets.append(DiceSavedPreset(title: title, notation: notation))
+			saveCustomPresets(presets)
+			return .success(())
+		}
 	}
 
 	func rerollDie(at index: Int) -> RollOutcome? {
