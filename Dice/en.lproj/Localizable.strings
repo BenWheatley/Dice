@@ -44,6 +44,7 @@
 "menu.control.dieColors" = "Die Colors";
 "menu.control.dieColor.side" = "d%d";
 "menu.control.edgeOutlines" = "Edge Outlines";
+"menu.control.motionBlur" = "Motion Blur";
 "menu.control.previewStyle" = "Preview Style";
 "menu.control.resetVisuals" = "Reset Visual Style";
 "theme.classic" = "Classic";

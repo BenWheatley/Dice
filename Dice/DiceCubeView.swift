@@ -51,6 +51,7 @@ final class DiceCubeView: UIView {
 	private var activeFaceNumeralFont: DiceFaceNumeralFont = .classic
 	private var activeCameraPreset: DiceBoardCameraPreset = .slightTilt
 	private var activeAnimationIntensity: DiceAnimationIntensity = .full
+	private var activeMotionBlurEnabled = false
 	private var needsMeshRefresh = false
 
 	override init(frame: CGRect) {
@@ -176,6 +177,11 @@ final class DiceCubeView: UIView {
 		activeAnimationIntensity = intensity
 	}
 
+	func setMotionBlurEnabled(_ enabled: Bool) {
+		activeMotionBlurEnabled = enabled
+		cameraNode.camera?.motionBlurIntensity = enabled ? 0.45 : 0.0
+	}
+
 	private func configureScene() {
 		backgroundColor = .clear
 		isUserInteractionEnabled = false
@@ -199,6 +205,7 @@ final class DiceCubeView: UIView {
 		cameraNode.camera?.usesOrthographicProjection = true
 		cameraNode.camera?.zNear = 1
 		cameraNode.camera?.zFar = 10_000
+		cameraNode.camera?.motionBlurIntensity = activeMotionBlurEnabled ? 0.45 : 0.0
 		cameraNode.position = SCNVector3(0, 120, 860)
 		cameraNode.eulerAngles = SCNVector3(-0.35, 0, 0)
 		scene.rootNode.addChildNode(cameraNode)

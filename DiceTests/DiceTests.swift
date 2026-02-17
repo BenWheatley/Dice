@@ -910,6 +910,22 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(preferencesStore.load().boardCameraPreset, .dramatic)
 	}
 
+	func testViewModelMotionBlurTogglePersistsToPreferences() {
+		let suiteName = "DiceTests.viewmodel.motionblur.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		XCTAssertFalse(viewModel.motionBlurEnabled)
+		viewModel.setMotionBlurEnabled(true)
+		XCTAssertTrue(viewModel.motionBlurEnabled)
+		XCTAssertTrue(preferencesStore.load().motionBlurEnabled)
+	}
+
 	func testViewModelResetVisualPreferencesRestoresDefaults() {
 		let suiteName = "DiceTests.viewmodel.resetvisuals.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!
@@ -928,6 +944,7 @@ final class DiceTests: XCTestCase {
 		viewModel.setD6PipStyle(.inset)
 		viewModel.setFaceNumeralFont(.mono)
 		viewModel.setBoardCameraPreset(.dramatic)
+		viewModel.setMotionBlurEnabled(true)
 
 		viewModel.resetVisualPreferences()
 
@@ -939,6 +956,7 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(viewModel.d6PipStyle, .round)
 		XCTAssertEqual(viewModel.faceNumeralFont, .classic)
 		XCTAssertEqual(viewModel.boardCameraPreset, .slightTilt)
+		XCTAssertFalse(viewModel.motionBlurEnabled)
 	}
 
 	func testViewModelNotationHintReturnsInlineMessageForInvalidInput() {

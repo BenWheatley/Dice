@@ -305,6 +305,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.setFaceNumeralFont(viewModel.faceNumeralFont)
 		diceBoardView.setCameraPreset(viewModel.boardCameraPreset, animated: false)
 		diceBoardView.setAnimationIntensity(viewModel.animationIntensity)
+		diceBoardView.setMotionBlurEnabled(viewModel.motionBlurEnabled)
 
 		let sideLength = 0.25 * min(collectionView.bounds.width, collectionView.bounds.height)
 		let itemCount = collectionView.numberOfItems(inSection: 0)
@@ -701,6 +702,12 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		) { [weak self] _ in
 			self?.toggleEdgeOutlines()
 		}
+		let motionBlurAction = UIAction(
+			title: NSLocalizedString("menu.control.motionBlur", comment: "Motion blur toggle menu title"),
+			state: viewModel.motionBlurEnabled ? .on : .off
+		) { [weak self] _ in
+			self?.toggleMotionBlur()
+		}
 		let previewStyleAction = UIAction(title: NSLocalizedString("menu.control.previewStyle", comment: "Preview style action title")) { [weak self] _ in
 			self?.presentStylePreview()
 		}
@@ -713,7 +720,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let resetAction = UIAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), attributes: .destructive) { [weak self] _ in
 			self?.resetStats()
 		}
-		menuButton.menu = UIMenu(children: [historyAction, repeatAction, themeMenu, textureMenu, cameraMenu, finishMenu, pipStyleMenu, numeralFontMenu, dieColorsMenu, outlinesAction, previewStyleAction, resetVisualsAction, animationAction, animationIntensityMenu, statsAction, resetAction])
+		menuButton.menu = UIMenu(children: [historyAction, repeatAction, themeMenu, textureMenu, cameraMenu, finishMenu, pipStyleMenu, numeralFontMenu, dieColorsMenu, outlinesAction, motionBlurAction, previewStyleAction, resetVisualsAction, animationAction, animationIntensityMenu, statsAction, resetAction])
 	}
 
 	@objc private func toggleStatsVisibility() {
@@ -769,6 +776,12 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		updateControlMenu()
 	}
 
+	private func toggleMotionBlur() {
+		viewModel.setMotionBlurEnabled(!viewModel.motionBlurEnabled)
+		diceBoardView.setMotionBlurEnabled(viewModel.motionBlurEnabled)
+		updateControlMenu()
+	}
+
 	private func selectDieColorPreset(_ preset: DiceDieColorPreset, sideCount: Int) {
 		viewModel.setDieColorPreset(preset, for: sideCount)
 		diceBoardView.setDieColorPreferences(viewModel.dieColorPreferences)
@@ -814,6 +827,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.setFaceNumeralFont(viewModel.faceNumeralFont)
 		diceBoardView.setCameraPreset(viewModel.boardCameraPreset, animated: false)
 		diceBoardView.setAnimationIntensity(viewModel.animationIntensity)
+		diceBoardView.setMotionBlurEnabled(viewModel.motionBlurEnabled)
 		updateDiceBoard(animated: false)
 		updateControlMenu()
 	}

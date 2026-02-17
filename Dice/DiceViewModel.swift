@@ -106,6 +106,10 @@ final class DiceViewModel {
 		appState.boardCameraPreset
 	}
 
+	var motionBlurEnabled: Bool {
+		appState.motionBlurEnabled
+	}
+
 	func restore() {
 		let preferences = preferencesStore.load()
 		if let parsed = notationParser.parse(preferences.lastNotation) {
@@ -121,6 +125,7 @@ final class DiceViewModel {
 		appState.d6PipStyle = preferences.d6PipStyle
 		appState.faceNumeralFont = preferences.faceNumeralFont
 		appState.boardCameraPreset = preferences.boardCameraPreset
+		appState.motionBlurEnabled = preferences.motionBlurEnabled
 		let persisted = historyStore.loadPersistedEntries()
 		rollHistory = DiceRollHistory(persistedRecentEntries: persisted)
 	}
@@ -287,6 +292,11 @@ final class DiceViewModel {
 		persistPreferences()
 	}
 
+	func setMotionBlurEnabled(_ enabled: Bool) {
+		appState.motionBlurEnabled = enabled
+		persistPreferences()
+	}
+
 	func isDieLocked(at index: Int) -> Bool {
 		appState.lockedDieIndices.contains(index)
 	}
@@ -309,6 +319,7 @@ final class DiceViewModel {
 		appState.d6PipStyle = .round
 		appState.faceNumeralFont = .classic
 		appState.boardCameraPreset = .slightTilt
+		appState.motionBlurEnabled = false
 		persistPreferences()
 	}
 
@@ -422,7 +433,8 @@ final class DiceViewModel {
 			d6PipStyle: appState.d6PipStyle,
 			faceNumeralFont: appState.faceNumeralFont,
 			customPresets: preferencesStore.load().customPresets,
-			boardCameraPreset: appState.boardCameraPreset
+			boardCameraPreset: appState.boardCameraPreset,
+			motionBlurEnabled: appState.motionBlurEnabled
 		)
 		preferencesStore.save(preferences)
 	}
