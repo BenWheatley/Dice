@@ -91,7 +91,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! DiceCollectionViewCell
 		let faceValue = viewModel.diceValues[indexPath.row]
 		let sideCount = viewModel.diceSideCounts[indexPath.row]
-		cell.configure(faceValue: faceValue, sideCount: sideCount, index: indexPath.row, palette: currentPalette)
+		cell.configure(faceValue: faceValue, sideCount: sideCount, index: indexPath.row, palette: currentPalette, isLocked: viewModel.isDieLocked(at: indexPath.row))
 		cell.onRequestReroll = { [weak self, weak collectionView] in
 			guard let self else { return }
 			guard let outcome = self.viewModel.rerollDie(at: indexPath.row) else { return }
@@ -99,6 +99,11 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			collectionView?.reloadItems(at: [indexPath])
 			collectionView?.layoutIfNeeded()
 			self.updateDiceBoard(animated: self.shouldAnimateBoard)
+		}
+		cell.onToggleLock = { [weak self, weak collectionView] in
+			guard let self else { return }
+			self.viewModel.toggleDieLock(at: indexPath.row)
+			collectionView?.reloadItems(at: [indexPath])
 		}
 		return cell
 	}
@@ -1340,17 +1345,36 @@ extension DiceCollectionViewController: UICollectionViewDelegateFlowLayout {
 class DiceCollectionViewCell: UICollectionViewCell {
 	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 	var onRequestReroll: (() -> Void)?
+	var onToggleLock: (() -> Void)?
 	private var currentPalette = DiceTheme.classic.palette
+	private var isLocked = false
+	private var lockGestureConfigured = false
 
 	@IBOutlet weak var diceButton: UIButton!
+
+	override init(frame: CGRect) {
+		super.init(frame: frame)
+		configureGestures()
+	}
+
+	required init?(coder: NSCoder) {
+		super.init(coder: coder)
+		configureGestures()
+	}
+
+	override func awakeFromNib() {
+		super.awakeFromNib()
+		configureGestures()
+	}
 
 	override func layoutSubviews() {
 		super.layoutSubviews()
 		diceButton.frame = contentView.bounds
 	}
 
-	func configure(faceValue: Int, sideCount: Int, index: Int, palette: DiceThemePalette) {
+	func configure(faceValue: Int, sideCount: Int, index: Int, palette: DiceThemePalette, isLocked: Bool) {
 		currentPalette = palette
+		self.isLocked = isLocked
 		diceButton.accessibilityIdentifier = "dieButton_\(index)"
 		diceButton.accessibilityLabel = String(
 			format: NSLocalizedString("a11y.die.label", comment: "Die button accessibility label format"),
@@ -1358,7 +1382,9 @@ class DiceCollectionViewCell: UICollectionViewCell {
 			index + 1,
 			faceValue
 		)
-		diceButton.accessibilityHint = NSLocalizedString("a11y.die.hint", comment: "Die button accessibility hint")
+		diceButton.accessibilityHint = isLocked
+			? NSLocalizedString("a11y.die.lockedHint", comment: "Locked die accessibility hint")
+			: NSLocalizedString("a11y.die.hint", comment: "Die button accessibility hint")
 		diceButton.accessibilityTraits = .button
 		setFaceValue(faceValue, sideCount: sideCount)
 	}
@@ -1367,18 +1393,34 @@ class DiceCollectionViewCell: UICollectionViewCell {
 		if boardSupportedSides.contains(sideCount) {
 			diceButton.setTitle(nil, for: .normal)
 			diceButton.setImage(nil, for: .normal)
-			diceButton.layer.borderWidth = 0
-			diceButton.layer.cornerRadius = 0
+			diceButton.layer.borderWidth = isLocked ? 2 : 0
+			diceButton.layer.cornerRadius = isLocked ? 8 : 0
+			diceButton.layer.borderColor = isLocked ? UIColor.systemYellow.cgColor : UIColor.clear.cgColor
 			diceButton.backgroundColor = UIColor.clear
 		} else {
 			diceButton.setImage(nil, for: .normal)
 			diceButton.setTitle("\(value)", for: .normal)
 			diceButton.setTitleColor(currentPalette.fallbackDieTextColor, for: .normal)
 			diceButton.titleLabel?.font = UIFont.systemFont(ofSize: 36, weight: .bold)
-			diceButton.layer.borderColor = currentPalette.fallbackDieBorderColor.cgColor
-			diceButton.layer.borderWidth = 1
+			diceButton.layer.borderColor = isLocked ? UIColor.systemYellow.cgColor : currentPalette.fallbackDieBorderColor.cgColor
+			diceButton.layer.borderWidth = isLocked ? 2 : 1
 			diceButton.layer.cornerRadius = 8
 			diceButton.backgroundColor = currentPalette.fallbackDieBackgroundColor
+		}
+	}
+
+	private func configureGestures() {
+		guard !lockGestureConfigured, let diceButton else { return }
+		lockGestureConfigured = true
+		let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+		longPress.minimumPressDuration = 0.35
+		diceButton.addGestureRecognizer(longPress)
+		diceButton.isUserInteractionEnabled = true
+	}
+
+	@objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+		if gesture.state == .began {
+			onToggleLock?()
 		}
 	}
 

@@ -94,6 +94,10 @@ final class DiceViewModel {
 		appState.faceNumeralFont
 	}
 
+	var lockedDieIndices: Set<Int> {
+		appState.lockedDieIndices
+	}
+
 	func restore() {
 		let preferences = preferencesStore.load()
 		if let parsed = notationParser.parse(preferences.lastNotation) {
@@ -114,6 +118,9 @@ final class DiceViewModel {
 	func rollFromInput(_ text: String) -> Result<RollOutcome, DiceInputError> {
 		switch notationParser.parseResult(text) {
 		case let .success(parsed):
+			if appState.configuration.sideCountsPerDie != parsed.sideCountsPerDie {
+				appState.lockedDieIndices.removeAll()
+			}
 			appState.configuration = parsed
 			preferencesStore.addRecentPreset(parsed.notation)
 			persistPreferences()
@@ -152,6 +159,7 @@ final class DiceViewModel {
 
 	func selectPreset(diceCount: Int, intuitive: Bool) -> RollOutcome {
 		appState.configuration = RollConfiguration(diceCount: diceCount, sideCount: 6, intuitive: intuitive)
+		appState.lockedDieIndices.removeAll()
 		preferencesStore.addRecentPreset(appState.configuration.notation)
 		persistPreferences()
 		return performRoll()
@@ -178,6 +186,7 @@ final class DiceViewModel {
 	func rerollDie(at index: Int) -> RollOutcome? {
 		guard diceValues.indices.contains(index) else { return nil }
 		guard appState.diceSideCounts.indices.contains(index) else { return nil }
+		guard !appState.lockedDieIndices.contains(index) else { return nil }
 		let singleRoll = RollConfiguration(diceCount: 1, sideCount: appState.diceSideCounts[index], intuitive: appState.configuration.intuitive)
 		let outcome = rollSession.roll(singleRoll)
 		guard let newValue = outcome.values.first else { return nil }
@@ -251,6 +260,19 @@ final class DiceViewModel {
 		persistPreferences()
 	}
 
+	func isDieLocked(at index: Int) -> Bool {
+		appState.lockedDieIndices.contains(index)
+	}
+
+	func toggleDieLock(at index: Int) {
+		guard appState.diceValues.indices.contains(index) else { return }
+		if appState.lockedDieIndices.contains(index) {
+			appState.lockedDieIndices.remove(index)
+		} else {
+			appState.lockedDieIndices.insert(index)
+		}
+	}
+
 	func resetVisualPreferences() {
 		appState.theme = .classic
 		appState.tableTexture = .neutral
@@ -315,12 +337,47 @@ final class DiceViewModel {
 
 	private func performRoll(configuration: RollConfiguration? = nil) -> RollOutcome {
 		let activeConfiguration = configuration ?? appState.configuration
-		let outcome = rollSession.roll(activeConfiguration)
+		let previousValues = appState.diceValues
+		let previousSideCounts = appState.diceSideCounts
+		let rawOutcome = rollSession.roll(activeConfiguration)
+		let outcome = applyLocks(to: rawOutcome, previousValues: previousValues, previousSideCounts: previousSideCounts)
 		appState.lastRolledConfiguration = activeConfiguration
 		appState.applyRollOutcome(outcome)
 		appendHistory(for: activeConfiguration, outcome: outcome)
 		telemetry.logRoll(configuration: activeConfiguration, sum: outcome.sum, diceCount: activeConfiguration.diceCount)
 		return outcome
+	}
+
+	private func applyLocks(to outcome: RollOutcome, previousValues: [Int], previousSideCounts: [Int]) -> RollOutcome {
+		guard !appState.lockedDieIndices.isEmpty else { return outcome }
+		guard previousValues.count == outcome.values.count, previousSideCounts.count == outcome.sideCounts.count else {
+			appState.lockedDieIndices.removeAll()
+			return outcome
+		}
+
+		var values = outcome.values
+		var validLocks: Set<Int> = []
+		for index in appState.lockedDieIndices where index < values.count {
+			guard previousSideCounts[index] == outcome.sideCounts[index] else { continue }
+			values[index] = previousValues[index]
+			validLocks.insert(index)
+		}
+		appState.lockedDieIndices = validLocks
+
+		let maxSides = outcome.sideCounts.max() ?? 0
+		var localTotals = Array(repeating: 0, count: maxSides)
+		for value in values where value > 0 && value <= maxSides {
+			localTotals[value - 1] += 1
+		}
+
+		return RollOutcome(
+			values: values,
+			sideCounts: outcome.sideCounts,
+			localTotals: localTotals,
+			sessionTotals: outcome.sessionTotals,
+			totalRolls: outcome.totalRolls,
+			sum: values.reduce(0, +)
+		)
 	}
 
 	private func persistPreferences() {

@@ -48,6 +48,7 @@ final class DiceAppState {
 	var d6PipStyle: DiceD6PipStyle
 	var faceNumeralFont: DiceFaceNumeralFont
 	var lastRolledConfiguration: RollConfiguration?
+	var lockedDieIndices: Set<Int>
 
 	init(configuration: RollConfiguration = RollConfiguration(diceCount: 6, sideCount: 6, intuitive: false)) {
 		self.configuration = configuration
@@ -63,11 +64,13 @@ final class DiceAppState {
 		self.d6PipStyle = .round
 		self.faceNumeralFont = .classic
 		self.lastRolledConfiguration = nil
+		self.lockedDieIndices = []
 	}
 
 	func applyRollOutcome(_ outcome: RollOutcome) {
 		diceValues = outcome.values
 		diceSideCounts = outcome.sideCounts
 		stats = DiceStats(outcome: outcome)
+		lockedDieIndices = lockedDieIndices.filter { $0 >= 0 && $0 < diceValues.count }
 	}
 }

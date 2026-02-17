@@ -725,6 +725,30 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(repeated.sideCounts, [4])
 	}
 
+	func testViewModelLockedDiceRemainHeldDuringSubsequentRolls() {
+		let suiteName = "DiceTests.viewmodel.locked.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		var nextValue = 0
+		let fallback = TrueRandomRoller { range in
+			nextValue += 1
+			return min(range.upperBound, max(range.lowerBound, nextValue))
+		}
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults),
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: fallback, randomDouble: { 0.5 }))
+		)
+
+		_ = viewModel.rollFromInput("3d6")
+		XCTAssertEqual(viewModel.diceValues, [1, 2, 3])
+		viewModel.toggleDieLock(at: 1)
+		XCTAssertTrue(viewModel.isDieLocked(at: 1))
+
+		_ = viewModel.rollCurrent()
+		XCTAssertEqual(viewModel.diceValues, [4, 2, 6])
+	}
+
 	func testViewModelAnimationTogglePersistsToPreferences() {
 		let suiteName = "DiceTests.viewmodel.animations.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!

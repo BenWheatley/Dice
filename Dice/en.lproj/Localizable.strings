@@ -113,3 +113,4 @@
 "a11y.menu.label" = "Menu";
 "a11y.die.label" = "Die %d, value %d";
 "a11y.die.hint" = "Reroll this die";
+"a11y.die.lockedHint" = "Die locked. Long press to unlock.";
