@@ -102,6 +102,9 @@
 "history.row.time" = "Time: %@";
 "history.row.values" = "Values: %@";
 "history.histogram.title" = "Recent distribution\n%@";
+"history.indicators.title" = "Streak and Outlier Indicators";
+"history.indicators.summary" = "Indicators\nHigh streak: %d  Low streak: %d\nStrongest outlier: %@ (|z| %.2f)";
+"history.indicators.tooltip" = "High/low streaks count consecutive die results in the top/bottom 20%% of each die's range. Current longest high streak: %d. Current longest low streak: %d. Outlier shows the largest normalized sum deviation (z-score) within recent rolls.";
 "alert.exportFailed.title" = "Export failed";
 "alert.exportFailed.message" = "Could not prepare export file.";
 "stats.reset" = "Stats reset";

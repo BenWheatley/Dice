@@ -608,6 +608,40 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(summary?.contains("d6") ?? false)
 	}
 
+	func testRollHistoryAnalyticsComputesStreaksAndStrongOutlier() {
+		let entries = [
+			RollHistoryEntry(timestamp: Date(timeIntervalSince1970: 1), notation: "1d6", values: [6], sum: 6, intuitive: false),
+			RollHistoryEntry(timestamp: Date(timeIntervalSince1970: 2), notation: "1d6", values: [6], sum: 6, intuitive: false),
+			RollHistoryEntry(timestamp: Date(timeIntervalSince1970: 3), notation: "1d6", values: [6], sum: 6, intuitive: false),
+			RollHistoryEntry(timestamp: Date(timeIntervalSince1970: 4), notation: "1d6", values: [1], sum: 1, intuitive: false),
+			RollHistoryEntry(timestamp: Date(timeIntervalSince1970: 5), notation: "3d6", values: [6, 6, 6], sum: 18, intuitive: false),
+		]
+
+		let indicators = RollHistoryAnalytics.indicators(entries: entries)
+		XCTAssertGreaterThanOrEqual(indicators.highStreak, 3)
+		XCTAssertGreaterThanOrEqual(indicators.lowStreak, 1)
+		XCTAssertEqual(indicators.outlierNotation, "3d6")
+		XCTAssertTrue((indicators.outlierZScore ?? 0) > 2.0)
+	}
+
+	func testViewModelHistoryIndicatorsFlagHighlightsForLongHighStreaks() {
+		let suiteName = "DiceTests.viewmodel.history.indicators.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults),
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { _ in 6 }, randomDouble: { 0.5 }))
+		)
+
+		_ = viewModel.rollFromInput("1d6")
+		_ = viewModel.rollCurrent()
+		_ = viewModel.rollCurrent()
+		let indicators = viewModel.historyIndicators()
+		XCTAssertGreaterThanOrEqual(indicators.highStreak, 3)
+		XCTAssertTrue(indicators.hasHighlights)
+	}
+
 	func testViewModelRollFromInputUpdatesConfigurationAndDiceCount() {
 		let suiteName = "DiceTests.viewmodel.roll.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!

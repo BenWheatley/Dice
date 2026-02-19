@@ -530,9 +530,12 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	@objc private func showHistory() {
+		let indicators = viewModel.historyIndicators()
 		let historyViewController = RollHistoryViewController(
 			entries: viewModel.historyEntries,
-			histogramSummary: viewModel.historyHistogramSummary()
+			histogramSummary: viewModel.historyHistogramSummary(),
+			indicatorSummary: historyIndicatorSummaryText(indicators),
+			indicatorTooltip: historyIndicatorTooltipText(indicators)
 		)
 		historyViewController.onExportText = { [weak self] in
 			guard let self else { return }
@@ -545,7 +548,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		historyViewController.onClearHistory = { [weak self, weak historyViewController] in
 			guard let self else { return }
 			self.viewModel.clearHistory()
-			historyViewController?.updateEntries([], histogramSummary: nil)
+			historyViewController?.updateEntries([], histogramSummary: nil, indicatorSummary: nil, indicatorTooltip: nil)
 		}
 		let navigationController = UINavigationController(rootViewController: historyViewController)
 		navigationController.modalPresentationStyle = .formSheet
@@ -554,6 +557,28 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			popover.sourceRect = menuButton.bounds
 		}
 		present(navigationController, animated: true)
+	}
+
+	private func historyIndicatorSummaryText(_ indicators: RollHistoryIndicators) -> String? {
+		guard indicators.hasHighlights else { return nil }
+		let z = abs(indicators.outlierZScore ?? 0)
+		let notation = indicators.outlierNotation ?? "-"
+		return String(
+			format: NSLocalizedString("history.indicators.summary", comment: "History indicators summary line"),
+			indicators.highStreak,
+			indicators.lowStreak,
+			notation,
+			z
+		)
+	}
+
+	private func historyIndicatorTooltipText(_ indicators: RollHistoryIndicators) -> String? {
+		guard indicators.hasHighlights else { return nil }
+		return String(
+			format: NSLocalizedString("history.indicators.tooltip", comment: "History indicators explanatory tooltip text"),
+			indicators.highStreak,
+			indicators.lowStreak
+		)
 	}
 
 	private func presentExportSheet(content: String, filename: String) {
@@ -1655,6 +1680,8 @@ private final class RollHistoryViewController: UITableViewController {
 
 	private var entries: [RollHistoryEntry]
 	private var histogramSummary: String?
+	private var indicatorSummary: String?
+	private var indicatorTooltip: String?
 	private let dateFormatter: DateFormatter = {
 		let formatter = DateFormatter()
 		formatter.dateStyle = .none
@@ -1662,9 +1689,11 @@ private final class RollHistoryViewController: UITableViewController {
 		return formatter
 	}()
 
-	init(entries: [RollHistoryEntry], histogramSummary: String?) {
+	init(entries: [RollHistoryEntry], histogramSummary: String?, indicatorSummary: String?, indicatorTooltip: String?) {
 		self.entries = entries
 		self.histogramSummary = histogramSummary
+		self.indicatorSummary = indicatorSummary
+		self.indicatorTooltip = indicatorTooltip
 		super.init(style: .insetGrouped)
 	}
 
@@ -1687,12 +1716,16 @@ private final class RollHistoryViewController: UITableViewController {
 			title: NSLocalizedString("menu.control.actions", comment: "History actions menu title"),
 			menu: historyActionsMenu()
 		)
+		updateIndicatorHelpButton()
 		updateHistogramHeader()
 	}
 
-	func updateEntries(_ entries: [RollHistoryEntry], histogramSummary: String?) {
+	func updateEntries(_ entries: [RollHistoryEntry], histogramSummary: String?, indicatorSummary: String?, indicatorTooltip: String?) {
 		self.entries = entries
 		self.histogramSummary = histogramSummary
+		self.indicatorSummary = indicatorSummary
+		self.indicatorTooltip = indicatorTooltip
+		updateIndicatorHelpButton()
 		updateHistogramHeader()
 		tableView.reloadData()
 	}
@@ -1735,7 +1768,11 @@ private final class RollHistoryViewController: UITableViewController {
 	}
 
 	private func updateHistogramHeader() {
-		guard let histogramSummary, !histogramSummary.isEmpty else {
+		let combinedText = [histogramSummary, indicatorSummary]
+			.compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+			.filter { !$0.isEmpty }
+			.joined(separator: "\n\n")
+		guard !combinedText.isEmpty else {
 			tableView.tableHeaderView = nil
 			return
 		}
@@ -1745,10 +1782,7 @@ private final class RollHistoryViewController: UITableViewController {
 		label.numberOfLines = 0
 		label.font = UIFont.monospacedSystemFont(ofSize: 12, weight: .regular)
 		label.textColor = .secondaryLabel
-		label.text = String(
-			format: NSLocalizedString("history.histogram.title", comment: "History histogram title"),
-			histogramSummary
-		)
+		label.text = combinedText
 		container.addSubview(label)
 		NSLayoutConstraint.activate([
 			label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
@@ -1764,6 +1798,43 @@ private final class RollHistoryViewController: UITableViewController {
 		)
 		container.frame = CGRect(x: 0, y: 0, width: targetWidth, height: size.height)
 		tableView.tableHeaderView = container
+	}
+
+	private func updateIndicatorHelpButton() {
+		guard let indicatorTooltip, !indicatorTooltip.isEmpty else {
+			navigationItem.leftBarButtonItems = [UIBarButtonItem(
+				title: NSLocalizedString("button.close", comment: "Close button title"),
+				style: .plain,
+				target: self,
+				action: #selector(close)
+			)]
+			return
+		}
+		let close = UIBarButtonItem(
+			title: NSLocalizedString("button.close", comment: "Close button title"),
+			style: .plain,
+			target: self,
+			action: #selector(close)
+		)
+		let help = UIBarButtonItem(
+			image: UIImage(systemName: "info.circle"),
+			style: .plain,
+			target: self,
+			action: #selector(showIndicatorsHelp)
+		)
+		help.accessibilityIdentifier = "historyIndicatorsHelpButton"
+		navigationItem.leftBarButtonItems = [close, help]
+	}
+
+	@objc private func showIndicatorsHelp() {
+		guard let indicatorTooltip, !indicatorTooltip.isEmpty else { return }
+		let alert = UIAlertController(
+			title: NSLocalizedString("history.indicators.title", comment: "History indicator help title"),
+			message: indicatorTooltip,
+			preferredStyle: .alert
+		)
+		alert.addAction(UIAlertAction(title: NSLocalizedString("button.ok", comment: "Generic confirmation button"), style: .default))
+		present(alert, animated: true)
 	}
 
 	@objc private func close() {

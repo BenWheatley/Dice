@@ -260,6 +260,10 @@ final class DiceViewModel {
 		return RollHistoryAnalytics.histogramSummaryText(histograms)
 	}
 
+	func historyIndicators(maxEntries: Int = 60) -> RollHistoryIndicators {
+		RollHistoryAnalytics.indicators(entries: rollHistory.sessionEntries, maxEntries: maxEntries)
+	}
+
 	func setAnimationsEnabled(_ enabled: Bool) {
 		appState.animationsEnabled = enabled
 		if enabled && appState.animationIntensity == .off {
