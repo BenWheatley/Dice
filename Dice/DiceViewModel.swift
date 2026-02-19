@@ -251,6 +251,15 @@ final class DiceViewModel {
 		historyExporter.export(rollHistory.sessionEntries, format: format)
 	}
 
+	func historyHistograms(maxEntries: Int = 60) -> [RollHistogram] {
+		RollHistoryAnalytics.histograms(entries: rollHistory.sessionEntries, maxEntries: maxEntries)
+	}
+
+	func historyHistogramSummary(maxEntries: Int = 60) -> String? {
+		let histograms = historyHistograms(maxEntries: maxEntries)
+		return RollHistoryAnalytics.histogramSummaryText(histograms)
+	}
+
 	func setAnimationsEnabled(_ enabled: Bool) {
 		appState.animationsEnabled = enabled
 		if enabled && appState.animationIntensity == .off {

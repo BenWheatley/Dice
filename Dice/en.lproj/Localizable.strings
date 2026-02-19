@@ -101,6 +101,7 @@
 "history.empty" = "No rolls in this session yet.";
 "history.row.time" = "Time: %@";
 "history.row.values" = "Values: %@";
+"history.histogram.title" = "Recent distribution\n%@";
 "alert.exportFailed.title" = "Export failed";
 "alert.exportFailed.message" = "Could not prepare export file.";
 "stats.reset" = "Stats reset";

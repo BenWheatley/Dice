@@ -141,7 +141,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 ### Statistics and History UX
 
-- [ ] Add histogram visualization for recent roll distributions per side count.
+- [x] Add histogram visualization for recent roll distributions per side count.
 - [ ] Add streak/outlier indicators (e.g., repeated highs/lows) with explanatory tooltip text.
 - [ ] Add filter/search controls in history (by notation, mode, date range).
 - [ ] Add shareable summary card export for a roll session (image + text metadata).

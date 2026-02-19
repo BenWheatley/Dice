@@ -564,6 +564,50 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(csv.contains("2d6"))
 	}
 
+	func testRollHistoryAnalyticsBuildsHistogramsPerSideCount() {
+		let entries = [
+			RollHistoryEntry(
+				timestamp: Date(timeIntervalSince1970: 10),
+				notation: "2d6+d4",
+				values: [2, 6, 4],
+				sum: 12,
+				intuitive: false
+			),
+			RollHistoryEntry(
+				timestamp: Date(timeIntervalSince1970: 11),
+				notation: "d6 + d4",
+				values: [2, 1],
+				sum: 3,
+				intuitive: false
+			),
+		]
+
+		let histograms = RollHistoryAnalytics.histograms(entries: entries)
+		let d4 = histograms.first(where: { $0.sideCount == 4 })
+		let d6 = histograms.first(where: { $0.sideCount == 6 })
+
+		XCTAssertEqual(d4?.totalSamples, 2)
+		XCTAssertEqual(d4?.bins, [1, 0, 0, 1])
+		XCTAssertEqual(d6?.totalSamples, 3)
+		XCTAssertEqual(d6?.bins, [0, 2, 0, 0, 0, 1])
+	}
+
+	func testViewModelHistoryHistogramSummaryIncludesDiceFamilyPrefix() {
+		let suiteName = "DiceTests.viewmodel.history.histogram.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults),
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { _ in 2 }, randomDouble: { 0.5 }))
+		)
+
+		_ = viewModel.rollFromInput("2d6")
+		let summary = viewModel.historyHistogramSummary()
+		XCTAssertNotNil(summary)
+		XCTAssertTrue(summary?.contains("d6") ?? false)
+	}
+
 	func testViewModelRollFromInputUpdatesConfigurationAndDiceCount() {
 		let suiteName = "DiceTests.viewmodel.roll.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!

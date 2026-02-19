@@ -34,6 +34,7 @@
 		C0DE00092F44009800D1CE00 /* DiceAppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00082F44009800D1CE00 /* DiceAppState.swift */; };
 		C0DE000B2F4400BA00D1CE00 /* DicePreferencesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE000A2F4400BA00D1CE00 /* DicePreferencesStore.swift */; };
 		C0DE000D2F4400DC00D1CE00 /* DiceRollHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE000C2F4400DC00D1CE00 /* DiceRollHistory.swift */; };
+		C0DE004A2F44720100D1CE00 /* DiceRollHistoryAnalytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00492F44720100D1CE00 /* DiceRollHistoryAnalytics.swift */; };
 		C0DE000F2F4400FE00D1CE00 /* DiceRollHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE000E2F4400FE00D1CE00 /* DiceRollHistoryStore.swift */; };
 		C0DE00112F44012000D1CE00 /* DiceTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00102F44012000D1CE00 /* DiceTelemetry.swift */; };
 		C0DE00132F44014200D1CE00 /* DiceViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00122F44014200D1CE00 /* DiceViewModel.swift */; };
@@ -149,6 +150,7 @@
 		C0DE00082F44009800D1CE00 /* DiceAppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceAppState.swift; sourceTree = "<group>"; };
 		C0DE000A2F4400BA00D1CE00 /* DicePreferencesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DicePreferencesStore.swift; sourceTree = "<group>"; };
 		C0DE000C2F4400DC00D1CE00 /* DiceRollHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceRollHistory.swift; sourceTree = "<group>"; };
+		C0DE00492F44720100D1CE00 /* DiceRollHistoryAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceRollHistoryAnalytics.swift; sourceTree = "<group>"; };
 		C0DE000E2F4400FE00D1CE00 /* DiceRollHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceRollHistoryStore.swift; sourceTree = "<group>"; };
 		C0DE00102F44012000D1CE00 /* DiceTelemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceTelemetry.swift; sourceTree = "<group>"; };
 		C0DE00122F44014200D1CE00 /* DiceViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceViewModel.swift; sourceTree = "<group>"; };
@@ -236,6 +238,7 @@
 				C0DE00082F44009800D1CE00 /* DiceAppState.swift */,
 				C0DE000A2F4400BA00D1CE00 /* DicePreferencesStore.swift */,
 				C0DE000C2F4400DC00D1CE00 /* DiceRollHistory.swift */,
+				C0DE00492F44720100D1CE00 /* DiceRollHistoryAnalytics.swift */,
 				C0DE000E2F4400FE00D1CE00 /* DiceRollHistoryStore.swift */,
 				C0DE00102F44012000D1CE00 /* DiceTelemetry.swift */,
 				C0DE00122F44014200D1CE00 /* DiceViewModel.swift */,
@@ -519,6 +522,7 @@
 				C0DE00112F44012000D1CE00 /* DiceTelemetry.swift in Sources */,
 				C0DE000F2F4400FE00D1CE00 /* DiceRollHistoryStore.swift in Sources */,
 				C0DE000D2F4400DC00D1CE00 /* DiceRollHistory.swift in Sources */,
+				C0DE004A2F44720100D1CE00 /* DiceRollHistoryAnalytics.swift in Sources */,
 				C0DE000B2F4400BA00D1CE00 /* DicePreferencesStore.swift in Sources */,
 				C0DE00092F44009800D1CE00 /* DiceAppState.swift in Sources */,
 				C0DE00072F44007600D1CE00 /* DiceRollSession.swift in Sources */,

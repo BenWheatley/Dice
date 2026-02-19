@@ -530,7 +530,10 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	@objc private func showHistory() {
-		let historyViewController = RollHistoryViewController(entries: viewModel.historyEntries)
+		let historyViewController = RollHistoryViewController(
+			entries: viewModel.historyEntries,
+			histogramSummary: viewModel.historyHistogramSummary()
+		)
 		historyViewController.onExportText = { [weak self] in
 			guard let self else { return }
 			self.presentExportSheet(content: self.viewModel.exportHistory(format: .text), filename: "dice-history.txt")
@@ -542,7 +545,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		historyViewController.onClearHistory = { [weak self, weak historyViewController] in
 			guard let self else { return }
 			self.viewModel.clearHistory()
-			historyViewController?.updateEntries([])
+			historyViewController?.updateEntries([], histogramSummary: nil)
 		}
 		let navigationController = UINavigationController(rootViewController: historyViewController)
 		navigationController.modalPresentationStyle = .formSheet
@@ -1651,6 +1654,7 @@ private final class RollHistoryViewController: UITableViewController {
 	var onClearHistory: (() -> Void)?
 
 	private var entries: [RollHistoryEntry]
+	private var histogramSummary: String?
 	private let dateFormatter: DateFormatter = {
 		let formatter = DateFormatter()
 		formatter.dateStyle = .none
@@ -1658,8 +1662,9 @@ private final class RollHistoryViewController: UITableViewController {
 		return formatter
 	}()
 
-	init(entries: [RollHistoryEntry]) {
+	init(entries: [RollHistoryEntry], histogramSummary: String?) {
 		self.entries = entries
+		self.histogramSummary = histogramSummary
 		super.init(style: .insetGrouped)
 	}
 
@@ -1682,10 +1687,13 @@ private final class RollHistoryViewController: UITableViewController {
 			title: NSLocalizedString("menu.control.actions", comment: "History actions menu title"),
 			menu: historyActionsMenu()
 		)
+		updateHistogramHeader()
 	}
 
-	func updateEntries(_ entries: [RollHistoryEntry]) {
+	func updateEntries(_ entries: [RollHistoryEntry], histogramSummary: String?) {
 		self.entries = entries
+		self.histogramSummary = histogramSummary
+		updateHistogramHeader()
 		tableView.reloadData()
 	}
 
@@ -1724,6 +1732,38 @@ private final class RollHistoryViewController: UITableViewController {
 			self?.onClearHistory?()
 		}
 		return UIMenu(children: [exportText, exportCSV, clear])
+	}
+
+	private func updateHistogramHeader() {
+		guard let histogramSummary, !histogramSummary.isEmpty else {
+			tableView.tableHeaderView = nil
+			return
+		}
+		let container = UIView(frame: CGRect(x: 0, y: 0, width: tableView.bounds.width, height: 0))
+		let label = UILabel()
+		label.translatesAutoresizingMaskIntoConstraints = false
+		label.numberOfLines = 0
+		label.font = UIFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+		label.textColor = .secondaryLabel
+		label.text = String(
+			format: NSLocalizedString("history.histogram.title", comment: "History histogram title"),
+			histogramSummary
+		)
+		container.addSubview(label)
+		NSLayoutConstraint.activate([
+			label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
+			label.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -16),
+			label.topAnchor.constraint(equalTo: container.topAnchor, constant: 8),
+			label.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -8),
+		])
+		let targetWidth = tableView.bounds.width > 0 ? tableView.bounds.width : 420
+		let size = container.systemLayoutSizeFitting(
+			CGSize(width: targetWidth, height: UIView.layoutFittingCompressedSize.height),
+			withHorizontalFittingPriority: .required,
+			verticalFittingPriority: .fittingSizeLevel
+		)
+		container.frame = CGRect(x: 0, y: 0, width: targetWidth, height: size.height)
+		tableView.tableHeaderView = container
 	}
 
 	@objc private func close() {
