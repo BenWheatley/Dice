@@ -1524,6 +1524,18 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(commandInputs.contains("f"))
 	}
 
+	func testDieIndexFromAccessibilityIdentifierParsesExpectedFormat() {
+		XCTAssertEqual(DiceCollectionViewController.dieIndexFromAccessibilityIdentifier("dieButton_0"), 0)
+		XCTAssertEqual(DiceCollectionViewController.dieIndexFromAccessibilityIdentifier("dieButton_12"), 12)
+	}
+
+	func testDieIndexFromAccessibilityIdentifierRejectsInvalidValues() {
+		XCTAssertNil(DiceCollectionViewController.dieIndexFromAccessibilityIdentifier(nil))
+		XCTAssertNil(DiceCollectionViewController.dieIndexFromAccessibilityIdentifier("die_2"))
+		XCTAssertNil(DiceCollectionViewController.dieIndexFromAccessibilityIdentifier("dieButton_"))
+		XCTAssertNil(DiceCollectionViewController.dieIndexFromAccessibilityIdentifier("dieButton_x"))
+	}
+
 	func testWatchViewModelRepeatLastRollUsesPreviousModeConfiguration() {
 		let model = WatchRollViewModel(
 			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { $0.lowerBound }, randomDouble: { 0.5 })),

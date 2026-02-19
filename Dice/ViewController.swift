@@ -91,6 +91,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		updateNotationField()
 		restoreStatsVisibility()
 		updateStatsVisibility()
+		configureAccessibilityRotors()
 		updateControlMenu()
 		performRoll()
 	}
@@ -444,13 +445,15 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		present(alert, animated: true)
 	}
 
-	private func rerollDie(at index: Int) {
-		guard let outcome = viewModel.rerollDie(at: index) else { return }
+	@discardableResult
+	private func rerollDie(at index: Int) -> RollOutcome? {
+		guard let outcome = viewModel.rerollDie(at: index) else { return nil }
 		updateTotalsText(outcome: outcome)
 		collectionView.reloadItems(at: [IndexPath(row: index, section: 0)])
 		collectionView.layoutIfNeeded()
 		updateDiceBoard(animated: shouldAnimateBoard)
 		playRollSound()
+		return outcome
 	}
 
 	private func toggleDieLock(at index: Int) {
@@ -562,6 +565,71 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		if viewModel.hapticsEnabled {
 			hapticsEngine.playRollSettle()
 		}
+	}
+
+	private func configureAccessibilityRotors() {
+		let rerollRotor = UIAccessibilityCustomRotor(
+			name: NSLocalizedString("a11y.rotor.rerollDie", comment: "VoiceOver rotor title for rerolling selected die")
+		) { [weak self] predicate in
+			guard let self else { return nil }
+			guard let index = selectedDieIndex(from: predicate), viewModel.diceValues.indices.contains(index) else { return nil }
+			if let outcome = rerollDie(at: index), let value = outcome.values.first {
+				let message = String(
+					format: NSLocalizedString("a11y.announcement.dieRerolled", comment: "Announcement for rerolled die value"),
+					locale: .current,
+					index + 1,
+					value
+				)
+				UIAccessibility.post(notification: .announcement, argument: message)
+			} else if viewModel.isDieLocked(at: index) {
+				UIAccessibility.post(
+					notification: .announcement,
+					argument: NSLocalizedString("a11y.announcement.dieLocked", comment: "Announcement when attempting to reroll locked die")
+				)
+			}
+			guard let dieButton = dieButton(at: index) else { return nil }
+			return UIAccessibilityCustomRotorItemResult(targetElement: dieButton, targetRange: nil)
+		}
+
+		let readSidesRotor = UIAccessibilityCustomRotor(
+			name: NSLocalizedString("a11y.rotor.readDieSides", comment: "VoiceOver rotor title for reading die side counts")
+		) { [weak self] predicate in
+			guard let self else { return nil }
+			guard let index = selectedDieIndex(from: predicate), viewModel.diceSideCounts.indices.contains(index) else { return nil }
+			let message = String(
+				format: NSLocalizedString("a11y.announcement.dieSides", comment: "Announcement for die side count"),
+				locale: .current,
+				index + 1,
+				viewModel.diceSideCounts[index]
+			)
+			UIAccessibility.post(notification: .announcement, argument: message)
+			guard let dieButton = dieButton(at: index) else { return nil }
+			return UIAccessibilityCustomRotorItemResult(targetElement: dieButton, targetRange: nil)
+		}
+
+		view.accessibilityCustomRotors = [rerollRotor, readSidesRotor]
+	}
+
+	private func selectedDieIndex(from predicate: UIAccessibilityCustomRotorSearchPredicate) -> Int? {
+		if let identifiable = predicate.currentItem.targetElement as? UIAccessibilityIdentification,
+		   let currentIdentifier = identifiable.accessibilityIdentifier,
+		   let index = Self.dieIndexFromAccessibilityIdentifier(currentIdentifier) {
+			return index
+		}
+		return viewModel.diceValues.isEmpty ? nil : 0
+	}
+
+	private func dieButton(at index: Int) -> UIButton? {
+		let indexPath = IndexPath(row: index, section: 0)
+		guard let cell = collectionView.cellForItem(at: indexPath) as? DiceCollectionViewCell else { return nil }
+		return cell.diceButton
+	}
+
+	static func dieIndexFromAccessibilityIdentifier(_ identifier: String?) -> Int? {
+		guard let identifier else { return nil }
+		guard identifier.hasPrefix("dieButton_") else { return nil }
+		let suffix = identifier.dropFirst("dieButton_".count)
+		return Int(suffix)
 	}
 
 	private func selectAnimationIntensity(_ intensity: DiceAnimationIntensity) {

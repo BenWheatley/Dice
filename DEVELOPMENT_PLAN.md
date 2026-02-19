@@ -152,7 +152,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Add dyslexia-friendly numeral option and test face-label readability across all die types.
 - [x] Add larger-face-label accessibility mode for board previews and static dice cells.
 - [x] Add reduced-motion-specific board behavior profile beyond simple animation on/off.
-- [ ] Add VoiceOver custom rotor actions for rerolling selected die and reading per-die side count.
+- [x] Add VoiceOver custom rotor actions for rerolling selected die and reading per-die side count.
 - [ ] Add additional localization pass for validation errors and stats copy tone consistency.
 
 ### Quality, Reliability, and Tooling

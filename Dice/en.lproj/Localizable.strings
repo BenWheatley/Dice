@@ -159,3 +159,8 @@
 "a11y.die.label" = "Die %d, value %d";
 "a11y.die.hint" = "Show options for this die.";
 "a11y.die.lockedHint" = "Die locked. Long press to unlock.";
+"a11y.rotor.rerollDie" = "Reroll Selected Die";
+"a11y.rotor.readDieSides" = "Read Die Sides";
+"a11y.announcement.dieRerolled" = "Die %d rerolled to %d.";
+"a11y.announcement.dieSides" = "Die %d is d%d.";
+"a11y.announcement.dieLocked" = "Die is locked.";
