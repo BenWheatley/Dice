@@ -157,7 +157,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 ### Quality, Reliability, and Tooling
 
-- [ ] Add snapshot tests for key visual themes and dice combinations on iPhone/iPad/macOS layouts.
+- [x] Add snapshot tests for key visual themes and dice combinations on iPhone/iPad/macOS layouts.
 - [x] Add SceneKit regression tests for d6 pip orientation and d4/d10 geometry correctness.
 - [x] Add property-based parser tests for mixed separators and whitespace/edge formatting.
 - [x] Add startup performance budget checks and automated alerting for regressions in CI.

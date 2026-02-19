@@ -1678,4 +1678,169 @@ final class DiceTests: XCTestCase {
 		}
 	}
 
+	func testVisualSnapshot_iPhoneLightMixedDice() {
+		let hash = visualSnapshotHash(
+			theme: .lightMode,
+			layout: .iphone,
+			values: [3, 5, 2, 17, 8, 11],
+			sideCounts: [6, 6, 4, 20, 8, 10]
+		)
+		XCTAssertEqual(hash, "00699cbfe309afb8")
+	}
+
+	func testVisualSnapshot_iPadDarkMixedDice() {
+		let hash = visualSnapshotHash(
+			theme: .darkMode,
+			layout: .ipad,
+			values: [12, 4, 6, 19, 7, 2, 9, 15],
+			sideCounts: [20, 6, 6, 20, 10, 4, 8, 12]
+		)
+		XCTAssertEqual(hash, "fc96f651d30b9d72")
+	}
+
+	func testVisualSnapshot_macSystemMixedDice() {
+		let hash = visualSnapshotHash(
+			theme: .system,
+			layout: .macCatalyst,
+			values: [1, 6, 10, 14, 4, 8, 2, 11, 20],
+			sideCounts: [4, 6, 10, 12, 6, 8, 4, 20, 20]
+		)
+		XCTAssertEqual(hash, "3624d848cb91f989")
+	}
+
+	private enum SnapshotLayout {
+		case iphone
+		case ipad
+		case macCatalyst
+
+		var canvasSize: CGSize {
+			switch self {
+			case .iphone: return CGSize(width: 390, height: 844)
+			case .ipad: return CGSize(width: 1024, height: 1366)
+			case .macCatalyst: return CGSize(width: 1280, height: 800)
+			}
+		}
+
+		var columns: Int {
+			switch self {
+			case .iphone: return 3
+			case .ipad: return 4
+			case .macCatalyst: return 5
+			}
+		}
+	}
+
+	private func visualSnapshotHash(theme: DiceTheme, layout: SnapshotLayout, values: [Int], sideCounts: [Int]) -> String {
+		XCTAssertEqual(values.count, sideCounts.count)
+		let image = visualSnapshotImage(theme: theme, layout: layout, values: values, sideCounts: sideCounts)
+		guard let data = image.pngData() else {
+			XCTFail("Expected snapshot PNG data")
+			return ""
+		}
+		return fnv1a64Hex(data)
+	}
+
+	private func visualSnapshotImage(theme: DiceTheme, layout: SnapshotLayout, values: [Int], sideCounts: [Int]) -> UIImage {
+		let palette = theme.palette
+		let size = layout.canvasSize
+		let renderer = UIGraphicsImageRenderer(size: size)
+		return renderer.image { context in
+			let cg = context.cgContext
+			palette.screenBackgroundColor.setFill()
+			cg.fill(CGRect(origin: .zero, size: size))
+
+			let boardRect = CGRect(x: 24, y: 120, width: size.width - 48, height: size.height - 180)
+			let board = UIBezierPath(roundedRect: boardRect, cornerRadius: 16)
+			palette.panelBackgroundColor.setFill()
+			board.fill()
+
+			let textAttrs: [NSAttributedString.Key: Any] = [
+				.font: UIFont.systemFont(ofSize: 28, weight: .semibold),
+				.foregroundColor: palette.secondaryTextColor
+			]
+			("Snapshot \(theme.rawValue)" as NSString).draw(at: CGPoint(x: 28, y: 60), withAttributes: textAttrs)
+
+			let columns = layout.columns
+			let spacing: CGFloat = 18
+			let availableWidth = boardRect.width - CGFloat(columns - 1) * spacing - 24
+			let dieSide = floor(availableWidth / CGFloat(columns))
+			let rows = Int(ceil(Double(values.count) / Double(columns)))
+			let totalHeight = CGFloat(rows) * dieSide + CGFloat(max(0, rows - 1)) * spacing
+			let originY = boardRect.minY + max(16, (boardRect.height - totalHeight) * 0.5)
+
+			for index in values.indices {
+				let row = index / columns
+				let column = index % columns
+				let x = boardRect.minX + 12 + CGFloat(column) * (dieSide + spacing)
+				let y = originY + CGFloat(row) * (dieSide + spacing)
+				let rect = CGRect(x: x, y: y, width: dieSide, height: dieSide).insetBy(dx: 4, dy: 4)
+				drawSnapshotDie(in: cg, rect: rect, value: values[index], sideCount: sideCounts[index], palette: palette)
+			}
+		}
+	}
+
+	private func drawSnapshotDie(in context: CGContext, rect: CGRect, value: Int, sideCount: Int, palette: DiceThemePalette) {
+		let preset = DiceDieColorPreferences.default.preset(for: sideCount)
+		let path = snapshotPath(for: sideCount, in: rect)
+		context.saveGState()
+		context.addPath(path.cgPath)
+		context.setFillColor(preset.fillColor.cgColor)
+		context.fillPath()
+		context.restoreGState()
+
+		context.saveGState()
+		context.addPath(path.cgPath)
+		context.setStrokeColor(palette.secondaryTextColor.cgColor)
+		context.setLineWidth(2)
+		context.strokePath()
+		context.restoreGState()
+
+		let fontSize = max(16, rect.width * 0.28)
+		let attrs: [NSAttributedString.Key: Any] = [
+			.font: DiceFaceNumeralFont.classic.numeralFont(ofSize: fontSize),
+			.foregroundColor: DiceFaceContrast.style(for: preset.fillColor).primaryInkColor
+		]
+		let text = "\(value)" as NSString
+		let textSize = text.size(withAttributes: attrs)
+		let point = CGPoint(x: rect.midX - textSize.width / 2, y: rect.midY - textSize.height / 2)
+		text.draw(at: point, withAttributes: attrs)
+	}
+
+	private func snapshotPath(for sideCount: Int, in rect: CGRect) -> UIBezierPath {
+		let sides: Int
+		switch sideCount {
+		case 4: sides = 3
+		case 6: sides = 4
+		case 8: sides = 8
+		case 10: sides = 10
+		case 12: sides = 6
+		case 20: sides = 10
+		default: sides = 6
+		}
+		let center = CGPoint(x: rect.midX, y: rect.midY)
+		let radius = min(rect.width, rect.height) * 0.48
+		let path = UIBezierPath()
+		for i in 0..<sides {
+			let angle = -CGFloat.pi / 2 + (CGFloat(i) * 2 * .pi / CGFloat(sides))
+			let point = CGPoint(x: center.x + cos(angle) * radius, y: center.y + sin(angle) * radius)
+			if i == 0 {
+				path.move(to: point)
+			} else {
+				path.addLine(to: point)
+			}
+		}
+		path.close()
+		return path
+	}
+
+	private func fnv1a64Hex(_ data: Data) -> String {
+		var hash: UInt64 = 0xcbf29ce484222325
+		let prime: UInt64 = 0x100000001b3
+		for byte in data {
+			hash ^= UInt64(byte)
+			hash = hash &* prime
+		}
+		return String(format: "%016llx", hash)
+	}
+
 }
