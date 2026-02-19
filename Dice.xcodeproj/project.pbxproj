@@ -53,6 +53,7 @@
 		C0DE00462F440B8700D1CE00 /* DiceAnimationIntensity.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00452F440B8700D1CE00 /* DiceAnimationIntensity.swift */; };
 		C0DE00482F440C4900D1CE00 /* DiceBoardLayoutPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00472F440C4900D1CE00 /* DiceBoardLayoutPreset.swift */; };
 		C0DE004B2F44A00100D1CE00 /* DiceFaceLabelSizing.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE004D2F44A00100D1CE00 /* DiceFaceLabelSizing.swift */; };
+		C0DE004E2F44A20100D1CE00 /* DiceMotionBehaviorProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE004F2F44A20100D1CE00 /* DiceMotionBehaviorProfile.swift */; };
 		C0DE00212F44022100D1CE00 /* DiceNotationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00002F44000100D1CE00 /* DiceNotationParser.swift */; };
 		C0DE00232F44022300D1CE00 /* TrueRandomRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00022F44003200D1CE00 /* TrueRandomRoller.swift */; };
 		C0DE00252F44022500D1CE00 /* IntuitiveRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00042F44005400D1CE00 /* IntuitiveRoller.swift */; };
@@ -166,6 +167,7 @@
 		C0DE00452F440B8700D1CE00 /* DiceAnimationIntensity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceAnimationIntensity.swift; sourceTree = "<group>"; };
 		C0DE00472F440C4900D1CE00 /* DiceBoardLayoutPreset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceBoardLayoutPreset.swift; sourceTree = "<group>"; };
 		C0DE004D2F44A00100D1CE00 /* DiceFaceLabelSizing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceFaceLabelSizing.swift; sourceTree = "<group>"; };
+		C0DE004F2F44A20100D1CE00 /* DiceMotionBehaviorProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceMotionBehaviorProfile.swift; sourceTree = "<group>"; };
 		C0DE00302F44033100D1CE00 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C0DE00142F44016400D1CE00 /* WatchRollViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRollViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -255,6 +257,7 @@
 				C0DE00452F440B8700D1CE00 /* DiceAnimationIntensity.swift */,
 				C0DE00472F440C4900D1CE00 /* DiceBoardLayoutPreset.swift */,
 				C0DE004D2F44A00100D1CE00 /* DiceFaceLabelSizing.swift */,
+				C0DE004F2F44A20100D1CE00 /* DiceMotionBehaviorProfile.swift */,
 				C0DE00142F44016400D1CE00 /* WatchRollViewModel.swift */,
 				B57DA5B92F4228E00057BC3A /* DiceCubeView.swift */,
 				B50B44D4215D803D00A6399B /* Main.storyboard */,
@@ -523,6 +526,7 @@
 				C0DE00462F440B8700D1CE00 /* DiceAnimationIntensity.swift in Sources */,
 				C0DE00482F440C4900D1CE00 /* DiceBoardLayoutPreset.swift in Sources */,
 				C0DE004B2F44A00100D1CE00 /* DiceFaceLabelSizing.swift in Sources */,
+				C0DE004E2F44A20100D1CE00 /* DiceMotionBehaviorProfile.swift in Sources */,
 				C0DE00112F44012000D1CE00 /* DiceTelemetry.swift in Sources */,
 				C0DE000F2F4400FE00D1CE00 /* DiceRollHistoryStore.swift in Sources */,
 				C0DE000D2F4400DC00D1CE00 /* DiceRollHistory.swift in Sources */,

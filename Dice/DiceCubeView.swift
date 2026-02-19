@@ -52,6 +52,7 @@ final class DiceCubeView: UIView {
 	private var activeLargeFaceLabelsEnabled = false
 	private var activeAnimationIntensity: DiceAnimationIntensity = .full
 	private var activeMotionBlurEnabled = false
+	private var reduceMotionEnabled = UIAccessibility.isReduceMotionEnabled
 	private var needsMeshRefresh = false
 	private var activeRollAnimationToken: Int = 0
 	private var pendingRollAnimationCompletions = 0
@@ -83,7 +84,8 @@ final class DiceCubeView: UIView {
 	func setDice(values: [Int], centers: [CGPoint], sideLength: CGFloat, sideCounts: [Int], animated: Bool) {
 		guard values.count == centers.count, values.count == sideCounts.count else { return }
 		ensureNodeCount(values.count)
-		let shouldAnimateRoll = animated && activeAnimationIntensity != .off
+		let motionProfile = DiceMotionBehaviorProfile.resolve(intensity: activeAnimationIntensity, reduceMotionEnabled: reduceMotionEnabled)
+		let shouldAnimateRoll = animated && activeAnimationIntensity != .off && motionProfile.duration > 0
 		if shouldAnimateRoll {
 			activeRollAnimationToken += 1
 			pendingRollAnimationCompletions = values.count
@@ -140,7 +142,8 @@ final class DiceCubeView: UIView {
 					to: targetPosition,
 					faceValue: targetFace,
 					sideLength: sideLength,
-					sideCount: sideCount
+					sideCount: sideCount,
+					motionProfile: motionProfile
 				) { [weak self] in
 					self?.handleRollAnimationCompletion(for: rollToken)
 				}
@@ -262,7 +265,15 @@ final class DiceCubeView: UIView {
 		) { [weak self] _ in
 			self?.scnView.isPlaying = true
 		}
-		lifecycleObservers = [resignObserver, becomeObserver]
+		let reduceMotionObserver = center.addObserver(
+			forName: UIAccessibility.reduceMotionStatusDidChangeNotification,
+			object: nil,
+			queue: .main
+		) { [weak self] _ in
+			guard let self else { return }
+			self.reduceMotionEnabled = UIAccessibility.isReduceMotionEnabled
+		}
+		lifecycleObservers = [resignObserver, becomeObserver, reduceMotionObserver]
 	}
 
 	private func updateCamera(animated: Bool) {
@@ -669,7 +680,7 @@ final class DiceCubeView: UIView {
 		SCNVector3(center.x - bounds.midX, bounds.midY - center.y, 0)
 	}
 
-	private func animateRoll(node: SCNNode, from start: SCNVector3, to target: SCNVector3, faceValue: Int, sideLength: CGFloat, sideCount: Int, completion: @escaping () -> Void) {
+	private func animateRoll(node: SCNNode, from start: SCNVector3, to target: SCNVector3, faceValue: Int, sideLength: CGFloat, sideCount: Int, motionProfile: DiceMotionBehaviorProfile, completion: @escaping () -> Void) {
 		node.removeAllActions()
 		if activeAnimationIntensity == .off {
 			node.position = target
@@ -677,10 +688,22 @@ final class DiceCubeView: UIView {
 			completion()
 			return
 		}
-		let duration: TimeInterval = 1.6
-		let motionScale: Float = 1.0
-		let moveAction = makeBounceMoveAction(start: start, target: target, sideLength: sideLength, duration: duration, motionScale: motionScale)
-		let rotateAction = makeRotateAction(node: node, targetFace: faceValue, sideCount: sideCount, duration: duration, motionScale: motionScale)
+		let moveAction = makeBounceMoveAction(
+			start: start,
+			target: target,
+			sideLength: sideLength,
+			duration: motionProfile.duration,
+			motionScale: motionProfile.motionScale,
+			liftMultiplier: motionProfile.liftMultiplier,
+			oscillationAmplitudeMultiplier: motionProfile.oscillationAmplitude
+		)
+		let rotateAction = makeRotateAction(
+			node: node,
+			targetFace: faceValue,
+			sideCount: sideCount,
+			duration: motionProfile.duration,
+			motionScale: motionProfile.motionScale
+		)
 		node.runAction(.group([moveAction, rotateAction]), completionHandler: completion)
 	}
 
@@ -740,7 +763,15 @@ final class DiceCubeView: UIView {
 		}
 	}
 
-	private func makeBounceMoveAction(start: SCNVector3, target: SCNVector3, sideLength: CGFloat, duration: TimeInterval, motionScale: Float) -> SCNAction {
+	private func makeBounceMoveAction(
+		start: SCNVector3,
+		target: SCNVector3,
+		sideLength: CGFloat,
+		duration: TimeInterval,
+		motionScale: Float,
+		liftMultiplier: Float,
+		oscillationAmplitudeMultiplier: Float
+	) -> SCNAction {
 		let halfW = Float(bounds.width / 2)
 		let halfH = Float(bounds.height / 2)
 		let margin = Float(sideLength / 2 + 6)
@@ -752,8 +783,8 @@ final class DiceCubeView: UIView {
 		var lastTime: TimeInterval = 0
 		var pos = start
 		var vel = SCNVector3(Float.random(in: -420...420) * motionScale, Float.random(in: -330...330) * motionScale, 0)
-		let liftAmplitude = Float(sideLength * 1.35) * motionScale
-		let oscillationAmplitude = Float(sideLength * 0.28) * motionScale
+		let liftAmplitude = Float(sideLength) * liftMultiplier * motionScale
+		let oscillationAmplitude = Float(sideLength) * oscillationAmplitudeMultiplier * motionScale
 		let oscillationFrequency: Float = 9.0 * max(0.7, motionScale)
 
 		return SCNAction.customAction(duration: duration) { node, elapsed in

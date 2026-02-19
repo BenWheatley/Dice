@@ -1458,6 +1458,24 @@ final class DiceTests: XCTestCase {
 		XCTAssertGreaterThan(largeFallback, normalFallback)
 	}
 
+	func testReducedMotionProfileLowersEnergyAndDuration() {
+		let normal = DiceMotionBehaviorProfile.resolve(intensity: .full, reduceMotionEnabled: false)
+		let reduced = DiceMotionBehaviorProfile.resolve(intensity: .full, reduceMotionEnabled: true)
+
+		XCTAssertGreaterThan(normal.duration, reduced.duration)
+		XCTAssertGreaterThan(normal.motionScale, reduced.motionScale)
+		XCTAssertGreaterThan(normal.liftMultiplier, reduced.liftMultiplier)
+		XCTAssertGreaterThan(normal.oscillationAmplitude, reduced.oscillationAmplitude)
+	}
+
+	func testOffAnimationIntensityUsesZeroMotionProfile() {
+		let profile = DiceMotionBehaviorProfile.resolve(intensity: .off, reduceMotionEnabled: false)
+		XCTAssertEqual(profile.duration, 0)
+		XCTAssertEqual(profile.motionScale, 0)
+		XCTAssertEqual(profile.liftMultiplier, 0)
+		XCTAssertEqual(profile.oscillationAmplitude, 0)
+	}
+
 	func testFaceContrastCalibrationKeepsReadableInkAcrossFaceFills() {
 		let fills: [UIColor] = [
 			UIColor(white: 0.98, alpha: 1.0),
