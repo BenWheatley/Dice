@@ -44,3 +44,6 @@ For v1 development, simulator-only testing is required; code-signing and TestFli
 1. Monitor crash/telemetry signals and support channels.
 2. Triage hotfixes with regression tests first.
 3. Start next patch version branch after stabilization.
+
+## Triage Dashboard
+Use `docs/release/CRASH_TELEMETRY_DASHBOARD.md` as the canonical crash/telemetry aggregation and incident triage workflow for release candidates.
