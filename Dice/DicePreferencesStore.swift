@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 
 struct DiceSavedPreset: Codable, Equatable, Identifiable {
 	let id: String
@@ -91,10 +92,12 @@ final class DicePreferencesStore {
 
 	private let defaults: UserDefaults
 	private let maxRecentPresets: Int
+	private let voiceOverIsRunning: () -> Bool
 
-	init(defaults: UserDefaults = .standard, maxRecentPresets: Int = 12) {
+	init(defaults: UserDefaults = .standard, maxRecentPresets: Int = 12, voiceOverIsRunning: @escaping () -> Bool = { UIAccessibility.isVoiceOverRunning }) {
 		self.defaults = defaults
 		self.maxRecentPresets = maxRecentPresets
+		self.voiceOverIsRunning = voiceOverIsRunning
 	}
 
 	func load() -> DiceUserPreferences {
@@ -124,7 +127,12 @@ final class DicePreferencesStore {
 		let rawSoundPack = defaults.string(forKey: Keys.soundPack)
 		let soundPack = rawSoundPack.flatMap(DiceSoundPack.init(rawValue:)) ?? DiceUserPreferences.default.soundPack
 		let soundVolume = defaults.object(forKey: Keys.soundVolume) as? Float ?? DiceUserPreferences.default.soundVolume
-		let soundEffectsEnabled = defaults.object(forKey: Keys.soundEffectsEnabled) as? Bool ?? DiceUserPreferences.default.soundEffectsEnabled
+		let soundEffectsEnabled: Bool
+		if let storedSfxEnabled = defaults.object(forKey: Keys.soundEffectsEnabled) as? Bool {
+			soundEffectsEnabled = storedSfxEnabled
+		} else {
+			soundEffectsEnabled = voiceOverIsRunning() ? false : DiceUserPreferences.default.soundEffectsEnabled
+		}
 		let hapticsEnabled = defaults.object(forKey: Keys.hapticsEnabled) as? Bool ?? DiceUserPreferences.default.hapticsEnabled
 		return DiceUserPreferences(
 			lastNotation: notation,

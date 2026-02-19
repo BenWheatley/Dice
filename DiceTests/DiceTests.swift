@@ -472,6 +472,27 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(loaded.boardLayoutPreset, .compact)
 	}
 
+	func testPreferencesStoreDefaultsSoundEffectsOffWhenVoiceOverIsActive() {
+		let suiteName = "DiceTests.preferences.voiceover.default.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let store = DicePreferencesStore(defaults: defaults, voiceOverIsRunning: { true })
+
+		let loaded = store.load()
+		XCTAssertFalse(loaded.soundEffectsEnabled)
+	}
+
+	func testPreferencesStoreRespectsStoredSoundEffectsValueWithVoiceOverActive() {
+		let suiteName = "DiceTests.preferences.voiceover.stored.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		defaults.set(true, forKey: "Dice.soundEffectsEnabled")
+		let store = DicePreferencesStore(defaults: defaults, voiceOverIsRunning: { true })
+
+		let loaded = store.load()
+		XCTAssertTrue(loaded.soundEffectsEnabled)
+	}
+
 	func testRollHistoryAppendsInNewestFirstOrder() {
 		let history = DiceRollHistory(maxPersistedEntries: 10)
 		let first = RollHistoryEntry(timestamp: Date(timeIntervalSince1970: 1), notation: "1d6", values: [1], sum: 1, intuitive: false)
