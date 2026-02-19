@@ -241,6 +241,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.translatesAutoresizingMaskIntoConstraints = false
 		diceBoardView.backgroundColor = .clear
 		diceBoardView.isUserInteractionEnabled = false
+		diceBoardView.onRollSettled = { [weak self] in
+			self?.playSettleTickSound()
+		}
 		view.addSubview(diceBoardView)
 		view.bringSubviewToFront(controlsContainer ?? UIView())
 		view.bringSubviewToFront(totalsContainer)
@@ -507,6 +510,10 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	private func playRollSound() {
 		soundEngine.playRollImpact()
+	}
+
+	private func playSettleTickSound() {
+		soundEngine.playSettleTick()
 	}
 
 	private func selectAnimationIntensity(_ intensity: DiceAnimationIntensity) {
@@ -1055,7 +1062,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 private final class DiceSoundEngine {
 	private let engine = AVAudioEngine()
 	private let player = AVAudioPlayerNode()
-	private var cachedBuffers: [DiceSoundPack: AVAudioPCMBuffer] = [:]
+	private var cachedImpactBuffers: [DiceSoundPack: AVAudioPCMBuffer] = [:]
+	private var cachedTickBuffers: [DiceSoundPack: AVAudioPCMBuffer] = [:]
 	private var currentPack: DiceSoundPack = .off
 	private var currentVolume: Float = 0.65
 	private var didStartEngine = false
@@ -1074,8 +1082,20 @@ private final class DiceSoundEngine {
 		guard currentPack != .off else { return }
 		guard currentVolume > 0 else { return }
 		ensureEngineStarted()
-		guard let buffer = buffer(for: currentPack) else { return }
+		guard let buffer = impactBuffer(for: currentPack) else { return }
 		player.volume = currentVolume
+		player.scheduleBuffer(buffer, at: nil, options: []) { }
+		if !player.isPlaying {
+			player.play()
+		}
+	}
+
+	func playSettleTick() {
+		guard currentPack != .off else { return }
+		guard currentVolume > 0 else { return }
+		ensureEngineStarted()
+		guard let buffer = tickBuffer(for: currentPack) else { return }
+		player.volume = currentVolume * 0.9
 		player.scheduleBuffer(buffer, at: nil, options: []) { }
 		if !player.isPlaying {
 			player.play()
@@ -1092,8 +1112,8 @@ private final class DiceSoundEngine {
 		}
 	}
 
-	private func buffer(for pack: DiceSoundPack) -> AVAudioPCMBuffer? {
-		if let cached = cachedBuffers[pack] {
+	private func impactBuffer(for pack: DiceSoundPack) -> AVAudioPCMBuffer? {
+		if let cached = cachedImpactBuffers[pack] {
 			return cached
 		}
 		guard let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1) else {
@@ -1108,7 +1128,27 @@ private final class DiceSoundEngine {
 			return nil
 		}
 		fill(channel: channel, count: Int(frameCount), sampleRate: Float(format.sampleRate), pack: pack)
-		cachedBuffers[pack] = buffer
+		cachedImpactBuffers[pack] = buffer
+		return buffer
+	}
+
+	private func tickBuffer(for pack: DiceSoundPack) -> AVAudioPCMBuffer? {
+		if let cached = cachedTickBuffers[pack] {
+			return cached
+		}
+		guard let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1) else {
+			return nil
+		}
+		let frameCount: AVAudioFrameCount = 1_800
+		guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
+			return nil
+		}
+		buffer.frameLength = frameCount
+		guard let channel = buffer.floatChannelData?.pointee else {
+			return nil
+		}
+		fillTick(channel: channel, count: Int(frameCount), sampleRate: Float(format.sampleRate), pack: pack)
+		cachedTickBuffers[pack] = buffer
 		return buffer
 	}
 
@@ -1136,6 +1176,19 @@ private final class DiceSoundEngine {
 				x = hp * envelope * 0.9
 			}
 			channel[index] = max(-1, min(1, x))
+		}
+	}
+
+	private func fillTick(channel: UnsafeMutablePointer<Float>, count: Int, sampleRate: Float, pack: DiceSoundPack) {
+		let twoPi = Float.pi * 2
+		for index in 0..<count {
+			let t = Float(index) / sampleRate
+			let envelope = exp(-34 * t)
+			let noise = Float.random(in: -1...1)
+			let toneFrequency: Float = pack == .softWood ? 1_280 : 1_880
+			let tone = sin(twoPi * toneFrequency * t)
+			let mix: Float = pack == .softWood ? ((0.6 * noise) + (0.4 * tone)) : ((0.82 * noise) + (0.18 * tone))
+			channel[index] = max(-1, min(1, mix * envelope * 0.75))
 		}
 	}
 }

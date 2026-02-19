@@ -52,6 +52,9 @@ final class DiceCubeView: UIView {
 	private var activeAnimationIntensity: DiceAnimationIntensity = .full
 	private var activeMotionBlurEnabled = false
 	private var needsMeshRefresh = false
+	private var activeRollAnimationToken: Int = 0
+	private var pendingRollAnimationCompletions = 0
+	var onRollSettled: (() -> Void)?
 
 	override init(frame: CGRect) {
 		super.init(frame: frame)
@@ -79,6 +82,14 @@ final class DiceCubeView: UIView {
 	func setDice(values: [Int], centers: [CGPoint], sideLength: CGFloat, sideCounts: [Int], animated: Bool) {
 		guard values.count == centers.count, values.count == sideCounts.count else { return }
 		ensureNodeCount(values.count)
+		let shouldAnimateRoll = animated && activeAnimationIntensity != .off
+		if shouldAnimateRoll {
+			activeRollAnimationToken += 1
+			pendingRollAnimationCompletions = values.count
+		} else {
+			pendingRollAnimationCompletions = 0
+		}
+		let rollToken = activeRollAnimationToken
 
 		let sizeChanged = abs(currentSideLength - sideLength) > 0.5
 		if sizeChanged {
@@ -121,8 +132,17 @@ final class DiceCubeView: UIView {
 			let targetFace = values[index]
 			let startPosition = SCNVector3(container.presentation.position.x, container.presentation.position.y, 0)
 
-			if animated {
-				animateRoll(node: container, from: startPosition, to: targetPosition, faceValue: targetFace, sideLength: sideLength, sideCount: sideCount)
+			if shouldAnimateRoll {
+				animateRoll(
+					node: container,
+					from: startPosition,
+					to: targetPosition,
+					faceValue: targetFace,
+					sideLength: sideLength,
+					sideCount: sideCount
+				) { [weak self] in
+					self?.handleRollAnimationCompletion(for: rollToken)
+				}
 			} else {
 				container.removeAllActions()
 				container.position = targetPosition
@@ -632,18 +652,28 @@ final class DiceCubeView: UIView {
 		SCNVector3(center.x - bounds.midX, bounds.midY - center.y, 0)
 	}
 
-	private func animateRoll(node: SCNNode, from start: SCNVector3, to target: SCNVector3, faceValue: Int, sideLength: CGFloat, sideCount: Int) {
+	private func animateRoll(node: SCNNode, from start: SCNVector3, to target: SCNVector3, faceValue: Int, sideLength: CGFloat, sideCount: Int, completion: @escaping () -> Void) {
 		node.removeAllActions()
 		if activeAnimationIntensity == .off {
 			node.position = target
 			node.eulerAngles = orientation(for: faceValue, sideCount: sideCount)
+			completion()
 			return
 		}
 		let duration: TimeInterval = 1.6
 		let motionScale: Float = 1.0
 		let moveAction = makeBounceMoveAction(start: start, target: target, sideLength: sideLength, duration: duration, motionScale: motionScale)
 		let rotateAction = makeRotateAction(node: node, targetFace: faceValue, sideCount: sideCount, duration: duration, motionScale: motionScale)
-		node.runAction(.group([moveAction, rotateAction]))
+		node.runAction(.group([moveAction, rotateAction]), completionHandler: completion)
+	}
+
+	private func handleRollAnimationCompletion(for token: Int) {
+		guard token == activeRollAnimationToken else { return }
+		guard pendingRollAnimationCompletions > 0 else { return }
+		pendingRollAnimationCompletions -= 1
+		if pendingRollAnimationCompletions == 0 {
+			onRollSettled?()
+		}
 	}
 
 	private func makeRotateAction(node: SCNNode, targetFace: Int, sideCount: Int, duration: TimeInterval, motionScale: Float) -> SCNAction {
