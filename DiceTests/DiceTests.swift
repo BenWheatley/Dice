@@ -665,6 +665,21 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(rangeResult.count, 2)
 	}
 
+	func testRollHistoryAnalyticsSessionSummaryComputesRollAndNotationHighlights() {
+		let entries = [
+			RollHistoryEntry(timestamp: Date(timeIntervalSince1970: 3), notation: "2d6", values: [2, 3], sum: 5, intuitive: false),
+			RollHistoryEntry(timestamp: Date(timeIntervalSince1970: 2), notation: "1d20", values: [17], sum: 17, intuitive: false),
+			RollHistoryEntry(timestamp: Date(timeIntervalSince1970: 1), notation: "2d6", values: [6, 6], sum: 12, intuitive: false),
+		]
+
+		let summary = RollHistoryAnalytics.sessionSummary(entries: entries)
+		XCTAssertEqual(summary.rollCount, 3)
+		XCTAssertEqual(summary.totalDiceRolled, 5)
+		XCTAssertEqual(summary.topNotation, "2d6")
+		XCTAssertEqual(summary.latestNotation, "2d6")
+		XCTAssertEqual(summary.latestSum, 5)
+	}
+
 	func testViewModelHistoryIndicatorsFlagHighlightsForLongHighStreaks() {
 		let suiteName = "DiceTests.viewmodel.history.indicators.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!

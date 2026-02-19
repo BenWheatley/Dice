@@ -97,6 +97,7 @@
 "history.title" = "Roll History";
 "history.export.text" = "Export Text";
 "history.export.csv" = "Export CSV";
+"history.export.summary" = "Share Summary Card";
 "history.clear" = "Clear History";
 "history.empty" = "No rolls in this session yet.";
 "history.row.time" = "Time: %@";
@@ -116,6 +117,9 @@
 "history.filter.range.7d" = "Last 7 Days";
 "history.filter.range.30d" = "Last 30 Days";
 "history.filter.reset" = "Reset Filters";
+"history.summary.title" = "Dice Session Summary";
+"history.summary.body" = "Rolls: %d\nDice rolled: %d\nTop notation: %@\nLatest: %@ = %d";
+"history.summary.footer" = "Generated %@";
 "alert.exportFailed.title" = "Export failed";
 "alert.exportFailed.message" = "Could not prepare export file.";
 "stats.reset" = "Stats reset";

@@ -25,6 +25,38 @@ struct HistoryRowFormatter {
 	}
 }
 
+private struct HistorySummaryCardRenderer {
+	func render(title: String, body: String, footer: String, size: CGSize = CGSize(width: 1080, height: 1080)) -> UIImage {
+		let renderer = UIGraphicsImageRenderer(size: size)
+		return renderer.image { context in
+			let cg = context.cgContext
+			UIColor.systemBackground.setFill()
+			cg.fill(CGRect(origin: .zero, size: size))
+
+			let panel = CGRect(x: 72, y: 72, width: size.width - 144, height: size.height - 144)
+			let panelPath = UIBezierPath(roundedRect: panel, cornerRadius: 36)
+			UIColor.secondarySystemBackground.setFill()
+			panelPath.fill()
+
+			let titleAttrs: [NSAttributedString.Key: Any] = [
+				.font: UIFont.systemFont(ofSize: 58, weight: .bold),
+				.foregroundColor: UIColor.label
+			]
+			let bodyAttrs: [NSAttributedString.Key: Any] = [
+				.font: UIFont.monospacedSystemFont(ofSize: 34, weight: .regular),
+				.foregroundColor: UIColor.label
+			]
+			let footerAttrs: [NSAttributedString.Key: Any] = [
+				.font: UIFont.systemFont(ofSize: 26, weight: .regular),
+				.foregroundColor: UIColor.secondaryLabel
+			]
+			(title as NSString).draw(in: CGRect(x: panel.minX + 40, y: panel.minY + 44, width: panel.width - 80, height: 80), withAttributes: titleAttrs)
+			(body as NSString).draw(in: CGRect(x: panel.minX + 40, y: panel.minY + 140, width: panel.width - 80, height: panel.height - 250), withAttributes: bodyAttrs)
+			(footer as NSString).draw(in: CGRect(x: panel.minX + 40, y: panel.maxY - 80, width: panel.width - 80, height: 44), withAttributes: footerAttrs)
+		}
+	}
+}
+
 class DiceCollectionViewController: UICollectionViewController, UITextFieldDelegate {
 	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 	private let viewModel = DiceViewModel()
@@ -550,6 +582,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			self.viewModel.clearHistory()
 			historyViewController?.updateEntries([], histogramSummary: nil, indicatorSummary: nil, indicatorTooltip: nil)
 		}
+		historyViewController.onShareSummary = { [weak self] entries in
+			self?.shareHistorySummaryCard(entries: entries)
+		}
 		let navigationController = UINavigationController(rootViewController: historyViewController)
 		navigationController.modalPresentationStyle = .formSheet
 		if let popover = navigationController.popoverPresentationController {
@@ -600,6 +635,31 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			alert.addAction(UIAlertAction(title: NSLocalizedString("button.ok", comment: "Generic confirmation button"), style: .default))
 			present(alert, animated: true)
 		}
+	}
+
+	private func shareHistorySummaryCard(entries: [RollHistoryEntry]) {
+		let summary = viewModel.historySessionSummary(entries: entries)
+		guard summary.rollCount > 0 else { return }
+		let title = NSLocalizedString("history.summary.title", comment: "History summary card title")
+		let body = String(
+			format: NSLocalizedString("history.summary.body", comment: "History summary card body"),
+			summary.rollCount,
+			summary.totalDiceRolled,
+			summary.topNotation ?? "-",
+			summary.latestNotation ?? "-",
+			summary.latestSum ?? 0
+		)
+		let footer = String(
+			format: NSLocalizedString("history.summary.footer", comment: "History summary footer"),
+			DateFormatter.localizedString(from: Date(), dateStyle: .medium, timeStyle: .short)
+		)
+		let image = HistorySummaryCardRenderer().render(title: title, body: body, footer: footer)
+		let activity = UIActivityViewController(activityItems: [image, body], applicationActivities: nil)
+		if let popover = activity.popoverPresentationController {
+			popover.sourceView = menuButton
+			popover.sourceRect = menuButton.bounds
+		}
+		present(activity, animated: true)
 	}
 
 	@objc private func resetStats() {
@@ -1677,6 +1737,7 @@ private final class RollHistoryViewController: UITableViewController, UISearchRe
 	var onExportText: (() -> Void)?
 	var onExportCSV: (() -> Void)?
 	var onClearHistory: (() -> Void)?
+	var onShareSummary: (([RollHistoryEntry]) -> Void)?
 
 	private var allEntries: [RollHistoryEntry]
 	private var visibleEntries: [RollHistoryEntry]
@@ -1769,13 +1830,17 @@ private final class RollHistoryViewController: UITableViewController, UISearchRe
 		let exportCSV = UIAction(title: NSLocalizedString("history.export.csv", comment: "Export history csv action")) { [weak self] _ in
 			self?.onExportCSV?()
 		}
+		let shareSummary = UIAction(title: NSLocalizedString("history.export.summary", comment: "Share summary card action")) { [weak self] _ in
+			guard let self else { return }
+			onShareSummary?(visibleEntries)
+		}
 		let clear = UIAction(
 			title: NSLocalizedString("history.clear", comment: "Clear history action"),
 			attributes: .destructive
 		) { [weak self] _ in
 			self?.onClearHistory?()
 		}
-		return UIMenu(children: [exportText, exportCSV, clear])
+		return UIMenu(children: [exportText, exportCSV, shareSummary, clear])
 	}
 
 	private func filterMenu() -> UIMenu {

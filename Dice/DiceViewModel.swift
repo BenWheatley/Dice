@@ -264,6 +264,10 @@ final class DiceViewModel {
 		RollHistoryAnalytics.indicators(entries: rollHistory.sessionEntries, maxEntries: maxEntries)
 	}
 
+	func historySessionSummary(entries: [RollHistoryEntry]? = nil) -> RollSessionSummary {
+		RollHistoryAnalytics.sessionSummary(entries: entries ?? rollHistory.sessionEntries)
+	}
+
 	func setAnimationsEnabled(_ enabled: Bool) {
 		appState.animationsEnabled = enabled
 		if enabled && appState.animationIntensity == .off {

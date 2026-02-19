@@ -144,7 +144,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Add histogram visualization for recent roll distributions per side count.
 - [x] Add streak/outlier indicators (e.g., repeated highs/lows) with explanatory tooltip text.
 - [x] Add filter/search controls in history (by notation, mode, date range).
-- [ ] Add shareable summary card export for a roll session (image + text metadata).
+- [x] Add shareable summary card export for a roll session (image + text metadata).
 - [ ] Add "clear recent only" and "clear all persisted" split actions in history management.
 
 ### Accessibility and Internationalization Extensions

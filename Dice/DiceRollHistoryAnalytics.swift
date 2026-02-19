@@ -45,6 +45,14 @@ struct RollHistoryFilter: Equatable {
 	static let `default` = RollHistoryFilter(searchText: "", mode: .all, dateRange: .all)
 }
 
+struct RollSessionSummary: Equatable {
+	let rollCount: Int
+	let totalDiceRolled: Int
+	let topNotation: String?
+	let latestNotation: String?
+	let latestSum: Int?
+}
+
 enum RollHistoryAnalytics {
 	static func histograms(
 		entries: [RollHistoryEntry],
@@ -200,5 +208,26 @@ enum RollHistoryAnalytics {
 			if entry.values.map(String.init).joined(separator: ",").contains(search) { return true }
 			return "\(entry.sum)".contains(search)
 		}
+	}
+
+	static func sessionSummary(entries: [RollHistoryEntry]) -> RollSessionSummary {
+		guard !entries.isEmpty else {
+			return RollSessionSummary(rollCount: 0, totalDiceRolled: 0, topNotation: nil, latestNotation: nil, latestSum: nil)
+		}
+		let countsByNotation = entries.reduce(into: [String: Int]()) { partial, entry in
+			partial[entry.notation, default: 0] += 1
+		}
+		let topNotation = countsByNotation.max { lhs, rhs in
+			if lhs.value == rhs.value { return lhs.key > rhs.key }
+			return lhs.value < rhs.value
+		}?.key
+		let latest = entries.first
+		return RollSessionSummary(
+			rollCount: entries.count,
+			totalDiceRolled: entries.reduce(0) { $0 + $1.values.count },
+			topNotation: topNotation,
+			latestNotation: latest?.notation,
+			latestSum: latest?.sum
+		)
 	}
 }
