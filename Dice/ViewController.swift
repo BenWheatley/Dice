@@ -1673,15 +1673,17 @@ private final class DiceStylePreviewViewController: UIViewController {
 	}
 }
 
-private final class RollHistoryViewController: UITableViewController {
+private final class RollHistoryViewController: UITableViewController, UISearchResultsUpdating {
 	var onExportText: (() -> Void)?
 	var onExportCSV: (() -> Void)?
 	var onClearHistory: (() -> Void)?
 
-	private var entries: [RollHistoryEntry]
+	private var allEntries: [RollHistoryEntry]
+	private var visibleEntries: [RollHistoryEntry]
 	private var histogramSummary: String?
 	private var indicatorSummary: String?
 	private var indicatorTooltip: String?
+	private var activeFilter: RollHistoryFilter = .default
 	private let dateFormatter: DateFormatter = {
 		let formatter = DateFormatter()
 		formatter.dateStyle = .none
@@ -1690,7 +1692,8 @@ private final class RollHistoryViewController: UITableViewController {
 	}()
 
 	init(entries: [RollHistoryEntry], histogramSummary: String?, indicatorSummary: String?, indicatorTooltip: String?) {
-		self.entries = entries
+		self.allEntries = entries
+		self.visibleEntries = entries
 		self.histogramSummary = histogramSummary
 		self.indicatorSummary = indicatorSummary
 		self.indicatorTooltip = indicatorTooltip
@@ -1706,43 +1709,51 @@ private final class RollHistoryViewController: UITableViewController {
 		title = NSLocalizedString("history.title", comment: "Roll history title")
 		tableView.register(UITableViewCell.self, forCellReuseIdentifier: "HistoryCell")
 		tableView.accessibilityIdentifier = "historyTable"
-		navigationItem.leftBarButtonItem = UIBarButtonItem(
-			title: NSLocalizedString("button.close", comment: "Close button title"),
-			style: .plain,
-			target: self,
-			action: #selector(close)
-		)
-		navigationItem.rightBarButtonItem = UIBarButtonItem(
+		let actionsButton = UIBarButtonItem(
 			title: NSLocalizedString("menu.control.actions", comment: "History actions menu title"),
 			menu: historyActionsMenu()
 		)
+		let filterButton = UIBarButtonItem(
+			image: UIImage(systemName: "line.3.horizontal.decrease.circle"),
+			menu: filterMenu()
+		)
+		filterButton.accessibilityIdentifier = "historyFilterButton"
+		navigationItem.rightBarButtonItems = [actionsButton, filterButton]
+		let searchController = UISearchController(searchResultsController: nil)
+		searchController.obscuresBackgroundDuringPresentation = false
+		searchController.searchBar.placeholder = NSLocalizedString("history.search.placeholder", comment: "History search placeholder")
+		searchController.searchResultsUpdater = self
+		navigationItem.searchController = searchController
+		navigationItem.hidesSearchBarWhenScrolling = false
+		definesPresentationContext = true
 		updateIndicatorHelpButton()
 		updateHistogramHeader()
 	}
 
 	func updateEntries(_ entries: [RollHistoryEntry], histogramSummary: String?, indicatorSummary: String?, indicatorTooltip: String?) {
-		self.entries = entries
+		self.allEntries = entries
 		self.histogramSummary = histogramSummary
 		self.indicatorSummary = indicatorSummary
 		self.indicatorTooltip = indicatorTooltip
+		applyFilters()
 		updateIndicatorHelpButton()
 		updateHistogramHeader()
 		tableView.reloadData()
 	}
 
 	override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-		max(1, entries.count)
+		max(1, visibleEntries.count)
 	}
 
 	override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 		let cell = tableView.dequeueReusableCell(withIdentifier: "HistoryCell", for: indexPath)
-		if entries.isEmpty {
+		if visibleEntries.isEmpty {
 			cell.textLabel?.text = NSLocalizedString("history.empty", comment: "Empty history message")
 			cell.detailTextLabel?.text = nil
 			cell.selectionStyle = .none
 			return cell
 		}
-		let entry = entries[indexPath.row]
+		let entry = visibleEntries[indexPath.row]
 		var content = UIListContentConfiguration.subtitleCell()
 		content.text = "\(entry.notation) = \(entry.sum)"
 		content.secondaryText = HistoryRowFormatter.subtitle(for: entry, dateFormatter: dateFormatter)
@@ -1765,6 +1776,98 @@ private final class RollHistoryViewController: UITableViewController {
 			self?.onClearHistory?()
 		}
 		return UIMenu(children: [exportText, exportCSV, clear])
+	}
+
+	private func filterMenu() -> UIMenu {
+		let modeActions: [UIAction] = [
+			UIAction(
+				title: NSLocalizedString("history.filter.mode.all", comment: "History mode all filter"),
+				state: activeFilter.mode == .all ? .on : .off
+			) { [weak self] _ in self?.setModeFilter(.all) },
+			UIAction(
+				title: NSLocalizedString("history.filter.mode.trueRandom", comment: "History true random mode filter"),
+				state: activeFilter.mode == .trueRandom ? .on : .off
+			) { [weak self] _ in self?.setModeFilter(.trueRandom) },
+			UIAction(
+				title: NSLocalizedString("history.filter.mode.intuitive", comment: "History intuitive mode filter"),
+				state: activeFilter.mode == .intuitive ? .on : .off
+			) { [weak self] _ in self?.setModeFilter(.intuitive) },
+		]
+		let rangeActions: [UIAction] = [
+			UIAction(
+				title: NSLocalizedString("history.filter.range.all", comment: "History date range all"),
+				state: activeFilter.dateRange == .all ? .on : .off
+			) { [weak self] _ in self?.setDateRangeFilter(.all) },
+			UIAction(
+				title: NSLocalizedString("history.filter.range.24h", comment: "History date range 24h"),
+				state: activeFilter.dateRange == .last24Hours ? .on : .off
+			) { [weak self] _ in self?.setDateRangeFilter(.last24Hours) },
+			UIAction(
+				title: NSLocalizedString("history.filter.range.7d", comment: "History date range 7d"),
+				state: activeFilter.dateRange == .last7Days ? .on : .off
+			) { [weak self] _ in self?.setDateRangeFilter(.last7Days) },
+			UIAction(
+				title: NSLocalizedString("history.filter.range.30d", comment: "History date range 30d"),
+				state: activeFilter.dateRange == .last30Days ? .on : .off
+			) { [weak self] _ in self?.setDateRangeFilter(.last30Days) },
+		]
+		let resetAction = UIAction(title: NSLocalizedString("history.filter.reset", comment: "Reset history filters")) { [weak self] _ in
+			self?.resetFilters()
+		}
+		let modeMenu = UIMenu(
+			title: NSLocalizedString("history.filter.mode.title", comment: "History mode filter menu title"),
+			options: .displayInline,
+			children: modeActions
+		)
+		let rangeMenu = UIMenu(
+			title: NSLocalizedString("history.filter.range.title", comment: "History date range filter menu title"),
+			options: .displayInline,
+			children: rangeActions
+		)
+		return UIMenu(children: [modeMenu, rangeMenu, resetAction])
+	}
+
+	private func setModeFilter(_ mode: RollHistoryModeFilter) {
+		activeFilter.mode = mode
+		applyFilters()
+		refreshFilterButtonMenu()
+	}
+
+	private func setDateRangeFilter(_ range: RollHistoryDateRangeFilter) {
+		activeFilter.dateRange = range
+		applyFilters()
+		refreshFilterButtonMenu()
+	}
+
+	private func resetFilters() {
+		activeFilter = .default
+		navigationItem.searchController?.searchBar.text = nil
+		applyFilters()
+		refreshFilterButtonMenu()
+	}
+
+	private func refreshFilterButtonMenu() {
+		let actionsButton = navigationItem.rightBarButtonItems?.first
+		let filterButton = UIBarButtonItem(
+			image: UIImage(systemName: "line.3.horizontal.decrease.circle"),
+			menu: filterMenu()
+		)
+		filterButton.accessibilityIdentifier = "historyFilterButton"
+		if let actionsButton {
+			navigationItem.rightBarButtonItems = [actionsButton, filterButton]
+		} else {
+			navigationItem.rightBarButtonItems = [filterButton]
+		}
+	}
+
+	private func applyFilters() {
+		visibleEntries = RollHistoryAnalytics.filteredEntries(entries: allEntries, filter: activeFilter)
+		tableView.reloadData()
+	}
+
+	func updateSearchResults(for searchController: UISearchController) {
+		activeFilter.searchText = searchController.searchBar.text ?? ""
+		applyFilters()
 	}
 
 	private func updateHistogramHeader() {

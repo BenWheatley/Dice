@@ -624,6 +624,47 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue((indicators.outlierZScore ?? 0) > 2.0)
 	}
 
+	func testRollHistoryAnalyticsFiltersByNotationModeAndDateRange() {
+		let now = Date(timeIntervalSince1970: 10_000)
+		let entries = [
+			RollHistoryEntry(
+				timestamp: now.addingTimeInterval(-2 * 60 * 60),
+				notation: "3d6+1d4",
+				values: [2, 4, 6, 3],
+				sum: 15,
+				intuitive: false
+			),
+			RollHistoryEntry(
+				timestamp: now.addingTimeInterval(-5 * 24 * 60 * 60),
+				notation: "2d6i",
+				values: [1, 2],
+				sum: 3,
+				intuitive: true
+			),
+			RollHistoryEntry(
+				timestamp: now.addingTimeInterval(-40 * 24 * 60 * 60),
+				notation: "1d20",
+				values: [20],
+				sum: 20,
+				intuitive: false
+			),
+		]
+
+		let searchFilter = RollHistoryFilter(searchText: "d4", mode: .all, dateRange: .all)
+		let searchResult = RollHistoryAnalytics.filteredEntries(entries: entries, filter: searchFilter, now: now)
+		XCTAssertEqual(searchResult.count, 1)
+		XCTAssertEqual(searchResult.first?.notation, "3d6+1d4")
+
+		let modeFilter = RollHistoryFilter(searchText: "", mode: .intuitive, dateRange: .all)
+		let modeResult = RollHistoryAnalytics.filteredEntries(entries: entries, filter: modeFilter, now: now)
+		XCTAssertEqual(modeResult.count, 1)
+		XCTAssertEqual(modeResult.first?.notation, "2d6i")
+
+		let rangeFilter = RollHistoryFilter(searchText: "", mode: .all, dateRange: .last7Days)
+		let rangeResult = RollHistoryAnalytics.filteredEntries(entries: entries, filter: rangeFilter, now: now)
+		XCTAssertEqual(rangeResult.count, 2)
+	}
+
 	func testViewModelHistoryIndicatorsFlagHighlightsForLongHighStreaks() {
 		let suiteName = "DiceTests.viewmodel.history.indicators.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!

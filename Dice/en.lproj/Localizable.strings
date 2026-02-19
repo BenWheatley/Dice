@@ -105,6 +105,17 @@
 "history.indicators.title" = "Streak and Outlier Indicators";
 "history.indicators.summary" = "Indicators\nHigh streak: %d  Low streak: %d\nStrongest outlier: %@ (|z| %.2f)";
 "history.indicators.tooltip" = "High/low streaks count consecutive die results in the top/bottom 20%% of each die's range. Current longest high streak: %d. Current longest low streak: %d. Outlier shows the largest normalized sum deviation (z-score) within recent rolls.";
+"history.search.placeholder" = "Search notation, values, or sum";
+"history.filter.mode.title" = "Mode";
+"history.filter.mode.all" = "All Modes";
+"history.filter.mode.trueRandom" = "True Random";
+"history.filter.mode.intuitive" = "Intuitive";
+"history.filter.range.title" = "Date Range";
+"history.filter.range.all" = "All Time";
+"history.filter.range.24h" = "Last 24 Hours";
+"history.filter.range.7d" = "Last 7 Days";
+"history.filter.range.30d" = "Last 30 Days";
+"history.filter.reset" = "Reset Filters";
 "alert.exportFailed.title" = "Export failed";
 "alert.exportFailed.message" = "Could not prepare export file.";
 "stats.reset" = "Stats reset";

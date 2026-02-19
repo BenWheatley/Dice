@@ -24,6 +24,27 @@ struct RollHistoryIndicators: Equatable {
 	}
 }
 
+enum RollHistoryModeFilter: Equatable {
+	case all
+	case trueRandom
+	case intuitive
+}
+
+enum RollHistoryDateRangeFilter: Equatable {
+	case all
+	case last24Hours
+	case last7Days
+	case last30Days
+}
+
+struct RollHistoryFilter: Equatable {
+	var searchText: String
+	var mode: RollHistoryModeFilter
+	var dateRange: RollHistoryDateRangeFilter
+
+	static let `default` = RollHistoryFilter(searchText: "", mode: .all, dateRange: .all)
+}
+
 enum RollHistoryAnalytics {
 	static func histograms(
 		entries: [RollHistoryEntry],
@@ -142,5 +163,42 @@ enum RollHistoryAnalytics {
 			outlierNotation: outlierNotation,
 			outlierZScore: outlierZScore
 		)
+	}
+
+	static func filteredEntries(
+		entries: [RollHistoryEntry],
+		filter: RollHistoryFilter,
+		now: Date = Date()
+	) -> [RollHistoryEntry] {
+		let search = filter.searchText.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+		let cutoff: Date?
+		switch filter.dateRange {
+		case .all:
+			cutoff = nil
+		case .last24Hours:
+			cutoff = now.addingTimeInterval(-24 * 60 * 60)
+		case .last7Days:
+			cutoff = now.addingTimeInterval(-7 * 24 * 60 * 60)
+		case .last30Days:
+			cutoff = now.addingTimeInterval(-30 * 24 * 60 * 60)
+		}
+
+		return entries.filter { entry in
+			if let cutoff, entry.timestamp < cutoff {
+				return false
+			}
+			switch filter.mode {
+			case .all:
+				break
+			case .trueRandom:
+				if entry.intuitive { return false }
+			case .intuitive:
+				if !entry.intuitive { return false }
+			}
+			if search.isEmpty { return true }
+			if entry.notation.lowercased().contains(search) { return true }
+			if entry.values.map(String.init).joined(separator: ",").contains(search) { return true }
+			return "\(entry.sum)".contains(search)
+		}
 	}
 }
