@@ -51,7 +51,6 @@ final class DiceAppState {
 	var lastRolledConfiguration: RollConfiguration?
 	var lockedDieIndices: Set<Int>
 	var motionBlurEnabled: Bool
-	var animationSeed: Int?
 	var boardLayoutPreset: DiceBoardLayoutPreset
 
 	init(configuration: RollConfiguration = RollConfiguration(diceCount: 6, sideCount: 6, intuitive: false)) {
@@ -71,7 +70,6 @@ final class DiceAppState {
 		self.lastRolledConfiguration = nil
 		self.lockedDieIndices = []
 		self.motionBlurEnabled = false
-		self.animationSeed = nil
 		self.boardLayoutPreset = .compact
 	}
 

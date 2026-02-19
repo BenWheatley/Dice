@@ -422,7 +422,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.setFaceNumeralFont(viewModel.faceNumeralFont)
 		diceBoardView.setAnimationIntensity(viewModel.animationIntensity)
 		diceBoardView.setMotionBlurEnabled(viewModel.motionBlurEnabled)
-		diceBoardView.setAnimationSeed(viewModel.animationSeed)
 
 		let mixed = Set(sideCounts).count > 1
 		let baseScale: CGFloat
@@ -787,17 +786,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		) { [weak self] _ in
 			self?.toggleMotionBlur()
 		}
-		let setAnimationSeedAction = UIAction(
-			title: NSLocalizedString("menu.control.setAnimationSeed", comment: "Set animation seed menu title")
-		) { [weak self] _ in
-			self?.promptAnimationSeed()
-		}
-		let clearAnimationSeedAction = UIAction(
-			title: NSLocalizedString("menu.control.clearAnimationSeed", comment: "Clear animation seed menu title"),
-			attributes: viewModel.animationSeed == nil ? .disabled : .destructive
-		) { [weak self] _ in
-			self?.clearAnimationSeed()
-		}
 		let previewStyleAction = UIAction(title: NSLocalizedString("menu.control.previewStyle", comment: "Preview style action title")) { [weak self] _ in
 			self?.presentStylePreview()
 		}
@@ -810,7 +798,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let resetAction = UIAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), attributes: .destructive) { [weak self] _ in
 			self?.resetStats()
 		}
-		menuButton.menu = UIMenu(children: [historyAction, repeatAction, animationAction, animationIntensityMenu, resetAction, statsAction, themeMenu, textureMenu, layoutMenu, finishMenu, outlinesAction, motionBlurAction, setAnimationSeedAction, clearAnimationSeedAction, previewStyleAction, resetVisualsAction])
+		menuButton.menu = UIMenu(children: [historyAction, repeatAction, animationAction, animationIntensityMenu, resetAction, statsAction, themeMenu, textureMenu, layoutMenu, finishMenu, outlinesAction, motionBlurAction, previewStyleAction, resetVisualsAction])
 	}
 
 	@objc private func toggleStatsVisibility() {
@@ -874,37 +862,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		updateControlMenu()
 	}
 
-	private func promptAnimationSeed() {
-		let alert = UIAlertController(
-			title: NSLocalizedString("alert.animationSeed.title", comment: "Animation seed prompt title"),
-			message: NSLocalizedString("alert.animationSeed.message", comment: "Animation seed prompt message"),
-			preferredStyle: .alert
-		)
-		alert.addTextField { field in
-			field.placeholder = NSLocalizedString("alert.animationSeed.placeholder", comment: "Animation seed placeholder")
-			field.keyboardType = .numberPad
-			if let seed = self.viewModel.animationSeed {
-				field.text = String(seed)
-			}
-		}
-		alert.addAction(UIAlertAction(title: NSLocalizedString("button.cancel", comment: "Cancel action"), style: .cancel))
-		alert.addAction(UIAlertAction(title: NSLocalizedString("button.save", comment: "Save button title"), style: .default) { [weak self, weak alert] _ in
-			guard let self else { return }
-			let text = alert?.textFields?.first?.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-			guard let seed = Int(text) else { return }
-			self.viewModel.setAnimationSeed(seed)
-			self.diceBoardView.setAnimationSeed(seed)
-			self.updateControlMenu()
-		})
-		present(alert, animated: true)
-	}
-
-	private func clearAnimationSeed() {
-		viewModel.setAnimationSeed(nil)
-		diceBoardView.setAnimationSeed(nil)
-		updateControlMenu()
-	}
-
 	private func selectDieColorPreset(_ preset: DiceDieColorPreset, sideCount: Int) {
 		viewModel.setDieColorPreset(preset, for: sideCount)
 		diceBoardView.setDieColorPreferences(viewModel.dieColorPreferences)
@@ -950,7 +907,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.setFaceNumeralFont(viewModel.faceNumeralFont)
 		diceBoardView.setAnimationIntensity(viewModel.animationIntensity)
 		diceBoardView.setMotionBlurEnabled(viewModel.motionBlurEnabled)
-		diceBoardView.setAnimationSeed(viewModel.animationSeed)
 		updateDiceBoard(animated: false)
 		updateControlMenu()
 	}

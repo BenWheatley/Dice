@@ -128,6 +128,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Add animation intensity settings (off, subtle, full) mapped to duration and bounce parameters.
 - [x] Add optional motion blur/trail effect for rolling dice while maintaining 60fps target.
 - [x] Add deterministic seed mode for board animation replay/debug of specific roll sequences.
+  Removed in current UX scope: hidden from users and deleted from app settings/state by product decision.
 - [x] Add mixed-dice spacing/layout presets to improve readability for large heterogeneous rolls.
 
 ### Audio and Haptics

@@ -106,10 +106,6 @@ final class DiceViewModel {
 		appState.motionBlurEnabled
 	}
 
-	var animationSeed: Int? {
-		appState.animationSeed
-	}
-
 	var boardLayoutPreset: DiceBoardLayoutPreset {
 		appState.boardLayoutPreset
 	}
@@ -129,7 +125,6 @@ final class DiceViewModel {
 		appState.d6PipStyle = preferences.d6PipStyle
 		appState.faceNumeralFont = preferences.faceNumeralFont
 		appState.motionBlurEnabled = preferences.motionBlurEnabled
-		appState.animationSeed = preferences.animationSeed
 		appState.boardLayoutPreset = preferences.boardLayoutPreset
 		let persisted = historyStore.loadPersistedEntries()
 		rollHistory = DiceRollHistory(persistedRecentEntries: persisted)
@@ -297,11 +292,6 @@ final class DiceViewModel {
 		persistPreferences()
 	}
 
-	func setAnimationSeed(_ seed: Int?) {
-		appState.animationSeed = seed
-		persistPreferences()
-	}
-
 	func setBoardLayoutPreset(_ preset: DiceBoardLayoutPreset) {
 		appState.boardLayoutPreset = preset
 		persistPreferences()
@@ -443,7 +433,6 @@ final class DiceViewModel {
 			faceNumeralFont: appState.faceNumeralFont,
 			customPresets: preferencesStore.load().customPresets,
 			motionBlurEnabled: appState.motionBlurEnabled,
-			animationSeed: appState.animationSeed,
 			boardLayoutPreset: appState.boardLayoutPreset
 		)
 		preferencesStore.save(preferences)
