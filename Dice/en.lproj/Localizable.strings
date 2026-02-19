@@ -41,6 +41,8 @@
 "menu.control.finish" = "Die Finish";
 "menu.control.edgeOutlines" = "Edge Outlines";
 "menu.control.motionBlur" = "Motion Blur";
+"menu.control.soundPack" = "Roll Sound";
+"menu.control.soundVolume" = "Sound Volume (%d%%)";
 "menu.control.previewStyle" = "Preview Style";
 "menu.control.resetVisuals" = "Reset Visual Style";
 "theme.lightMode" = "Light Mode";
@@ -69,8 +71,12 @@
 "font.serif" = "Serif";
 "font.rounded" = "Rounded";
 "font.mono" = "Mono";
+"soundPack.off" = "Off";
+"soundPack.softWood" = "Soft Wood";
+"soundPack.hardTable" = "Hard Table";
 "alert.invalid.title" = "Invalid dice input";
 "alert.invalid.announcement" = "Invalid dice notation.";
+"alert.soundVolume.title" = "Roll Sound Volume";
 "alert.resetVisuals.title" = "Reset visual style?";
 "alert.resetVisuals.message" = "This will restore theme, texture, die finish, outlines, die colors, pip style, and numeral font defaults.";
 "die.options.title" = "Die %d (d%d)";

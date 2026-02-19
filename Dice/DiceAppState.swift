@@ -7,6 +7,23 @@
 
 import Foundation
 
+enum DiceSoundPack: String, CaseIterable {
+	case off
+	case softWood
+	case hardTable
+
+	var menuTitleKey: String {
+		switch self {
+		case .off:
+			return "soundPack.off"
+		case .softWood:
+			return "soundPack.softWood"
+		case .hardTable:
+			return "soundPack.hardTable"
+		}
+	}
+}
+
 struct DiceStats {
 	var localTotals: [Int]
 	var sessionTotals: [Int]
@@ -52,6 +69,8 @@ final class DiceAppState {
 	var lockedDieIndices: Set<Int>
 	var motionBlurEnabled: Bool
 	var boardLayoutPreset: DiceBoardLayoutPreset
+	var soundPack: DiceSoundPack
+	var soundVolume: Float
 
 	init(configuration: RollConfiguration = RollConfiguration(diceCount: 6, sideCount: 6, intuitive: false)) {
 		self.configuration = configuration
@@ -71,6 +90,8 @@ final class DiceAppState {
 		self.lockedDieIndices = []
 		self.motionBlurEnabled = false
 		self.boardLayoutPreset = .compact
+		self.soundPack = .off
+		self.soundVolume = 0.65
 	}
 
 	func applyRollOutcome(_ outcome: RollOutcome) {

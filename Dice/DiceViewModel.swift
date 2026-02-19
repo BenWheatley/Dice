@@ -110,6 +110,14 @@ final class DiceViewModel {
 		appState.boardLayoutPreset
 	}
 
+	var soundPack: DiceSoundPack {
+		appState.soundPack
+	}
+
+	var soundVolume: Float {
+		appState.soundVolume
+	}
+
 	func restore() {
 		let preferences = preferencesStore.load()
 		if let parsed = notationParser.parse(preferences.lastNotation) {
@@ -126,6 +134,8 @@ final class DiceViewModel {
 		appState.faceNumeralFont = preferences.faceNumeralFont
 		appState.motionBlurEnabled = preferences.motionBlurEnabled
 		appState.boardLayoutPreset = preferences.boardLayoutPreset
+		appState.soundPack = preferences.soundPack
+		appState.soundVolume = preferences.soundVolume
 		let persisted = historyStore.loadPersistedEntries()
 		rollHistory = DiceRollHistory(persistedRecentEntries: persisted)
 	}
@@ -297,6 +307,16 @@ final class DiceViewModel {
 		persistPreferences()
 	}
 
+	func setSoundPack(_ pack: DiceSoundPack) {
+		appState.soundPack = pack
+		persistPreferences()
+	}
+
+	func setSoundVolume(_ volume: Float) {
+		appState.soundVolume = min(max(volume, 0), 1)
+		persistPreferences()
+	}
+
 	func isDieLocked(at index: Int) -> Bool {
 		appState.lockedDieIndices.contains(index)
 	}
@@ -433,7 +453,9 @@ final class DiceViewModel {
 			faceNumeralFont: appState.faceNumeralFont,
 			customPresets: preferencesStore.load().customPresets,
 			motionBlurEnabled: appState.motionBlurEnabled,
-			boardLayoutPreset: appState.boardLayoutPreset
+			boardLayoutPreset: appState.boardLayoutPreset,
+			soundPack: appState.soundPack,
+			soundVolume: appState.soundVolume
 		)
 		preferencesStore.save(preferences)
 	}

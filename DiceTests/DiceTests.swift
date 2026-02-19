@@ -428,7 +428,9 @@ final class DiceTests: XCTestCase {
 			dieColorPreferences: DiceDieColorPreferences.default.updated(sideCount: 20, preset: .crimson),
 			customPresets: [
 				DiceSavedPreset(id: "preset-1", title: "Boss Fight", notation: "4d12+2d8", pinned: true)
-			]
+			],
+			soundPack: .hardTable,
+			soundVolume: 0.4
 		)
 
 		store.save(expected)
@@ -939,6 +941,40 @@ final class DiceTests: XCTestCase {
 		viewModel.setBoardLayoutPreset(.spacious)
 		XCTAssertEqual(viewModel.boardLayoutPreset, .spacious)
 		XCTAssertEqual(preferencesStore.load().boardLayoutPreset, .spacious)
+	}
+
+	func testViewModelSoundPackPersistsToPreferences() {
+		let suiteName = "DiceTests.viewmodel.soundpack.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		XCTAssertEqual(viewModel.soundPack, .off)
+		viewModel.setSoundPack(.softWood)
+		XCTAssertEqual(viewModel.soundPack, .softWood)
+		XCTAssertEqual(preferencesStore.load().soundPack, .softWood)
+	}
+
+	func testViewModelSoundVolumePersistsToPreferences() {
+		let suiteName = "DiceTests.viewmodel.soundvolume.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		viewModel.setSoundVolume(0.72)
+		XCTAssertEqual(viewModel.soundVolume, 0.72, accuracy: 0.0001)
+		XCTAssertEqual(preferencesStore.load().soundVolume, 0.72, accuracy: 0.0001)
+
+		viewModel.setSoundVolume(2.0)
+		XCTAssertEqual(viewModel.soundVolume, 1.0, accuracy: 0.0001)
 	}
 
 	func testViewModelResetVisualPreferencesRestoresDefaults() {

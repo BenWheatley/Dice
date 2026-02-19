@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import AVFoundation
 
 private let reuseIdentifier = "DiceCell"
 
@@ -27,6 +28,7 @@ struct HistoryRowFormatter {
 class DiceCollectionViewController: UICollectionViewController, UITextFieldDelegate {
 	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 	private let viewModel = DiceViewModel()
+	private let soundEngine = DiceSoundEngine()
 
 	private let notationField = UITextField()
 	private let validationLabel = UILabel()
@@ -46,6 +48,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		viewModel.restore()
+		syncSoundSettings()
 
 		collectionView.keyboardDismissMode = .onDrag
 		configureControls()
@@ -117,6 +120,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			collectionView.reloadData()
 			collectionView.layoutIfNeeded()
 			updateDiceBoard(animated: shouldAnimateBoard)
+			playRollSound()
 		}
 	}
 
@@ -264,6 +268,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			collectionView.reloadData()
 			collectionView.layoutIfNeeded()
 			updateDiceBoard(animated: shouldAnimateBoard)
+			playRollSound()
 		case let .failure(error):
 			showValidationError(message: error.userMessage)
 		}
@@ -277,6 +282,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		collectionView.reloadData()
 		collectionView.layoutIfNeeded()
 		updateDiceBoard(animated: shouldAnimateBoard)
+		playRollSound()
 	}
 
 	private func performRoll() {
@@ -287,6 +293,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		collectionView.reloadData()
 		collectionView.layoutIfNeeded()
 		updateDiceBoard(animated: shouldAnimateBoard)
+		playRollSound()
 	}
 
 	private func presentDieOptions(for index: Int, sourceView: UIView) {
@@ -399,6 +406,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		collectionView.reloadItems(at: [IndexPath(row: index, section: 0)])
 		collectionView.layoutIfNeeded()
 		updateDiceBoard(animated: shouldAnimateBoard)
+		playRollSound()
 	}
 
 	private func toggleDieLock(at index: Int) {
@@ -491,6 +499,14 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		viewModel.setAnimationsEnabled(!viewModel.animationsEnabled)
 		diceBoardView.setAnimationIntensity(viewModel.animationIntensity)
 		updateControlMenu()
+	}
+
+	private func syncSoundSettings() {
+		soundEngine.configure(pack: viewModel.soundPack, volume: viewModel.soundVolume)
+	}
+
+	private func playRollSound() {
+		soundEngine.playRollImpact()
 	}
 
 	private func selectAnimationIntensity(_ intensity: DiceAnimationIntensity) {
@@ -684,6 +700,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		collectionView.reloadData()
 		collectionView.layoutIfNeeded()
 		updateDiceBoard(animated: shouldAnimateBoard)
+		playRollSound()
 	}
 
 	@objc private func showControlMenu() {
@@ -786,6 +803,27 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		) { [weak self] _ in
 			self?.toggleMotionBlur()
 		}
+		let soundPackActions = DiceSoundPack.allCases.map { pack in
+			UIAction(
+				title: NSLocalizedString(pack.menuTitleKey, comment: "Sound pack option"),
+				state: self.viewModel.soundPack == pack ? .on : .off
+			) { [weak self] _ in
+				self?.selectSoundPack(pack)
+			}
+		}
+		let soundPackMenu = UIMenu(
+			title: NSLocalizedString("menu.control.soundPack", comment: "Sound pack submenu title"),
+			options: .displayInline,
+			children: soundPackActions
+		)
+		let soundVolumeAction = UIAction(
+			title: String(
+				format: NSLocalizedString("menu.control.soundVolume", comment: "Sound volume menu title"),
+				Int((viewModel.soundVolume * 100).rounded())
+			)
+		) { [weak self] _ in
+			self?.presentSoundVolumeSheet()
+		}
 		let previewStyleAction = UIAction(title: NSLocalizedString("menu.control.previewStyle", comment: "Preview style action title")) { [weak self] _ in
 			self?.presentStylePreview()
 		}
@@ -798,7 +836,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let resetAction = UIAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), attributes: .destructive) { [weak self] _ in
 			self?.resetStats()
 		}
-		menuButton.menu = UIMenu(children: [historyAction, repeatAction, animationAction, animationIntensityMenu, resetAction, statsAction, themeMenu, textureMenu, layoutMenu, finishMenu, outlinesAction, motionBlurAction, previewStyleAction, resetVisualsAction])
+		menuButton.menu = UIMenu(children: [historyAction, repeatAction, animationAction, animationIntensityMenu, soundPackMenu, soundVolumeAction, resetAction, statsAction, themeMenu, textureMenu, layoutMenu, finishMenu, outlinesAction, motionBlurAction, previewStyleAction, resetVisualsAction])
 	}
 
 	@objc private func toggleStatsVisibility() {
@@ -860,6 +898,44 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		viewModel.setMotionBlurEnabled(!viewModel.motionBlurEnabled)
 		diceBoardView.setMotionBlurEnabled(viewModel.motionBlurEnabled)
 		updateControlMenu()
+	}
+
+	private func selectSoundPack(_ pack: DiceSoundPack) {
+		viewModel.setSoundPack(pack)
+		syncSoundSettings()
+		if pack != .off {
+			playRollSound()
+		}
+		updateControlMenu()
+	}
+
+	private func presentSoundVolumeSheet() {
+		let alert = UIAlertController(
+			title: NSLocalizedString("alert.soundVolume.title", comment: "Sound volume sheet title"),
+			message: "\n\n\n",
+			preferredStyle: .alert
+		)
+		let slider = UISlider(frame: .zero)
+		slider.minimumValue = 0
+		slider.maximumValue = 1
+		slider.value = viewModel.soundVolume
+		slider.translatesAutoresizingMaskIntoConstraints = false
+		alert.view.addSubview(slider)
+
+		NSLayoutConstraint.activate([
+			slider.leadingAnchor.constraint(equalTo: alert.view.leadingAnchor, constant: 20),
+			slider.trailingAnchor.constraint(equalTo: alert.view.trailingAnchor, constant: -20),
+			slider.topAnchor.constraint(equalTo: alert.view.topAnchor, constant: 74),
+		])
+
+		alert.addAction(UIAlertAction(title: NSLocalizedString("button.cancel", comment: "Cancel action"), style: .cancel))
+		alert.addAction(UIAlertAction(title: NSLocalizedString("button.save", comment: "Save button title"), style: .default) { [weak self] _ in
+			guard let self else { return }
+			viewModel.setSoundVolume(slider.value)
+			syncSoundSettings()
+			updateControlMenu()
+		})
+		present(alert, animated: true)
 	}
 
 	private func selectDieColorPreset(_ preset: DiceDieColorPreset, sideCount: Int) {
@@ -972,6 +1048,94 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			return .dark
 		case .system:
 			return traitCollection.userInterfaceStyle == .dark ? .dark : .light
+		}
+	}
+}
+
+private final class DiceSoundEngine {
+	private let engine = AVAudioEngine()
+	private let player = AVAudioPlayerNode()
+	private var cachedBuffers: [DiceSoundPack: AVAudioPCMBuffer] = [:]
+	private var currentPack: DiceSoundPack = .off
+	private var currentVolume: Float = 0.65
+	private var didStartEngine = false
+
+	init() {
+		engine.attach(player)
+		engine.connect(player, to: engine.mainMixerNode, format: nil)
+	}
+
+	func configure(pack: DiceSoundPack, volume: Float) {
+		currentPack = pack
+		currentVolume = min(max(volume, 0), 1)
+	}
+
+	func playRollImpact() {
+		guard currentPack != .off else { return }
+		guard currentVolume > 0 else { return }
+		ensureEngineStarted()
+		guard let buffer = buffer(for: currentPack) else { return }
+		player.volume = currentVolume
+		player.scheduleBuffer(buffer, at: nil, options: []) { }
+		if !player.isPlaying {
+			player.play()
+		}
+	}
+
+	private func ensureEngineStarted() {
+		guard !didStartEngine else { return }
+		do {
+			try engine.start()
+			didStartEngine = true
+		} catch {
+			didStartEngine = false
+		}
+	}
+
+	private func buffer(for pack: DiceSoundPack) -> AVAudioPCMBuffer? {
+		if let cached = cachedBuffers[pack] {
+			return cached
+		}
+		guard let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1) else {
+			return nil
+		}
+		let frameCount: AVAudioFrameCount = 7_000
+		guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
+			return nil
+		}
+		buffer.frameLength = frameCount
+		guard let channel = buffer.floatChannelData?.pointee else {
+			return nil
+		}
+		fill(channel: channel, count: Int(frameCount), sampleRate: Float(format.sampleRate), pack: pack)
+		cachedBuffers[pack] = buffer
+		return buffer
+	}
+
+	private func fill(channel: UnsafeMutablePointer<Float>, count: Int, sampleRate: Float, pack: DiceSoundPack) {
+		let twoPi = Float.pi * 2
+		var lpState: Float = 0
+		for index in 0..<count {
+			let t = Float(index) / sampleRate
+			let envelope = exp(-12 * t)
+			let noise = Float.random(in: -1...1)
+			let x: Float
+			switch pack {
+			case .off:
+				x = 0
+			case .softWood:
+				let tone = sin(twoPi * 230 * t)
+				let mixed = (0.6 * noise) + (0.4 * tone)
+				lpState += 0.08 * (mixed - lpState)
+				x = lpState * envelope * 0.65
+			case .hardTable:
+				let tone = sin(twoPi * 1_350 * t)
+				let mixed = (0.82 * noise) + (0.18 * tone)
+				lpState += 0.03 * (mixed - lpState)
+				let hp = mixed - lpState
+				x = hp * envelope * 0.9
+			}
+			channel[index] = max(-1, min(1, x))
 		}
 	}
 }
