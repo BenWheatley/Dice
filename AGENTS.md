@@ -26,6 +26,9 @@ These rules apply to all agents working in this repository.
 8. Avoid triggering simulator runtime downloads during routine testing:
    - prefer explicit installed runtimes in `xcodebuild -destination` (for example `platform=iOS Simulator,OS=18.6,name=iPhone 16`)
    - avoid `OS=latest` unless intentionally validating against the newest installed runtime
+9. Keep deterministic animation seed/replay controls out of end-user UI:
+   - do not add seed/replay options to production menus or settings
+   - if seed-based behavior is needed for debugging, keep it test-only or internal developer tooling
 
 ## Platform/Feature Scope
 
