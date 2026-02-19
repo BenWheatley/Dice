@@ -73,6 +73,7 @@
 "font.serif" = "Serif";
 "font.rounded" = "Rounded";
 "font.mono" = "Mono";
+"font.dyslexiaFriendly" = "Dyslexia Friendly";
 "soundPack.off" = "Off";
 "soundPack.softWood" = "Soft Wood";
 "soundPack.hardTable" = "Hard Table";

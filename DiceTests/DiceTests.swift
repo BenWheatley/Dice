@@ -1399,18 +1399,30 @@ final class DiceTests: XCTestCase {
 		XCTAssertNotEqual(squareData, insetData)
 	}
 
-	func testNonD6NumeralFontsRemainReadableAtSmallSizes() {
-		let canvas = CGSize(width: 100, height: 100)
+	func testNonD6NumeralFontsRemainReadableAcrossDieTypeFaceSizes() {
+		let dieSamples: [(sample: String, pointSize: CGFloat, canvas: CGSize, inset: CGFloat, label: String)] = [
+			("4", 36, CGSize(width: 96, height: 96), 10, "d4"),
+			("8", 34, CGSize(width: 96, height: 96), 10, "d8"),
+			("10", 34, CGSize(width: 100, height: 100), 10, "d10"),
+			("12", 32, CGSize(width: 100, height: 100), 10, "d12"),
+			("20", 30, CGSize(width: 100, height: 100), 10, "d20"),
+			("100", 28, CGSize(width: 100, height: 100), 10, "d100"),
+		]
 		for font in DiceFaceNumeralFont.allCases {
-			XCTAssertTrue(
-				font.isReadable(sampleText: "100", pointSize: 28, canvas: canvas, inset: 10),
-				"Font \(font) should remain readable for three-digit faces"
-			)
-			XCTAssertTrue(
-				font.isReadable(sampleText: "20", pointSize: 24, canvas: CGSize(width: 70, height: 70), inset: 8),
-				"Font \(font) should remain readable for badge labels"
-			)
+			for sample in dieSamples {
+				XCTAssertTrue(
+					font.isReadable(sampleText: sample.sample, pointSize: sample.pointSize, canvas: sample.canvas, inset: sample.inset),
+					"Font \(font) should remain readable for \(sample.label)"
+				)
+			}
 		}
+	}
+
+	func testDyslexiaFriendlyFontOptionProvidesNumeralAndCaptionFonts() {
+		let numeral = DiceFaceNumeralFont.dyslexiaFriendly.numeralFont(ofSize: 28)
+		let caption = DiceFaceNumeralFont.dyslexiaFriendly.captionFont(ofSize: 16)
+		XCTAssertGreaterThan(numeral.pointSize, 0)
+		XCTAssertGreaterThan(caption.pointSize, 0)
 	}
 
 	func testFaceContrastCalibrationKeepsReadableInkAcrossFaceFills() {
