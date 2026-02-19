@@ -430,7 +430,9 @@ final class DiceTests: XCTestCase {
 				DiceSavedPreset(id: "preset-1", title: "Boss Fight", notation: "4d12+2d8", pinned: true)
 			],
 			soundPack: .hardTable,
-			soundVolume: 0.4
+			soundVolume: 0.4,
+			soundEffectsEnabled: false,
+			hapticsEnabled: false
 		)
 
 		store.save(expected)
@@ -975,6 +977,38 @@ final class DiceTests: XCTestCase {
 
 		viewModel.setSoundVolume(2.0)
 		XCTAssertEqual(viewModel.soundVolume, 1.0, accuracy: 0.0001)
+	}
+
+	func testViewModelSoundEffectsTogglePersistsToPreferences() {
+		let suiteName = "DiceTests.viewmodel.sfx.toggle.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		XCTAssertTrue(viewModel.soundEffectsEnabled)
+		viewModel.setSoundEffectsEnabled(false)
+		XCTAssertFalse(viewModel.soundEffectsEnabled)
+		XCTAssertFalse(preferencesStore.load().soundEffectsEnabled)
+	}
+
+	func testViewModelHapticsTogglePersistsToPreferences() {
+		let suiteName = "DiceTests.viewmodel.haptics.toggle.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		XCTAssertTrue(viewModel.hapticsEnabled)
+		viewModel.setHapticsEnabled(false)
+		XCTAssertFalse(viewModel.hapticsEnabled)
+		XCTAssertFalse(preferencesStore.load().hapticsEnabled)
 	}
 
 	func testViewModelResetVisualPreferencesRestoresDefaults() {

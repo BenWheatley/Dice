@@ -118,6 +118,14 @@ final class DiceViewModel {
 		appState.soundVolume
 	}
 
+	var soundEffectsEnabled: Bool {
+		appState.soundEffectsEnabled
+	}
+
+	var hapticsEnabled: Bool {
+		appState.hapticsEnabled
+	}
+
 	func restore() {
 		let preferences = preferencesStore.load()
 		if let parsed = notationParser.parse(preferences.lastNotation) {
@@ -136,6 +144,8 @@ final class DiceViewModel {
 		appState.boardLayoutPreset = preferences.boardLayoutPreset
 		appState.soundPack = preferences.soundPack
 		appState.soundVolume = preferences.soundVolume
+		appState.soundEffectsEnabled = preferences.soundEffectsEnabled
+		appState.hapticsEnabled = preferences.hapticsEnabled
 		let persisted = historyStore.loadPersistedEntries()
 		rollHistory = DiceRollHistory(persistedRecentEntries: persisted)
 	}
@@ -317,6 +327,16 @@ final class DiceViewModel {
 		persistPreferences()
 	}
 
+	func setSoundEffectsEnabled(_ enabled: Bool) {
+		appState.soundEffectsEnabled = enabled
+		persistPreferences()
+	}
+
+	func setHapticsEnabled(_ enabled: Bool) {
+		appState.hapticsEnabled = enabled
+		persistPreferences()
+	}
+
 	func isDieLocked(at index: Int) -> Bool {
 		appState.lockedDieIndices.contains(index)
 	}
@@ -455,7 +475,9 @@ final class DiceViewModel {
 			motionBlurEnabled: appState.motionBlurEnabled,
 			boardLayoutPreset: appState.boardLayoutPreset,
 			soundPack: appState.soundPack,
-			soundVolume: appState.soundVolume
+			soundVolume: appState.soundVolume,
+			soundEffectsEnabled: appState.soundEffectsEnabled,
+			hapticsEnabled: appState.hapticsEnabled
 		)
 		preferencesStore.save(preferences)
 	}

@@ -29,6 +29,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 	private let viewModel = DiceViewModel()
 	private let soundEngine = DiceSoundEngine()
+	private let hapticsEngine = DiceHapticsEngine()
 
 	private let notationField = UITextField()
 	private let validationLabel = UILabel()
@@ -505,15 +506,21 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	private func syncSoundSettings() {
-		soundEngine.configure(pack: viewModel.soundPack, volume: viewModel.soundVolume)
+		soundEngine.configure(pack: viewModel.soundPack, volume: viewModel.soundVolume, enabled: viewModel.soundEffectsEnabled)
 	}
 
 	private func playRollSound() {
 		soundEngine.playRollImpact()
+		if viewModel.hapticsEnabled {
+			hapticsEngine.playRollImpact()
+		}
 	}
 
 	private func playSettleTickSound() {
 		soundEngine.playSettleTick()
+		if viewModel.hapticsEnabled {
+			hapticsEngine.playRollSettle()
+		}
 	}
 
 	private func selectAnimationIntensity(_ intensity: DiceAnimationIntensity) {
@@ -584,6 +591,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		notationField.layer.cornerRadius = 6
 		let prefix = NSLocalizedString("alert.invalid.announcement", comment: "Accessibility announcement for invalid notation")
 		UIAccessibility.post(notification: .announcement, argument: "\(prefix) \(message)")
+		if viewModel.hapticsEnabled {
+			hapticsEngine.playInvalidInput()
+		}
 	}
 
 	private func clearValidationFeedback() {
@@ -831,6 +841,18 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		) { [weak self] _ in
 			self?.presentSoundVolumeSheet()
 		}
+		let soundEffectsAction = UIAction(
+			title: NSLocalizedString("menu.control.soundEffects", comment: "Sound effects toggle title"),
+			state: viewModel.soundEffectsEnabled ? .on : .off
+		) { [weak self] _ in
+			self?.toggleSoundEffects()
+		}
+		let hapticsAction = UIAction(
+			title: NSLocalizedString("menu.control.haptics", comment: "Haptics toggle title"),
+			state: viewModel.hapticsEnabled ? .on : .off
+		) { [weak self] _ in
+			self?.toggleHaptics()
+		}
 		let previewStyleAction = UIAction(title: NSLocalizedString("menu.control.previewStyle", comment: "Preview style action title")) { [weak self] _ in
 			self?.presentStylePreview()
 		}
@@ -843,7 +865,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let resetAction = UIAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), attributes: .destructive) { [weak self] _ in
 			self?.resetStats()
 		}
-		menuButton.menu = UIMenu(children: [historyAction, repeatAction, animationAction, animationIntensityMenu, soundPackMenu, soundVolumeAction, resetAction, statsAction, themeMenu, textureMenu, layoutMenu, finishMenu, outlinesAction, motionBlurAction, previewStyleAction, resetVisualsAction])
+		menuButton.menu = UIMenu(children: [historyAction, repeatAction, animationAction, animationIntensityMenu, soundPackMenu, soundVolumeAction, soundEffectsAction, hapticsAction, resetAction, statsAction, themeMenu, textureMenu, layoutMenu, finishMenu, outlinesAction, motionBlurAction, previewStyleAction, resetVisualsAction])
 	}
 
 	@objc private func toggleStatsVisibility() {
@@ -914,6 +936,20 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			playRollSound()
 		}
 		updateControlMenu()
+	}
+
+	private func toggleSoundEffects() {
+		viewModel.setSoundEffectsEnabled(!viewModel.soundEffectsEnabled)
+		syncSoundSettings()
+		updateControlMenu()
+	}
+
+	private func toggleHaptics() {
+		viewModel.setHapticsEnabled(!viewModel.hapticsEnabled)
+		updateControlMenu()
+		if viewModel.hapticsEnabled {
+			hapticsEngine.playRollImpact()
+		}
 	}
 
 	private func presentSoundVolumeSheet() {
@@ -1066,6 +1102,7 @@ private final class DiceSoundEngine {
 	private var cachedTickBuffers: [DiceSoundPack: AVAudioPCMBuffer] = [:]
 	private var currentPack: DiceSoundPack = .off
 	private var currentVolume: Float = 0.65
+	private var isEnabled = true
 	private var didStartEngine = false
 
 	init() {
@@ -1073,12 +1110,14 @@ private final class DiceSoundEngine {
 		engine.connect(player, to: engine.mainMixerNode, format: nil)
 	}
 
-	func configure(pack: DiceSoundPack, volume: Float) {
+	func configure(pack: DiceSoundPack, volume: Float, enabled: Bool) {
 		currentPack = pack
 		currentVolume = min(max(volume, 0), 1)
+		isEnabled = enabled
 	}
 
 	func playRollImpact() {
+		guard isEnabled else { return }
 		guard currentPack != .off else { return }
 		guard currentVolume > 0 else { return }
 		ensureEngineStarted()
@@ -1091,6 +1130,7 @@ private final class DiceSoundEngine {
 	}
 
 	func playSettleTick() {
+		guard isEnabled else { return }
 		guard currentPack != .off else { return }
 		guard currentVolume > 0 else { return }
 		ensureEngineStarted()
@@ -1190,6 +1230,26 @@ private final class DiceSoundEngine {
 			let mix: Float = pack == .softWood ? ((0.6 * noise) + (0.4 * tone)) : ((0.82 * noise) + (0.18 * tone))
 			channel[index] = max(-1, min(1, mix * envelope * 0.75))
 		}
+	}
+}
+
+private final class DiceHapticsEngine {
+	private let impact = UIImpactFeedbackGenerator(style: .medium)
+	private let settle = UIImpactFeedbackGenerator(style: .soft)
+	private let invalid = UINotificationFeedbackGenerator()
+
+	func playRollImpact() {
+		impact.prepare()
+		impact.impactOccurred(intensity: 0.85)
+	}
+
+	func playRollSettle() {
+		settle.prepare()
+		settle.impactOccurred(intensity: 0.65)
+	}
+
+	func playInvalidInput() {
+		invalid.notificationOccurred(.warning)
 	}
 }
 

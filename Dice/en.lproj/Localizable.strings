@@ -43,6 +43,8 @@
 "menu.control.motionBlur" = "Motion Blur";
 "menu.control.soundPack" = "Roll Sound";
 "menu.control.soundVolume" = "Sound Volume (%d%%)";
+"menu.control.soundEffects" = "Sound Effects";
+"menu.control.haptics" = "Haptics";
 "menu.control.previewStyle" = "Preview Style";
 "menu.control.resetVisuals" = "Reset Visual Style";
 "theme.lightMode" = "Light Mode";

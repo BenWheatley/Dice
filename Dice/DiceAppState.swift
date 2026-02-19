@@ -71,6 +71,8 @@ final class DiceAppState {
 	var boardLayoutPreset: DiceBoardLayoutPreset
 	var soundPack: DiceSoundPack
 	var soundVolume: Float
+	var soundEffectsEnabled: Bool
+	var hapticsEnabled: Bool
 
 	init(configuration: RollConfiguration = RollConfiguration(diceCount: 6, sideCount: 6, intuitive: false)) {
 		self.configuration = configuration
@@ -92,6 +94,8 @@ final class DiceAppState {
 		self.boardLayoutPreset = .compact
 		self.soundPack = .off
 		self.soundVolume = 0.65
+		self.soundEffectsEnabled = true
+		self.hapticsEnabled = true
 	}
 
 	func applyRollOutcome(_ outcome: RollOutcome) {

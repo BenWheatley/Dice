@@ -38,8 +38,10 @@ struct DiceUserPreferences: Equatable {
 	var boardLayoutPreset: DiceBoardLayoutPreset
 	var soundPack: DiceSoundPack
 	var soundVolume: Float
+	var soundEffectsEnabled: Bool
+	var hapticsEnabled: Bool
 
-	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, animationIntensity: DiceAnimationIntensity = .full, theme: DiceTheme = .system, tableTexture: DiceTableTexture = .neutral, dieFinish: DiceDieFinish = .matte, edgeOutlinesEnabled: Bool = false, dieColorPreferences: DiceDieColorPreferences = .default, d6PipStyle: DiceD6PipStyle = .round, faceNumeralFont: DiceFaceNumeralFont = .classic, customPresets: [DiceSavedPreset] = [], motionBlurEnabled: Bool = false, boardLayoutPreset: DiceBoardLayoutPreset = .compact, soundPack: DiceSoundPack = .off, soundVolume: Float = 0.65) {
+	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, animationIntensity: DiceAnimationIntensity = .full, theme: DiceTheme = .system, tableTexture: DiceTableTexture = .neutral, dieFinish: DiceDieFinish = .matte, edgeOutlinesEnabled: Bool = false, dieColorPreferences: DiceDieColorPreferences = .default, d6PipStyle: DiceD6PipStyle = .round, faceNumeralFont: DiceFaceNumeralFont = .classic, customPresets: [DiceSavedPreset] = [], motionBlurEnabled: Bool = false, boardLayoutPreset: DiceBoardLayoutPreset = .compact, soundPack: DiceSoundPack = .off, soundVolume: Float = 0.65, soundEffectsEnabled: Bool = true, hapticsEnabled: Bool = true) {
 		self.lastNotation = lastNotation
 		self.recentPresets = recentPresets
 		self.animationsEnabled = animationsEnabled
@@ -56,10 +58,12 @@ struct DiceUserPreferences: Equatable {
 		self.boardLayoutPreset = boardLayoutPreset
 		self.soundPack = soundPack
 		self.soundVolume = soundVolume
+		self.soundEffectsEnabled = soundEffectsEnabled
+		self.hapticsEnabled = hapticsEnabled
 	}
 
 	static var `default`: DiceUserPreferences {
-		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, animationIntensity: .full, theme: .system, tableTexture: .neutral, dieFinish: .matte, edgeOutlinesEnabled: false, dieColorPreferences: .default, d6PipStyle: .round, faceNumeralFont: .classic, customPresets: [], motionBlurEnabled: false, boardLayoutPreset: .compact, soundPack: .off, soundVolume: 0.65)
+		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, animationIntensity: .full, theme: .system, tableTexture: .neutral, dieFinish: .matte, edgeOutlinesEnabled: false, dieColorPreferences: .default, d6PipStyle: .round, faceNumeralFont: .classic, customPresets: [], motionBlurEnabled: false, boardLayoutPreset: .compact, soundPack: .off, soundVolume: 0.65, soundEffectsEnabled: true, hapticsEnabled: true)
 	}
 }
 
@@ -81,6 +85,8 @@ final class DicePreferencesStore {
 		static let boardLayoutPreset = "Dice.boardLayoutPreset"
 		static let soundPack = "Dice.soundPack"
 		static let soundVolume = "Dice.soundVolume"
+		static let soundEffectsEnabled = "Dice.soundEffectsEnabled"
+		static let hapticsEnabled = "Dice.hapticsEnabled"
 	}
 
 	private let defaults: UserDefaults
@@ -118,6 +124,8 @@ final class DicePreferencesStore {
 		let rawSoundPack = defaults.string(forKey: Keys.soundPack)
 		let soundPack = rawSoundPack.flatMap(DiceSoundPack.init(rawValue:)) ?? DiceUserPreferences.default.soundPack
 		let soundVolume = defaults.object(forKey: Keys.soundVolume) as? Float ?? DiceUserPreferences.default.soundVolume
+		let soundEffectsEnabled = defaults.object(forKey: Keys.soundEffectsEnabled) as? Bool ?? DiceUserPreferences.default.soundEffectsEnabled
+		let hapticsEnabled = defaults.object(forKey: Keys.hapticsEnabled) as? Bool ?? DiceUserPreferences.default.hapticsEnabled
 		return DiceUserPreferences(
 			lastNotation: notation,
 			recentPresets: presets,
@@ -134,7 +142,9 @@ final class DicePreferencesStore {
 			motionBlurEnabled: motionBlurEnabled,
 			boardLayoutPreset: boardLayoutPreset,
 			soundPack: soundPack,
-			soundVolume: min(max(soundVolume, 0), 1)
+			soundVolume: min(max(soundVolume, 0), 1),
+			soundEffectsEnabled: soundEffectsEnabled,
+			hapticsEnabled: hapticsEnabled
 		)
 	}
 
@@ -155,6 +165,8 @@ final class DicePreferencesStore {
 		defaults.set(preferences.boardLayoutPreset.rawValue, forKey: Keys.boardLayoutPreset)
 		defaults.set(preferences.soundPack.rawValue, forKey: Keys.soundPack)
 		defaults.set(min(max(preferences.soundVolume, 0), 1), forKey: Keys.soundVolume)
+		defaults.set(preferences.soundEffectsEnabled, forKey: Keys.soundEffectsEnabled)
+		defaults.set(preferences.hapticsEnabled, forKey: Keys.hapticsEnabled)
 	}
 
 	func addRecentPreset(_ notation: String) {

@@ -135,7 +135,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 - [x] Add optional dice roll sound pack v1 (soft wood, hard table) with volume slider.
 - [x] Add face-up settle "tick" sound for final die stop, synchronized to animation completion.
-- [ ] Add separate mute toggles for SFX and haptics, persisted per platform.
+- [x] Add separate mute toggles for SFX and haptics, persisted per platform.
 - [ ] Add accessibility-safe audio defaults (sound off by default when VoiceOver is active).
 - [ ] Add watchOS haptic variants for roll begin/end and invalid input feedback.
 
