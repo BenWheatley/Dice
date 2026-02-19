@@ -12,6 +12,10 @@ import SceneKit
 
 
 class InterfaceController: WKInterfaceController {
+	private enum WatchRollFeedbackProfile {
+		case trueRandom
+		case intuitive
+	}
 
 	private let viewModel = WatchRollViewModel()
 	private var rollCount = 0
@@ -52,7 +56,11 @@ class InterfaceController: WKInterfaceController {
 
 	@IBAction func roll() {
 		let outcome = viewModel.roll()
-		guard let value = outcome.values.first else { return }
+		guard let value = outcome.values.first else {
+			playInvalidInputFeedback()
+			diceButton.setTitle("Invalid")
+			return
+		}
 		rollCount += 1
 		playRollStartFeedback()
 		if usesSceneRenderer {
@@ -73,13 +81,17 @@ class InterfaceController: WKInterfaceController {
 	@objc private func toggleMode() {
 		viewModel.toggleMode()
 		rollCount = 0
-		feedbackDevice.play(.success)
+		feedbackDevice.play(viewModel.isIntuitiveMode ? .directionUp : .directionDown)
 		roll()
 	}
 
 	@objc private func repeatLastRoll() {
 		let outcome = viewModel.repeatLastRoll()
-		guard let value = outcome.values.first else { return }
+		guard let value = outcome.values.first else {
+			playInvalidInputFeedback()
+			diceButton.setTitle("Invalid")
+			return
+		}
 		rollCount += 1
 		playRollStartFeedback()
 		if usesSceneRenderer {
@@ -166,11 +178,29 @@ class InterfaceController: WKInterfaceController {
 	}
 
 	private func playRollStartFeedback() {
-		feedbackDevice.play(.start)
+		switch feedbackProfile() {
+		case .trueRandom:
+			feedbackDevice.play(.start)
+		case .intuitive:
+			feedbackDevice.play(.directionUp)
+		}
 	}
 
 	private func playRollSettleFeedback() {
-		feedbackDevice.play(.click)
+		switch feedbackProfile() {
+		case .trueRandom:
+			feedbackDevice.play(.click)
+		case .intuitive:
+			feedbackDevice.play(.success)
+		}
+	}
+
+	private func playInvalidInputFeedback() {
+		feedbackDevice.play(.failure)
+	}
+
+	private func feedbackProfile() -> WatchRollFeedbackProfile {
+		viewModel.isIntuitiveMode ? .intuitive : .trueRandom
 	}
 
 	private func orientation(for value: Int) -> SCNVector3 {

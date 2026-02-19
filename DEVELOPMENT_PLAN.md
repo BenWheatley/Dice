@@ -137,7 +137,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Add face-up settle "tick" sound for final die stop, synchronized to animation completion.
 - [x] Add separate mute toggles for SFX and haptics, persisted per platform.
 - [x] Add accessibility-safe audio defaults (sound off by default when VoiceOver is active).
-- [ ] Add watchOS haptic variants for roll begin/end and invalid input feedback.
+- [x] Add watchOS haptic variants for roll begin/end and invalid input feedback.
 
 ### Statistics and History UX
 
