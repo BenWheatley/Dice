@@ -41,6 +41,7 @@
 "menu.control.finish" = "Die Finish";
 "menu.control.edgeOutlines" = "Edge Outlines";
 "menu.control.motionBlur" = "Motion Blur";
+"menu.control.largeFaceLabels" = "Larger Face Labels";
 "menu.control.soundPack" = "Roll Sound";
 "menu.control.soundVolume" = "Sound Volume (%d%%)";
 "menu.control.soundEffects" = "Sound Effects";
@@ -81,7 +82,7 @@
 "alert.invalid.announcement" = "Invalid dice notation.";
 "alert.soundVolume.title" = "Roll Sound Volume";
 "alert.resetVisuals.title" = "Reset visual style?";
-"alert.resetVisuals.message" = "This will restore theme, texture, die finish, outlines, die colors, pip style, and numeral font defaults.";
+"alert.resetVisuals.message" = "This will restore theme, texture, die finish, outlines, die colors, pip style, numeral font, and large face label defaults.";
 "die.options.title" = "Die %d (d%d)";
 "die.options.message" = "Current face: %d";
 "die.options.reroll" = "Reroll This Die";

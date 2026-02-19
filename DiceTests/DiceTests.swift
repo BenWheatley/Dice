@@ -426,6 +426,7 @@ final class DiceTests: XCTestCase {
 			dieFinish: .stone,
 			edgeOutlinesEnabled: true,
 			dieColorPreferences: DiceDieColorPreferences.default.updated(sideCount: 20, preset: .crimson),
+			largeFaceLabelsEnabled: true,
 			customPresets: [
 				DiceSavedPreset(id: "preset-1", title: "Boss Fight", notation: "4d12+2d8", pinned: true)
 			],
@@ -1088,6 +1089,22 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(preferencesStore.load().faceNumeralFont, .serif)
 	}
 
+	func testViewModelLargeFaceLabelsTogglePersistsToPreferences() {
+		let suiteName = "DiceTests.viewmodel.largefacelabels.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		XCTAssertFalse(viewModel.largeFaceLabelsEnabled)
+		viewModel.setLargeFaceLabelsEnabled(true)
+		XCTAssertTrue(viewModel.largeFaceLabelsEnabled)
+		XCTAssertTrue(preferencesStore.load().largeFaceLabelsEnabled)
+	}
+
 	func testViewModelMotionBlurTogglePersistsToPreferences() {
 		let suiteName = "DiceTests.viewmodel.motionblur.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!
@@ -1203,6 +1220,7 @@ final class DiceTests: XCTestCase {
 		viewModel.setDieColorPreset(.sapphire, for: 20)
 		viewModel.setD6PipStyle(.inset)
 		viewModel.setFaceNumeralFont(.mono)
+		viewModel.setLargeFaceLabelsEnabled(true)
 		viewModel.setMotionBlurEnabled(true)
 
 		viewModel.resetVisualPreferences()
@@ -1214,6 +1232,7 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(viewModel.dieColorPreset(for: 20), .ivory)
 		XCTAssertEqual(viewModel.d6PipStyle, .round)
 		XCTAssertEqual(viewModel.faceNumeralFont, .classic)
+		XCTAssertFalse(viewModel.largeFaceLabelsEnabled)
 		XCTAssertFalse(viewModel.motionBlurEnabled)
 	}
 
@@ -1423,6 +1442,20 @@ final class DiceTests: XCTestCase {
 		let caption = DiceFaceNumeralFont.dyslexiaFriendly.captionFont(ofSize: 16)
 		XCTAssertGreaterThan(numeral.pointSize, 0)
 		XCTAssertGreaterThan(caption.pointSize, 0)
+	}
+
+	func testLargeFaceLabelSizingIncreasesTextureAndFallbackSizes() {
+		let normalTexture = DiceFaceLabelSizing.textureNumeralPointSize(sideCount: 20, large: false)
+		let largeTexture = DiceFaceLabelSizing.textureNumeralPointSize(sideCount: 20, large: true)
+		XCTAssertGreaterThan(largeTexture, normalTexture)
+
+		let normalD4 = DiceFaceLabelSizing.textureNumeralPointSize(sideCount: 4, large: false)
+		let largeD4 = DiceFaceLabelSizing.textureNumeralPointSize(sideCount: 4, large: true)
+		XCTAssertGreaterThan(largeD4, normalD4)
+
+		let normalFallback = DiceFaceLabelSizing.staticFallbackPointSize(cellSideLength: 80, large: false)
+		let largeFallback = DiceFaceLabelSizing.staticFallbackPointSize(cellSideLength: 80, large: true)
+		XCTAssertGreaterThan(largeFallback, normalFallback)
 	}
 
 	func testFaceContrastCalibrationKeepsReadableInkAcrossFaceFills() {

@@ -98,6 +98,10 @@ final class DiceViewModel {
 		appState.faceNumeralFont
 	}
 
+	var largeFaceLabelsEnabled: Bool {
+		appState.largeFaceLabelsEnabled
+	}
+
 	var lockedDieIndices: Set<Int> {
 		appState.lockedDieIndices
 	}
@@ -140,6 +144,7 @@ final class DiceViewModel {
 		appState.dieColorPreferences = preferences.dieColorPreferences
 		appState.d6PipStyle = preferences.d6PipStyle
 		appState.faceNumeralFont = preferences.faceNumeralFont
+		appState.largeFaceLabelsEnabled = preferences.largeFaceLabelsEnabled
 		appState.motionBlurEnabled = preferences.motionBlurEnabled
 		appState.boardLayoutPreset = preferences.boardLayoutPreset
 		appState.soundPack = preferences.soundPack
@@ -332,6 +337,11 @@ final class DiceViewModel {
 		persistPreferences()
 	}
 
+	func setLargeFaceLabelsEnabled(_ enabled: Bool) {
+		appState.largeFaceLabelsEnabled = enabled
+		persistPreferences()
+	}
+
 	func setMotionBlurEnabled(_ enabled: Bool) {
 		appState.motionBlurEnabled = enabled
 		persistPreferences()
@@ -383,6 +393,7 @@ final class DiceViewModel {
 		appState.dieColorPreferences = .default
 		appState.d6PipStyle = .round
 		appState.faceNumeralFont = .classic
+		appState.largeFaceLabelsEnabled = false
 		appState.motionBlurEnabled = false
 		persistPreferences()
 	}
@@ -496,6 +507,7 @@ final class DiceViewModel {
 			dieColorPreferences: appState.dieColorPreferences,
 			d6PipStyle: appState.d6PipStyle,
 			faceNumeralFont: appState.faceNumeralFont,
+			largeFaceLabelsEnabled: appState.largeFaceLabelsEnabled,
 			customPresets: preferencesStore.load().customPresets,
 			motionBlurEnabled: appState.motionBlurEnabled,
 			boardLayoutPreset: appState.boardLayoutPreset,

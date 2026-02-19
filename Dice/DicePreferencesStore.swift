@@ -34,6 +34,7 @@ struct DiceUserPreferences: Equatable {
 	var dieColorPreferences: DiceDieColorPreferences
 	var d6PipStyle: DiceD6PipStyle
 	var faceNumeralFont: DiceFaceNumeralFont
+	var largeFaceLabelsEnabled: Bool
 	var customPresets: [DiceSavedPreset]
 	var motionBlurEnabled: Bool
 	var boardLayoutPreset: DiceBoardLayoutPreset
@@ -42,7 +43,7 @@ struct DiceUserPreferences: Equatable {
 	var soundEffectsEnabled: Bool
 	var hapticsEnabled: Bool
 
-	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, animationIntensity: DiceAnimationIntensity = .full, theme: DiceTheme = .system, tableTexture: DiceTableTexture = .neutral, dieFinish: DiceDieFinish = .matte, edgeOutlinesEnabled: Bool = false, dieColorPreferences: DiceDieColorPreferences = .default, d6PipStyle: DiceD6PipStyle = .round, faceNumeralFont: DiceFaceNumeralFont = .classic, customPresets: [DiceSavedPreset] = [], motionBlurEnabled: Bool = false, boardLayoutPreset: DiceBoardLayoutPreset = .compact, soundPack: DiceSoundPack = .off, soundVolume: Float = 0.65, soundEffectsEnabled: Bool = true, hapticsEnabled: Bool = true) {
+	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, animationIntensity: DiceAnimationIntensity = .full, theme: DiceTheme = .system, tableTexture: DiceTableTexture = .neutral, dieFinish: DiceDieFinish = .matte, edgeOutlinesEnabled: Bool = false, dieColorPreferences: DiceDieColorPreferences = .default, d6PipStyle: DiceD6PipStyle = .round, faceNumeralFont: DiceFaceNumeralFont = .classic, largeFaceLabelsEnabled: Bool = false, customPresets: [DiceSavedPreset] = [], motionBlurEnabled: Bool = false, boardLayoutPreset: DiceBoardLayoutPreset = .compact, soundPack: DiceSoundPack = .off, soundVolume: Float = 0.65, soundEffectsEnabled: Bool = true, hapticsEnabled: Bool = true) {
 		self.lastNotation = lastNotation
 		self.recentPresets = recentPresets
 		self.animationsEnabled = animationsEnabled
@@ -54,6 +55,7 @@ struct DiceUserPreferences: Equatable {
 		self.dieColorPreferences = dieColorPreferences
 		self.d6PipStyle = d6PipStyle
 		self.faceNumeralFont = faceNumeralFont
+		self.largeFaceLabelsEnabled = largeFaceLabelsEnabled
 		self.customPresets = customPresets
 		self.motionBlurEnabled = motionBlurEnabled
 		self.boardLayoutPreset = boardLayoutPreset
@@ -64,7 +66,7 @@ struct DiceUserPreferences: Equatable {
 	}
 
 	static var `default`: DiceUserPreferences {
-		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, animationIntensity: .full, theme: .system, tableTexture: .neutral, dieFinish: .matte, edgeOutlinesEnabled: false, dieColorPreferences: .default, d6PipStyle: .round, faceNumeralFont: .classic, customPresets: [], motionBlurEnabled: false, boardLayoutPreset: .compact, soundPack: .off, soundVolume: 0.65, soundEffectsEnabled: true, hapticsEnabled: true)
+		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, animationIntensity: .full, theme: .system, tableTexture: .neutral, dieFinish: .matte, edgeOutlinesEnabled: false, dieColorPreferences: .default, d6PipStyle: .round, faceNumeralFont: .classic, largeFaceLabelsEnabled: false, customPresets: [], motionBlurEnabled: false, boardLayoutPreset: .compact, soundPack: .off, soundVolume: 0.65, soundEffectsEnabled: true, hapticsEnabled: true)
 	}
 }
 
@@ -81,6 +83,7 @@ final class DicePreferencesStore {
 		static let dieColors = "Dice.dieColors"
 		static let d6PipStyle = "Dice.d6PipStyle"
 		static let faceNumeralFont = "Dice.faceNumeralFont"
+		static let largeFaceLabelsEnabled = "Dice.largeFaceLabelsEnabled"
 		static let customPresets = "Dice.customPresets"
 		static let motionBlurEnabled = "Dice.motionBlurEnabled"
 		static let boardLayoutPreset = "Dice.boardLayoutPreset"
@@ -120,6 +123,7 @@ final class DicePreferencesStore {
 		let d6PipStyle = rawPipStyle.flatMap(DiceD6PipStyle.init(rawValue:)) ?? DiceUserPreferences.default.d6PipStyle
 		let rawFaceNumeralFont = defaults.string(forKey: Keys.faceNumeralFont)
 		let faceNumeralFont = rawFaceNumeralFont.flatMap(DiceFaceNumeralFont.init(rawValue:)) ?? DiceUserPreferences.default.faceNumeralFont
+		let largeFaceLabelsEnabled = defaults.object(forKey: Keys.largeFaceLabelsEnabled) as? Bool ?? DiceUserPreferences.default.largeFaceLabelsEnabled
 		let customPresets = decodeCustomPresets(from: defaults.data(forKey: Keys.customPresets))
 		let motionBlurEnabled = defaults.object(forKey: Keys.motionBlurEnabled) as? Bool ?? DiceUserPreferences.default.motionBlurEnabled
 		let rawLayoutPreset = defaults.string(forKey: Keys.boardLayoutPreset)
@@ -146,6 +150,7 @@ final class DicePreferencesStore {
 			dieColorPreferences: dieColorPreferences,
 			d6PipStyle: d6PipStyle,
 			faceNumeralFont: faceNumeralFont,
+			largeFaceLabelsEnabled: largeFaceLabelsEnabled,
 			customPresets: customPresets,
 			motionBlurEnabled: motionBlurEnabled,
 			boardLayoutPreset: boardLayoutPreset,
@@ -168,6 +173,7 @@ final class DicePreferencesStore {
 		defaults.set(preferences.dieColorPreferences.serialized(), forKey: Keys.dieColors)
 		defaults.set(preferences.d6PipStyle.rawValue, forKey: Keys.d6PipStyle)
 		defaults.set(preferences.faceNumeralFont.rawValue, forKey: Keys.faceNumeralFont)
+		defaults.set(preferences.largeFaceLabelsEnabled, forKey: Keys.largeFaceLabelsEnabled)
 		defaults.set(encodeCustomPresets(preferences.customPresets), forKey: Keys.customPresets)
 		defaults.set(preferences.motionBlurEnabled, forKey: Keys.motionBlurEnabled)
 		defaults.set(preferences.boardLayoutPreset.rawValue, forKey: Keys.boardLayoutPreset)

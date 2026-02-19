@@ -49,6 +49,7 @@ final class DiceCubeView: UIView {
 	private var activeDieColorPreferences: DiceDieColorPreferences = .default
 	private var activeD6PipStyle: DiceD6PipStyle = .round
 	private var activeFaceNumeralFont: DiceFaceNumeralFont = .classic
+	private var activeLargeFaceLabelsEnabled = false
 	private var activeAnimationIntensity: DiceAnimationIntensity = .full
 	private var activeMotionBlurEnabled = false
 	private var needsMeshRefresh = false
@@ -181,6 +182,14 @@ final class DiceCubeView: UIView {
 	func setFaceNumeralFont(_ font: DiceFaceNumeralFont) {
 		guard activeFaceNumeralFont != font else { return }
 		activeFaceNumeralFont = font
+		meshCache.removeAll()
+		badgeImageCache.removeAll()
+		needsMeshRefresh = true
+	}
+
+	func setLargeFaceLabelsEnabled(_ enabled: Bool) {
+		guard activeLargeFaceLabelsEnabled != enabled else { return }
+		activeLargeFaceLabelsEnabled = enabled
 		meshCache.removeAll()
 		badgeImageCache.removeAll()
 		needsMeshRefresh = true
@@ -532,7 +541,9 @@ final class DiceCubeView: UIView {
 
 			let placements = d4LabelPlacements(triangle: trianglePoints)
 			let attrs: [NSAttributedString.Key: Any] = [
-				.font: activeFaceNumeralFont.numeralFont(ofSize: 54),
+				.font: activeFaceNumeralFont.numeralFont(
+					ofSize: DiceFaceLabelSizing.textureNumeralPointSize(sideCount: 4, large: activeLargeFaceLabelsEnabled)
+				),
 				.foregroundColor: style.primaryInkColor
 			]
 			for (index, placement) in placements.enumerated() where index < vertexLabels.count {
@@ -593,7 +604,9 @@ final class DiceCubeView: UIView {
 
 			let text = "\(value)" as NSString
 			let attrs: [NSAttributedString.Key: Any] = [
-				.font: activeFaceNumeralFont.numeralFont(ofSize: 73),
+				.font: activeFaceNumeralFont.numeralFont(
+					ofSize: DiceFaceLabelSizing.textureNumeralPointSize(sideCount: sideCount, large: activeLargeFaceLabelsEnabled)
+				),
 				.foregroundColor: style.primaryInkColor
 			]
 			let tSize = text.size(withAttributes: attrs)
@@ -602,7 +615,9 @@ final class DiceCubeView: UIView {
 
 			let subtitle = "d\(sideCount)" as NSString
 			let subAttrs: [NSAttributedString.Key: Any] = [
-				.font: activeFaceNumeralFont.captionFont(ofSize: 15),
+				.font: activeFaceNumeralFont.captionFont(
+					ofSize: DiceFaceLabelSizing.textureCaptionPointSize(large: activeLargeFaceLabelsEnabled)
+				),
 				.foregroundColor: style.secondaryInkColor
 			]
 			let sSize = subtitle.size(withAttributes: subAttrs)
@@ -637,7 +652,9 @@ final class DiceCubeView: UIView {
 
 			let text = "\(value)" as NSString
 			let attrs: [NSAttributedString.Key: Any] = [
-				.font: activeFaceNumeralFont.numeralFont(ofSize: size.height * 0.56),
+				.font: activeFaceNumeralFont.numeralFont(
+					ofSize: size.height * DiceFaceLabelSizing.badgeNumeralScale(large: activeLargeFaceLabelsEnabled)
+				),
 				.foregroundColor: UIColor.black
 			]
 			let textSize = text.size(withAttributes: attrs)

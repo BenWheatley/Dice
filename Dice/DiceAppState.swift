@@ -65,6 +65,7 @@ final class DiceAppState {
 	var dieColorPreferences: DiceDieColorPreferences
 	var d6PipStyle: DiceD6PipStyle
 	var faceNumeralFont: DiceFaceNumeralFont
+	var largeFaceLabelsEnabled: Bool
 	var lastRolledConfiguration: RollConfiguration?
 	var lockedDieIndices: Set<Int>
 	var motionBlurEnabled: Bool
@@ -88,6 +89,7 @@ final class DiceAppState {
 		self.dieColorPreferences = .default
 		self.d6PipStyle = .round
 		self.faceNumeralFont = .classic
+		self.largeFaceLabelsEnabled = false
 		self.lastRolledConfiguration = nil
 		self.lockedDieIndices = []
 		self.motionBlurEnabled = false

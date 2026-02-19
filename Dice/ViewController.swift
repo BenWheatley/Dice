@@ -131,7 +131,14 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! DiceCollectionViewCell
 		let faceValue = viewModel.diceValues[indexPath.row]
 		let sideCount = viewModel.diceSideCounts[indexPath.row]
-		cell.configure(faceValue: faceValue, sideCount: sideCount, index: indexPath.row, palette: currentPalette, isLocked: viewModel.isDieLocked(at: indexPath.row))
+		cell.configure(
+			faceValue: faceValue,
+			sideCount: sideCount,
+			index: indexPath.row,
+			palette: currentPalette,
+			isLocked: viewModel.isDieLocked(at: indexPath.row),
+			largeFaceLabelsEnabled: viewModel.largeFaceLabelsEnabled
+		)
 		cell.onTapDie = { [weak self, weak cell] in
 			guard let self, let cell else { return }
 			self.presentDieOptions(for: indexPath.row, sourceView: cell)
@@ -277,6 +284,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.onRollSettled = { [weak self] in
 			self?.playSettleTickSound()
 		}
+		diceBoardView.setLargeFaceLabelsEnabled(viewModel.largeFaceLabelsEnabled)
 		view.addSubview(diceBoardView)
 		view.bringSubviewToFront(controlsContainer ?? UIView())
 		view.bringSubviewToFront(totalsContainer)
@@ -464,6 +472,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.setDieColorPreferences(viewModel.dieColorPreferences)
 		diceBoardView.setD6PipStyle(viewModel.d6PipStyle)
 		diceBoardView.setFaceNumeralFont(viewModel.faceNumeralFont)
+		diceBoardView.setLargeFaceLabelsEnabled(viewModel.largeFaceLabelsEnabled)
 		diceBoardView.setAnimationIntensity(viewModel.animationIntensity)
 		diceBoardView.setMotionBlurEnabled(viewModel.motionBlurEnabled)
 
@@ -913,6 +922,12 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		) { [weak self] _ in
 			self?.toggleMotionBlur()
 		}
+		let largeLabelsAction = UIAction(
+			title: NSLocalizedString("menu.control.largeFaceLabels", comment: "Large face labels toggle title"),
+			state: viewModel.largeFaceLabelsEnabled ? .on : .off
+		) { [weak self] _ in
+			self?.toggleLargeFaceLabels()
+		}
 		let soundPackActions = DiceSoundPack.allCases.map { pack in
 			UIAction(
 				title: NSLocalizedString(pack.menuTitleKey, comment: "Sound pack option"),
@@ -958,7 +973,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let resetAction = UIAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), attributes: .destructive) { [weak self] _ in
 			self?.resetStats()
 		}
-		menuButton.menu = UIMenu(children: [historyAction, repeatAction, animationAction, animationIntensityMenu, soundPackMenu, soundVolumeAction, soundEffectsAction, hapticsAction, resetAction, statsAction, themeMenu, textureMenu, layoutMenu, finishMenu, outlinesAction, motionBlurAction, previewStyleAction, resetVisualsAction])
+		menuButton.menu = UIMenu(children: [historyAction, repeatAction, animationAction, animationIntensityMenu, soundPackMenu, soundVolumeAction, soundEffectsAction, hapticsAction, resetAction, statsAction, themeMenu, textureMenu, layoutMenu, finishMenu, outlinesAction, motionBlurAction, largeLabelsAction, previewStyleAction, resetVisualsAction])
 	}
 
 	@objc private func toggleStatsVisibility() {
@@ -1095,6 +1110,14 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		updateControlMenu()
 	}
 
+	private func toggleLargeFaceLabels() {
+		viewModel.setLargeFaceLabelsEnabled(!viewModel.largeFaceLabelsEnabled)
+		diceBoardView.setLargeFaceLabelsEnabled(viewModel.largeFaceLabelsEnabled)
+		collectionView.reloadData()
+		updateDiceBoard(animated: false)
+		updateControlMenu()
+	}
+
 	private func confirmVisualReset() {
 		let alert = UIAlertController(
 			title: NSLocalizedString("alert.resetVisuals.title", comment: "Reset visual settings confirmation title"),
@@ -1117,6 +1140,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.setDieColorPreferences(viewModel.dieColorPreferences)
 		diceBoardView.setD6PipStyle(viewModel.d6PipStyle)
 		diceBoardView.setFaceNumeralFont(viewModel.faceNumeralFont)
+		diceBoardView.setLargeFaceLabelsEnabled(viewModel.largeFaceLabelsEnabled)
 		diceBoardView.setAnimationIntensity(viewModel.animationIntensity)
 		diceBoardView.setMotionBlurEnabled(viewModel.motionBlurEnabled)
 		updateDiceBoard(animated: false)
@@ -1131,7 +1155,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			edgeOutlinesEnabled: viewModel.edgeOutlinesEnabled,
 			dieColors: viewModel.dieColorPreferences,
 			d6PipStyle: viewModel.d6PipStyle,
-			faceNumeralFont: viewModel.faceNumeralFont
+			faceNumeralFont: viewModel.faceNumeralFont,
+			largeFaceLabelsEnabled: viewModel.largeFaceLabelsEnabled
 		)
 		let preview = DiceStylePreviewViewController(state: previewState)
 		let navigation = UINavigationController(rootViewController: preview)
@@ -1625,6 +1650,7 @@ private struct DiceStylePreviewState {
 	let dieColors: DiceDieColorPreferences
 	let d6PipStyle: DiceD6PipStyle
 	let faceNumeralFont: DiceFaceNumeralFont
+	let largeFaceLabelsEnabled: Bool
 }
 
 private final class DiceStylePreviewViewController: UIViewController {
@@ -1666,6 +1692,7 @@ private final class DiceStylePreviewViewController: UIViewController {
 		previewBoard.setDieColorPreferences(state.dieColors)
 		previewBoard.setD6PipStyle(state.d6PipStyle)
 		previewBoard.setFaceNumeralFont(state.faceNumeralFont)
+		previewBoard.setLargeFaceLabelsEnabled(state.largeFaceLabelsEnabled)
 
 		summaryLabel.translatesAutoresizingMaskIntoConstraints = false
 		summaryLabel.font = .systemFont(ofSize: 13, weight: .medium)
@@ -2102,7 +2129,7 @@ class DiceCollectionViewCell: UICollectionViewCell {
 		diceButton.frame = contentView.bounds
 	}
 
-	func configure(faceValue: Int, sideCount: Int, index: Int, palette: DiceThemePalette, isLocked: Bool) {
+	func configure(faceValue: Int, sideCount: Int, index: Int, palette: DiceThemePalette, isLocked: Bool, largeFaceLabelsEnabled: Bool) {
 		currentPalette = palette
 		self.isLocked = isLocked
 		diceButton.accessibilityIdentifier = "dieButton_\(index)"
@@ -2116,10 +2143,10 @@ class DiceCollectionViewCell: UICollectionViewCell {
 			? NSLocalizedString("a11y.die.lockedHint", comment: "Locked die accessibility hint")
 			: NSLocalizedString("a11y.die.hint", comment: "Die button accessibility hint")
 		diceButton.accessibilityTraits = .button
-		setFaceValue(faceValue, sideCount: sideCount)
+		setFaceValue(faceValue, sideCount: sideCount, largeFaceLabelsEnabled: largeFaceLabelsEnabled)
 	}
 
-	private func setFaceValue(_ value: Int, sideCount: Int) {
+	private func setFaceValue(_ value: Int, sideCount: Int, largeFaceLabelsEnabled: Bool) {
 		if boardSupportedSides.contains(sideCount) {
 			diceButton.setTitle(nil, for: .normal)
 			diceButton.setImage(nil, for: .normal)
@@ -2131,7 +2158,9 @@ class DiceCollectionViewCell: UICollectionViewCell {
 			diceButton.setImage(nil, for: .normal)
 			diceButton.setTitle("\(value)", for: .normal)
 			diceButton.setTitleColor(currentPalette.fallbackDieTextColor, for: .normal)
-			diceButton.titleLabel?.font = UIFont.systemFont(ofSize: 36, weight: .bold)
+			let side = min(contentView.bounds.width, contentView.bounds.height)
+			let pointSize = DiceFaceLabelSizing.staticFallbackPointSize(cellSideLength: side, large: largeFaceLabelsEnabled)
+			diceButton.titleLabel?.font = UIFont.systemFont(ofSize: pointSize, weight: .bold)
 			diceButton.layer.borderColor = isLocked ? UIColor.systemYellow.cgColor : currentPalette.fallbackDieBorderColor.cgColor
 			diceButton.layer.borderWidth = isLocked ? 2 : 1
 			diceButton.layer.cornerRadius = 8
