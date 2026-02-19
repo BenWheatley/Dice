@@ -1437,6 +1437,16 @@ final class DiceTests: XCTestCase {
 		XCTAssertNotEqual(squareData, insetData)
 	}
 
+	func testD6PipFaceTexturesAreDistinctAcrossAllFaceValues() {
+		let textures = (1...6).map { D6SceneKitRenderConfig.faceTexture(value: $0, pipStyle: .round).pngData() }
+		XCTAssertTrue(textures.allSatisfy { $0 != nil })
+		for i in 0..<textures.count {
+			for j in (i + 1)..<textures.count {
+				XCTAssertNotEqual(textures[i], textures[j], "Expected unique pip texture for faces \(i + 1) and \(j + 1)")
+			}
+		}
+	}
+
 	func testNonD6NumeralFontsRemainReadableAcrossDieTypeFaceSizes() {
 		let dieSamples: [(sample: String, pointSize: CGFloat, canvas: CGSize, inset: CGFloat, label: String)] = [
 			("4", 36, CGSize(width: 96, height: 96), 10, "d4"),
@@ -1570,6 +1580,8 @@ final class DiceTests: XCTestCase {
 
 	func testD10MeshFacesArePlanar() {
 		let mesh = DiceCubeView.debugMeshData(sideCount: 10)
+		XCTAssertEqual(mesh.vertices.count, 12)
+		XCTAssertEqual(mesh.faces.count, 10)
 		for face in mesh.faces {
 			XCTAssertEqual(face.count, 4)
 			let a = mesh.vertices[face[0]]
@@ -1578,6 +1590,17 @@ final class DiceTests: XCTestCase {
 			let d = mesh.vertices[face[3]]
 			let volume6 = simd_dot(b - a, simd_cross(c - a, d - a))
 			XCTAssertEqual(volume6, 0, accuracy: 0.0001, "Non-planar face indices: \(face)")
+		}
+	}
+
+	func testD4MeshGeometryMatchesTetrahedronExpectations() {
+		let mesh = DiceCubeView.debugMeshData(sideCount: 4)
+		XCTAssertEqual(mesh.vertices.count, 4)
+		XCTAssertEqual(mesh.faces.count, 4)
+		for face in mesh.faces {
+			XCTAssertEqual(face.count, 3)
+			let uniqueIndices = Set(face)
+			XCTAssertEqual(uniqueIndices.count, 3)
 		}
 	}
 
