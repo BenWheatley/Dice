@@ -15,8 +15,26 @@ final class DiceUITests: XCTestCase {
 		continueAfterFailure = false
 		app = XCUIApplication()
 		app.launchArguments = ["-ui-testing", "-reset-state"]
-		app.launch()
+		// Launch-budget test controls launch timing itself.
+		if !name.contains("testStartupLaunchWithinBudget") {
+			app.launch()
+		}
 	}
+
+	func testStartupLaunchWithinBudget() {
+		app.terminate()
+		let budgetSeconds = 6.0
+		let start = Date()
+		app.launch()
+		let notationField = app.textFields["notationField"]
+		XCTAssertTrue(notationField.waitForExistence(timeout: 8), "Notation field should appear after launch")
+		let elapsed = Date().timeIntervalSince(start)
+			XCTAssertLessThanOrEqual(
+				elapsed,
+				budgetSeconds,
+				"Startup launch time \(String(format: "%.2f", elapsed))s exceeded budget \(budgetSeconds)s"
+			)
+		}
 
 	func testLaunchAndRollFromNotationInput() {
 		let notationField = app.textFields["notationField"]
