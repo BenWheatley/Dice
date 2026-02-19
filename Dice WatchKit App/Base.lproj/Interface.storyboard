@@ -17,7 +17,7 @@
                         <button alignment="center" verticalAlignment="center" id="64x-ie-It6">
                             <group key="contentGroup" width="1" height="1" alignment="left" id="Rub-qg-0Kw">
                                 <items>
-                                    <imageView width="1" height="1" alignment="center" verticalAlignment="center" image="1" contentMode="scaleAspectFit" id="fBg-Ge-r7O"/>
+                                    <imageView width="1" height="1" alignment="center" verticalAlignment="center" contentMode="scaleAspectFit" id="fBg-Ge-r7O"/>
                                 </items>
                             </group>
                             <connections>

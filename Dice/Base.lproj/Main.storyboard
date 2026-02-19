@@ -32,7 +32,7 @@
                                     <subviews>
                                         <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="z1r-9m-2f9">
                                             <rect key="frame" x="31" y="31" width="88" height="88"/>
-                                            <state key="normal" image="1"/>
+                                            <state key="normal"/>
                                             <connections>
                                                 <action selector="reroll:" destination="iU3-AV-BbE" eventType="touchUpInside" id="aei-mz-B5c"/>
                                             </connections>
@@ -59,7 +59,4 @@
             <point key="canvasLocation" x="-250.40000000000001" y="5.8470764617691158"/>
         </scene>
     </scenes>
-    <resources>
-        <image name="1" width="88" height="88"/>
-    </resources>
 </document>

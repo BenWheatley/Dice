@@ -206,8 +206,8 @@ final class DiceCubeView: UIView {
 		cameraNode.camera?.zNear = 1
 		cameraNode.camera?.zFar = 10_000
 		cameraNode.camera?.motionBlurIntensity = activeMotionBlurEnabled ? 0.45 : 0.0
-		cameraNode.position = SCNVector3(0, 120, 860)
-		cameraNode.eulerAngles = SCNVector3(-0.35, 0, 0)
+		cameraNode.position = SCNVector3(0, 0, 800)
+		cameraNode.eulerAngles = SCNVector3(0, 0, 0)
 		scene.rootNode.addChildNode(cameraNode)
 
 		let keyLight = SCNNode()
@@ -245,7 +245,7 @@ final class DiceCubeView: UIView {
 
 	private func updateCamera(animated: Bool) {
 		cameraNode.camera?.orthographicScale = Double(bounds.height / 2)
-		let target = (position: SCNVector3(0, 120, 860), euler: SCNVector3(-0.35, 0, 0))
+		let target = (position: SCNVector3(0, 0, 800), euler: SCNVector3(0, 0, 0))
 		guard animated else {
 			cameraNode.position = target.position
 			cameraNode.eulerAngles = target.euler

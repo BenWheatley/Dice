@@ -44,6 +44,8 @@ final class DiceUITests: XCTestCase {
 		let firstDie = app.buttons["dieButton_0"]
 		XCTAssertTrue(firstDie.waitForExistence(timeout: 5))
 		firstDie.tap()
+		XCTAssertTrue(app.buttons["Reroll This Die"].waitForExistence(timeout: 2))
+		app.buttons["Cancel"].tap()
 	}
 
 	func testResetStatsAndToggleAnimations() {
