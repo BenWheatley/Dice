@@ -1278,6 +1278,25 @@ final class DiceTests: XCTestCase {
 		XCTAssertFalse(text.contains("3D board preview unavailable"))
 	}
 
+	func testViewModelFormattedTotalsIncludesModeAndNotationLines() {
+		let suiteName = "DiceTests.viewmodel.stats.modeandnotation.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults),
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { $0.lowerBound }, randomDouble: { 0.1 }))
+		)
+		let supportedBoardSides: Set<Int> = [4, 6, 8, 10, 12, 20]
+
+		_ = viewModel.rollFromInput("2d6i")
+		let outcome = viewModel.rollCurrent()
+		let text = viewModel.formattedTotalsText(outcome: outcome, boardSupportedSides: supportedBoardSides)
+
+		XCTAssertTrue(text.contains("Mode: Intuitive"))
+		XCTAssertTrue(text.contains("Notation: 2d6i"))
+	}
+
 	func testViewModelFormattedTotalsShowsSingleUnsupportedSideWarning() {
 		let suiteName = "DiceTests.viewmodel.board.singleunsupported.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!

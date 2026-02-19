@@ -403,6 +403,11 @@ final class DiceViewModel {
 		lines.append(String(
 			format: NSLocalizedString("stats.mode", comment: "Current mode and notation"),
 			locale: .current,
+			localizedModeLabel(intuitive: appState.configuration.intuitive)
+		))
+		lines.append(String(
+			format: NSLocalizedString("stats.notation", comment: "Current notation line"),
+			locale: .current,
 			appState.configuration.notation
 		))
 
@@ -460,6 +465,11 @@ final class DiceViewModel {
 		appendHistory(for: activeConfiguration, outcome: outcome)
 		telemetry.logRoll(configuration: activeConfiguration, sum: outcome.sum, diceCount: activeConfiguration.diceCount)
 		return outcome
+	}
+
+	private func localizedModeLabel(intuitive: Bool) -> String {
+		let key = intuitive ? "stats.mode.intuitive" : "stats.mode.trueRandom"
+		return NSLocalizedString(key, comment: "Localized mode label in stats output")
 	}
 
 	private func applyLocks(to outcome: RollOutcome, previousValues: [Int], previousSideCounts: [Int]) -> RollOutcome {
