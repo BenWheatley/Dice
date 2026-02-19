@@ -577,9 +577,14 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			guard let self else { return }
 			self.presentExportSheet(content: self.viewModel.exportHistory(format: .csv), filename: "dice-history.csv")
 		}
-		historyViewController.onClearHistory = { [weak self, weak historyViewController] in
+		historyViewController.onClearRecentOnly = { [weak self, weak historyViewController] in
 			guard let self else { return }
-			self.viewModel.clearHistory()
+			self.viewModel.clearRecentHistory()
+			historyViewController?.updateEntries([], histogramSummary: nil, indicatorSummary: nil, indicatorTooltip: nil)
+		}
+		historyViewController.onClearPersistedAll = { [weak self, weak historyViewController] in
+			guard let self else { return }
+			self.viewModel.clearPersistedHistory()
 			historyViewController?.updateEntries([], histogramSummary: nil, indicatorSummary: nil, indicatorTooltip: nil)
 		}
 		historyViewController.onShareSummary = { [weak self] entries in
@@ -1736,7 +1741,8 @@ private final class DiceStylePreviewViewController: UIViewController {
 private final class RollHistoryViewController: UITableViewController, UISearchResultsUpdating {
 	var onExportText: (() -> Void)?
 	var onExportCSV: (() -> Void)?
-	var onClearHistory: (() -> Void)?
+	var onClearRecentOnly: (() -> Void)?
+	var onClearPersistedAll: (() -> Void)?
 	var onShareSummary: (([RollHistoryEntry]) -> Void)?
 
 	private var allEntries: [RollHistoryEntry]
@@ -1834,13 +1840,19 @@ private final class RollHistoryViewController: UITableViewController, UISearchRe
 			guard let self else { return }
 			onShareSummary?(visibleEntries)
 		}
-		let clear = UIAction(
-			title: NSLocalizedString("history.clear", comment: "Clear history action"),
+		let clearRecent = UIAction(
+			title: NSLocalizedString("history.clearRecent", comment: "Clear recent history action"),
 			attributes: .destructive
 		) { [weak self] _ in
-			self?.onClearHistory?()
+			self?.onClearRecentOnly?()
 		}
-		return UIMenu(children: [exportText, exportCSV, shareSummary, clear])
+		let clearPersisted = UIAction(
+			title: NSLocalizedString("history.clearPersisted", comment: "Clear persisted history action"),
+			attributes: .destructive
+		) { [weak self] _ in
+			self?.onClearPersistedAll?()
+		}
+		return UIMenu(children: [exportText, exportCSV, shareSummary, clearRecent, clearPersisted])
 	}
 
 	private func filterMenu() -> UIMenu {

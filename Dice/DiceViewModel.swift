@@ -242,7 +242,15 @@ final class DiceViewModel {
 	}
 
 	func clearHistory() {
+		clearRecentHistory()
+		clearPersistedHistory()
+	}
+
+	func clearRecentHistory() {
 		rollHistory.clearSession()
+	}
+
+	func clearPersistedHistory() {
 		rollHistory.clearPersistedRecent()
 		historyStore.savePersistedEntries([])
 	}

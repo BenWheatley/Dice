@@ -99,6 +99,8 @@
 "history.export.csv" = "Export CSV";
 "history.export.summary" = "Share Summary Card";
 "history.clear" = "Clear History";
+"history.clearRecent" = "Clear Recent Only";
+"history.clearPersisted" = "Clear All Persisted";
 "history.empty" = "No rolls in this session yet.";
 "history.row.time" = "Time: %@";
 "history.row.values" = "Values: %@";

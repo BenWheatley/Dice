@@ -808,6 +808,26 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(historyStore.loadPersistedEntries().isEmpty)
 	}
 
+	func testViewModelClearRecentAndPersistedActionsAreIndependent() {
+		let suiteName = "DiceTests.viewmodel.history.clear.split.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let historyStore = DiceRollHistoryStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: historyStore,
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { _ in 3 }, randomDouble: { 0.5 }))
+		)
+
+		_ = viewModel.rollFromInput("2d6")
+		viewModel.clearRecentHistory()
+		XCTAssertTrue(viewModel.historyEntries.isEmpty)
+		XCTAssertFalse(historyStore.loadPersistedEntries().isEmpty)
+
+		viewModel.clearPersistedHistory()
+		XCTAssertTrue(historyStore.loadPersistedEntries().isEmpty)
+	}
+
 	func testViewModelExportHistoryProvidesTextAndCSV() {
 		let suiteName = "DiceTests.viewmodel.history.export.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!
