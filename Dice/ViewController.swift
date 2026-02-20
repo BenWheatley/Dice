@@ -671,6 +671,14 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			self?.shareHistorySummaryCard(entries: entries)
 		}
 		let navigationController = UINavigationController(rootViewController: historyViewController)
+		switch viewModel.theme {
+		case .lightMode:
+			navigationController.overrideUserInterfaceStyle = .light
+		case .darkMode:
+			navigationController.overrideUserInterfaceStyle = .dark
+		case .system:
+			navigationController.overrideUserInterfaceStyle = .unspecified
+		}
 		navigationController.modalPresentationStyle = .formSheet
 		if let popover = navigationController.popoverPresentationController {
 			popover.sourceView = menuButton
