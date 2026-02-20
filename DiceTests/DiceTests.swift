@@ -1736,6 +1736,27 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(locked, Set([0, 1, 2, 4]))
 	}
 
+	func testGraphBarHeightsScaleRelativeToLargestBin() {
+		let heights = DiceCollectionViewController.graphBarHeights(
+			for: [0, 2, 4],
+			maxBarHeight: 46,
+			minBarHeight: 2
+		)
+		XCTAssertEqual(heights.count, 3)
+		XCTAssertEqual(heights[0], 2, accuracy: 0.001)
+		XCTAssertEqual(heights[1], 25, accuracy: 0.001)
+		XCTAssertEqual(heights[2], 48, accuracy: 0.001)
+	}
+
+	func testGraphBarHeightsUseMinimumWhenAllBinsAreZero() {
+		let heights = DiceCollectionViewController.graphBarHeights(
+			for: [0, 0, 0],
+			maxBarHeight: 46,
+			minBarHeight: 2
+		)
+		XCTAssertEqual(heights, [2, 2, 2])
+	}
+
 	func testWatchViewModelRepeatLastRollUsesPreviousModeConfiguration() {
 		let model = WatchRollViewModel(
 			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { $0.lowerBound }, randomDouble: { 0.5 })),

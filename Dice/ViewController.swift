@@ -20,6 +20,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let notationField = UITextField()
 	private let validationLabel = UILabel()
 	private let totalsLabel = UILabel()
+	private let totalsGraphStack = UIStackView()
 	private let totalsContainer = UIView()
 	private let rollButton = UIButton(type: .system)
 	private let presetsButton = UIButton(type: .system)
@@ -32,6 +33,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private var appliedTextureSize: CGSize = .zero
 	private let statsVisibilityKey = "Dice.showStats"
 	private var statsVisible = true
+	private var totalsBarHeightConstraints: [NSLayoutConstraint] = []
+	private var totalsBarViews: [UIView] = []
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -196,13 +199,22 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		totalsLabel.backgroundColor = .clear
 		totalsLabel.font = UIFont.preferredFont(forTextStyle: .body)
 		totalsLabel.adjustsFontForContentSizeCategory = true
-		totalsLabel.numberOfLines = 0
+		totalsLabel.numberOfLines = 1
 		totalsLabel.textColor = currentPalette.secondaryTextColor
 		totalsLabel.textAlignment = .left
+		totalsLabel.text = NSLocalizedString("stats.graph.title", comment: "Stats graph title")
 		totalsLabel.accessibilityIdentifier = "totalsLabel"
 		totalsLabel.accessibilityLabel = NSLocalizedString("a11y.totals.label", comment: "Totals accessibility label")
 
+		totalsGraphStack.translatesAutoresizingMaskIntoConstraints = false
+		totalsGraphStack.axis = .horizontal
+		totalsGraphStack.alignment = .bottom
+		totalsGraphStack.distribution = .fillEqually
+		totalsGraphStack.spacing = 3
+		configureTotalsGraphBars(count: 12)
+
 		totalsContainer.addSubview(totalsLabel)
+		totalsContainer.addSubview(totalsGraphStack)
 
 		controlsContainer.addSubview(row)
 		controlsContainer.addSubview(validationLabel)
@@ -227,8 +239,12 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 			totalsLabel.leadingAnchor.constraint(equalTo: totalsContainer.leadingAnchor, constant: 8),
 			totalsLabel.topAnchor.constraint(equalTo: totalsContainer.topAnchor, constant: 8),
-			totalsLabel.bottomAnchor.constraint(equalTo: totalsContainer.bottomAnchor, constant: -8),
 			totalsLabel.trailingAnchor.constraint(equalTo: totalsContainer.trailingAnchor, constant: -8),
+			totalsGraphStack.leadingAnchor.constraint(equalTo: totalsContainer.leadingAnchor, constant: 8),
+			totalsGraphStack.trailingAnchor.constraint(equalTo: totalsContainer.trailingAnchor, constant: -8),
+			totalsGraphStack.topAnchor.constraint(equalTo: totalsLabel.bottomAnchor, constant: 8),
+			totalsGraphStack.heightAnchor.constraint(equalToConstant: 48),
+			totalsGraphStack.bottomAnchor.constraint(equalTo: totalsContainer.bottomAnchor, constant: -8),
 
 			rollButton.widthAnchor.constraint(equalToConstant: 52),
 			presetsButton.widthAnchor.constraint(equalToConstant: 72),
@@ -712,11 +728,66 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	@objc private func resetStats() {
 		viewModel.resetStats()
-		totalsLabel.text = "  \(NSLocalizedString("stats.reset", comment: "Stats reset confirmation"))"
+		totalsLabel.text = NSLocalizedString("stats.graph.title", comment: "Stats graph title")
+		totalsLabel.accessibilityValue = NSLocalizedString("stats.reset", comment: "Stats reset confirmation")
+		updateTotalsGraph(with: [])
 	}
 
 	private func updateTotalsText(outcome: RollOutcome) {
-		totalsLabel.text = viewModel.formattedTotalsText(outcome: outcome, boardSupportedSides: boardSupportedSides)
+		totalsLabel.text = NSLocalizedString("stats.graph.title", comment: "Stats graph title")
+		totalsLabel.accessibilityValue = viewModel.formattedTotalsText(outcome: outcome, boardSupportedSides: boardSupportedSides)
+		updateTotalsGraph(with: outcome.localTotals)
+	}
+
+	private func configureTotalsGraphBars(count: Int) {
+		totalsBarHeightConstraints.removeAll()
+		totalsBarViews.removeAll()
+		totalsGraphStack.arrangedSubviews.forEach { view in
+			totalsGraphStack.removeArrangedSubview(view)
+			view.removeFromSuperview()
+		}
+		for _ in 0..<count {
+			let container = UIView()
+			container.backgroundColor = .clear
+			let bar = UIView()
+			bar.translatesAutoresizingMaskIntoConstraints = false
+			bar.layer.cornerRadius = 2
+			bar.backgroundColor = currentPalette.primaryTextColor
+			container.addSubview(bar)
+			let height = bar.heightAnchor.constraint(equalToConstant: 2)
+			NSLayoutConstraint.activate([
+				bar.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+				bar.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+				bar.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+				height,
+			])
+			totalsBarHeightConstraints.append(height)
+			totalsBarViews.append(bar)
+			totalsGraphStack.addArrangedSubview(container)
+		}
+	}
+
+	private func updateTotalsGraph(with counts: [Int]) {
+		if counts.count != totalsBarHeightConstraints.count {
+			configureTotalsGraphBars(count: max(4, counts.count))
+		}
+		let clampedBins = Array(counts.prefix(totalsBarHeightConstraints.count))
+		let heights = Self.graphBarHeights(for: clampedBins, maxBarHeight: 46, minBarHeight: 2)
+		for index in totalsBarHeightConstraints.indices {
+			let bin = index < clampedBins.count ? clampedBins[index] : 0
+			let height = index < heights.count ? heights[index] : 2
+			totalsBarHeightConstraints[index].constant = height
+			totalsBarViews[index].alpha = bin > 0 ? 1.0 : 0.28
+		}
+	}
+
+	static func graphBarHeights(for counts: [Int], maxBarHeight: CGFloat, minBarHeight: CGFloat) -> [CGFloat] {
+		let maxCount = counts.max() ?? 0
+		return counts.map { count in
+			guard maxCount > 0 else { return minBarHeight }
+			let ratio = CGFloat(count) / CGFloat(maxCount)
+			return minBarHeight + (maxBarHeight * ratio)
+		}
 	}
 
 	private func showValidationError(message: String) {
@@ -1243,6 +1314,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		controlsContainer?.backgroundColor = palette.panelBackgroundColor
 		totalsContainer.backgroundColor = palette.panelBackgroundColor
 		totalsLabel.textColor = palette.secondaryTextColor
+		for bar in totalsBarViews {
+			bar.backgroundColor = palette.primaryTextColor
+		}
 		validationLabel.textColor = palette.validationColor
 		notationField.textColor = palette.primaryTextColor
 		notationField.keyboardAppearance = keyboardAppearance(for: viewModel.theme)

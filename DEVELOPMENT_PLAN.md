@@ -180,6 +180,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Ensure Roll History presentation respects selected theme override (light, dark, system) just like the main options sheet.
 - [x] Replace per-die alert sheets with contextual die menus attached to each die button, including reroll/lock/color/style actions.
 - [x] Re-fix D4 corner-label regression by sourcing material refresh face-order directly from built tetrahedron geometry ordering so UV corner mapping and displayed vertex values stay aligned.
+- [x] Convert stats panel from multiline text output to graph-first presentation with accessibility summary text, and add regression tests for bar-height scaling behavior.
 
 ## 12. watchOS Small-Screen Interface Plan
 

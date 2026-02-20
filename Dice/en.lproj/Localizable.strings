@@ -129,6 +129,7 @@
 "stats.mode.trueRandom" = "True Random";
 "stats.mode.intuitive" = "Intuitive";
 "stats.mode.mixed" = "Mixed";
+"stats.graph.title" = "Roll Distribution";
 "stats.notation" = "Notation: %@";
 "stats.rollCounts" = "Roll counts: %@";
 "stats.rollSum" = "Roll total: %d";
