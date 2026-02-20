@@ -1713,6 +1713,24 @@ final class DiceTests: XCTestCase {
 		XCTAssertNil(DiceCollectionViewController.dieIndexFromAccessibilityIdentifier("dieButton_x"))
 	}
 
+	func testBoardAnimationLockedIndicesUsesPersistentLocksWhenNoAnimationSubsetProvided() {
+		let locked = DiceCollectionViewController.boardAnimationLockedIndices(
+			totalDice: 5,
+			persistentLocked: [1, 4],
+			animatingIndices: nil
+		)
+		XCTAssertEqual(locked, Set([1, 4]))
+	}
+
+	func testBoardAnimationLockedIndicesFreezesNonTargetDiceForSingleDieAnimation() {
+		let locked = DiceCollectionViewController.boardAnimationLockedIndices(
+			totalDice: 5,
+			persistentLocked: [1],
+			animatingIndices: [3]
+		)
+		XCTAssertEqual(locked, Set([0, 1, 2, 4]))
+	}
+
 	func testWatchViewModelRepeatLastRollUsesPreviousModeConfiguration() {
 		let model = WatchRollViewModel(
 			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { $0.lowerBound }, randomDouble: { 0.5 })),

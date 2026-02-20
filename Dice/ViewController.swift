@@ -432,7 +432,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		updateTotalsText(outcome: outcome)
 		collectionView.reloadItems(at: [IndexPath(row: index, section: 0)])
 		collectionView.layoutIfNeeded()
-		updateDiceBoard(animated: shouldAnimateBoard)
+		updateDiceBoard(animated: shouldAnimateBoard, animatingIndices: [index])
 		playRollSound()
 		return outcome
 	}
@@ -442,7 +442,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		collectionView.reloadItems(at: [IndexPath(row: index, section: 0)])
 	}
 
-	private func updateDiceBoard(animated: Bool) {
+	private func updateDiceBoard(animated: Bool, animatingIndices: Set<Int>? = nil) {
 		let sideCounts = viewModel.diceSideCounts
 		guard !sideCounts.isEmpty,
 			  sideCounts.allSatisfy({ boardSupportedSides.contains($0) }) else {
@@ -498,6 +498,11 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 		let colorOverrides = (0..<values.count).map { viewModel.dieColorOverridesByIndex[$0] }
 		let fontOverrides = (0..<values.count).map { viewModel.dieFaceNumeralFontOverridesByIndex[$0] }
+		let boardLockedIndices = Self.boardAnimationLockedIndices(
+			totalDice: values.count,
+			persistentLocked: viewModel.lockedDieIndices,
+			animatingIndices: animatingIndices
+		)
 		diceBoardView.setDice(
 			values: values,
 			centers: centers,
@@ -505,9 +510,19 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			sideCounts: boardSideCounts,
 			dieColorPresets: colorOverrides,
 			faceNumeralFonts: fontOverrides,
-			lockedIndices: viewModel.lockedDieIndices,
+			lockedIndices: boardLockedIndices,
 			animated: animated
 		)
+	}
+
+	static func boardAnimationLockedIndices(totalDice: Int, persistentLocked: Set<Int>, animatingIndices: Set<Int>?) -> Set<Int> {
+		guard let animatingIndices else { return persistentLocked }
+		let validAnimating = Set(animatingIndices.filter { $0 >= 0 && $0 < totalDice })
+		var locked = persistentLocked
+		for index in 0..<totalDice where !validAnimating.contains(index) {
+			locked.insert(index)
+		}
+		return locked
 	}
 
 	private func showInvalidNotationAlert(message: String) {
