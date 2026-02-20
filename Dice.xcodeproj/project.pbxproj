@@ -52,6 +52,21 @@
 		C0DE00482F440C4900D1CE00 /* DiceBoardLayoutPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00472F440C4900D1CE00 /* DiceBoardLayoutPreset.swift */; };
 		C0DE004B2F44A00100D1CE00 /* DiceFaceLabelSizing.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE004D2F44A00100D1CE00 /* DiceFaceLabelSizing.swift */; };
 		C0DE004E2F44A20100D1CE00 /* DiceMotionBehaviorProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE004F2F44A20100D1CE00 /* DiceMotionBehaviorProfile.swift */; };
+		D1CE11012F50000100D1CE00 /* DiceCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10012F50000100D1CE00 /* DiceCollectionViewCell.swift */; };
+		D1CE11022F50000200D1CE00 /* DiceHapticsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10022F50000200D1CE00 /* DiceHapticsEngine.swift */; };
+		D1CE11032F50000300D1CE00 /* DiceMetalTextureRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10032F50000300D1CE00 /* DiceMetalTextureRenderer.swift */; };
+		D1CE11042F50000400D1CE00 /* DiceOptionsSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10042F50000400D1CE00 /* DiceOptionsSheetViewController.swift */; };
+		D1CE11052F50000500D1CE00 /* DiceOptionsSectionBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10052F50000500D1CE00 /* DiceOptionsSectionBuilder.swift */; };
+		D1CE11062F50000600D1CE00 /* DiceShaderBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10062F50000600D1CE00 /* DiceShaderBackgroundView.swift */; };
+		D1CE11072F50000700D1CE00 /* DiceSoundEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10072F50000700D1CE00 /* DiceSoundEngine.swift */; };
+		D1CE11082F50000800D1CE00 /* DiceAudioFormatResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10082F50000800D1CE00 /* DiceAudioFormatResolver.swift */; };
+		D1CE11092F50000900D1CE00 /* DiceStylePreviewState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10092F50000900D1CE00 /* DiceStylePreviewState.swift */; };
+		D1CE110A2F50000A00D1CE00 /* DiceStylePreviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE100A2F50000A00D1CE00 /* DiceStylePreviewViewController.swift */; };
+		D1CE110B2F50000B00D1CE00 /* HistoryRowFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE100B2F50000B00D1CE00 /* HistoryRowFormatter.swift */; };
+		D1CE110C2F50000C00D1CE00 /* HistorySummaryCardRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE100C2F50000C00D1CE00 /* HistorySummaryCardRenderer.swift */; };
+		D1CE110D2F50000D00D1CE00 /* PresetManagerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE100D2F50000D00D1CE00 /* PresetManagerViewController.swift */; };
+		D1CE110E2F50000E00D1CE00 /* PresetPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE100E2F50000E00D1CE00 /* PresetPickerViewController.swift */; };
+		D1CE110F2F50000F00D1CE00 /* RollHistoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE100F2F50000F00D1CE00 /* RollHistoryViewController.swift */; };
 		C0DE00212F44022100D1CE00 /* DiceNotationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00002F44000100D1CE00 /* DiceNotationParser.swift */; };
 		C0DE00232F44022300D1CE00 /* TrueRandomRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00022F44003200D1CE00 /* TrueRandomRoller.swift */; };
 		C0DE00252F44022500D1CE00 /* IntuitiveRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00042F44005400D1CE00 /* IntuitiveRoller.swift */; };
@@ -167,6 +182,21 @@
 		C0DE004F2F44A20100D1CE00 /* DiceMotionBehaviorProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceMotionBehaviorProfile.swift; sourceTree = "<group>"; };
 		C0DE00302F44033100D1CE00 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		C0DE00142F44016400D1CE00 /* WatchRollViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRollViewModel.swift; sourceTree = "<group>"; };
+		D1CE10012F50000100D1CE00 /* DiceCollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceCollectionViewCell.swift; sourceTree = "<group>"; };
+		D1CE10022F50000200D1CE00 /* DiceHapticsEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceHapticsEngine.swift; sourceTree = "<group>"; };
+		D1CE10032F50000300D1CE00 /* DiceMetalTextureRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceMetalTextureRenderer.swift; sourceTree = "<group>"; };
+		D1CE10042F50000400D1CE00 /* DiceOptionsSheetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceOptionsSheetViewController.swift; sourceTree = "<group>"; };
+		D1CE10052F50000500D1CE00 /* DiceOptionsSectionBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceOptionsSectionBuilder.swift; sourceTree = "<group>"; };
+		D1CE10062F50000600D1CE00 /* DiceShaderBackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceShaderBackgroundView.swift; sourceTree = "<group>"; };
+		D1CE10072F50000700D1CE00 /* DiceSoundEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceSoundEngine.swift; sourceTree = "<group>"; };
+		D1CE10082F50000800D1CE00 /* DiceAudioFormatResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceAudioFormatResolver.swift; sourceTree = "<group>"; };
+		D1CE10092F50000900D1CE00 /* DiceStylePreviewState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceStylePreviewState.swift; sourceTree = "<group>"; };
+		D1CE100A2F50000A00D1CE00 /* DiceStylePreviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceStylePreviewViewController.swift; sourceTree = "<group>"; };
+		D1CE100B2F50000B00D1CE00 /* HistoryRowFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryRowFormatter.swift; sourceTree = "<group>"; };
+		D1CE100C2F50000C00D1CE00 /* HistorySummaryCardRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistorySummaryCardRenderer.swift; sourceTree = "<group>"; };
+		D1CE100D2F50000D00D1CE00 /* PresetManagerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetManagerViewController.swift; sourceTree = "<group>"; };
+		D1CE100E2F50000E00D1CE00 /* PresetPickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetPickerViewController.swift; sourceTree = "<group>"; };
+		D1CE100F2F50000F00D1CE00 /* RollHistoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollHistoryViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -256,6 +286,21 @@
 				C0DE004F2F44A20100D1CE00 /* DiceMotionBehaviorProfile.swift */,
 				C0DE00142F44016400D1CE00 /* WatchRollViewModel.swift */,
 				B57DA5B92F4228E00057BC3A /* DiceCubeView.swift */,
+				D1CE100B2F50000B00D1CE00 /* HistoryRowFormatter.swift */,
+				D1CE100C2F50000C00D1CE00 /* HistorySummaryCardRenderer.swift */,
+				D1CE10042F50000400D1CE00 /* DiceOptionsSheetViewController.swift */,
+				D1CE10052F50000500D1CE00 /* DiceOptionsSectionBuilder.swift */,
+				D1CE10072F50000700D1CE00 /* DiceSoundEngine.swift */,
+				D1CE10082F50000800D1CE00 /* DiceAudioFormatResolver.swift */,
+				D1CE10022F50000200D1CE00 /* DiceHapticsEngine.swift */,
+				D1CE100E2F50000E00D1CE00 /* PresetPickerViewController.swift */,
+				D1CE100D2F50000D00D1CE00 /* PresetManagerViewController.swift */,
+				D1CE10092F50000900D1CE00 /* DiceStylePreviewState.swift */,
+				D1CE100A2F50000A00D1CE00 /* DiceStylePreviewViewController.swift */,
+				D1CE10062F50000600D1CE00 /* DiceShaderBackgroundView.swift */,
+				D1CE10032F50000300D1CE00 /* DiceMetalTextureRenderer.swift */,
+				D1CE100F2F50000F00D1CE00 /* RollHistoryViewController.swift */,
+				D1CE10012F50000100D1CE00 /* DiceCollectionViewCell.swift */,
 				B50B44D4215D803D00A6399B /* Main.storyboard */,
 				B50B44D7215D804100A6399B /* Assets.xcassets */,
 				B50B44D9215D804100A6399B /* LaunchScreen.storyboard */,
@@ -523,6 +568,21 @@
 				C0DE00032F44003200D1CE00 /* TrueRandomRoller.swift in Sources */,
 				C0DE00012F44000100D1CE00 /* DiceNotationParser.swift in Sources */,
 				B57DA5BA2F4228E00057BC3A /* DiceCubeView.swift in Sources */,
+				D1CE110B2F50000B00D1CE00 /* HistoryRowFormatter.swift in Sources */,
+				D1CE110C2F50000C00D1CE00 /* HistorySummaryCardRenderer.swift in Sources */,
+				D1CE11042F50000400D1CE00 /* DiceOptionsSheetViewController.swift in Sources */,
+				D1CE11052F50000500D1CE00 /* DiceOptionsSectionBuilder.swift in Sources */,
+				D1CE11072F50000700D1CE00 /* DiceSoundEngine.swift in Sources */,
+				D1CE11082F50000800D1CE00 /* DiceAudioFormatResolver.swift in Sources */,
+				D1CE11022F50000200D1CE00 /* DiceHapticsEngine.swift in Sources */,
+				D1CE110E2F50000E00D1CE00 /* PresetPickerViewController.swift in Sources */,
+				D1CE110D2F50000D00D1CE00 /* PresetManagerViewController.swift in Sources */,
+				D1CE11092F50000900D1CE00 /* DiceStylePreviewState.swift in Sources */,
+				D1CE110A2F50000A00D1CE00 /* DiceStylePreviewViewController.swift in Sources */,
+				D1CE11062F50000600D1CE00 /* DiceShaderBackgroundView.swift in Sources */,
+				D1CE11032F50000300D1CE00 /* DiceMetalTextureRenderer.swift in Sources */,
+				D1CE110F2F50000F00D1CE00 /* RollHistoryViewController.swift in Sources */,
+				D1CE11012F50000100D1CE00 /* DiceCollectionViewCell.swift in Sources */,
 				B50B44D3215D803D00A6399B /* ViewController.swift in Sources */,
 				B50B44D2215D803D00A6399A /* SceneDelegate.swift in Sources */,
 				B50B44D1215D803D00A6399B /* AppDelegate.swift in Sources */,

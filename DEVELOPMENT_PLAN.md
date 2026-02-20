@@ -162,6 +162,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Add property-based parser tests for mixed separators and whitespace/edge formatting.
 - [x] Add startup performance budget checks and automated alerting for regressions in CI.
 - [x] Add crash/telemetry event aggregation dashboard document for release triage workflow.
+- [x] Enforce single-responsibility split for UI support types by extracting controller-adjacent classes/helpers into dedicated Swift files and wiring target membership.
 
 ## 12. watchOS Small-Screen Interface Plan
 
