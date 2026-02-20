@@ -55,11 +55,17 @@ fragment float4 diceBgFragment(
 	}
 
 	if (uniforms.mode == 1) {
-		float grainA = sin((uv.y * uniforms.resolution.y * 0.28) + noise2(float2(uv.y * 58.0, 0.0)) * 5.0);
-		float grainB = sin((uv.y * uniforms.resolution.y * 1.05) + noise2(float2(uv.y * 180.0, 1.0)) * 4.5);
+		float ringCoord = uv.y * uniforms.resolution.y * 0.23;
+		float boundaryWarp = (noise2(float2(uv.x * uniforms.resolution.x * 0.018, uv.y * uniforms.resolution.y * 0.036)) - 0.5) * 18.0;
+		boundaryWarp += (noise2(float2(uv.x * uniforms.resolution.x * 0.044 + 13.0, uv.y * uniforms.resolution.y * 0.072 + 2.0)) - 0.5) * 7.0;
+		float ringXWarp = (noise2(float2(uv.x * uniforms.resolution.x * 0.11, uv.y * uniforms.resolution.y * 0.012 + 5.0)) - 0.5) * 4.5;
+		float warpedCoord = ringCoord + boundaryWarp + ringXWarp;
+		float grainA = sin(warpedCoord * 0.27 + noise2(float2(warpedCoord * 0.032, 0.0)) * 5.0);
+		float grainB = sin(warpedCoord * 1.03 + noise2(float2(warpedCoord * 0.096, 1.0)) * 4.4);
 		float fine = noise2(float2(uv.x * uniforms.resolution.x * 0.22, uv.y * uniforms.resolution.y * 0.9));
 		float pore = smoothstep(0.84, 0.98, noise2(float2(uv.x * uniforms.resolution.x * 0.90, uv.y * uniforms.resolution.y * 2.8)));
 		float rings = grainA * 0.05 + grainB * 0.02 + (fine - 0.5) * 0.01 - pore * 0.04;
+		rings += (noise2(float2(warpedCoord * 0.021, uv.x * uniforms.resolution.x * 0.055)) - 0.5) * 0.012;
 		float3 base = float3(0.49, 0.31, 0.18);
 		float3 color = base + float3(rings, rings * 0.7, rings * 0.4);
 		return float4(color, 1.0);
