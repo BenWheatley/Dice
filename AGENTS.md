@@ -39,6 +39,12 @@ These rules apply to all agents working in this repository.
 12. Do not require non-standard local tooling:
    - do not assume user machines have optional CLI tools installed
    - when suggesting or requiring commands, prefer broadly available defaults or provide a fallback
+13. Avoid quick workarounds when first-class platform paths exist:
+   - do not ship temporary or shortcut implementations when a standard platform-native approach is available
+   - if a temporary approach is ever proposed for unblock reasons, get explicit user approval first and record follow-up work
+14. Prioritize strong engineering quality and low technical debt:
+   - choose maintainable, testable designs over expedient hacks
+   - keep abstractions clear and cohesive, and reduce future rework during current implementation
 
 ## Platform/Feature Scope
 
