@@ -29,6 +29,9 @@ These rules apply to all agents working in this repository.
 9. Keep deterministic animation seed/replay controls out of end-user UI:
    - do not add seed/replay options to production menus or settings
    - if seed-based behavior is needed for debugging, keep it test-only or internal developer tooling
+10. Honor explicitly requested implementation technologies:
+   - when the user specifies a concrete technology (for example, "switch to shaders"), implement using that technology
+   - do not substitute an alternative approach that seems similar without first getting explicit user approval
 
 ## Platform/Feature Scope
 
