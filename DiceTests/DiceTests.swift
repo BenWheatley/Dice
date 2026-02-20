@@ -1768,6 +1768,12 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(changedAtLeastOneFace)
 	}
 
+	func testD4MaterialFaceLabelsMatchOrderedCornerMapping() {
+		let ordered = DiceCubeView.debugD4OrderedFaceVertexLabels()
+		let material = DiceCubeView.debugD4MaterialFaceVertexLabels()
+		XCTAssertEqual(material, ordered)
+	}
+
 	func testD4OrientationMapsRollValueToCameraFacingVertex() {
 		for value in 1...4 {
 			XCTAssertEqual(DiceCubeView.debugD4TopVertex(for: value), value)

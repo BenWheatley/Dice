@@ -169,6 +169,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Fix shader and D4 regressions: neutral background must never render black, and D4 face-vertex label winding/orientation must not mirror across faces.
 - [x] Replace D4 digit derivation from raw mesh vertex indices with an explicit canonical vertex-value map, and use that map for top-face orientation.
 - [x] Replace D4 2D label-placement heuristic with 3D tetrahedron-derived placement/orientation (vertex to opposite-face-center direction) so displayed digits follow physical D4 rules.
+- [x] Fix D4 corner-label regressions by aligning material-refresh face ordering with tetrahedron UV corner ordering, backed by regression tests.
 
 ## 12. watchOS Small-Screen Interface Plan
 

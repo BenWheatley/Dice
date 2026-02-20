@@ -396,10 +396,16 @@ final class DiceCubeView: UIView {
 	static func debugD4OrderedFaceVertexLabels() -> [[Int]] {
 		let view = DiceCubeView(frame: .zero)
 		let vertices = view.tetrahedronVertices()
-		return view.tetrahedronFaces().map { face in
-			let ordered = view.d4OrderedFaceVertices(for: face, vertices: vertices)
-			return view.d4VertexLabels(forFace: ordered)
+		let faces = view.tetrahedronFaces().map { face in
+			view.d4OrderedFaceVertices(for: face, vertices: vertices)
 		}
+		return faces.map { view.d4VertexLabels(forFace: $0) }
+	}
+
+	static func debugD4MaterialFaceVertexLabels() -> [[Int]] {
+		let view = DiceCubeView(frame: .zero)
+		let faces = view.materialFaces(for: 4)
+		return faces.map { view.d4VertexLabels(forFace: $0) }
 	}
 
 	static func debugD4TopVertex(for value: Int) -> Int {
@@ -424,11 +430,17 @@ final class DiceCubeView: UIView {
 	static func debugD4LabelLayout(size: CGSize) -> (triangle: [CGPoint], placements: [(position: CGPoint, angle: CGFloat)]) {
 		let view = DiceCubeView(frame: .zero)
 		let triangle = view.d4TrianglePoints(size: size)
-		let face = view.tetrahedronFaces().first ?? [0, 1, 2]
-		let placements = view.d4LabelPlacements(face: face, vertices: view.tetrahedronVertices(), triangle: triangle)
-		return (triangle: triangle, placements: placements.map { (position: $0.position, angle: $0.angle) })
+		let placements = view.d4LabelPlacements(triangle: triangle)
+		return (triangle: triangle, placements: placements)
 	}
 #endif
+
+	private func materialFaces(for sideCount: Int) -> [[Int]] {
+		let faces = meshData(for: sideCount).faces
+		guard sideCount == 4 else { return faces }
+		let vertices = tetrahedronVertices()
+		return faces.map { d4OrderedFaceVertices(for: $0, vertices: vertices) }
+	}
 
 	private func buildGeometry(sideLength: CGFloat, sideCount: Int) -> BuiltMesh {
 		let mesh = meshData(for: sideCount)
@@ -549,7 +561,7 @@ final class DiceCubeView: UIView {
 		if sideCount == 6 {
 			material.diffuse.contents = D6SceneKitRenderConfig.faceTexture(value: value, fillColor: resolvedFillColor, pipStyle: activeD6PipStyle)
 		} else if sideCount == 4 {
-			material.diffuse.contents = d4FaceTexture(face: face, fillColor: resolvedFillColor, numeralFont: resolvedFont)
+			material.diffuse.contents = d4FaceTexture(vertexLabels: d4VertexLabels(forFace: face), fillColor: resolvedFillColor, numeralFont: resolvedFont)
 		} else {
 			material.diffuse.contents = faceValueTexture(value: value, sideCount: sideCount, fillColor: resolvedFillColor, numeralFont: resolvedFont)
 		}
@@ -568,7 +580,7 @@ final class DiceCubeView: UIView {
 		guard let geometry else { return }
 		let fillColor = (colorPresetOverride ?? activeDieColorPreferences.preset(for: sideCount)).fillColor
 		let font = faceNumeralFontOverride ?? activeFaceNumeralFont
-		let faces = meshData(for: sideCount).faces
+		let faces = materialFaces(for: sideCount)
 		geometry.materials = faces.enumerated().map { faceIndex, face in
 			faceMaterial(faceIndex: faceIndex, face: face, sideCount: sideCount, fillColor: fillColor, numeralFont: font)
 		}
@@ -639,7 +651,7 @@ final class DiceCubeView: UIView {
 		return [top.vertex, left.vertex, right.vertex]
 	}
 
-	private func d4FaceTexture(face: [Int], fillColor: UIColor, numeralFont: DiceFaceNumeralFont) -> UIImage {
+	private func d4FaceTexture(vertexLabels: [Int], fillColor: UIColor, numeralFont: DiceFaceNumeralFont) -> UIImage {
 		let size = CGSize(width: 256, height: 256)
 		let renderer = UIGraphicsImageRenderer(size: size)
 		return renderer.image { ctx in
@@ -660,15 +672,15 @@ final class DiceCubeView: UIView {
 			triangle.lineWidth = 6
 			triangle.stroke()
 
-			let placements = d4LabelPlacements(face: face, vertices: tetrahedronVertices(), triangle: trianglePoints)
+			let placements = d4LabelPlacements(triangle: trianglePoints)
 			let attrs: [NSAttributedString.Key: Any] = [
 				.font: numeralFont.numeralFont(
 					ofSize: DiceFaceLabelSizing.textureNumeralPointSize(sideCount: 4, large: activeLargeFaceLabelsEnabled)
 				),
 				.foregroundColor: style.primaryInkColor
 			]
-			for placement in placements {
-				let text = "\(placement.value)" as NSString
+			for (index, placement) in placements.enumerated() where index < vertexLabels.count {
+				let text = "\(vertexLabels[index])" as NSString
 				let textSize = text.size(withAttributes: attrs)
 				let textRect = CGRect(
 					x: -textSize.width / 2,
@@ -693,90 +705,21 @@ final class DiceCubeView: UIView {
 		]
 	}
 
-	private func d4LabelPlacements(
-		face: [Int],
-		vertices: [SIMD3<Float>],
-		triangle: [CGPoint]
-	) -> [(value: Int, position: CGPoint, angle: CGFloat)] {
-		guard face.count == 3, triangle.count == 3 else { return [] }
-		let faceVerts = face.map { vertices[$0] }
-		let faceCenter = (faceVerts[0] + faceVerts[1] + faceVerts[2]) / 3
-		let normal = simd_normalize(simd_cross(faceVerts[1] - faceVerts[0], faceVerts[2] - faceVerts[0]))
-		let uAxis = simd_normalize(faceVerts[1] - faceVerts[0])
-		let vAxis = simd_normalize(simd_cross(normal, uAxis))
-
-		let local = faceVerts.map { point in
-			let delta = point - faceCenter
-			return SIMD2<Float>(simd_dot(delta, uAxis), simd_dot(delta, vAxis))
-		}
-
-		let l0 = local[0]
-		let l1 = local[1]
-		let l2 = local[2]
-		let t0 = triangle[0]
-		let t1 = triangle[1]
-		let t2 = triangle[2]
-		let det = (l1.x - l0.x) * (l2.y - l0.y) - (l2.x - l0.x) * (l1.y - l0.y)
-		guard abs(det) > 1e-5 else { return [] }
-
-		let inv = SIMD2<Float>(
-			x:  (l2.y - l0.y) / det,
-			y: -(l2.x - l0.x) / det
-		)
-		let inv2 = SIMD2<Float>(
-			x: -(l1.y - l0.y) / det,
-			y:  (l1.x - l0.x) / det
-		)
-
-		let texDx = SIMD2<Float>(Float(t1.x - t0.x), Float(t2.x - t0.x))
-		let texDy = SIMD2<Float>(Float(t1.y - t0.y), Float(t2.y - t0.y))
-		let a11 = texDx.x * inv.x + texDx.y * inv.y
-		let a12 = texDx.x * inv2.x + texDx.y * inv2.y
-		let a21 = texDy.x * inv.x + texDy.y * inv.y
-		let a22 = texDy.x * inv2.x + texDy.y * inv2.y
-
-		func mapPoint(_ p: SIMD2<Float>) -> CGPoint {
-			let d = p - l0
-			return CGPoint(
-				x: t0.x + CGFloat(a11 * d.x + a12 * d.y),
-				y: t0.y + CGFloat(a21 * d.x + a22 * d.y)
-			)
-		}
-
-		func mapVector(_ v: SIMD2<Float>) -> CGPoint {
-			CGPoint(x: CGFloat(a11 * v.x + a12 * v.y), y: CGFloat(a21 * v.x + a22 * v.y))
-		}
-
-		let inset: CGFloat = 0.30
+	private func d4LabelPlacements(triangle: [CGPoint]) -> [(position: CGPoint, angle: CGFloat)] {
+		guard triangle.count == 3 else { return [] }
+		let inset: CGFloat = 0.34
 		return (0..<3).map { index in
-			let vertexIndex = face[index]
-			let value = d4VertexValueByIndex[vertexIndex]
-			let vertex3 = vertices[vertexIndex]
-			let oppositeIndices = (0..<vertices.count).filter { $0 != vertexIndex }
-			let oppositeCenter = oppositeIndices
-				.map { vertices[$0] }
-				.reduce(SIMD3<Float>(repeating: 0), +) / Float(oppositeIndices.count)
-			let towardOpposite3 = simd_normalize(oppositeCenter - vertex3)
-
-			let vertexLocal = local[index]
-			let oppositeLocal = SIMD2<Float>(
-				simd_dot(oppositeCenter - faceCenter, uAxis),
-				simd_dot(oppositeCenter - faceCenter, vAxis)
-			)
-			let towardOppositeLocal = SIMD2<Float>(
-				simd_dot(towardOpposite3, uAxis),
-				simd_dot(towardOpposite3, vAxis)
-			)
-
-			let vertexTex = mapPoint(vertexLocal)
-			let oppositeTex = mapPoint(oppositeLocal)
-			let towardOppositeTex = mapVector(towardOppositeLocal)
+			let vertex = triangle[index]
+			let otherA = triangle[(index + 1) % 3]
+			let otherB = triangle[(index + 2) % 3]
+			let oppositeMid = CGPoint(x: (otherA.x + otherB.x) * 0.5, y: (otherA.y + otherB.y) * 0.5)
+			let towardOpposite = CGPoint(x: oppositeMid.x - vertex.x, y: oppositeMid.y - vertex.y)
 			let position = CGPoint(
-				x: vertexTex.x + (oppositeTex.x - vertexTex.x) * inset,
-				y: vertexTex.y + (oppositeTex.y - vertexTex.y) * inset
+				x: vertex.x + towardOpposite.x * inset,
+				y: vertex.y + towardOpposite.y * inset
 			)
-			let angle = atan2(towardOppositeTex.y, towardOppositeTex.x) - (.pi / 2)
-			return (value: value, position: position, angle: angle)
+			let angle = atan2(towardOpposite.y, towardOpposite.x) - (.pi / 2)
+			return (position: position, angle: angle)
 		}
 	}
 
