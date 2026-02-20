@@ -343,6 +343,10 @@ final class DiceViewModel {
 		appState.dieColorOverrides[index] = preset
 	}
 
+	func applyPerDieColorSelection(_ preset: DiceDieColorPreset, at index: Int) {
+		setDieColorPreset(preset, forDieAt: index)
+	}
+
 	func setDieColorPreset(_ preset: DiceDieColorPreset, for sideCount: Int) {
 		appState.dieColorPreferences = appState.dieColorPreferences.updated(sideCount: sideCount, preset: preset)
 		persistPreferences()

@@ -1162,9 +1162,10 @@ final class DiceTests: XCTestCase {
 		)
 
 		_ = viewModel.rollFromInput("2d6")
-		viewModel.setDieColorPreset(.crimson, forDieAt: 1)
+		viewModel.applyPerDieColorSelection(.crimson, at: 1)
 		XCTAssertNil(viewModel.dieColorPreset(forDieAt: 0))
 		XCTAssertEqual(viewModel.dieColorPreset(forDieAt: 1), .crimson)
+		XCTAssertEqual(viewModel.dieColorPreset(for: 6), .ivory)
 	}
 
 	func testViewModelRollFromInputAppliesNotationColorOverridesPerDie() {

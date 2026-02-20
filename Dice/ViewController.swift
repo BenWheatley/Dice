@@ -371,7 +371,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			let marker = isCurrent ? " ✓" : ""
 			let title = NSLocalizedString(preset.menuTitleKey, comment: "Die color option") + marker
 			alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
-				self?.selectDieColorPreset(preset, sideCount: sideCount, index: index)
+				self?.selectDieColorPreset(preset, index: index)
 			})
 		}
 		alert.addAction(UIAlertAction(title: NSLocalizedString("button.cancel", comment: "Cancel action"), style: .cancel))
@@ -1175,9 +1175,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		}
 	}
 
-	private func selectDieColorPreset(_ preset: DiceDieColorPreset, sideCount: Int, index: Int) {
-		viewModel.setDieColorPreset(preset, forDieAt: index)
-		viewModel.setDieColorPreset(preset, for: sideCount)
+	private func selectDieColorPreset(_ preset: DiceDieColorPreset, index: Int) {
+		viewModel.applyPerDieColorSelection(preset, at: index)
 		diceBoardView.setDieColorPreferences(viewModel.dieColorPreferences)
 		updateDiceBoard(animated: false)
 		updateControlMenu()
