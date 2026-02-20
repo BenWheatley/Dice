@@ -176,6 +176,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Implement shader-based stone die finish with procedural marble-style veining and retain finish behavior under automated material tests.
 - [x] Increase wood table shader realism by warping grain boundaries with low-amplitude procedural noise instead of perfectly regular bands.
 - [x] Rebalance options sheet grouping: move Motion Blur under Animations, move Show Stats out of Animations, and remove non-functional Edge Outlines control.
+- [x] Remove long-press dice interactions in favor of explicit tap-driven options for better discoverability.
 
 ## 12. watchOS Small-Screen Interface Plan
 

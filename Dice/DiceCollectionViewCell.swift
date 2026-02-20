@@ -3,29 +3,24 @@ import UIKit
 class DiceCollectionViewCell: UICollectionViewCell {
 	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 	var onTapDie: ((CGPoint) -> Void)?
-	var onToggleLock: (() -> Void)?
 	private var currentPalette = DiceTheme.system.palette
 	private var isLocked = false
-	private var lockGestureConfigured = false
 	private let lockIconView = UIImageView(image: UIImage(systemName: "lock.fill"))
 
 	@IBOutlet weak var diceButton: UIButton!
 
 	override init(frame: CGRect) {
 		super.init(frame: frame)
-		configureGestures()
 		configureLockIcon()
 	}
 
 	required init?(coder: NSCoder) {
 		super.init(coder: coder)
-		configureGestures()
 		configureLockIcon()
 	}
 
 	override func awakeFromNib() {
 		super.awakeFromNib()
-		configureGestures()
 		configureLockIcon()
 	}
 
@@ -76,15 +71,6 @@ class DiceCollectionViewCell: UICollectionViewCell {
 		}
 	}
 
-	private func configureGestures() {
-		guard !lockGestureConfigured, let diceButton else { return }
-		lockGestureConfigured = true
-		let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
-		longPress.minimumPressDuration = 0.35
-		diceButton.addGestureRecognizer(longPress)
-		diceButton.isUserInteractionEnabled = true
-	}
-
 	private func configureLockIcon() {
 		guard lockIconView.superview == nil else { return }
 		lockIconView.tintColor = .systemYellow
@@ -96,12 +82,6 @@ class DiceCollectionViewCell: UICollectionViewCell {
 		lockIconView.isHidden = true
 		contentView.addSubview(lockIconView)
 		contentView.bringSubviewToFront(lockIconView)
-	}
-
-	@objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
-		if gesture.state == .began {
-			onToggleLock?()
-		}
 	}
 
 	@IBAction func reroll(_ sender: Any) {

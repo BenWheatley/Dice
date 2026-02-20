@@ -7,6 +7,6 @@
 - [x] "Motion Blur" should be in the "animations" group
 - [x] "Edge Outlines" does nothing, remove it
 - [ ] Stats box should use a graph instead of text
-- [ ] Remove long-press wherever it's being used, that's bad for discovery
+- [x] Remove long-press wherever it's being used, that's bad for discovery
 - [ ] The "Roll History" view incorrectly ignores light/dark mode
 - [ ] The options for each die are being shown with a UIAlertController, and not, as I asked for a CONTEXT MENU: https://developer.apple.com/design/human-interface-guidelines/context-menus

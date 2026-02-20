@@ -113,11 +113,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			let anchorRect = CGRect(x: anchorPoint.x - 1, y: anchorPoint.y - 1, width: 2, height: 2)
 			self.presentDieOptions(for: indexPath.row, sourceView: self.view, sourceRect: anchorRect)
 		}
-		cell.onToggleLock = { [weak self, weak collectionView] in
-			guard let self else { return }
-			self.viewModel.toggleDieLock(at: indexPath.row)
-			collectionView?.reloadItems(at: [indexPath])
-		}
 		return cell
 	}
 
