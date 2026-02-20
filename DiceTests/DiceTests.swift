@@ -1182,6 +1182,31 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(viewModel.dieColorPreset(forDieAt: 2), .sapphire)
 	}
 
+	func testViewModelRestoreAppliesNotationColorOverridesAndDiceCountBeforeFirstRoll() {
+		let suiteName = "DiceTests.viewmodel.restore.notationcolors.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		preferencesStore.save(
+			DiceUserPreferences(
+				lastNotation: "2d6(red)+1d6(blue)",
+				recentPresets: []
+			)
+		)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		viewModel.restore()
+
+		XCTAssertEqual(viewModel.diceSideCounts, [6, 6, 6])
+		XCTAssertEqual(viewModel.diceValues.count, 3)
+		XCTAssertEqual(viewModel.dieColorPreset(forDieAt: 0), .crimson)
+		XCTAssertEqual(viewModel.dieColorPreset(forDieAt: 1), .crimson)
+		XCTAssertEqual(viewModel.dieColorPreset(forDieAt: 2), .sapphire)
+	}
+
 	func testViewModelD6PipStyleSelectionPersistsToPreferences() {
 		let suiteName = "DiceTests.viewmodel.pipstyle.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!

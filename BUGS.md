@@ -1,4 +1,12 @@
-- [x] App startup is unacceptably slow, seems like 10s of seconds even on just "installing" and "Launching Dice…" phases in Xcode
-- [x] D4 are textured incorrectly, see attached picture in chat session.
-- [x] Assets 1, 2, 3, 4, 5, 6 are in SceneKit Asset Catalog, they should not be used anywhere. Remove, replacing any use of them with the existing alternative.
-- [x] Wood and felt backgrounds do not tile correctly; fix this by switching to shaders for which cover entire region, which simulate wood and felt. Also use shader for the "stripes" background, but that can simply be a repeating texture of the existing asset.
+- [x] Dice colors are absent on initial app load
+- [ ] If I have e.g. "3d6" or "3d6(red) 2d6(blue), then tap on the first d6 and choose to change its color, that should ONLY change the color of the first d6, not all d6 in that group
+- [ ] "Reroll This Dice" animates every dice, it should only animate the once die being re-rolled
+- [ ] Die Finish "Stone" should use a marble (3d simplex noise) effect
+- [ ] Wood needs some more natural irregularity, shift grain boundaries with light simplex noise
+- [ ] "Show Stats" shouldn't be in the "animations" group
+- [ ] "Motion Blur" should be in the "animations" group
+- [ ] "Edge Outlines" does nothing, remove it
+- [ ] Stats box should use a graph instead of text
+- [ ] Remove long-press wherever it's being used, that's bad for discovery
+- [ ] The "Roll History" view incorrectly ignores light/dark mode
+- [ ] The options for each die are being shown with a UIAlertController, and not, as I asked for a CONTEXT MENU: https://developer.apple.com/design/human-interface-guidelines/context-menus

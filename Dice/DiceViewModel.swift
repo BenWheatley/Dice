@@ -137,7 +137,14 @@ final class DiceViewModel {
 	func restore() {
 		let preferences = preferencesStore.load()
 		if let parsed = notationParser.parse(preferences.lastNotation) {
-		appState.configuration = parsed
+			appState.configuration = parsed
+			appState.diceSideCounts = parsed.sideCountsPerDie
+			appState.diceValues = Array(repeating: 1, count: parsed.diceCount)
+			applyNotationColorOverrides(from: parsed)
+		} else {
+			appState.diceSideCounts = appState.configuration.sideCountsPerDie
+			appState.diceValues = Array(repeating: 1, count: appState.configuration.diceCount)
+			appState.dieColorOverrides = [:]
 		}
 		appState.animationsEnabled = preferences.animationsEnabled
 		appState.animationIntensity = preferences.animationIntensity
