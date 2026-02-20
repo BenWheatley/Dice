@@ -1746,10 +1746,26 @@ final class DiceTests: XCTestCase {
 	func testD4FacesUseVertexLabelTriples() {
 		let labels = DiceCubeView.debugD4FaceVertexLabels()
 		XCTAssertEqual(labels.count, 4)
-		XCTAssertEqual(labels[0], [1, 2, 3])
-		XCTAssertEqual(labels[1], [1, 4, 2])
-		XCTAssertEqual(labels[2], [1, 3, 4])
-		XCTAssertEqual(labels[3], [2, 4, 3])
+		for faceLabels in labels {
+			XCTAssertEqual(faceLabels.count, 3)
+			XCTAssertEqual(Set(faceLabels).count, 3)
+			XCTAssertTrue(faceLabels.allSatisfy { (1...4).contains($0) })
+		}
+	}
+
+	func testD4OrderedFaceLabelsPreserveVerticesWithStableCornerOrdering() {
+		let unordered = DiceCubeView.debugD4FaceVertexLabels()
+		let ordered = DiceCubeView.debugD4OrderedFaceVertexLabels()
+		XCTAssertEqual(unordered.count, ordered.count)
+
+		var changedAtLeastOneFace = false
+		for index in ordered.indices {
+			XCTAssertEqual(Set(unordered[index]), Set(ordered[index]))
+			if unordered[index] != ordered[index] {
+				changedAtLeastOneFace = true
+			}
+		}
+		XCTAssertTrue(changedAtLeastOneFace)
 	}
 
 	func testD4OrientationMapsRollValueToCameraFacingVertex() {

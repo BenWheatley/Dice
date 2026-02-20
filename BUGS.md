@@ -1,10 +1,4 @@
-- [x] Popup menu for changing font affects all dice, not just the tapped upon die which it should be limited to. I want to be able to have a red D4 and a blue D4, etc.; also extend the notation so that I can have e.g. "2d6i(red) + d6(green) + d6(blue)"
-- [x] When changing dice color, you're changing all dice of that side count, when you should be changing that *specific* die
-- [x] I asked for a *contextual* menu, as in target point is where the die is
-- [x] Dark mode should also affect Options table
-- [x] "History" button in Options table does not function
-- [x] "Reset Visual Style" button in Options table does not function
-- [x] Remove "Preview Style" button from Options table
-- [x] Remove "Repeat Last Roll" button from Options table
-- [x] Options table should use grouping appropriately
-- [x] Crash in playRollImpact on player.scheduleBuffer
+- [x] App startup is unacceptably slow, seems like 10s of seconds even on just "installing" and "Launching Dice…" phases in Xcode
+- [x] D4 are textured incorrectly, see attached picture in chat session.
+- [x] Assets 1, 2, 3, 4, 5, 6 are in SceneKit Asset Catalog, they should not be used anywhere. Remove, replacing any use of them with the existing alternative.
+- [x] Wood and felt backgrounds do not tile correctly; fix this by switching to shaders for which cover entire region, which simulate wood and felt. Also use shader for the "stripes" background, but that can simply be a repeating texture of the existing asset.

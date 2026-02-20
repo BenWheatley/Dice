@@ -391,6 +391,15 @@ final class DiceCubeView: UIView {
 		return view.tetrahedronFaces().map { view.d4VertexLabels(forFace: $0) }
 	}
 
+	static func debugD4OrderedFaceVertexLabels() -> [[Int]] {
+		let view = DiceCubeView(frame: .zero)
+		let vertices = view.tetrahedronVertices()
+		return view.tetrahedronFaces().map { face in
+			let ordered = view.d4OrderedFaceVertices(for: face, vertices: vertices)
+			return view.d4VertexLabels(forFace: ordered)
+		}
+	}
+
 	static func debugD4TopVertex(for value: Int) -> Int {
 		let view = DiceCubeView(frame: .zero)
 		let orientation = view.orientation(for: value, sideCount: 4)
@@ -440,6 +449,11 @@ final class DiceCubeView: UIView {
 			// Force outward normals so face orientation and texturing remain consistent.
 			if simd_dot(n, center) < 0 {
 				workingFace = Array(workingFace.reversed())
+				points = workingFace.map { scaledVerts[$0] }
+				n = simd_normalize(simd_cross(points[1] - points[0], points[2] - points[0]))
+			}
+			if sideCount == 4 {
+				workingFace = d4OrderedFaceVertices(for: workingFace, vertices: scaledVerts)
 				points = workingFace.map { scaledVerts[$0] }
 				n = simd_normalize(simd_cross(points[1] - points[0], points[2] - points[0]))
 			}
@@ -566,6 +580,49 @@ final class DiceCubeView: UIView {
 
 	private func d4VertexLabels(forFace face: [Int]) -> [Int] {
 		face.map { $0 + 1 }
+	}
+
+	private func d4OrderedFaceVertices(for face: [Int], vertices: [SIMD3<Float>]) -> [Int] {
+		guard face.count == 3 else { return face }
+		let points = face.map { vertices[$0] }
+		let center = points.reduce(SIMD3<Float>(repeating: 0), +) / Float(points.count)
+		let normal = simd_normalize(simd_cross(points[1] - points[0], points[2] - points[0]))
+
+		var worldUp = SIMD3<Float>(0, 1, 0)
+		if abs(simd_dot(normal, worldUp)) > 0.95 {
+			worldUp = SIMD3<Float>(1, 0, 0)
+		}
+		let xAxis = simd_normalize(simd_cross(worldUp, normal))
+		let yAxis = simd_normalize(simd_cross(normal, xAxis))
+
+		let projected: [(vertex: Int, x: Float, y: Float)] = face.map { vertexIndex in
+			let point = vertices[vertexIndex]
+			let delta = point - center
+			return (
+				vertex: vertexIndex,
+				x: simd_dot(delta, xAxis),
+				y: simd_dot(delta, yAxis)
+			)
+		}
+
+		guard let top = projected.max(by: { lhs, rhs in
+			if lhs.y == rhs.y { return lhs.vertex > rhs.vertex }
+			return lhs.y < rhs.y
+		}) else {
+			return face
+		}
+		let remaining = projected.filter { $0.vertex != top.vertex }
+		guard remaining.count == 2 else { return face }
+		let left: (vertex: Int, x: Float, y: Float)
+		let right: (vertex: Int, x: Float, y: Float)
+		if remaining[0].x <= remaining[1].x {
+			left = remaining[0]
+			right = remaining[1]
+		} else {
+			left = remaining[1]
+			right = remaining[0]
+		}
+		return [top.vertex, left.vertex, right.vertex]
 	}
 
 	private func d4FaceTexture(vertexLabels: [Int], fillColor: UIColor, numeralFont: DiceFaceNumeralFont) -> UIImage {

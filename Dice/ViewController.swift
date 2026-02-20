@@ -62,6 +62,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let viewModel = DiceViewModel()
 	private let soundEngine = DiceSoundEngine()
 	private let hapticsEngine = DiceHapticsEngine()
+	private var hasPerformedInitialRoll = false
 
 	private let notationField = UITextField()
 	private let validationLabel = UILabel()
@@ -75,6 +76,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private var currentPalette = DiceTheme.system.palette
 	private var currentTexture: DiceTableTexture = .neutral
 	private var currentDieFinish: DiceDieFinish = .matte
+	private var appliedTextureSize: CGSize = .zero
 	private let statsVisibilityKey = "Dice.showStats"
 	private var statsVisible = true
 
@@ -93,7 +95,16 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		updateStatsVisibility()
 		configureAccessibilityRotors()
 		updateControlMenu()
-		performRoll()
+		renderRestoredState()
+	}
+
+	override func viewDidAppear(_ animated: Bool) {
+		super.viewDidAppear(animated)
+		guard !hasPerformedInitialRoll else { return }
+		hasPerformedInitialRoll = true
+		DispatchQueue.main.async { [weak self] in
+			self?.performRoll()
+		}
 	}
 
 	override var keyCommands: [UIKeyCommand]? {
@@ -116,6 +127,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			collectionView.scrollIndicatorInsets = insets
 			collectionView.collectionViewLayout.invalidateLayout()
 		}
+		applyTextureIfNeededForCurrentBounds()
 		updateDiceBoard(animated: false)
 	}
 
@@ -344,6 +356,15 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		collectionView.layoutIfNeeded()
 		updateDiceBoard(animated: shouldAnimateBoard)
 		playRollSound()
+	}
+
+	private func renderRestoredState() {
+		updateNotationField()
+		clearValidationFeedback()
+		collectionView.collectionViewLayout.invalidateLayout()
+		collectionView.reloadData()
+		collectionView.layoutIfNeeded()
+		updateDiceBoard(animated: false)
 	}
 
 	private func presentDieOptions(for index: Int, sourceView: UIView, sourceRect: CGRect? = nil) {
@@ -1315,7 +1336,30 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	private func applyTexture() {
 		currentTexture = viewModel.tableTexture
-		collectionView.backgroundColor = DiceTextureProvider.shared.patternColor(for: currentTexture)
+		appliedTextureSize = .zero
+		applyTextureIfNeededForCurrentBounds()
+	}
+
+	private func applyTextureIfNeededForCurrentBounds() {
+		let size = collectionView.bounds.size
+		guard size.width > 1, size.height > 1 else { return }
+		let shouldRefresh = size != appliedTextureSize || currentTexture != viewModel.tableTexture
+		guard shouldRefresh else { return }
+
+		currentTexture = viewModel.tableTexture
+		appliedTextureSize = size
+		let image = DiceTextureProvider.shared.backgroundImage(for: currentTexture, size: size)
+
+		let imageView: UIImageView
+		if let existing = collectionView.backgroundView as? UIImageView {
+			imageView = existing
+		} else {
+			imageView = UIImageView()
+			imageView.contentMode = .scaleToFill
+			imageView.clipsToBounds = true
+			collectionView.backgroundView = imageView
+		}
+		imageView.image = image
 	}
 
 	private func keyboardAppearance(for theme: DiceTheme) -> UIKeyboardAppearance {
@@ -2024,6 +2068,7 @@ private final class DiceStylePreviewViewController: UIViewController {
 	private let state: DiceStylePreviewState
 	private let previewBoard = DiceCubeView()
 	private let summaryLabel = UILabel()
+	private let textureBackgroundView = UIImageView()
 
 	init(state: DiceStylePreviewState) {
 		self.state = state
@@ -2049,9 +2094,12 @@ private final class DiceStylePreviewViewController: UIViewController {
 
 		let texturePanel = UIView()
 		texturePanel.translatesAutoresizingMaskIntoConstraints = false
-		texturePanel.backgroundColor = DiceTextureProvider.shared.patternColor(for: state.texture)
 		texturePanel.layer.cornerRadius = 12
 		texturePanel.clipsToBounds = true
+
+		textureBackgroundView.translatesAutoresizingMaskIntoConstraints = false
+		textureBackgroundView.contentMode = .scaleToFill
+		textureBackgroundView.clipsToBounds = true
 
 		previewBoard.translatesAutoresizingMaskIntoConstraints = false
 		previewBoard.setDieFinish(state.dieFinish)
@@ -2068,6 +2116,7 @@ private final class DiceStylePreviewViewController: UIViewController {
 		summaryLabel.textAlignment = .center
 		summaryLabel.text = summaryText()
 
+		texturePanel.addSubview(textureBackgroundView)
 		texturePanel.addSubview(previewBoard)
 		view.addSubview(texturePanel)
 		view.addSubview(summaryLabel)
@@ -2077,6 +2126,11 @@ private final class DiceStylePreviewViewController: UIViewController {
 			texturePanel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
 			texturePanel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
 			texturePanel.heightAnchor.constraint(equalTo: texturePanel.widthAnchor, multiplier: 0.64),
+
+			textureBackgroundView.topAnchor.constraint(equalTo: texturePanel.topAnchor),
+			textureBackgroundView.leadingAnchor.constraint(equalTo: texturePanel.leadingAnchor),
+			textureBackgroundView.trailingAnchor.constraint(equalTo: texturePanel.trailingAnchor),
+			textureBackgroundView.bottomAnchor.constraint(equalTo: texturePanel.bottomAnchor),
 
 			previewBoard.topAnchor.constraint(equalTo: texturePanel.topAnchor),
 			previewBoard.leadingAnchor.constraint(equalTo: texturePanel.leadingAnchor),
@@ -2096,6 +2150,7 @@ private final class DiceStylePreviewViewController: UIViewController {
 		super.viewDidLayoutSubviews()
 		let panelBounds = previewBoard.bounds
 		guard panelBounds.width > 80, panelBounds.height > 80 else { return }
+		textureBackgroundView.image = DiceTextureProvider.shared.backgroundImage(for: state.texture, size: panelBounds.size)
 		let side = max(52, min(96, min(panelBounds.width / 4.2, panelBounds.height / 2.6)))
 		let y = panelBounds.midY
 		let centers = [
