@@ -207,3 +207,26 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Add watch haptic/audio sync to final face settle event for clearer result confirmation.
 - [x] Add tests for mode switching and repeated rolls with SceneKit enabled to catch state desync regressions.
 - [x] Add watch-specific QA pass for crown interaction, wake/resume, and scene lifecycle handling.
+
+## 13. Widgets and Home Screen Quick Actions
+
+### SpringBoard and Lock Screen Widgets
+
+- [ ] Define widget scope for v1.1: Home Screen small/medium widgets and Lock Screen inline/circular widgets with simulator-only validation constraints.
+- [ ] Create WidgetKit extension target scaffold and shared timeline/provider model wired to existing persisted roll state.
+- [ ] Implement Home Screen small widget showing last notation, last total, and mode token with theme-aware rendering.
+- [ ] Implement Home Screen medium widget showing last roll summary plus compact recent-history strip (latest 3 outcomes).
+- [ ] Implement Lock Screen inline and circular widgets optimized for truncation limits and legibility.
+- [ ] Add widget deep-link routing into app destinations (roll screen, history, presets) using URL-based scene handling.
+- [ ] Add widget timeline refresh policy and placeholder/snapshot handling for empty-state and first-launch flows.
+- [ ] Add unit tests for widget timeline entries and snapshot fallback logic using deterministic fixtures.
+- [ ] Add simulator UI validation checklist for widget families (iPhone and iPad where supported) including light/dark appearances.
+
+### SpringBoard Long-Press App Icon Options
+
+- [ ] Define app-icon quick actions set (Roll Now, Repeat Last Roll, Presets, Roll History) and map each to stable deep-link routes.
+- [ ] Implement static quick actions in `Info.plist` with localized titles/subtitles and SF Symbols.
+- [ ] Add dynamic quick actions update path based on recent notation/history availability.
+- [ ] Implement scene startup routing for quick-action launches with per-window state isolation on Catalyst/iPad multiwindow.
+- [ ] Add unit tests for quick-action parsing/routing and no-op handling for unavailable actions.
+- [ ] Add simulator manual QA checklist for long-press action invocation from SpringBoard and cold-start/warm-start behavior.
