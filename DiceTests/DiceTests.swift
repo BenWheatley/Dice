@@ -1168,6 +1168,27 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(viewModel.dieColorPreset(for: 6), .ivory)
 	}
 
+	func testViewModelPerDieColorOverrideDoesNotMutateSiblingDiceInGroupedNotation() {
+		let suiteName = "DiceTests.viewmodel.diecolors.grouped-perdie.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults),
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { $0.lowerBound }, randomDouble: { 0.5 }))
+		)
+
+		_ = viewModel.rollFromInput("3d6(red)+2d6(blue)")
+		viewModel.applyPerDieColorSelection(.amber, at: 0)
+
+		XCTAssertEqual(viewModel.dieColorPreset(forDieAt: 0), .amber)
+		XCTAssertEqual(viewModel.dieColorPreset(forDieAt: 1), .crimson)
+		XCTAssertEqual(viewModel.dieColorPreset(forDieAt: 2), .crimson)
+		XCTAssertEqual(viewModel.dieColorPreset(forDieAt: 3), .sapphire)
+		XCTAssertEqual(viewModel.dieColorPreset(forDieAt: 4), .sapphire)
+		XCTAssertEqual(viewModel.dieColorPreset(for: 6), .ivory)
+	}
+
 	func testViewModelRollFromInputAppliesNotationColorOverridesPerDie() {
 		let suiteName = "DiceTests.viewmodel.diecolors.notation.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!

@@ -1,12 +1,8 @@
-- [x] Dice colors are absent on initial app load
 - [x] If I have e.g. "3d6" or "3d6(red) 2d6(blue), then tap on the first d6 and choose to change its color, that should ONLY change the color of the first d6, not all d6 in that group
-- [x] "Reroll This Dice" animates every dice, it should only animate the once die being re-rolled
-- [x] Die Finish "Stone" should use a marble (3d simplex noise) effect
-- [x] Wood needs some more natural irregularity, shift grain boundaries with light simplex noise
-- [x] "Show Stats" shouldn't be in the "animations" group
-- [x] "Motion Blur" should be in the "animations" group
-- [x] "Edge Outlines" does nothing, remove it
-- [x] Stats box should use a graph instead of text
-- [x] Remove long-press wherever it's being used, that's bad for discovery
-- [x] The "Roll History" view incorrectly ignores light/dark mode
-- [x] The options for each die are being shown with a UIAlertController, and not, as I asked for a CONTEXT MENU: https://developer.apple.com/design/human-interface-guidelines/context-menus
+- [ ] Die Finish "Stone" should use a marble (3d simplex noise) effect. Currently it is solid purple.
+- [ ] Stats box graph needs labels, gridlines
+- [ ] Tap area for bringing up contextual menu is too small, should be about same size as dice themselves, a little bigger
+- [ ] Remove "Dyslexia Friendly" font
+- [ ] Presets menu doesn't respect dark/light mode
+- [ ] Presets menu should be single-column table view with something like [1d6-4d6, 1d6i, d6(red) + d20(green), d6(blue,serif) + d4(red,monospace)] as defaults, that list should itself also contain whatever custom presets exist, and be able to delete anything including the defaults
+- [ ] Manage Presets menu should be replaced with an add button to the new Presets menu table
