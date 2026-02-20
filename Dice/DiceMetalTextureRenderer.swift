@@ -14,7 +14,6 @@ final class DiceMetalTextureRenderer: NSObject, MTKViewDelegate {
 	private let pipelineState: MTLRenderPipelineState
 	private let startTime = CACurrentMediaTime()
 	private var mode: UInt32
-	private var stripeTexture: MTLTexture?
 
 	init?(device: MTLDevice, texture: DiceTableTexture) {
 		self.device = device
@@ -44,7 +43,6 @@ final class DiceMetalTextureRenderer: NSObject, MTKViewDelegate {
 		}
 		self.pipelineState = pipelineState
 		super.init()
-		self.stripeTexture = Self.loadStripeTexture(device: device)
 	}
 
 	func setTexture(_ texture: DiceTableTexture) {
@@ -68,9 +66,6 @@ final class DiceMetalTextureRenderer: NSObject, MTKViewDelegate {
 		)
 		encoder.setRenderPipelineState(pipelineState)
 		encoder.setFragmentBytes([uniforms], length: MemoryLayout<Uniforms>.stride, index: 0)
-		if let stripeTexture {
-			encoder.setFragmentTexture(stripeTexture, index: 0)
-		}
 		encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
 		encoder.endEncoding()
 
@@ -87,17 +82,5 @@ final class DiceMetalTextureRenderer: NSObject, MTKViewDelegate {
 		case .neutral:
 			return 2
 		}
-	}
-
-	private static func loadStripeTexture(device: MTLDevice) -> MTLTexture? {
-		guard let image = UIImage(named: "stripes"), let cgImage = image.cgImage else { return nil }
-		let loader = MTKTextureLoader(device: device)
-		return try? loader.newTexture(
-			cgImage: cgImage,
-			options: [
-				MTKTextureLoader.Option.SRGB: false,
-				MTKTextureLoader.Option.origin: MTKTextureLoader.Origin.topLeft
-			]
-		)
 	}
 }

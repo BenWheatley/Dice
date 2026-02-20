@@ -456,6 +456,13 @@ final class DiceCubeView: UIView {
 				workingFace = d4OrderedFaceVertices(for: workingFace, vertices: scaledVerts)
 				points = workingFace.map { scaledVerts[$0] }
 				n = simd_normalize(simd_cross(points[1] - points[0], points[2] - points[0]))
+				// Keep tetrahedron winding outward after custom top/left/right ordering.
+				// Without this, some faces can mirror labels due to flipped vertex order.
+				if simd_dot(n, center) < 0 {
+					workingFace.swapAt(1, 2)
+					points = workingFace.map { scaledVerts[$0] }
+					n = simd_normalize(simd_cross(points[1] - points[0], points[2] - points[0]))
+				}
 			}
 			let up = simd_normalize(points[1] - points[0])
 			faceNormals.append(n)

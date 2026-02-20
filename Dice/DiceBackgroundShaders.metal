@@ -39,10 +39,8 @@ float noise2(float2 p) {
 
 fragment float4 diceBgFragment(
 	DiceBgVertexOut in [[stage_in]],
-	constant DiceBgUniforms& uniforms [[buffer(0)]],
-	texture2d<float> stripeTexture [[texture(0)]]
+	constant DiceBgUniforms& uniforms [[buffer(0)]]
 ) {
-	const sampler repeatSampler(filter::linear, address::repeat);
 	float2 uv = in.uv;
 
 	if (uniforms.mode == 0) {
@@ -67,7 +65,8 @@ fragment float4 diceBgFragment(
 		return float4(color, 1.0);
 	}
 
-	float2 tiledUV = uv * float2(max(uniforms.resolution.x / 24.0, 1.0), max(uniforms.resolution.y / 24.0, 1.0));
-	float3 sampled = stripeTexture.sample(repeatSampler, tiledUV).rgb;
-	return float4(sampled, 1.0);
+	float stripes = sin(uv.y * uniforms.resolution.y * 0.52) * 0.5 + 0.5;
+	float micro = noise2(float2(uv.x * uniforms.resolution.x * 0.06, uv.y * uniforms.resolution.y * 0.10));
+	float shade = 0.88 + (stripes - 0.5) * 0.10 + (micro - 0.5) * 0.02;
+	return float4(float3(shade), 1.0);
 }
