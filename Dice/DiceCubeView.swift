@@ -32,6 +32,7 @@ final class DiceCubeView: UIView {
 		let geometry: SCNGeometry
 		let faceNormals: [SIMD3<Float>]
 		let faceUps: [SIMD3<Float>]
+		let materialFaces: [[Int]]
 	}
 
 	private let scnView = SCNView()
@@ -136,6 +137,7 @@ final class DiceCubeView: UIView {
 			applyFaceMaterials(
 				to: body?.geometry,
 				sideCount: sideCount,
+				sideLength: sideLength,
 				colorPresetOverride: colorPreset,
 				faceNumeralFontOverride: numeralFont
 			)
@@ -395,17 +397,20 @@ final class DiceCubeView: UIView {
 
 	static func debugD4OrderedFaceVertexLabels() -> [[Int]] {
 		let view = DiceCubeView(frame: .zero)
-		let vertices = view.tetrahedronVertices()
-		let faces = view.tetrahedronFaces().map { face in
-			view.d4OrderedFaceVertices(for: face, vertices: vertices)
-		}
+		let faces = view.builtMesh(sideLength: 120, sideCount: 4).materialFaces
 		return faces.map { view.d4VertexLabels(forFace: $0) }
 	}
 
 	static func debugD4MaterialFaceVertexLabels() -> [[Int]] {
 		let view = DiceCubeView(frame: .zero)
-		let faces = view.materialFaces(for: 4)
+		let faces = view.builtMesh(sideLength: 120, sideCount: 4).materialFaces
 		return faces.map { view.d4VertexLabels(forFace: $0) }
+	}
+
+	static func debugD4GeometryFaceVertexLabels() -> [[Int]] {
+		let view = DiceCubeView(frame: .zero)
+		let mesh = view.builtMesh(sideLength: 120, sideCount: 4)
+		return mesh.materialFaces.map { view.d4VertexLabels(forFace: $0) }
 	}
 
 	static func debugD4TopVertex(for value: Int) -> Int {
@@ -435,13 +440,6 @@ final class DiceCubeView: UIView {
 	}
 #endif
 
-	private func materialFaces(for sideCount: Int) -> [[Int]] {
-		let faces = meshData(for: sideCount).faces
-		guard sideCount == 4 else { return faces }
-		let vertices = tetrahedronVertices()
-		return faces.map { d4OrderedFaceVertices(for: $0, vertices: vertices) }
-	}
-
 	private func buildGeometry(sideLength: CGFloat, sideCount: Int) -> BuiltMesh {
 		let mesh = meshData(for: sideCount)
 		let maxNorm = mesh.vertices.map { simd_length($0) }.max() ?? 1
@@ -454,6 +452,7 @@ final class DiceCubeView: UIView {
 		var materials: [SCNMaterial] = []
 		var faceNormals: [SIMD3<Float>] = []
 		var faceUps: [SIMD3<Float>] = []
+		var materialFaces: [[Int]] = []
 
 		for (faceIndex, face) in mesh.faces.enumerated() {
 			guard face.count >= 3 else { continue }
@@ -525,6 +524,7 @@ final class DiceCubeView: UIView {
 
 			elements.append(SCNGeometryElement(indices: faceTriIndices, primitiveType: .triangles))
 			materials.append(faceMaterial(faceIndex: faceIndex, face: workingFace, sideCount: sideCount))
+			materialFaces.append(workingFace)
 		}
 
 		let vSource = SCNGeometrySource(vertices: finalVertices)
@@ -539,7 +539,7 @@ final class DiceCubeView: UIView {
 			geometry = SCNGeometry(sources: [vSource, uvSource], elements: elements)
 			geometry.materials = materials
 		}
-		return BuiltMesh(geometry: geometry, faceNormals: faceNormals, faceUps: faceUps)
+		return BuiltMesh(geometry: geometry, faceNormals: faceNormals, faceUps: faceUps, materialFaces: materialFaces)
 	}
 
 	private func builtMesh(sideLength: CGFloat, sideCount: Int) -> BuiltMesh {
@@ -574,13 +574,14 @@ final class DiceCubeView: UIView {
 	private func applyFaceMaterials(
 		to geometry: SCNGeometry?,
 		sideCount: Int,
+		sideLength: CGFloat,
 		colorPresetOverride: DiceDieColorPreset?,
 		faceNumeralFontOverride: DiceFaceNumeralFont?
 	) {
 		guard let geometry else { return }
 		let fillColor = (colorPresetOverride ?? activeDieColorPreferences.preset(for: sideCount)).fillColor
 		let font = faceNumeralFontOverride ?? activeFaceNumeralFont
-		let faces = materialFaces(for: sideCount)
+		let faces = builtMesh(sideLength: sideLength, sideCount: sideCount).materialFaces
 		geometry.materials = faces.enumerated().map { faceIndex, face in
 			faceMaterial(faceIndex: faceIndex, face: face, sideCount: sideCount, fillColor: fillColor, numeralFont: font)
 		}
