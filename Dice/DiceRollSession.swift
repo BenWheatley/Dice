@@ -140,7 +140,7 @@ final class DiceRollSession {
 	private var persistentTotals: [Int] = []
 	private var sortedTotals: [Int] = []
 	private var totalRolls = 0
-	private var wasIntuitive = false
+	private var lastModeSignature = ""
 	private let intuitiveRoller: IntuitiveRoller
 
 	init(intuitiveRoller: IntuitiveRoller = IntuitiveRoller()) {
@@ -148,11 +148,11 @@ final class DiceRollSession {
 	}
 
 	func roll(_ configuration: RollConfiguration) -> RollOutcome {
-		if configuration.intuitive != wasIntuitive {
+		if configuration.modeSignature != lastModeSignature {
 			persistentTotals = []
 			sortedTotals = []
 			totalRolls = 0
-			wasIntuitive = configuration.intuitive
+			lastModeSignature = configuration.modeSignature
 		}
 
 		let maxSideCount = configuration.pools.map(\.sideCount).max() ?? configuration.sideCount
@@ -167,7 +167,7 @@ final class DiceRollSession {
 
 		for pool in configuration.pools {
 			for _ in 0..<pool.diceCount {
-				let roll = getDiceRoll(sideCount: pool.sideCount, numDiceBeingRolled: pool.diceCount, intuitive: configuration.intuitive)
+				let roll = getDiceRoll(sideCount: pool.sideCount, numDiceBeingRolled: pool.diceCount, intuitive: pool.intuitive)
 				values.append(roll)
 				sideCounts.append(pool.sideCount)
 				let index = roll - 1

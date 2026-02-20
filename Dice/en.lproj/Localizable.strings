@@ -43,7 +43,6 @@
 "menu.control.motionBlur" = "Motion Blur";
 "menu.control.largeFaceLabels" = "Larger Face Labels";
 "menu.control.soundPack" = "Roll Sound";
-"menu.control.soundVolume" = "Sound Volume (%d%%)";
 "menu.control.soundEffects" = "Sound Effects";
 "menu.control.haptics" = "Haptics";
 "menu.control.previewStyle" = "Preview Style";
@@ -80,7 +79,6 @@
 "soundPack.hardTable" = "Hard Table";
 "alert.invalid.title" = "Invalid dice input";
 "alert.invalid.announcement" = "Invalid dice notation.";
-"alert.soundVolume.title" = "Roll Sound Volume";
 "alert.resetVisuals.title" = "Reset visual style?";
 "alert.resetVisuals.message" = "This will restore theme, texture, die finish, outlines, die colors, pip style, numeral font, and large face label defaults.";
 "die.options.title" = "Die %d (d%d)";
@@ -130,6 +128,7 @@
 "stats.mode" = "Mode: %@";
 "stats.mode.trueRandom" = "True Random";
 "stats.mode.intuitive" = "Intuitive";
+"stats.mode.mixed" = "Mixed";
 "stats.notation" = "Notation: %@";
 "stats.rollCounts" = "Roll counts: %@";
 "stats.rollSum" = "Roll total: %d";

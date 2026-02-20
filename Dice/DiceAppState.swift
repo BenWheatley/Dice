@@ -65,13 +65,14 @@ final class DiceAppState {
 	var dieColorPreferences: DiceDieColorPreferences
 	var d6PipStyle: DiceD6PipStyle
 	var faceNumeralFont: DiceFaceNumeralFont
+	var dieFaceNumeralFontOverrides: [Int: DiceFaceNumeralFont]
+	var dieColorOverrides: [Int: DiceDieColorPreset]
 	var largeFaceLabelsEnabled: Bool
 	var lastRolledConfiguration: RollConfiguration?
 	var lockedDieIndices: Set<Int>
 	var motionBlurEnabled: Bool
 	var boardLayoutPreset: DiceBoardLayoutPreset
 	var soundPack: DiceSoundPack
-	var soundVolume: Float
 	var soundEffectsEnabled: Bool
 	var hapticsEnabled: Bool
 
@@ -89,13 +90,14 @@ final class DiceAppState {
 		self.dieColorPreferences = .default
 		self.d6PipStyle = .round
 		self.faceNumeralFont = .classic
+		self.dieFaceNumeralFontOverrides = [:]
+		self.dieColorOverrides = [:]
 		self.largeFaceLabelsEnabled = false
 		self.lastRolledConfiguration = nil
 		self.lockedDieIndices = []
 		self.motionBlurEnabled = false
 		self.boardLayoutPreset = .compact
 		self.soundPack = .off
-		self.soundVolume = 0.65
 		self.soundEffectsEnabled = true
 		self.hapticsEnabled = true
 	}
@@ -105,5 +107,7 @@ final class DiceAppState {
 		diceSideCounts = outcome.sideCounts
 		stats = DiceStats(outcome: outcome)
 		lockedDieIndices = lockedDieIndices.filter { $0 >= 0 && $0 < diceValues.count }
+		dieFaceNumeralFontOverrides = dieFaceNumeralFontOverrides.filter { $0.key >= 0 && $0.key < diceValues.count }
+		dieColorOverrides = dieColorOverrides.filter { $0.key >= 0 && $0.key < diceValues.count }
 	}
 }

@@ -66,7 +66,7 @@ final class DiceUITests: XCTestCase {
 		app.buttons["Cancel"].tap()
 	}
 
-	func testResetStatsAndToggleAnimations() {
+	func testToggleAnimationsFromMenu() {
 		let menuButton = app.buttons["menuButton"]
 		let totalsLabel = app.staticTexts["totalsLabel"]
 
@@ -76,9 +76,6 @@ final class DiceUITests: XCTestCase {
 
 		menuButton.tap()
 		app.buttons["Animations"].tap()
-
-		menuButton.tap()
-		app.buttons["Reset"].tap()
 		XCTAssertTrue(totalsLabel.exists)
 	}
 

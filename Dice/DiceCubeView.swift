@@ -20,6 +20,7 @@ final class DiceCubeView: UIView {
 	private struct BadgeCacheKey: Hashable {
 		let value: Int
 		let roundedBadgeSize: Int
+		let font: DiceFaceNumeralFont
 	}
 
 	private struct MeshData {
@@ -81,7 +82,16 @@ final class DiceCubeView: UIView {
 		updateCamera(animated: false)
 	}
 
-	func setDice(values: [Int], centers: [CGPoint], sideLength: CGFloat, sideCounts: [Int], animated: Bool) {
+	func setDice(
+		values: [Int],
+		centers: [CGPoint],
+		sideLength: CGFloat,
+		sideCounts: [Int],
+		dieColorPresets: [DiceDieColorPreset?] = [],
+		faceNumeralFonts: [DiceFaceNumeralFont?] = [],
+		lockedIndices: Set<Int> = [],
+		animated: Bool
+	) {
 		guard values.count == centers.count, values.count == sideCounts.count else { return }
 		ensureNodeCount(values.count)
 		let motionProfile = DiceMotionBehaviorProfile.resolve(intensity: activeAnimationIntensity, reduceMotionEnabled: reduceMotionEnabled)
@@ -118,6 +128,15 @@ final class DiceCubeView: UIView {
 				outline?.isHidden = !activeEdgeOutlinesEnabled
 				dieSideCounts[index] = sideCount
 			}
+			let colorPreset = index < dieColorPresets.count ? dieColorPresets[index] : nil
+			let numeralFont = index < faceNumeralFonts.count ? faceNumeralFonts[index] : nil
+			let body = container.childNode(withName: "body", recursively: false)
+			applyFaceMaterials(
+				to: body?.geometry,
+				sideCount: sideCount,
+				colorPresetOverride: colorPreset,
+				faceNumeralFontOverride: numeralFont
+			)
 
 			let showLabel = sideCount != 6
 			let labelNode = container.childNode(withName: "label", recursively: false)
@@ -126,7 +145,11 @@ final class DiceCubeView: UIView {
 				let cacheKey = ObjectIdentifier(labelNode)
 				let previousValue = labelValueCache[cacheKey]
 				if sizeChanged || didSideChange || previousValue != values[index] {
-					(labelNode.geometry as? SCNPlane)?.firstMaterial?.diffuse.contents = valueBadgeImage(values[index], sideLength: sideLength)
+					(labelNode.geometry as? SCNPlane)?.firstMaterial?.diffuse.contents = valueBadgeImage(
+						values[index],
+						sideLength: sideLength,
+						font: numeralFont ?? activeFaceNumeralFont
+					)
 					labelValueCache[cacheKey] = values[index]
 				}
 			}
@@ -135,7 +158,7 @@ final class DiceCubeView: UIView {
 			let targetFace = values[index]
 			let startPosition = SCNVector3(container.presentation.position.x, container.presentation.position.y, 0)
 
-			if shouldAnimateRoll {
+			if shouldAnimateRoll && !lockedIndices.contains(index) {
 				animateRoll(
 					node: container,
 					from: startPosition,
@@ -493,21 +516,37 @@ final class DiceCubeView: UIView {
 		return mesh
 	}
 
-	private func faceMaterial(faceIndex: Int, face: [Int], sideCount: Int) -> SCNMaterial {
+	private func faceMaterial(faceIndex: Int, face: [Int], sideCount: Int, fillColor: UIColor? = nil, numeralFont: DiceFaceNumeralFont? = nil) -> SCNMaterial {
 		let material = SCNMaterial()
 		let value = faceIndex + 1
-		let fillColor = activeDieColorPreferences.fillColor(for: sideCount)
+		let resolvedFillColor = fillColor ?? activeDieColorPreferences.fillColor(for: sideCount)
+		let resolvedFont = numeralFont ?? activeFaceNumeralFont
 		if sideCount == 6 {
-			material.diffuse.contents = D6SceneKitRenderConfig.faceTexture(value: value, fillColor: fillColor, pipStyle: activeD6PipStyle)
+			material.diffuse.contents = D6SceneKitRenderConfig.faceTexture(value: value, fillColor: resolvedFillColor, pipStyle: activeD6PipStyle)
 		} else if sideCount == 4 {
-			material.diffuse.contents = d4FaceTexture(vertexLabels: d4VertexLabels(forFace: face), fillColor: fillColor)
+			material.diffuse.contents = d4FaceTexture(vertexLabels: d4VertexLabels(forFace: face), fillColor: resolvedFillColor, numeralFont: resolvedFont)
 		} else {
-			material.diffuse.contents = faceValueTexture(value: value, sideCount: sideCount, fillColor: fillColor)
+			material.diffuse.contents = faceValueTexture(value: value, sideCount: sideCount, fillColor: resolvedFillColor, numeralFont: resolvedFont)
 		}
 		material.locksAmbientWithDiffuse = true
 		material.isDoubleSided = false
 		activeDieFinish.apply(to: material)
 		return material
+	}
+
+	private func applyFaceMaterials(
+		to geometry: SCNGeometry?,
+		sideCount: Int,
+		colorPresetOverride: DiceDieColorPreset?,
+		faceNumeralFontOverride: DiceFaceNumeralFont?
+	) {
+		guard let geometry else { return }
+		let fillColor = (colorPresetOverride ?? activeDieColorPreferences.preset(for: sideCount)).fillColor
+		let font = faceNumeralFontOverride ?? activeFaceNumeralFont
+		let faces = meshData(for: sideCount).faces
+		geometry.materials = faces.enumerated().map { faceIndex, face in
+			faceMaterial(faceIndex: faceIndex, face: face, sideCount: sideCount, fillColor: fillColor, numeralFont: font)
+		}
 	}
 
 	private func makeOutlineGeometry(from source: SCNGeometry) -> SCNGeometry {
@@ -529,7 +568,7 @@ final class DiceCubeView: UIView {
 		face.map { $0 + 1 }
 	}
 
-	private func d4FaceTexture(vertexLabels: [Int], fillColor: UIColor) -> UIImage {
+	private func d4FaceTexture(vertexLabels: [Int], fillColor: UIColor, numeralFont: DiceFaceNumeralFont) -> UIImage {
 		let size = CGSize(width: 256, height: 256)
 		let renderer = UIGraphicsImageRenderer(size: size)
 		return renderer.image { ctx in
@@ -544,7 +583,7 @@ final class DiceCubeView: UIView {
 			triangle.addLine(to: trianglePoints[1])
 			triangle.addLine(to: trianglePoints[2])
 			triangle.close()
-			UIColor(white: 0.88, alpha: 1.0).setFill()
+			style.fillColor.setFill()
 			triangle.fill()
 			style.borderColor.setStroke()
 			triangle.lineWidth = 6
@@ -552,7 +591,7 @@ final class DiceCubeView: UIView {
 
 			let placements = d4LabelPlacements(triangle: trianglePoints)
 			let attrs: [NSAttributedString.Key: Any] = [
-				.font: activeFaceNumeralFont.numeralFont(
+				.font: numeralFont.numeralFont(
 					ofSize: DiceFaceLabelSizing.textureNumeralPointSize(sideCount: 4, large: activeLargeFaceLabelsEnabled)
 				),
 				.foregroundColor: style.primaryInkColor
@@ -601,7 +640,7 @@ final class DiceCubeView: UIView {
 		}
 	}
 
-	private func faceValueTexture(value: Int, sideCount: Int, fillColor: UIColor) -> UIImage {
+	private func faceValueTexture(value: Int, sideCount: Int, fillColor: UIColor, numeralFont: DiceFaceNumeralFont) -> UIImage {
 		let size = CGSize(width: 256, height: 256)
 		let renderer = UIGraphicsImageRenderer(size: size)
 		return renderer.image { ctx in
@@ -615,7 +654,7 @@ final class DiceCubeView: UIView {
 
 			let text = "\(value)" as NSString
 			let attrs: [NSAttributedString.Key: Any] = [
-				.font: activeFaceNumeralFont.numeralFont(
+				.font: numeralFont.numeralFont(
 					ofSize: DiceFaceLabelSizing.textureNumeralPointSize(sideCount: sideCount, large: activeLargeFaceLabelsEnabled)
 				),
 				.foregroundColor: style.primaryInkColor
@@ -626,7 +665,7 @@ final class DiceCubeView: UIView {
 
 			let subtitle = "d\(sideCount)" as NSString
 			let subAttrs: [NSAttributedString.Key: Any] = [
-				.font: activeFaceNumeralFont.captionFont(
+				.font: numeralFont.captionFont(
 					ofSize: DiceFaceLabelSizing.textureCaptionPointSize(large: activeLargeFaceLabelsEnabled)
 				),
 				.foregroundColor: style.secondaryInkColor
@@ -647,9 +686,9 @@ final class DiceCubeView: UIView {
 		return plane
 	}
 
-	private func valueBadgeImage(_ value: Int, sideLength: CGFloat) -> UIImage {
+	private func valueBadgeImage(_ value: Int, sideLength: CGFloat, font: DiceFaceNumeralFont) -> UIImage {
 		let badgeSize = Int((sideLength * 0.45).rounded())
-		let key = BadgeCacheKey(value: value, roundedBadgeSize: badgeSize)
+		let key = BadgeCacheKey(value: value, roundedBadgeSize: badgeSize, font: font)
 		if let cached = badgeImageCache[key] {
 			return cached
 		}
@@ -663,7 +702,7 @@ final class DiceCubeView: UIView {
 
 			let text = "\(value)" as NSString
 			let attrs: [NSAttributedString.Key: Any] = [
-				.font: activeFaceNumeralFont.numeralFont(
+				.font: font.numeralFont(
 					ofSize: size.height * DiceFaceLabelSizing.badgeNumeralScale(large: activeLargeFaceLabelsEnabled)
 				),
 				.foregroundColor: UIColor.black

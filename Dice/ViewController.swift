@@ -125,7 +125,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
 		guard let cell = collectionView.cellForItem(at: indexPath) else { return }
-		presentDieOptions(for: indexPath.row, sourceView: cell)
+		let anchorPoint = cell.convert(CGPoint(x: cell.bounds.midX, y: cell.bounds.midY), to: view)
+		let anchorRect = CGRect(x: anchorPoint.x - 1, y: anchorPoint.y - 1, width: 2, height: 2)
+		presentDieOptions(for: indexPath.row, sourceView: view, sourceRect: anchorRect)
 	}
 
 	override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -140,9 +142,11 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			isLocked: viewModel.isDieLocked(at: indexPath.row),
 			largeFaceLabelsEnabled: viewModel.largeFaceLabelsEnabled
 		)
-		cell.onTapDie = { [weak self, weak cell] in
+		cell.onTapDie = { [weak self, weak cell] point in
 			guard let self, let cell else { return }
-			self.presentDieOptions(for: indexPath.row, sourceView: cell)
+			let anchorPoint = cell.convert(point, to: self.view)
+			let anchorRect = CGRect(x: anchorPoint.x - 1, y: anchorPoint.y - 1, width: 2, height: 2)
+			self.presentDieOptions(for: indexPath.row, sourceView: self.view, sourceRect: anchorRect)
 		}
 		cell.onToggleLock = { [weak self, weak collectionView] in
 			guard let self else { return }
@@ -341,7 +345,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		playRollSound()
 	}
 
-	private func presentDieOptions(for index: Int, sourceView: UIView) {
+	private func presentDieOptions(for index: Int, sourceView: UIView, sourceRect: CGRect? = nil) {
 		guard viewModel.diceValues.indices.contains(index) else { return }
 		guard viewModel.diceSideCounts.indices.contains(index) else { return }
 		let sideCount = viewModel.diceSideCounts[index]
@@ -353,14 +357,16 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			message: String(format: NSLocalizedString("die.options.message", comment: "Per-die options message"), faceValue),
 			preferredStyle: .actionSheet
 		)
-		alert.addAction(UIAlertAction(title: NSLocalizedString("die.options.reroll", comment: "Reroll one die action"), style: .default) { [weak self] _ in
+		let rerollAction = UIAlertAction(title: NSLocalizedString("die.options.reroll", comment: "Reroll one die action"), style: .default) { [weak self] _ in
 			self?.rerollDie(at: index)
-		})
+		}
+		rerollAction.isEnabled = !viewModel.isDieLocked(at: index)
+		alert.addAction(rerollAction)
 		alert.addAction(UIAlertAction(title: NSLocalizedString(lockTitleKey, comment: "Toggle lock action"), style: .default) { [weak self] _ in
 			self?.toggleDieLock(at: index)
 		})
 		alert.addAction(UIAlertAction(title: NSLocalizedString("die.options.color", comment: "Change die color action"), style: .default) { [weak self] _ in
-			self?.presentDieColorOptions(for: sideCount, sourceView: sourceView)
+			self?.presentDieColorOptions(forDieAt: index, sideCount: sideCount, sourceView: sourceView, sourceRect: sourceRect)
 		})
 		if sideCount == 6 {
 			alert.addAction(UIAlertAction(title: NSLocalizedString("die.options.pips", comment: "Change d6 pip style action"), style: .default) { [weak self] _ in
@@ -368,35 +374,35 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			})
 		} else {
 			alert.addAction(UIAlertAction(title: NSLocalizedString("die.options.font", comment: "Change numeral font action"), style: .default) { [weak self] _ in
-				self?.presentNumeralFontOptions(sourceView: sourceView)
+				self?.presentNumeralFontOptions(forDieAt: index, sourceView: sourceView, sourceRect: sourceRect)
 			})
 		}
 		alert.addAction(UIAlertAction(title: NSLocalizedString("button.cancel", comment: "Cancel action"), style: .cancel))
 		if let popover = alert.popoverPresentationController {
 			popover.sourceView = sourceView
-			popover.sourceRect = sourceView.bounds
+			popover.sourceRect = sourceRect ?? sourceView.bounds
 		}
 		present(alert, animated: true)
 	}
 
-	private func presentDieColorOptions(for sideCount: Int, sourceView: UIView) {
+	private func presentDieColorOptions(forDieAt index: Int, sideCount: Int, sourceView: UIView, sourceRect: CGRect?) {
 		let alert = UIAlertController(
 			title: String(format: NSLocalizedString("die.options.color.title", comment: "Die color sheet title"), sideCount),
 			message: nil,
 			preferredStyle: .actionSheet
 		)
 		for preset in DiceDieColorPreset.allCases {
-			let isCurrent = viewModel.dieColorPreset(for: sideCount) == preset
+			let isCurrent = (viewModel.dieColorPreset(forDieAt: index) ?? viewModel.dieColorPreset(for: sideCount)) == preset
 			let marker = isCurrent ? " ✓" : ""
 			let title = NSLocalizedString(preset.menuTitleKey, comment: "Die color option") + marker
 			alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
-				self?.selectDieColorPreset(preset, sideCount: sideCount)
+				self?.selectDieColorPreset(preset, sideCount: sideCount, index: index)
 			})
 		}
 		alert.addAction(UIAlertAction(title: NSLocalizedString("button.cancel", comment: "Cancel action"), style: .cancel))
 		if let popover = alert.popoverPresentationController {
 			popover.sourceView = sourceView
-			popover.sourceRect = sourceView.bounds
+			popover.sourceRect = sourceRect ?? sourceView.bounds
 		}
 		present(alert, animated: true)
 	}
@@ -423,24 +429,24 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		present(alert, animated: true)
 	}
 
-	private func presentNumeralFontOptions(sourceView: UIView) {
+	private func presentNumeralFontOptions(forDieAt index: Int, sourceView: UIView, sourceRect: CGRect?) {
 		let alert = UIAlertController(
 			title: NSLocalizedString("die.options.font.title", comment: "Numeral font sheet title"),
 			message: nil,
 			preferredStyle: .actionSheet
 		)
 		for font in DiceFaceNumeralFont.allCases {
-			let isCurrent = viewModel.faceNumeralFont == font
+			let isCurrent = (viewModel.faceNumeralFont(forDieAt: index) ?? viewModel.faceNumeralFont) == font
 			let marker = isCurrent ? " ✓" : ""
 			let title = NSLocalizedString(font.menuTitleKey, comment: "Numeral font option") + marker
 			alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
-				self?.selectFaceNumeralFont(font)
+				self?.selectFaceNumeralFont(font, dieIndex: index)
 			})
 		}
 		alert.addAction(UIAlertAction(title: NSLocalizedString("button.cancel", comment: "Cancel action"), style: .cancel))
 		if let popover = alert.popoverPresentationController {
 			popover.sourceView = sourceView
-			popover.sourceRect = sourceView.bounds
+			popover.sourceRect = sourceRect ?? sourceView.bounds
 		}
 		present(alert, animated: true)
 	}
@@ -514,7 +520,18 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			boardSideCounts.append(sideCounts[row])
 		}
 
-		diceBoardView.setDice(values: values, centers: centers, sideLength: sideLength, sideCounts: boardSideCounts, animated: animated)
+		let colorOverrides = (0..<values.count).map { viewModel.dieColorOverridesByIndex[$0] }
+		let fontOverrides = (0..<values.count).map { viewModel.dieFaceNumeralFontOverridesByIndex[$0] }
+		diceBoardView.setDice(
+			values: values,
+			centers: centers,
+			sideLength: sideLength,
+			sideCounts: boardSideCounts,
+			dieColorPresets: colorOverrides,
+			faceNumeralFonts: fontOverrides,
+			lockedIndices: viewModel.lockedDieIndices,
+			animated: animated
+		)
 	}
 
 	private func showInvalidNotationAlert(message: String) {
@@ -550,7 +567,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	private func syncSoundSettings() {
-		soundEngine.configure(pack: viewModel.soundPack, volume: viewModel.soundVolume, enabled: viewModel.soundEffectsEnabled)
+		soundEngine.configure(pack: viewModel.soundPack, enabled: viewModel.soundEffectsEnabled)
 	}
 
 	private func playRollSound() {
@@ -1009,14 +1026,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			options: .displayInline,
 			children: soundPackActions
 		)
-		let soundVolumeAction = UIAction(
-			title: String(
-				format: NSLocalizedString("menu.control.soundVolume", comment: "Sound volume menu title"),
-				Int((viewModel.soundVolume * 100).rounded())
-			)
-		) { [weak self] _ in
-			self?.presentSoundVolumeSheet()
-		}
 		let soundEffectsAction = UIAction(
 			title: NSLocalizedString("menu.control.soundEffects", comment: "Sound effects toggle title"),
 			state: viewModel.soundEffectsEnabled ? .on : .off
@@ -1038,10 +1047,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		) { [weak self] _ in
 			self?.confirmVisualReset()
 		}
-		let resetAction = UIAction(title: NSLocalizedString("button.reset", comment: "Reset button title"), attributes: .destructive) { [weak self] _ in
-			self?.resetStats()
-		}
-		menuButton.menu = UIMenu(children: [historyAction, repeatAction, animationAction, animationIntensityMenu, soundPackMenu, soundVolumeAction, soundEffectsAction, hapticsAction, resetAction, statsAction, themeMenu, textureMenu, layoutMenu, finishMenu, outlinesAction, motionBlurAction, largeLabelsAction, previewStyleAction, resetVisualsAction])
+		menuButton.menu = UIMenu(children: [historyAction, repeatAction, animationAction, animationIntensityMenu, soundPackMenu, soundEffectsAction, hapticsAction, statsAction, themeMenu, textureMenu, layoutMenu, finishMenu, outlinesAction, motionBlurAction, largeLabelsAction, previewStyleAction, resetVisualsAction])
 	}
 
 	@objc private func toggleStatsVisibility() {
@@ -1128,36 +1134,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		}
 	}
 
-	private func presentSoundVolumeSheet() {
-		let alert = UIAlertController(
-			title: NSLocalizedString("alert.soundVolume.title", comment: "Sound volume sheet title"),
-			message: "\n\n\n",
-			preferredStyle: .alert
-		)
-		let slider = UISlider(frame: .zero)
-		slider.minimumValue = 0
-		slider.maximumValue = 1
-		slider.value = viewModel.soundVolume
-		slider.translatesAutoresizingMaskIntoConstraints = false
-		alert.view.addSubview(slider)
-
-		NSLayoutConstraint.activate([
-			slider.leadingAnchor.constraint(equalTo: alert.view.leadingAnchor, constant: 20),
-			slider.trailingAnchor.constraint(equalTo: alert.view.trailingAnchor, constant: -20),
-			slider.topAnchor.constraint(equalTo: alert.view.topAnchor, constant: 74),
-		])
-
-		alert.addAction(UIAlertAction(title: NSLocalizedString("button.cancel", comment: "Cancel action"), style: .cancel))
-		alert.addAction(UIAlertAction(title: NSLocalizedString("button.save", comment: "Save button title"), style: .default) { [weak self] _ in
-			guard let self else { return }
-			viewModel.setSoundVolume(slider.value)
-			syncSoundSettings()
-			updateControlMenu()
-		})
-		present(alert, animated: true)
-	}
-
-	private func selectDieColorPreset(_ preset: DiceDieColorPreset, sideCount: Int) {
+	private func selectDieColorPreset(_ preset: DiceDieColorPreset, sideCount: Int, index: Int) {
+		viewModel.setDieColorPreset(preset, forDieAt: index)
 		viewModel.setDieColorPreset(preset, for: sideCount)
 		diceBoardView.setDieColorPreferences(viewModel.dieColorPreferences)
 		updateDiceBoard(animated: false)
@@ -1171,8 +1149,12 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		updateControlMenu()
 	}
 
-	private func selectFaceNumeralFont(_ font: DiceFaceNumeralFont) {
-		viewModel.setFaceNumeralFont(font)
+	private func selectFaceNumeralFont(_ font: DiceFaceNumeralFont, dieIndex: Int? = nil) {
+		if let dieIndex {
+			viewModel.setFaceNumeralFont(font, forDieAt: dieIndex)
+		} else {
+			viewModel.setFaceNumeralFont(font)
+		}
 		diceBoardView.setFaceNumeralFont(font)
 		updateDiceBoard(animated: false)
 		updateControlMenu()
@@ -1287,7 +1269,6 @@ private final class DiceSoundEngine {
 	private var cachedImpactBuffers: [DiceSoundPack: AVAudioPCMBuffer] = [:]
 	private var cachedTickBuffers: [DiceSoundPack: AVAudioPCMBuffer] = [:]
 	private var currentPack: DiceSoundPack = .off
-	private var currentVolume: Float = 0.65
 	private var isEnabled = true
 	private var didStartEngine = false
 
@@ -1296,19 +1277,17 @@ private final class DiceSoundEngine {
 		engine.connect(player, to: engine.mainMixerNode, format: nil)
 	}
 
-	func configure(pack: DiceSoundPack, volume: Float, enabled: Bool) {
+	func configure(pack: DiceSoundPack, enabled: Bool) {
 		currentPack = pack
-		currentVolume = min(max(volume, 0), 1)
 		isEnabled = enabled
 	}
 
 	func playRollImpact() {
 		guard isEnabled else { return }
 		guard currentPack != .off else { return }
-		guard currentVolume > 0 else { return }
 		ensureEngineStarted()
 		guard let buffer = impactBuffer(for: currentPack) else { return }
-		player.volume = currentVolume
+		player.volume = 1.0
 		player.scheduleBuffer(buffer, at: nil, options: []) { }
 		if !player.isPlaying {
 			player.play()
@@ -1318,10 +1297,9 @@ private final class DiceSoundEngine {
 	func playSettleTick() {
 		guard isEnabled else { return }
 		guard currentPack != .off else { return }
-		guard currentVolume > 0 else { return }
 		ensureEngineStarted()
 		guard let buffer = tickBuffer(for: currentPack) else { return }
-		player.volume = currentVolume * 0.9
+		player.volume = 0.9
 		player.scheduleBuffer(buffer, at: nil, options: []) { }
 		if !player.isPlaying {
 			player.play()
@@ -2169,32 +2147,38 @@ extension DiceCollectionViewController: UICollectionViewDelegateFlowLayout {
 
 class DiceCollectionViewCell: UICollectionViewCell {
 	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
-	var onTapDie: (() -> Void)?
+	var onTapDie: ((CGPoint) -> Void)?
 	var onToggleLock: (() -> Void)?
 	private var currentPalette = DiceTheme.system.palette
 	private var isLocked = false
 	private var lockGestureConfigured = false
+	private let lockIconView = UIImageView(image: UIImage(systemName: "lock.fill"))
 
 	@IBOutlet weak var diceButton: UIButton!
 
 	override init(frame: CGRect) {
 		super.init(frame: frame)
 		configureGestures()
+		configureLockIcon()
 	}
 
 	required init?(coder: NSCoder) {
 		super.init(coder: coder)
 		configureGestures()
+		configureLockIcon()
 	}
 
 	override func awakeFromNib() {
 		super.awakeFromNib()
 		configureGestures()
+		configureLockIcon()
 	}
 
 	override func layoutSubviews() {
 		super.layoutSubviews()
 		diceButton.frame = contentView.bounds
+		let iconSize: CGFloat = 18
+		lockIconView.frame = CGRect(x: contentView.bounds.maxX - iconSize - 4, y: 4, width: iconSize, height: iconSize)
 	}
 
 	func configure(faceValue: Int, sideCount: Int, index: Int, palette: DiceThemePalette, isLocked: Bool, largeFaceLabelsEnabled: Bool) {
@@ -2212,15 +2196,16 @@ class DiceCollectionViewCell: UICollectionViewCell {
 			: NSLocalizedString("a11y.die.hint", comment: "Die button accessibility hint")
 		diceButton.accessibilityTraits = .button
 		setFaceValue(faceValue, sideCount: sideCount, largeFaceLabelsEnabled: largeFaceLabelsEnabled)
+		lockIconView.isHidden = !isLocked
 	}
 
 	private func setFaceValue(_ value: Int, sideCount: Int, largeFaceLabelsEnabled: Bool) {
 		if boardSupportedSides.contains(sideCount) {
 			diceButton.setTitle(nil, for: .normal)
 			diceButton.setImage(nil, for: .normal)
-			diceButton.layer.borderWidth = isLocked ? 2 : 0
-			diceButton.layer.cornerRadius = isLocked ? 8 : 0
-			diceButton.layer.borderColor = isLocked ? UIColor.systemYellow.cgColor : UIColor.clear.cgColor
+			diceButton.layer.borderWidth = 0
+			diceButton.layer.cornerRadius = 0
+			diceButton.layer.borderColor = UIColor.clear.cgColor
 			diceButton.backgroundColor = UIColor.clear
 		} else {
 			diceButton.setImage(nil, for: .normal)
@@ -2245,6 +2230,19 @@ class DiceCollectionViewCell: UICollectionViewCell {
 		diceButton.isUserInteractionEnabled = true
 	}
 
+	private func configureLockIcon() {
+		guard lockIconView.superview == nil else { return }
+		lockIconView.tintColor = .systemYellow
+		lockIconView.contentMode = .scaleAspectFit
+		lockIconView.layer.shadowColor = UIColor.black.cgColor
+		lockIconView.layer.shadowOpacity = 0.35
+		lockIconView.layer.shadowRadius = 1.5
+		lockIconView.layer.shadowOffset = CGSize(width: 0, height: 1)
+		lockIconView.isHidden = true
+		contentView.addSubview(lockIconView)
+		contentView.bringSubviewToFront(lockIconView)
+	}
+
 	@objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
 		if gesture.state == .began {
 			onToggleLock?()
@@ -2252,6 +2250,11 @@ class DiceCollectionViewCell: UICollectionViewCell {
 	}
 
 	@IBAction func reroll(_ sender: Any) {
-		onTapDie?()
+		guard let button = sender as? UIButton else {
+			onTapDie?(CGPoint(x: contentView.bounds.midX, y: contentView.bounds.midY))
+			return
+		}
+		let point = button.convert(CGPoint(x: button.bounds.midX, y: button.bounds.midY), to: contentView)
+		onTapDie?(point)
 	}
 }

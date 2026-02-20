@@ -43,20 +43,53 @@ enum DiceInputError: Error, Equatable {
 struct DicePool: Equatable {
 	let diceCount: Int
 	let sideCount: Int
+	let intuitive: Bool
+
+	init(diceCount: Int, sideCount: Int, intuitive: Bool = false) {
+		self.diceCount = diceCount
+		self.sideCount = sideCount
+		self.intuitive = intuitive
+	}
 }
 
 struct RollConfiguration {
 	let pools: [DicePool]
-	let intuitive: Bool
 
 	init(diceCount: Int, sideCount: Int, intuitive: Bool) {
-		self.pools = [DicePool(diceCount: diceCount, sideCount: sideCount)]
-		self.intuitive = intuitive
+		self.pools = [DicePool(diceCount: diceCount, sideCount: sideCount, intuitive: intuitive)]
 	}
 
 	init(pools: [DicePool], intuitive: Bool) {
+		self.pools = pools.map { DicePool(diceCount: $0.diceCount, sideCount: $0.sideCount, intuitive: intuitive) }
+	}
+
+	init(pools: [DicePool]) {
 		self.pools = pools
-		self.intuitive = intuitive
+	}
+
+	var intuitive: Bool {
+		pools.allSatisfy(\.intuitive)
+	}
+
+	var hasIntuitivePools: Bool {
+		pools.contains(where: \.intuitive)
+	}
+
+	var hasTrueRandomPools: Bool {
+		pools.contains(where: { !$0.intuitive })
+	}
+
+	var perDieIntuitiveFlags: [Bool] {
+		var flags: [Bool] = []
+		flags.reserveCapacity(diceCount)
+		for pool in pools {
+			flags.append(contentsOf: Array(repeating: pool.intuitive, count: pool.diceCount))
+		}
+		return flags
+	}
+
+	var modeSignature: String {
+		pools.map { $0.intuitive ? "i" : "r" }.joined(separator: ",")
 	}
 
 	var diceCount: Int {
@@ -82,8 +115,9 @@ struct RollConfiguration {
 	}
 
 	var notation: String {
-		let body = pools.map { "\($0.diceCount)d\($0.sideCount)" }.joined(separator: "+")
-		return "\(body)\(intuitive ? "i" : "")"
+		pools
+			.map { "\($0.diceCount)d\($0.sideCount)\($0.intuitive ? "i" : "")" }
+			.joined(separator: "+")
 	}
 }
 
@@ -110,9 +144,7 @@ struct DiceNotationParser {
 		let sanitized = text.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
 		if sanitized.isEmpty { throw DiceInputError.emptyInput }
 
-		let intuitive = sanitized.contains("i")
-		let withoutIntuitiveFlag = sanitized.replacingOccurrences(of: "i", with: "")
-		if let invalidCharacter = withoutIntuitiveFlag.first(where: { !$0.isNumber && $0 != "d" && $0 != "+" && $0 != "," && $0 != "&" && !$0.isWhitespace }) {
+		if let invalidCharacter = sanitized.first(where: { !$0.isNumber && $0 != "d" && $0 != "i" && $0 != "+" && $0 != "," && $0 != "&" && !$0.isWhitespace }) {
 			throw DiceInputError.invalidSegment(
 				segment: String(invalidCharacter),
 				hintKey: "error.input.hint.invalidCharacter"
@@ -120,21 +152,23 @@ struct DiceNotationParser {
 		}
 
 		let pools: [DicePool]
-		if withoutIntuitiveFlag.allSatisfy(\.isNumber) {
-			guard let parsedDice = Int(withoutIntuitiveFlag) else {
+		if sanitized.allSatisfy(\.isNumber) {
+			guard let parsedDice = Int(sanitized) else {
 				throw DiceInputError.invalidFormat
 			}
-			pools = [DicePool(diceCount: parsedDice, sideCount: 6)]
+			pools = [DicePool(diceCount: parsedDice, sideCount: 6, intuitive: false)]
 		} else {
-			let tokens = withoutIntuitiveFlag
-				.split(whereSeparator: { !$0.isNumber && $0 != "d" })
+			let tokens = sanitized
+				.split(whereSeparator: { !$0.isNumber && $0 != "d" && $0 != "i" })
 				.map(String.init)
 			guard !tokens.isEmpty else { throw DiceInputError.invalidFormat }
 
 			var parsedPools: [DicePool] = []
 			parsedPools.reserveCapacity(tokens.count)
 			for token in tokens {
-				let components = token.split(separator: "d", omittingEmptySubsequences: false)
+				let intuitive = token.hasSuffix("i")
+				let core = intuitive ? String(token.dropLast()) : token
+				let components = core.split(separator: "d", omittingEmptySubsequences: false)
 				guard components.count == 2 else {
 					throw DiceInputError.invalidSegment(
 						segment: token,
@@ -159,7 +193,7 @@ struct DiceNotationParser {
 				guard let parsedCount = count, let parsedSides = Int(sidePart) else {
 					throw DiceInputError.invalidFormat
 				}
-				parsedPools.append(DicePool(diceCount: parsedCount, sideCount: parsedSides))
+				parsedPools.append(DicePool(diceCount: parsedCount, sideCount: parsedSides, intuitive: intuitive))
 			}
 			pools = parsedPools
 		}
@@ -170,6 +204,6 @@ struct DiceNotationParser {
 			throw DiceInputError.outOfBounds(diceBounds: diceBounds, sideBounds: sideBounds)
 		}
 
-		return RollConfiguration(pools: pools, intuitive: intuitive)
+		return RollConfiguration(pools: pools)
 	}
 }

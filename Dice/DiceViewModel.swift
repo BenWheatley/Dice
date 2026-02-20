@@ -118,16 +118,20 @@ final class DiceViewModel {
 		appState.soundPack
 	}
 
-	var soundVolume: Float {
-		appState.soundVolume
-	}
-
 	var soundEffectsEnabled: Bool {
 		appState.soundEffectsEnabled
 	}
 
 	var hapticsEnabled: Bool {
 		appState.hapticsEnabled
+	}
+
+	var dieColorOverridesByIndex: [Int: DiceDieColorPreset] {
+		appState.dieColorOverrides
+	}
+
+	var dieFaceNumeralFontOverridesByIndex: [Int: DiceFaceNumeralFont] {
+		appState.dieFaceNumeralFontOverrides
 	}
 
 	func restore() {
@@ -148,7 +152,6 @@ final class DiceViewModel {
 		appState.motionBlurEnabled = preferences.motionBlurEnabled
 		appState.boardLayoutPreset = preferences.boardLayoutPreset
 		appState.soundPack = preferences.soundPack
-		appState.soundVolume = preferences.soundVolume
 		appState.soundEffectsEnabled = preferences.soundEffectsEnabled
 		appState.hapticsEnabled = preferences.hapticsEnabled
 		let persisted = historyStore.loadPersistedEntries()
@@ -160,6 +163,8 @@ final class DiceViewModel {
 		case let .success(parsed):
 			if appState.configuration.sideCountsPerDie != parsed.sideCountsPerDie {
 				appState.lockedDieIndices.removeAll()
+				appState.dieFaceNumeralFontOverrides.removeAll()
+				appState.dieColorOverrides.removeAll()
 			}
 			appState.configuration = parsed
 			preferencesStore.addRecentPreset(parsed.notation)
@@ -322,6 +327,15 @@ final class DiceViewModel {
 		appState.dieColorPreferences.preset(for: sideCount)
 	}
 
+	func dieColorPreset(forDieAt index: Int) -> DiceDieColorPreset? {
+		appState.dieColorOverrides[index]
+	}
+
+	func setDieColorPreset(_ preset: DiceDieColorPreset, forDieAt index: Int) {
+		guard appState.diceValues.indices.contains(index) else { return }
+		appState.dieColorOverrides[index] = preset
+	}
+
 	func setDieColorPreset(_ preset: DiceDieColorPreset, for sideCount: Int) {
 		appState.dieColorPreferences = appState.dieColorPreferences.updated(sideCount: sideCount, preset: preset)
 		persistPreferences()
@@ -335,6 +349,15 @@ final class DiceViewModel {
 	func setFaceNumeralFont(_ font: DiceFaceNumeralFont) {
 		appState.faceNumeralFont = font
 		persistPreferences()
+	}
+
+	func faceNumeralFont(forDieAt index: Int) -> DiceFaceNumeralFont? {
+		appState.dieFaceNumeralFontOverrides[index]
+	}
+
+	func setFaceNumeralFont(_ font: DiceFaceNumeralFont, forDieAt index: Int) {
+		guard appState.diceValues.indices.contains(index) else { return }
+		appState.dieFaceNumeralFontOverrides[index] = font
 	}
 
 	func setLargeFaceLabelsEnabled(_ enabled: Bool) {
@@ -354,11 +377,6 @@ final class DiceViewModel {
 
 	func setSoundPack(_ pack: DiceSoundPack) {
 		appState.soundPack = pack
-		persistPreferences()
-	}
-
-	func setSoundVolume(_ volume: Float) {
-		appState.soundVolume = min(max(volume, 0), 1)
 		persistPreferences()
 	}
 
@@ -403,7 +421,7 @@ final class DiceViewModel {
 		lines.append(String(
 			format: NSLocalizedString("stats.mode", comment: "Current mode and notation"),
 			locale: .current,
-			localizedModeLabel(intuitive: appState.configuration.intuitive)
+			localizedModeLabel(for: appState.configuration)
 		))
 		lines.append(String(
 			format: NSLocalizedString("stats.notation", comment: "Current notation line"),
@@ -458,8 +476,11 @@ final class DiceViewModel {
 		let activeConfiguration = configuration ?? appState.configuration
 		let previousValues = appState.diceValues
 		let previousSideCounts = appState.diceSideCounts
-		let rawOutcome = rollSession.roll(activeConfiguration)
-		let outcome = applyLocks(to: rawOutcome, previousValues: previousValues, previousSideCounts: previousSideCounts)
+		let outcome = lockAwareRoll(
+			configuration: activeConfiguration,
+			previousValues: previousValues,
+			previousSideCounts: previousSideCounts
+		)
 		appState.lastRolledConfiguration = activeConfiguration
 		appState.applyRollOutcome(outcome)
 		appendHistory(for: activeConfiguration, outcome: outcome)
@@ -467,41 +488,93 @@ final class DiceViewModel {
 		return outcome
 	}
 
-	private func localizedModeLabel(intuitive: Bool) -> String {
-		let key = intuitive ? "stats.mode.intuitive" : "stats.mode.trueRandom"
+	private func localizedModeLabel(for configuration: RollConfiguration) -> String {
+		let key: String
+		if configuration.hasIntuitivePools && configuration.hasTrueRandomPools {
+			key = "stats.mode.mixed"
+		} else {
+			key = configuration.hasIntuitivePools ? "stats.mode.intuitive" : "stats.mode.trueRandom"
+		}
 		return NSLocalizedString(key, comment: "Localized mode label in stats output")
 	}
 
-	private func applyLocks(to outcome: RollOutcome, previousValues: [Int], previousSideCounts: [Int]) -> RollOutcome {
-		guard !appState.lockedDieIndices.isEmpty else { return outcome }
-		guard previousValues.count == outcome.values.count, previousSideCounts.count == outcome.sideCounts.count else {
+	private func lockAwareRoll(configuration: RollConfiguration, previousValues: [Int], previousSideCounts: [Int]) -> RollOutcome {
+		guard !appState.lockedDieIndices.isEmpty else {
+			return rollSession.roll(configuration)
+		}
+		guard previousValues.count == configuration.diceCount,
+			  previousSideCounts == configuration.sideCountsPerDie else {
 			appState.lockedDieIndices.removeAll()
-			return outcome
+			return rollSession.roll(configuration)
 		}
 
-		var values = outcome.values
-		var validLocks: Set<Int> = []
-		for index in appState.lockedDieIndices where index < values.count {
-			guard previousSideCounts[index] == outcome.sideCounts[index] else { continue }
-			values[index] = previousValues[index]
-			validLocks.insert(index)
+		let allIndices = Set(configuration.sideCountsPerDie.indices)
+		let unlockedIndices = allIndices.subtracting(appState.lockedDieIndices).sorted()
+		if unlockedIndices.isEmpty {
+			let localTotals = localTotalsFromValues(previousValues, sideCounts: previousSideCounts)
+			return RollOutcome(
+				values: previousValues,
+				sideCounts: previousSideCounts,
+				localTotals: localTotals,
+				sessionTotals: appState.stats.sessionTotals,
+				totalRolls: appState.stats.totalRolls,
+				sum: previousValues.reduce(0, +)
+			)
 		}
-		appState.lockedDieIndices = validLocks
 
-		let maxSides = outcome.sideCounts.max() ?? 0
+		let sideCounts = configuration.sideCountsPerDie
+		let intuitiveFlags = configuration.perDieIntuitiveFlags
+		var unlockedPools: [DicePool] = []
+		var currentCount = 0
+		var currentSides = 0
+		var currentIntuitive = false
+		for index in unlockedIndices {
+			let sides = sideCounts[index]
+			let intuitive = intuitiveFlags[index]
+			if currentCount == 0 {
+				currentCount = 1
+				currentSides = sides
+				currentIntuitive = intuitive
+				continue
+			}
+			if currentSides == sides && currentIntuitive == intuitive {
+				currentCount += 1
+			} else {
+				unlockedPools.append(DicePool(diceCount: currentCount, sideCount: currentSides, intuitive: currentIntuitive))
+				currentCount = 1
+				currentSides = sides
+				currentIntuitive = intuitive
+			}
+		}
+		if currentCount > 0 {
+			unlockedPools.append(DicePool(diceCount: currentCount, sideCount: currentSides, intuitive: currentIntuitive))
+		}
+
+		let unlockedOutcome = rollSession.roll(RollConfiguration(pools: unlockedPools))
+		var mergedValues = previousValues
+		var unlockedCursor = 0
+		for index in unlockedIndices where unlockedCursor < unlockedOutcome.values.count {
+			mergedValues[index] = unlockedOutcome.values[unlockedCursor]
+			unlockedCursor += 1
+		}
+		let localTotals = localTotalsFromValues(mergedValues, sideCounts: sideCounts)
+		return RollOutcome(
+			values: mergedValues,
+			sideCounts: sideCounts,
+			localTotals: localTotals,
+			sessionTotals: unlockedOutcome.sessionTotals,
+			totalRolls: unlockedOutcome.totalRolls,
+			sum: mergedValues.reduce(0, +)
+		)
+	}
+
+	private func localTotalsFromValues(_ values: [Int], sideCounts: [Int]) -> [Int] {
+		let maxSides = sideCounts.max() ?? 0
 		var localTotals = Array(repeating: 0, count: maxSides)
 		for value in values where value > 0 && value <= maxSides {
 			localTotals[value - 1] += 1
 		}
-
-		return RollOutcome(
-			values: values,
-			sideCounts: outcome.sideCounts,
-			localTotals: localTotals,
-			sessionTotals: outcome.sessionTotals,
-			totalRolls: outcome.totalRolls,
-			sum: values.reduce(0, +)
-		)
+		return localTotals
 	}
 
 	private func persistPreferences() {
@@ -522,7 +595,6 @@ final class DiceViewModel {
 			motionBlurEnabled: appState.motionBlurEnabled,
 			boardLayoutPreset: appState.boardLayoutPreset,
 			soundPack: appState.soundPack,
-			soundVolume: appState.soundVolume,
 			soundEffectsEnabled: appState.soundEffectsEnabled,
 			hapticsEnabled: appState.hapticsEnabled
 		)

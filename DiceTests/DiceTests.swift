@@ -39,6 +39,17 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(configuration?.intuitive, true)
 	}
 
+	func testParseSupportsPerPoolIntuitiveFlags() {
+		let configuration = parser.parse("d20i d20")
+		XCTAssertNotNil(configuration)
+		XCTAssertEqual(configuration?.diceCount, 2)
+		XCTAssertEqual(configuration?.pools, [
+			DicePool(diceCount: 1, sideCount: 20, intuitive: true),
+			DicePool(diceCount: 1, sideCount: 20, intuitive: false),
+		])
+		XCTAssertEqual(configuration?.notation, "1d20i+1d20")
+	}
+
 	func testParseIsCaseInsensitiveAndTrimsSpaces() {
 		let configuration = parser.parse("  5D10I  ")
 		XCTAssertNotNil(configuration)
@@ -431,7 +442,6 @@ final class DiceTests: XCTestCase {
 				DiceSavedPreset(id: "preset-1", title: "Boss Fight", notation: "4d12+2d8", pinned: true)
 			],
 			soundPack: .hardTable,
-			soundVolume: 0.4,
 			soundEffectsEnabled: false,
 			hapticsEnabled: false
 		)
@@ -941,7 +951,51 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(viewModel.isDieLocked(at: 1))
 
 		_ = viewModel.rollCurrent()
-		XCTAssertEqual(viewModel.diceValues, [4, 2, 6])
+		XCTAssertEqual(viewModel.diceValues, [4, 2, 5])
+	}
+
+	func testViewModelLockedDiceDoNotIncreaseSessionRollCount() {
+		let suiteName = "DiceTests.viewmodel.locked.stats.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		var nextValue = 0
+		let fallback = TrueRandomRoller { range in
+			nextValue += 1
+			return min(range.upperBound, max(range.lowerBound, nextValue))
+		}
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults),
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: fallback, randomDouble: { 0.5 }))
+		)
+
+		let first = viewModel.rollFromInput("3d6")
+		if case let .success(outcome) = first {
+			XCTAssertEqual(outcome.totalRolls, 3)
+		} else {
+			XCTFail("Expected initial roll success")
+		}
+		viewModel.toggleDieLock(at: 1)
+		let second = viewModel.rollCurrent()
+		XCTAssertEqual(second.totalRolls, 5)
+		XCTAssertEqual(viewModel.diceValues[1], 2)
+	}
+
+	func testViewModelFormattedTotalsShowsMixedModeForMixedPoolNotation() {
+		let suiteName = "DiceTests.viewmodel.stats.mixedmode.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults),
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { $0.lowerBound }, randomDouble: { 0.5 }))
+		)
+
+		guard case let .success(outcome) = viewModel.rollFromInput("1d20i+1d20") else {
+			return XCTFail("Expected mixed mode notation to roll")
+		}
+		let formatted = viewModel.formattedTotalsText(outcome: outcome, boardSupportedSides: Set([4, 6, 8, 10, 12, 20]))
+		XCTAssertTrue(formatted.contains("Mode: Mixed"))
 	}
 
 	func testViewModelAnimationTogglePersistsToPreferences() {
@@ -1057,6 +1111,22 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(preferencesStore.load().dieColorPreferences.preset(for: 20), .sapphire)
 	}
 
+	func testViewModelPerDieColorOverrideIsScopedToSelectedDieIndex() {
+		let suiteName = "DiceTests.viewmodel.diecolors.perdie.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults),
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { $0.lowerBound }, randomDouble: { 0.5 }))
+		)
+
+		_ = viewModel.rollFromInput("2d6")
+		viewModel.setDieColorPreset(.crimson, forDieAt: 1)
+		XCTAssertNil(viewModel.dieColorPreset(forDieAt: 0))
+		XCTAssertEqual(viewModel.dieColorPreset(forDieAt: 1), .crimson)
+	}
+
 	func testViewModelD6PipStyleSelectionPersistsToPreferences() {
 		let suiteName = "DiceTests.viewmodel.pipstyle.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!
@@ -1087,6 +1157,21 @@ final class DiceTests: XCTestCase {
 		viewModel.setFaceNumeralFont(.serif)
 		XCTAssertEqual(viewModel.faceNumeralFont, .serif)
 		XCTAssertEqual(preferencesStore.load().faceNumeralFont, .serif)
+	}
+
+	func testViewModelPerDieFontOverrideIsScopedToSelectedDieIndex() {
+		let suiteName = "DiceTests.viewmodel.font.perdie.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		_ = viewModel.rollFromInput("2d10")
+		viewModel.setFaceNumeralFont(.mono, forDieAt: 0)
+		XCTAssertEqual(viewModel.faceNumeralFont(forDieAt: 0), .mono)
+		XCTAssertNil(viewModel.faceNumeralFont(forDieAt: 1))
 	}
 
 	func testViewModelLargeFaceLabelsTogglePersistsToPreferences() {
@@ -1151,24 +1236,6 @@ final class DiceTests: XCTestCase {
 		viewModel.setSoundPack(.softWood)
 		XCTAssertEqual(viewModel.soundPack, .softWood)
 		XCTAssertEqual(preferencesStore.load().soundPack, .softWood)
-	}
-
-	func testViewModelSoundVolumePersistsToPreferences() {
-		let suiteName = "DiceTests.viewmodel.soundvolume.\(UUID().uuidString)"
-		let defaults = UserDefaults(suiteName: suiteName)!
-		defer { defaults.removePersistentDomain(forName: suiteName) }
-		let preferencesStore = DicePreferencesStore(defaults: defaults)
-		let viewModel = DiceViewModel(
-			preferencesStore: preferencesStore,
-			historyStore: DiceRollHistoryStore(defaults: defaults)
-		)
-
-		viewModel.setSoundVolume(0.72)
-		XCTAssertEqual(viewModel.soundVolume, 0.72, accuracy: 0.0001)
-		XCTAssertEqual(preferencesStore.load().soundVolume, 0.72, accuracy: 0.0001)
-
-		viewModel.setSoundVolume(2.0)
-		XCTAssertEqual(viewModel.soundVolume, 1.0, accuracy: 0.0001)
 	}
 
 	func testViewModelSoundEffectsTogglePersistsToPreferences() {
