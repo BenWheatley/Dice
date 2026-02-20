@@ -10,6 +10,7 @@ import XCTest
 import UIKit
 import SceneKit
 import simd
+import AVFoundation
 @testable import Dice
 
 final class DiceTests: XCTestCase {
@@ -205,6 +206,26 @@ final class DiceTests: XCTestCase {
 		XCTAssertNil(parser.parse("31d100i"))
 		XCTAssertNil(parser.parse("30d101i"))
 		XCTAssertNil(parser.parse("20d6+20d6"))
+	}
+
+	func testAudioFormatResolverPrefersPlayerOutputFormat() {
+		let playerOutput = AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 2)
+		let mixerOutput = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
+
+		let resolved = DiceAudioFormatResolver.playbackFormat(playerOutput: playerOutput, mixerOutput: mixerOutput)
+
+		XCTAssertEqual(resolved?.sampleRate, 48_000)
+		XCTAssertEqual(resolved?.channelCount, 2)
+	}
+
+	func testAudioFormatResolverFallsBackToMixerWhenPlayerOutputInvalid() {
+		let invalidPlayerOutput = AVAudioFormat(standardFormatWithSampleRate: 0, channels: 0)
+		let mixerOutput = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
+
+		let resolved = DiceAudioFormatResolver.playbackFormat(playerOutput: invalidPlayerOutput, mixerOutput: mixerOutput)
+
+		XCTAssertEqual(resolved?.sampleRate, 44_100)
+		XCTAssertEqual(resolved?.channelCount, 1)
 	}
 
 	func testTrueRandomRollerUsesProvidedRandomSourceAndRange() {

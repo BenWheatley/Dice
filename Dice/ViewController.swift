@@ -1530,15 +1530,13 @@ private final class DiceSoundEngine {
 	private let engine = AVAudioEngine()
 	private let player = AVAudioPlayerNode()
 	private let audioQueue = DispatchQueue(label: "com.kitsunesoftware.dice.soundengine")
-	private var cachedImpactBuffers: [DiceSoundPack: AVAudioPCMBuffer] = [:]
-	private var cachedTickBuffers: [DiceSoundPack: AVAudioPCMBuffer] = [:]
 	private var currentPack: DiceSoundPack = .off
 	private var isEnabled = true
 	private var didStartEngine = false
 
 	init() {
 		engine.attach(player)
-		engine.connect(player, to: engine.mainMixerNode, format: nil)
+		engine.connect(player, to: engine.mainMixerNode, format: initialPlaybackFormat())
 	}
 
 	func configure(pack: DiceSoundPack, enabled: Bool) {
@@ -1591,10 +1589,7 @@ private final class DiceSoundEngine {
 	}
 
 	private func impactBuffer(for pack: DiceSoundPack) -> AVAudioPCMBuffer? {
-		if let cached = cachedImpactBuffers[pack] {
-			return cached
-		}
-		guard let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1) else {
+		guard let format = playbackFormat() else {
 			return nil
 		}
 		let frameCount: AVAudioFrameCount = 7_000
@@ -1602,19 +1597,22 @@ private final class DiceSoundEngine {
 			return nil
 		}
 		buffer.frameLength = frameCount
-		guard let channel = buffer.floatChannelData?.pointee else {
+		guard let channels = buffer.floatChannelData else {
 			return nil
 		}
-		fill(channel: channel, count: Int(frameCount), sampleRate: Float(format.sampleRate), pack: pack)
-		cachedImpactBuffers[pack] = buffer
+		for channelIndex in 0..<Int(format.channelCount) {
+			fill(
+				channel: channels[channelIndex],
+				count: Int(frameCount),
+				sampleRate: Float(format.sampleRate),
+				pack: pack
+			)
+		}
 		return buffer
 	}
 
 	private func tickBuffer(for pack: DiceSoundPack) -> AVAudioPCMBuffer? {
-		if let cached = cachedTickBuffers[pack] {
-			return cached
-		}
-		guard let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1) else {
+		guard let format = playbackFormat() else {
 			return nil
 		}
 		let frameCount: AVAudioFrameCount = 1_800
@@ -1622,12 +1620,30 @@ private final class DiceSoundEngine {
 			return nil
 		}
 		buffer.frameLength = frameCount
-		guard let channel = buffer.floatChannelData?.pointee else {
+		guard let channels = buffer.floatChannelData else {
 			return nil
 		}
-		fillTick(channel: channel, count: Int(frameCount), sampleRate: Float(format.sampleRate), pack: pack)
-		cachedTickBuffers[pack] = buffer
+		for channelIndex in 0..<Int(format.channelCount) {
+			fillTick(
+				channel: channels[channelIndex],
+				count: Int(frameCount),
+				sampleRate: Float(format.sampleRate),
+				pack: pack
+			)
+		}
 		return buffer
+	}
+
+	private func playbackFormat() -> AVAudioFormat? {
+		let playerFormat = player.outputFormat(forBus: 0)
+		let mixerFormat = engine.mainMixerNode.outputFormat(forBus: 0)
+		return DiceAudioFormatResolver.playbackFormat(playerOutput: playerFormat, mixerOutput: mixerFormat)
+	}
+
+	private func initialPlaybackFormat() -> AVAudioFormat {
+		let mixerFormat = engine.mainMixerNode.outputFormat(forBus: 0)
+		return DiceAudioFormatResolver.playbackFormat(playerOutput: nil, mixerOutput: mixerFormat)
+			?? AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 2)!
 	}
 
 	private func fill(channel: UnsafeMutablePointer<Float>, count: Int, sampleRate: Float, pack: DiceSoundPack) {
@@ -1684,6 +1700,21 @@ private final class DiceSoundEngine {
 			toChannels[channel].assign(from: fromChannels[channel], count: frames)
 		}
 		return copy
+	}
+}
+
+enum DiceAudioFormatResolver {
+	static func playbackFormat(playerOutput: AVAudioFormat?, mixerOutput: AVAudioFormat) -> AVAudioFormat? {
+		let sourceFormat: AVAudioFormat
+		if let playerOutput, playerOutput.channelCount > 0, playerOutput.sampleRate > 0 {
+			sourceFormat = playerOutput
+		} else {
+			sourceFormat = mixerOutput
+		}
+
+		let sampleRate = sourceFormat.sampleRate > 0 ? sourceFormat.sampleRate : 44_100
+		let channels = max(AVAudioChannelCount(1), sourceFormat.channelCount)
+		return AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: channels)
 	}
 }
 
