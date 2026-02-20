@@ -7,52 +7,6 @@
 
 import Foundation
 
-struct RollHistogram: Equatable {
-	let sideCount: Int
-	let bins: [Int]
-	let totalSamples: Int
-}
-
-struct RollHistoryIndicators: Equatable {
-	let highStreak: Int
-	let lowStreak: Int
-	let outlierNotation: String?
-	let outlierZScore: Double?
-
-	var hasHighlights: Bool {
-		highStreak >= 3 || lowStreak >= 3 || (outlierZScore.map { abs($0) >= 1.75 } ?? false)
-	}
-}
-
-enum RollHistoryModeFilter: Equatable {
-	case all
-	case trueRandom
-	case intuitive
-}
-
-enum RollHistoryDateRangeFilter: Equatable {
-	case all
-	case last24Hours
-	case last7Days
-	case last30Days
-}
-
-struct RollHistoryFilter: Equatable {
-	var searchText: String
-	var mode: RollHistoryModeFilter
-	var dateRange: RollHistoryDateRangeFilter
-
-	static let `default` = RollHistoryFilter(searchText: "", mode: .all, dateRange: .all)
-}
-
-struct RollSessionSummary: Equatable {
-	let rollCount: Int
-	let totalDiceRolled: Int
-	let topNotation: String?
-	let latestNotation: String?
-	let latestSum: Int?
-}
-
 enum RollHistoryAnalytics {
 	static func histograms(
 		entries: [RollHistoryEntry],

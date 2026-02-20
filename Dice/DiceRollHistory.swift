@@ -7,14 +7,6 @@
 
 import Foundation
 
-struct RollHistoryEntry: Codable, Equatable {
-	let timestamp: Date
-	let notation: String
-	let values: [Int]
-	let sum: Int
-	let intuitive: Bool
-}
-
 /// Retention policy:
 /// - sessionEntries: full in-memory history for the active window/session
 /// - persistedRecentEntries: bounded recent history intended for persistence
@@ -50,4 +42,3 @@ final class DiceRollHistory {
 		persistedRecentEntries.removeAll()
 	}
 }
-

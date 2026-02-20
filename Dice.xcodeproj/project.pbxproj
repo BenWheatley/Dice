@@ -67,6 +67,30 @@
 		D1CE110D2F50000D00D1CE00 /* PresetManagerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE100D2F50000D00D1CE00 /* PresetManagerViewController.swift */; };
 		D1CE110E2F50000E00D1CE00 /* PresetPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE100E2F50000E00D1CE00 /* PresetPickerViewController.swift */; };
 		D1CE110F2F50000F00D1CE00 /* RollHistoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE100F2F50000F00D1CE00 /* RollHistoryViewController.swift */; };
+		D2CE11012F51000100D1CE00 /* D6FaceOrientation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10012F51000100D1CE00 /* D6FaceOrientation.swift */; };
+		D2CE11022F51000200D1CE00 /* D6SceneKitRenderConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10022F51000200D1CE00 /* D6SceneKitRenderConfig.swift */; };
+		D2CE11032F51000300D1CE00 /* DiceDieColorPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10032F51000300D1CE00 /* DiceDieColorPreset.swift */; };
+		D2CE11042F51000400D1CE00 /* DiceInputError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10042F51000400D1CE00 /* DiceInputError.swift */; };
+		D2CE11052F51000500D1CE00 /* DicePool.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10052F51000500D1CE00 /* DicePool.swift */; };
+		D2CE11062F51000600D1CE00 /* DiceSavedPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10062F51000600D1CE00 /* DiceSavedPreset.swift */; };
+		D2CE11072F51000700D1CE00 /* DiceSoundPack.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10072F51000700D1CE00 /* DiceSoundPack.swift */; };
+		D2CE11082F51000800D1CE00 /* DiceStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10082F51000800D1CE00 /* DiceStats.swift */; };
+		D2CE11092F51000900D1CE00 /* DiceTextureProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10092F51000900D1CE00 /* DiceTextureProvider.swift */; };
+		D2CE110A2F51000A00D1CE00 /* DiceThemePalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE100A2F51000A00D1CE00 /* DiceThemePalette.swift */; };
+		D2CE110B2F51000B00D1CE00 /* DiceUserPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE100B2F51000B00D1CE00 /* DiceUserPreferences.swift */; };
+		D2CE110C2F51000C00D1CE00 /* FaceContrastStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE100C2F51000C00D1CE00 /* FaceContrastStyle.swift */; };
+		D2CE110D2F51000D00D1CE00 /* IntuitiveRollContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE100D2F51000D00D1CE00 /* IntuitiveRollContext.swift */; };
+		D2CE110E2F51000E00D1CE00 /* RollConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE100E2F51000E00D1CE00 /* RollConfiguration.swift */; };
+		D2CE110F2F51000F00D1CE00 /* RollHistogram.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE100F2F51000F00D1CE00 /* RollHistogram.swift */; };
+		D2CE11102F51001000D1CE00 /* RollHistoryDateRangeFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10102F51001000D1CE00 /* RollHistoryDateRangeFilter.swift */; };
+		D2CE11112F51001100D1CE00 /* RollHistoryEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10112F51001100D1CE00 /* RollHistoryEntry.swift */; };
+		D2CE11122F51001200D1CE00 /* RollHistoryExportFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10122F51001200D1CE00 /* RollHistoryExportFormat.swift */; };
+		D2CE11132F51001300D1CE00 /* RollHistoryExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10132F51001300D1CE00 /* RollHistoryExporter.swift */; };
+		D2CE11142F51001400D1CE00 /* RollHistoryFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10142F51001400D1CE00 /* RollHistoryFilter.swift */; };
+		D2CE11152F51001500D1CE00 /* RollHistoryIndicators.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10152F51001500D1CE00 /* RollHistoryIndicators.swift */; };
+		D2CE11162F51001600D1CE00 /* RollHistoryModeFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10162F51001600D1CE00 /* RollHistoryModeFilter.swift */; };
+		D2CE11172F51001700D1CE00 /* RollOutcome.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10172F51001700D1CE00 /* RollOutcome.swift */; };
+		D2CE11182F51001800D1CE00 /* RollSessionSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10182F51001800D1CE00 /* RollSessionSummary.swift */; };
 		C0DE00212F44022100D1CE00 /* DiceNotationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00002F44000100D1CE00 /* DiceNotationParser.swift */; };
 		C0DE00232F44022300D1CE00 /* TrueRandomRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00022F44003200D1CE00 /* TrueRandomRoller.swift */; };
 		C0DE00252F44022500D1CE00 /* IntuitiveRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00042F44005400D1CE00 /* IntuitiveRoller.swift */; };
@@ -197,6 +221,30 @@
 		D1CE100D2F50000D00D1CE00 /* PresetManagerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetManagerViewController.swift; sourceTree = "<group>"; };
 		D1CE100E2F50000E00D1CE00 /* PresetPickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetPickerViewController.swift; sourceTree = "<group>"; };
 		D1CE100F2F50000F00D1CE00 /* RollHistoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollHistoryViewController.swift; sourceTree = "<group>"; };
+		D2CE10012F51000100D1CE00 /* D6FaceOrientation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = D6FaceOrientation.swift; sourceTree = "<group>"; };
+		D2CE10022F51000200D1CE00 /* D6SceneKitRenderConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = D6SceneKitRenderConfig.swift; sourceTree = "<group>"; };
+		D2CE10032F51000300D1CE00 /* DiceDieColorPreset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceDieColorPreset.swift; sourceTree = "<group>"; };
+		D2CE10042F51000400D1CE00 /* DiceInputError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceInputError.swift; sourceTree = "<group>"; };
+		D2CE10052F51000500D1CE00 /* DicePool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DicePool.swift; sourceTree = "<group>"; };
+		D2CE10062F51000600D1CE00 /* DiceSavedPreset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceSavedPreset.swift; sourceTree = "<group>"; };
+		D2CE10072F51000700D1CE00 /* DiceSoundPack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceSoundPack.swift; sourceTree = "<group>"; };
+		D2CE10082F51000800D1CE00 /* DiceStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceStats.swift; sourceTree = "<group>"; };
+		D2CE10092F51000900D1CE00 /* DiceTextureProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceTextureProvider.swift; sourceTree = "<group>"; };
+		D2CE100A2F51000A00D1CE00 /* DiceThemePalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceThemePalette.swift; sourceTree = "<group>"; };
+		D2CE100B2F51000B00D1CE00 /* DiceUserPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceUserPreferences.swift; sourceTree = "<group>"; };
+		D2CE100C2F51000C00D1CE00 /* FaceContrastStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FaceContrastStyle.swift; sourceTree = "<group>"; };
+		D2CE100D2F51000D00D1CE00 /* IntuitiveRollContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntuitiveRollContext.swift; sourceTree = "<group>"; };
+		D2CE100E2F51000E00D1CE00 /* RollConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollConfiguration.swift; sourceTree = "<group>"; };
+		D2CE100F2F51000F00D1CE00 /* RollHistogram.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollHistogram.swift; sourceTree = "<group>"; };
+		D2CE10102F51001000D1CE00 /* RollHistoryDateRangeFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollHistoryDateRangeFilter.swift; sourceTree = "<group>"; };
+		D2CE10112F51001100D1CE00 /* RollHistoryEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollHistoryEntry.swift; sourceTree = "<group>"; };
+		D2CE10122F51001200D1CE00 /* RollHistoryExportFormat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollHistoryExportFormat.swift; sourceTree = "<group>"; };
+		D2CE10132F51001300D1CE00 /* RollHistoryExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollHistoryExporter.swift; sourceTree = "<group>"; };
+		D2CE10142F51001400D1CE00 /* RollHistoryFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollHistoryFilter.swift; sourceTree = "<group>"; };
+		D2CE10152F51001500D1CE00 /* RollHistoryIndicators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollHistoryIndicators.swift; sourceTree = "<group>"; };
+		D2CE10162F51001600D1CE00 /* RollHistoryModeFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollHistoryModeFilter.swift; sourceTree = "<group>"; };
+		D2CE10172F51001700D1CE00 /* RollOutcome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollOutcome.swift; sourceTree = "<group>"; };
+		D2CE10182F51001800D1CE00 /* RollSessionSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollSessionSummary.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -301,6 +349,30 @@
 				D1CE10032F50000300D1CE00 /* DiceMetalTextureRenderer.swift */,
 				D1CE100F2F50000F00D1CE00 /* RollHistoryViewController.swift */,
 				D1CE10012F50000100D1CE00 /* DiceCollectionViewCell.swift */,
+				D2CE10012F51000100D1CE00 /* D6FaceOrientation.swift */,
+				D2CE10022F51000200D1CE00 /* D6SceneKitRenderConfig.swift */,
+				D2CE10032F51000300D1CE00 /* DiceDieColorPreset.swift */,
+				D2CE10042F51000400D1CE00 /* DiceInputError.swift */,
+				D2CE10052F51000500D1CE00 /* DicePool.swift */,
+				D2CE10062F51000600D1CE00 /* DiceSavedPreset.swift */,
+				D2CE10072F51000700D1CE00 /* DiceSoundPack.swift */,
+				D2CE10082F51000800D1CE00 /* DiceStats.swift */,
+				D2CE10092F51000900D1CE00 /* DiceTextureProvider.swift */,
+				D2CE100A2F51000A00D1CE00 /* DiceThemePalette.swift */,
+				D2CE100B2F51000B00D1CE00 /* DiceUserPreferences.swift */,
+				D2CE100C2F51000C00D1CE00 /* FaceContrastStyle.swift */,
+				D2CE100D2F51000D00D1CE00 /* IntuitiveRollContext.swift */,
+				D2CE100E2F51000E00D1CE00 /* RollConfiguration.swift */,
+				D2CE100F2F51000F00D1CE00 /* RollHistogram.swift */,
+				D2CE10102F51001000D1CE00 /* RollHistoryDateRangeFilter.swift */,
+				D2CE10112F51001100D1CE00 /* RollHistoryEntry.swift */,
+				D2CE10122F51001200D1CE00 /* RollHistoryExportFormat.swift */,
+				D2CE10132F51001300D1CE00 /* RollHistoryExporter.swift */,
+				D2CE10142F51001400D1CE00 /* RollHistoryFilter.swift */,
+				D2CE10152F51001500D1CE00 /* RollHistoryIndicators.swift */,
+				D2CE10162F51001600D1CE00 /* RollHistoryModeFilter.swift */,
+				D2CE10172F51001700D1CE00 /* RollOutcome.swift */,
+				D2CE10182F51001800D1CE00 /* RollSessionSummary.swift */,
 				B50B44D4215D803D00A6399B /* Main.storyboard */,
 				B50B44D7215D804100A6399B /* Assets.xcassets */,
 				B50B44D9215D804100A6399B /* LaunchScreen.storyboard */,
@@ -583,6 +655,30 @@
 				D1CE11032F50000300D1CE00 /* DiceMetalTextureRenderer.swift in Sources */,
 				D1CE110F2F50000F00D1CE00 /* RollHistoryViewController.swift in Sources */,
 				D1CE11012F50000100D1CE00 /* DiceCollectionViewCell.swift in Sources */,
+				D2CE11012F51000100D1CE00 /* D6FaceOrientation.swift in Sources */,
+				D2CE11022F51000200D1CE00 /* D6SceneKitRenderConfig.swift in Sources */,
+				D2CE11032F51000300D1CE00 /* DiceDieColorPreset.swift in Sources */,
+				D2CE11042F51000400D1CE00 /* DiceInputError.swift in Sources */,
+				D2CE11052F51000500D1CE00 /* DicePool.swift in Sources */,
+				D2CE11062F51000600D1CE00 /* DiceSavedPreset.swift in Sources */,
+				D2CE11072F51000700D1CE00 /* DiceSoundPack.swift in Sources */,
+				D2CE11082F51000800D1CE00 /* DiceStats.swift in Sources */,
+				D2CE11092F51000900D1CE00 /* DiceTextureProvider.swift in Sources */,
+				D2CE110A2F51000A00D1CE00 /* DiceThemePalette.swift in Sources */,
+				D2CE110B2F51000B00D1CE00 /* DiceUserPreferences.swift in Sources */,
+				D2CE110C2F51000C00D1CE00 /* FaceContrastStyle.swift in Sources */,
+				D2CE110D2F51000D00D1CE00 /* IntuitiveRollContext.swift in Sources */,
+				D2CE110E2F51000E00D1CE00 /* RollConfiguration.swift in Sources */,
+				D2CE110F2F51000F00D1CE00 /* RollHistogram.swift in Sources */,
+				D2CE11102F51001000D1CE00 /* RollHistoryDateRangeFilter.swift in Sources */,
+				D2CE11112F51001100D1CE00 /* RollHistoryEntry.swift in Sources */,
+				D2CE11122F51001200D1CE00 /* RollHistoryExportFormat.swift in Sources */,
+				D2CE11132F51001300D1CE00 /* RollHistoryExporter.swift in Sources */,
+				D2CE11142F51001400D1CE00 /* RollHistoryFilter.swift in Sources */,
+				D2CE11152F51001500D1CE00 /* RollHistoryIndicators.swift in Sources */,
+				D2CE11162F51001600D1CE00 /* RollHistoryModeFilter.swift in Sources */,
+				D2CE11172F51001700D1CE00 /* RollOutcome.swift in Sources */,
+				D2CE11182F51001800D1CE00 /* RollSessionSummary.swift in Sources */,
 				B50B44D3215D803D00A6399B /* ViewController.swift in Sources */,
 				B50B44D2215D803D00A6399A /* SceneDelegate.swift in Sources */,
 				B50B44D1215D803D00A6399B /* AppDelegate.swift in Sources */,

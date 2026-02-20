@@ -1,12 +1,5 @@
 import UIKit
 
-struct FaceContrastStyle {
-	let fillColor: UIColor
-	let borderColor: UIColor
-	let primaryInkColor: UIColor
-	let secondaryInkColor: UIColor
-}
-
 enum DiceFaceContrast {
 	static func style(for fillColor: UIColor) -> FaceContrastStyle {
 		let candidates: [UIColor] = [
