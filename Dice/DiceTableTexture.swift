@@ -54,7 +54,7 @@ final class DiceTextureProvider {
 					context.setStrokeColor(fiberColor.cgColor)
 					context.setLineWidth(1)
 					context.move(to: CGPoint(x: 0, y: CGFloat(y)))
-					context.addLine(to: CGPoint(x: width, y: CGFloat(y) + 2.5))
+					context.addLine(to: CGPoint(x: CGFloat(width), y: CGFloat(y) + 2.5))
 					context.strokePath()
 				}
 
@@ -95,7 +95,7 @@ final class DiceTextureProvider {
 					let yy = CGFloat(y)
 					context.move(to: CGPoint(x: 0, y: yy))
 					context.addCurve(
-						to: CGPoint(x: width, y: yy),
+						to: CGPoint(x: CGFloat(width), y: yy),
 						control1: CGPoint(x: size.width * 0.28, y: yy + 6),
 						control2: CGPoint(x: size.width * 0.72, y: yy - 6)
 					)
