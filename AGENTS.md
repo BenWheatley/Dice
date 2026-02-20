@@ -32,6 +32,10 @@ These rules apply to all agents working in this repository.
 10. Honor explicitly requested implementation technologies:
    - when the user specifies a concrete technology (for example, "switch to shaders"), implement using that technology
    - do not substitute an alternative approach that seems similar without first getting explicit user approval
+11. Enforce clear separation of concerns:
+   - each file should have a single, focused responsibility
+   - avoid mixing unrelated UI, domain logic, rendering, persistence, and utility concerns in the same file
+   - when new work crosses concerns, split types/helpers into appropriately scoped files
 
 ## Platform/Feature Scope
 
