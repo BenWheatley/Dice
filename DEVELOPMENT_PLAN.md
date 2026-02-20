@@ -167,6 +167,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Move Metal background shader source from inline Swift strings to dedicated `.metal` source files compiled through the default Metal library.
 - [x] Tune Metal table shader scales so stripes/wood read zoomed-out correctly and felt uses lower-frequency, fabric-like noise.
 - [x] Fix shader and D4 regressions: neutral background must never render black, and D4 face-vertex label winding/orientation must not mirror across faces.
+- [x] Replace D4 digit derivation from raw mesh vertex indices with an explicit canonical vertex-value map, and use that map for top-face orientation.
 
 ## 12. watchOS Small-Screen Interface Plan
 

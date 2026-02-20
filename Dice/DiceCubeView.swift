@@ -57,6 +57,8 @@ final class DiceCubeView: UIView {
 	private var needsMeshRefresh = false
 	private var activeRollAnimationToken: Int = 0
 	private var pendingRollAnimationCompletions = 0
+	// D4 numbering is vertex-based and intentionally decoupled from raw mesh indices.
+	private let d4VertexValueByIndex: [Int] = [4, 3, 2, 1]
 	var onRollSettled: (() -> Void)?
 
 	override init(frame: CGRect) {
@@ -415,7 +417,8 @@ final class DiceCubeView: UIView {
 				bestIndex = index
 			}
 		}
-		return bestIndex + 1
+		guard view.d4VertexValueByIndex.indices.contains(bestIndex) else { return 1 }
+		return view.d4VertexValueByIndex[bestIndex]
 	}
 
 	static func debugD4LabelLayout(size: CGSize) -> (triangle: [CGPoint], placements: [(position: CGPoint, angle: CGFloat)]) {
@@ -586,7 +589,10 @@ final class DiceCubeView: UIView {
 	}
 
 	private func d4VertexLabels(forFace face: [Int]) -> [Int] {
-		face.map { $0 + 1 }
+		face.map { vertexIndex in
+			guard d4VertexValueByIndex.indices.contains(vertexIndex) else { return 1 }
+			return d4VertexValueByIndex[vertexIndex]
+		}
 	}
 
 	private func d4OrderedFaceVertices(for face: [Int], vertices: [SIMD3<Float>]) -> [Int] {
@@ -970,7 +976,7 @@ final class DiceCubeView: UIView {
 		var map: [Int: SCNVector3] = [:]
 
 		for topValue in 1...4 {
-			let topIndex = topValue - 1
+			guard let topIndex = d4VertexValueByIndex.firstIndex(of: topValue) else { continue }
 			let topVertex = simd_normalize(vertices[topIndex])
 			let q1 = simd_quatf(from: topVertex, to: targetTop)
 
