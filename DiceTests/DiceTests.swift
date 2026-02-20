@@ -1741,6 +1741,15 @@ final class DiceTests: XCTestCase {
 		XCTAssertNil(DiceCollectionViewController.dieIndexFromAccessibilityIdentifier("dieButton_x"))
 	}
 
+	func testDiceCellExpandedHitBoundsGrowsByPadding() {
+		let bounds = CGRect(x: 0, y: 0, width: 100, height: 80)
+		let expanded = DiceCollectionViewCell.expandedHitBounds(for: bounds, padding: 10)
+		XCTAssertEqual(expanded.origin.x, -10, accuracy: 0.001)
+		XCTAssertEqual(expanded.origin.y, -10, accuracy: 0.001)
+		XCTAssertEqual(expanded.size.width, 120, accuracy: 0.001)
+		XCTAssertEqual(expanded.size.height, 100, accuracy: 0.001)
+	}
+
 	func testBoardAnimationLockedIndicesUsesPersistentLocksWhenNoAnimationSubsetProvided() {
 		let locked = DiceCollectionViewController.boardAnimationLockedIndices(
 			totalDice: 5,

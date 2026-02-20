@@ -6,6 +6,7 @@ class DiceCollectionViewCell: UICollectionViewCell {
 	private var currentPalette = DiceTheme.system.palette
 	private var isLocked = false
 	private let lockIconView = UIImageView(image: UIImage(systemName: "lock.fill"))
+	private let menuHitPadding: CGFloat = 10
 
 	@IBOutlet weak var diceButton: UIButton!
 
@@ -29,6 +30,10 @@ class DiceCollectionViewCell: UICollectionViewCell {
 		diceButton.frame = contentView.bounds
 		let iconSize: CGFloat = 18
 		lockIconView.frame = CGRect(x: contentView.bounds.maxX - iconSize - 4, y: 4, width: iconSize, height: iconSize)
+	}
+
+	override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+		Self.expandedHitBounds(for: bounds, padding: menuHitPadding).contains(point)
 	}
 
 	func configure(faceValue: Int, sideCount: Int, index: Int, palette: DiceThemePalette, isLocked: Bool, largeFaceLabelsEnabled: Bool) {
@@ -82,6 +87,10 @@ class DiceCollectionViewCell: UICollectionViewCell {
 		lockIconView.isHidden = true
 		contentView.addSubview(lockIconView)
 		contentView.bringSubviewToFront(lockIconView)
+	}
+
+	static func expandedHitBounds(for bounds: CGRect, padding: CGFloat) -> CGRect {
+		bounds.insetBy(dx: -padding, dy: -padding)
 	}
 
 	@IBAction func reroll(_ sender: Any) {
