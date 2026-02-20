@@ -948,12 +948,28 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		sheet.onSetSoundPack = { [weak self] pack in self?.selectSoundPack(pack) }
 		sheet.onToggleSoundEffects = { [weak self] in self?.toggleSoundEffects() }
 		sheet.onToggleHaptics = { [weak self] in self?.toggleHaptics() }
-		sheet.onShowHistory = { [weak self] in self?.showHistory() }
-		sheet.onRepeatLastRoll = { [weak self] in self?.repeatLastRoll() }
-		sheet.onPreviewStyle = { [weak self] in self?.presentStylePreview() }
-		sheet.onResetVisuals = { [weak self] in self?.confirmVisualReset() }
+		sheet.onShowHistory = { [weak self, weak sheet] in
+			guard let self else { return }
+			sheet?.dismiss(animated: true) {
+				self.showHistory()
+			}
+		}
+		sheet.onResetVisuals = { [weak self, weak sheet] in
+			guard let self else { return }
+			sheet?.dismiss(animated: true) {
+				self.confirmVisualReset()
+			}
+		}
 
 		let navigationController = UINavigationController(rootViewController: sheet)
+		switch viewModel.theme {
+		case .lightMode:
+			navigationController.overrideUserInterfaceStyle = .light
+		case .darkMode:
+			navigationController.overrideUserInterfaceStyle = .dark
+		case .system:
+			navigationController.overrideUserInterfaceStyle = .unspecified
+		}
 		navigationController.modalPresentationStyle = .formSheet
 		if let popover = navigationController.popoverPresentationController {
 			popover.sourceView = menuButton
@@ -1345,8 +1361,6 @@ private final class DiceOptionsSheetViewController: UIViewController {
 	var onToggleSoundEffects: (() -> Void)?
 	var onToggleHaptics: (() -> Void)?
 	var onShowHistory: (() -> Void)?
-	var onRepeatLastRoll: (() -> Void)?
-	var onPreviewStyle: (() -> Void)?
 	var onResetVisuals: (() -> Void)?
 
 	private let state: State
@@ -1398,62 +1412,78 @@ private final class DiceOptionsSheetViewController: UIViewController {
 			stackView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor, constant: -32),
 		])
 
-		addSwitchRow(title: NSLocalizedString("menu.control.animations", comment: "Animations toggle menu title"), isOn: state.animationsEnabled) { [weak self] _ in
-			self?.onToggleAnimations?()
+		addSection(title: NSLocalizedString("menu.control.animations", comment: "Animations section")) { section in
+			section.addSwitchRow(title: NSLocalizedString("menu.control.animations", comment: "Animations toggle menu title"), isOn: state.animationsEnabled) { [weak self] _ in self?.onToggleAnimations?() }
+			section.addSegmentRow(
+				title: NSLocalizedString("menu.control.animationIntensity", comment: "Animation intensity submenu title"),
+				items: DiceAnimationIntensity.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Animation intensity option") },
+				selectedIndex: DiceAnimationIntensity.allCases.firstIndex(of: state.animationIntensity) ?? 0
+			) { [weak self] index in
+				guard DiceAnimationIntensity.allCases.indices.contains(index) else { return }
+				self?.onSetAnimationIntensity?(DiceAnimationIntensity.allCases[index])
+			}
+			section.addSwitchRow(title: NSLocalizedString("menu.control.showStats", comment: "Show stats toggle menu title"), isOn: state.showStats) { [weak self] _ in self?.onToggleStats?() }
 		}
-		addSegmentRow(
-			title: NSLocalizedString("menu.control.animationIntensity", comment: "Animation intensity submenu title"),
-			items: DiceAnimationIntensity.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Animation intensity option") },
-			selectedIndex: DiceAnimationIntensity.allCases.firstIndex(of: state.animationIntensity) ?? 0
-		) { [weak self] index in
-			guard DiceAnimationIntensity.allCases.indices.contains(index) else { return }
-			self?.onSetAnimationIntensity?(DiceAnimationIntensity.allCases[index])
+		addSection(title: NSLocalizedString("menu.control.theme", comment: "Visual section")) { section in
+			section.addSegmentRow(title: NSLocalizedString("menu.control.theme", comment: "Theme submenu title"), items: DiceTheme.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Theme option title") }, selectedIndex: DiceTheme.allCases.firstIndex(of: state.theme) ?? 0) { [weak self] index in
+				guard DiceTheme.allCases.indices.contains(index) else { return }
+				self?.onSetTheme?(DiceTheme.allCases[index])
+			}
+			section.addSegmentRow(title: NSLocalizedString("menu.control.texture", comment: "Texture submenu title"), items: DiceTableTexture.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Table texture option") }, selectedIndex: DiceTableTexture.allCases.firstIndex(of: state.texture) ?? 0) { [weak self] index in
+				guard DiceTableTexture.allCases.indices.contains(index) else { return }
+				self?.onSetTexture?(DiceTableTexture.allCases[index])
+			}
+			section.addSegmentRow(title: NSLocalizedString("menu.control.layout", comment: "Layout submenu title"), items: DiceBoardLayoutPreset.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Board layout option") }, selectedIndex: DiceBoardLayoutPreset.allCases.firstIndex(of: state.layout) ?? 0) { [weak self] index in
+				guard DiceBoardLayoutPreset.allCases.indices.contains(index) else { return }
+				self?.onSetLayout?(DiceBoardLayoutPreset.allCases[index])
+			}
+			section.addSegmentRow(title: NSLocalizedString("menu.control.finish", comment: "Finish submenu title"), items: DiceDieFinish.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Die finish option") }, selectedIndex: DiceDieFinish.allCases.firstIndex(of: state.finish) ?? 0) { [weak self] index in
+				guard DiceDieFinish.allCases.indices.contains(index) else { return }
+				self?.onSetFinish?(DiceDieFinish.allCases[index])
+			}
+			section.addSwitchRow(title: NSLocalizedString("menu.control.edgeOutlines", comment: "Edge outlines toggle menu title"), isOn: state.edgeOutlinesEnabled) { [weak self] _ in self?.onToggleEdgeOutlines?() }
+			section.addSwitchRow(title: NSLocalizedString("menu.control.motionBlur", comment: "Motion blur toggle menu title"), isOn: state.motionBlurEnabled) { [weak self] _ in self?.onToggleMotionBlur?() }
+			section.addSwitchRow(title: NSLocalizedString("menu.control.largeFaceLabels", comment: "Large face labels toggle title"), isOn: state.largeFaceLabelsEnabled) { [weak self] _ in self?.onToggleLargeLabels?() }
 		}
-		addSwitchRow(title: NSLocalizedString("menu.control.showStats", comment: "Show stats toggle menu title"), isOn: state.showStats) { [weak self] _ in
-			self?.onToggleStats?()
+		addSection(title: NSLocalizedString("menu.control.soundPack", comment: "Sound section")) { section in
+			section.addSegmentRow(title: NSLocalizedString("menu.control.soundPack", comment: "Sound pack submenu title"), items: DiceSoundPack.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Sound pack option") }, selectedIndex: DiceSoundPack.allCases.firstIndex(of: state.soundPack) ?? 0) { [weak self] index in
+				guard DiceSoundPack.allCases.indices.contains(index) else { return }
+				self?.onSetSoundPack?(DiceSoundPack.allCases[index])
+			}
+			section.addSwitchRow(title: NSLocalizedString("menu.control.soundEffects", comment: "Sound effects toggle title"), isOn: state.soundEffectsEnabled) { [weak self] _ in self?.onToggleSoundEffects?() }
+			section.addSwitchRow(title: NSLocalizedString("menu.control.haptics", comment: "Haptics toggle title"), isOn: state.hapticsEnabled) { [weak self] _ in self?.onToggleHaptics?() }
 		}
-		addSegmentRow(title: NSLocalizedString("menu.control.theme", comment: "Theme submenu title"), items: DiceTheme.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Theme option title") }, selectedIndex: DiceTheme.allCases.firstIndex(of: state.theme) ?? 0) { [weak self] index in
-			guard DiceTheme.allCases.indices.contains(index) else { return }
-			self?.onSetTheme?(DiceTheme.allCases[index])
+		addSection(title: NSLocalizedString("menu.control.actions", comment: "Actions section")) { section in
+			section.addActionButton(title: NSLocalizedString("button.history", comment: "History button title")) { [weak self] in self?.onShowHistory?() }
+			section.addActionButton(title: NSLocalizedString("menu.control.resetVisuals", comment: "Reset visual settings menu title"), destructive: true) { [weak self] in self?.onResetVisuals?() }
 		}
-		addSegmentRow(title: NSLocalizedString("menu.control.texture", comment: "Texture submenu title"), items: DiceTableTexture.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Table texture option") }, selectedIndex: DiceTableTexture.allCases.firstIndex(of: state.texture) ?? 0) { [weak self] index in
-			guard DiceTableTexture.allCases.indices.contains(index) else { return }
-			self?.onSetTexture?(DiceTableTexture.allCases[index])
-		}
-		addSegmentRow(title: NSLocalizedString("menu.control.layout", comment: "Layout submenu title"), items: DiceBoardLayoutPreset.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Board layout option") }, selectedIndex: DiceBoardLayoutPreset.allCases.firstIndex(of: state.layout) ?? 0) { [weak self] index in
-			guard DiceBoardLayoutPreset.allCases.indices.contains(index) else { return }
-			self?.onSetLayout?(DiceBoardLayoutPreset.allCases[index])
-		}
-		addSegmentRow(title: NSLocalizedString("menu.control.finish", comment: "Finish submenu title"), items: DiceDieFinish.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Die finish option") }, selectedIndex: DiceDieFinish.allCases.firstIndex(of: state.finish) ?? 0) { [weak self] index in
-			guard DiceDieFinish.allCases.indices.contains(index) else { return }
-			self?.onSetFinish?(DiceDieFinish.allCases[index])
-		}
-		addSwitchRow(title: NSLocalizedString("menu.control.edgeOutlines", comment: "Edge outlines toggle menu title"), isOn: state.edgeOutlinesEnabled) { [weak self] _ in
-			self?.onToggleEdgeOutlines?()
-		}
-		addSwitchRow(title: NSLocalizedString("menu.control.motionBlur", comment: "Motion blur toggle menu title"), isOn: state.motionBlurEnabled) { [weak self] _ in
-			self?.onToggleMotionBlur?()
-		}
-		addSwitchRow(title: NSLocalizedString("menu.control.largeFaceLabels", comment: "Large face labels toggle title"), isOn: state.largeFaceLabelsEnabled) { [weak self] _ in
-			self?.onToggleLargeLabels?()
-		}
-		addSegmentRow(title: NSLocalizedString("menu.control.soundPack", comment: "Sound pack submenu title"), items: DiceSoundPack.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Sound pack option") }, selectedIndex: DiceSoundPack.allCases.firstIndex(of: state.soundPack) ?? 0) { [weak self] index in
-			guard DiceSoundPack.allCases.indices.contains(index) else { return }
-			self?.onSetSoundPack?(DiceSoundPack.allCases[index])
-		}
-		addSwitchRow(title: NSLocalizedString("menu.control.soundEffects", comment: "Sound effects toggle title"), isOn: state.soundEffectsEnabled) { [weak self] _ in
-			self?.onToggleSoundEffects?()
-		}
-		addSwitchRow(title: NSLocalizedString("menu.control.haptics", comment: "Haptics toggle title"), isOn: state.hapticsEnabled) { [weak self] _ in
-			self?.onToggleHaptics?()
-		}
-		addActionButton(title: NSLocalizedString("button.history", comment: "History button title")) { [weak self] in self?.onShowHistory?() }
-		addActionButton(title: NSLocalizedString("menu.control.repeatLast", comment: "Repeat last roll menu title")) { [weak self] in self?.onRepeatLastRoll?() }
-		addActionButton(title: NSLocalizedString("menu.control.previewStyle", comment: "Preview style action title")) { [weak self] in self?.onPreviewStyle?() }
-		addActionButton(title: NSLocalizedString("menu.control.resetVisuals", comment: "Reset visual settings menu title"), destructive: true) { [weak self] in self?.onResetVisuals?() }
 	}
 
-	private func addSwitchRow(title: String, isOn: Bool, action: @escaping (Bool) -> Void) {
+	private func addSection(title: String, build: (DiceOptionsSectionBuilder) -> Void) {
+		let sectionStack = UIStackView()
+		sectionStack.axis = .vertical
+		sectionStack.spacing = 8
+		let header = UILabel()
+		header.text = title
+		header.font = .preferredFont(forTextStyle: .headline)
+		sectionStack.addArrangedSubview(header)
+		let body = UIStackView()
+		body.axis = .vertical
+		body.spacing = 10
+		body.isLayoutMarginsRelativeArrangement = true
+		body.layoutMargins = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+		body.backgroundColor = .secondarySystemGroupedBackground
+		body.layer.cornerRadius = 12
+		sectionStack.addArrangedSubview(body)
+		build(DiceOptionsSectionBuilder(stackView: body))
+		stackView.addArrangedSubview(sectionStack)
+	}
+}
+
+private struct DiceOptionsSectionBuilder {
+	let stackView: UIStackView
+
+	func addSwitchRow(title: String, isOn: Bool, action: @escaping (Bool) -> Void) {
 		let row = UIStackView()
 		row.axis = .horizontal
 		row.alignment = .center
@@ -1470,7 +1500,7 @@ private final class DiceOptionsSheetViewController: UIViewController {
 		stackView.addArrangedSubview(row)
 	}
 
-	private func addSegmentRow(title: String, items: [String], selectedIndex: Int, action: @escaping (Int) -> Void) {
+	func addSegmentRow(title: String, items: [String], selectedIndex: Int, action: @escaping (Int) -> Void) {
 		let container = UIStackView()
 		container.axis = .vertical
 		container.spacing = 8
@@ -1484,7 +1514,7 @@ private final class DiceOptionsSheetViewController: UIViewController {
 		stackView.addArrangedSubview(container)
 	}
 
-	private func addActionButton(title: String, destructive: Bool = false, action: @escaping () -> Void) {
+	func addActionButton(title: String, destructive: Bool = false, action: @escaping () -> Void) {
 		let button = UIButton(type: .system)
 		button.setTitle(title, for: .normal)
 		button.contentHorizontalAlignment = .leading
@@ -1499,6 +1529,7 @@ private final class DiceOptionsSheetViewController: UIViewController {
 private final class DiceSoundEngine {
 	private let engine = AVAudioEngine()
 	private let player = AVAudioPlayerNode()
+	private let audioQueue = DispatchQueue(label: "com.kitsunesoftware.dice.soundengine")
 	private var cachedImpactBuffers: [DiceSoundPack: AVAudioPCMBuffer] = [:]
 	private var cachedTickBuffers: [DiceSoundPack: AVAudioPCMBuffer] = [:]
 	private var currentPack: DiceSoundPack = .off
@@ -1511,31 +1542,41 @@ private final class DiceSoundEngine {
 	}
 
 	func configure(pack: DiceSoundPack, enabled: Bool) {
-		currentPack = pack
-		isEnabled = enabled
+		audioQueue.async { [weak self] in
+			self?.currentPack = pack
+			self?.isEnabled = enabled
+		}
 	}
 
 	func playRollImpact() {
-		guard isEnabled else { return }
-		guard currentPack != .off else { return }
-		ensureEngineStarted()
-		guard let buffer = impactBuffer(for: currentPack) else { return }
-		player.volume = 1.0
-		player.scheduleBuffer(buffer, at: nil, options: []) { }
-		if !player.isPlaying {
-			player.play()
+		audioQueue.async { [weak self] in
+			guard let self else { return }
+			guard self.isEnabled else { return }
+			guard self.currentPack != .off else { return }
+			self.ensureEngineStarted()
+			guard let baseBuffer = self.impactBuffer(for: self.currentPack),
+				  let buffer = self.copyBuffer(baseBuffer) else { return }
+			self.player.volume = 1.0
+			self.player.scheduleBuffer(buffer, at: nil, options: []) { }
+			if !self.player.isPlaying {
+				self.player.play()
+			}
 		}
 	}
 
 	func playSettleTick() {
-		guard isEnabled else { return }
-		guard currentPack != .off else { return }
-		ensureEngineStarted()
-		guard let buffer = tickBuffer(for: currentPack) else { return }
-		player.volume = 0.9
-		player.scheduleBuffer(buffer, at: nil, options: []) { }
-		if !player.isPlaying {
-			player.play()
+		audioQueue.async { [weak self] in
+			guard let self else { return }
+			guard self.isEnabled else { return }
+			guard self.currentPack != .off else { return }
+			self.ensureEngineStarted()
+			guard let baseBuffer = self.tickBuffer(for: self.currentPack),
+				  let buffer = self.copyBuffer(baseBuffer) else { return }
+			self.player.volume = 0.9
+			self.player.scheduleBuffer(buffer, at: nil, options: []) { }
+			if !self.player.isPlaying {
+				self.player.play()
+			}
 		}
 	}
 
@@ -1627,6 +1668,22 @@ private final class DiceSoundEngine {
 			let mix: Float = pack == .softWood ? ((0.6 * noise) + (0.4 * tone)) : ((0.82 * noise) + (0.18 * tone))
 			channel[index] = max(-1, min(1, mix * envelope * 0.75))
 		}
+	}
+
+	private func copyBuffer(_ source: AVAudioPCMBuffer) -> AVAudioPCMBuffer? {
+		guard let copy = AVAudioPCMBuffer(pcmFormat: source.format, frameCapacity: source.frameLength) else {
+			return nil
+		}
+		copy.frameLength = source.frameLength
+		guard let fromChannels = source.floatChannelData, let toChannels = copy.floatChannelData else {
+			return nil
+		}
+		let channels = Int(source.format.channelCount)
+		let frames = Int(source.frameLength)
+		for channel in 0..<channels {
+			toChannels[channel].assign(from: fromChannels[channel], count: frames)
+		}
+		return copy
 	}
 }
 

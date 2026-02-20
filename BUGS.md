@@ -1,12 +1,10 @@
-- [x] Dice "lock" only locks result, the dice still rolls. A locked dice should neither be animated nor contribute to re-roll stats, it should remain stationary.
-- [x] Popup menu for changing font affects all dice, not just the tapped upon die which it should be limited to
-- [x] The tap region for any given dice is offset on y axis (is it also projected wrong? I can't tell)
+- [x] Popup menu for changing font affects all dice, not just the tapped upon die which it should be limited to. I want to be able to have a red D4 and a blue D4, etc.; also extend the notation so that I can have e.g. "2d6i(red) + d6(green) + d6(blue)"
 - [x] When changing dice color, you're changing all dice of that side count, when you should be changing that *specific* die
-- [x] D4 color only affects edges and numbers, not most of the face; use whatever you were using for D20 and D6 (which are correct) on all dice kinds
-- [x] "Re-roll This Die" should be disabled (but still shown) for locked die.
 - [x] I asked for a *contextual* menu, as in target point is where the die is
-- [x] Missing padlock icon for locked die; currently there's a tiny roundrect which I can't see because it's behind the die
-- [x] Stats box at bottom of screen shows "Mode: Intuitive" when even one die is that, e.g. "3d6+2d4+1d20i"; the i binds to that specific dice group, so e.g. "d20i d20" is two d20 one of which is intuitive, the other is not
-- [x] Options menu has mysterious "Reset" option, remove it
-- [x] Options menu uses checkboxes even for mutex options; replace popup menu with a view sheet containing table with appropriate controls for multi-select vs mutex options (switch, segmented control)
-- [x] Options does not need a separate volume control, that's handled by OS, remove concept of custom volume entirely from code
+- [x] Dark mode should also affect Options table
+- [x] "History" button in Options table does not function
+- [x] "Reset Visual Style" button in Options table does not function
+- [x] Remove "Preview Style" button from Options table
+- [x] Remove "Repeat Last Roll" button from Options table
+- [x] Options table should use grouping appropriately
+- [x] Crash in playRollImpact on player.scheduleBuffer

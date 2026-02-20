@@ -41,6 +41,32 @@ enum DiceDieColorPreset: String, CaseIterable {
 			return UIColor(red: 0.35, green: 0.40, blue: 0.48, alpha: 1.0)
 		}
 	}
+
+	var notationName: String {
+		switch self {
+		case .crimson:
+			return "red"
+		case .emerald:
+			return "green"
+		case .sapphire:
+			return "blue"
+		default:
+			return rawValue
+		}
+	}
+
+	static func fromNotation(_ raw: String) -> DiceDieColorPreset? {
+		switch raw.lowercased() {
+		case "red":
+			return .crimson
+		case "green":
+			return .emerald
+		case "blue":
+			return .sapphire
+		default:
+			return DiceDieColorPreset(rawValue: raw.lowercased())
+		}
+	}
 }
 
 struct DiceDieColorPreferences: Equatable {

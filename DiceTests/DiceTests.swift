@@ -50,6 +50,25 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(configuration?.notation, "1d20i+1d20")
 	}
 
+	func testParseSupportsPerPoolColorTags() {
+		let configuration = parser.parse("2d6i(red)+d6(green)+d6(blue)")
+		XCTAssertNotNil(configuration)
+		XCTAssertEqual(configuration?.pools, [
+			DicePool(diceCount: 2, sideCount: 6, intuitive: true, colorTag: "red"),
+			DicePool(diceCount: 1, sideCount: 6, intuitive: false, colorTag: "green"),
+			DicePool(diceCount: 1, sideCount: 6, intuitive: false, colorTag: "blue"),
+		])
+		XCTAssertEqual(configuration?.notation, "2d6i(red)+1d6(green)+1d6(blue)")
+	}
+
+	func testParseRejectsUnknownColorTags() {
+		if case let .failure(error) = parser.parseResult("d6(magenta)") {
+			XCTAssertEqual(error, .invalidSegment(segment: "d6(magenta)", hintKey: "error.input.hint.colorTag"))
+		} else {
+			XCTFail("Expected color-tag parse failure")
+		}
+	}
+
 	func testParseIsCaseInsensitiveAndTrimsSpaces() {
 		let configuration = parser.parse("  5D10I  ")
 		XCTAssertNotNil(configuration)
@@ -1125,6 +1144,21 @@ final class DiceTests: XCTestCase {
 		viewModel.setDieColorPreset(.crimson, forDieAt: 1)
 		XCTAssertNil(viewModel.dieColorPreset(forDieAt: 0))
 		XCTAssertEqual(viewModel.dieColorPreset(forDieAt: 1), .crimson)
+	}
+
+	func testViewModelRollFromInputAppliesNotationColorOverridesPerDie() {
+		let suiteName = "DiceTests.viewmodel.diecolors.notation.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		_ = viewModel.rollFromInput("2d6(red)+d6(blue)")
+		XCTAssertEqual(viewModel.dieColorPreset(forDieAt: 0), .crimson)
+		XCTAssertEqual(viewModel.dieColorPreset(forDieAt: 1), .crimson)
+		XCTAssertEqual(viewModel.dieColorPreset(forDieAt: 2), .sapphire)
 	}
 
 	func testViewModelD6PipStyleSelectionPersistsToPreferences() {

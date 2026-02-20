@@ -144,6 +144,7 @@
 "error.input.hint.missingSides" = "Add sides after d (for example 2d6).";
 "error.input.hint.numericSides" = "Sides after d must be numeric (for example d10).";
 "error.input.hint.numericDiceCount" = "Dice count before d must be numeric (for example 3d6).";
+"error.input.hint.colorTag" = "Use a supported color tag like (red), (green), (blue), (ivory), (amber), or (slate).";
 "error.input.outOfBounds" = "Dice count must be %d-%d and sides must be %d-%d.";
 "state.on" = "On";
 "state.off" = "Off";

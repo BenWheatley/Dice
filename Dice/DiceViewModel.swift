@@ -164,9 +164,9 @@ final class DiceViewModel {
 			if appState.configuration.sideCountsPerDie != parsed.sideCountsPerDie {
 				appState.lockedDieIndices.removeAll()
 				appState.dieFaceNumeralFontOverrides.removeAll()
-				appState.dieColorOverrides.removeAll()
 			}
 			appState.configuration = parsed
+			applyNotationColorOverrides(from: parsed)
 			preferencesStore.addRecentPreset(parsed.notation)
 			persistPreferences()
 			return .success(performRoll())
@@ -599,6 +599,17 @@ final class DiceViewModel {
 			hapticsEnabled: appState.hapticsEnabled
 		)
 		preferencesStore.save(preferences)
+	}
+
+	private func applyNotationColorOverrides(from configuration: RollConfiguration) {
+		let colorTags = configuration.perDieColorTags
+		var overrides: [Int: DiceDieColorPreset] = [:]
+		for (index, tag) in colorTags.enumerated() {
+			if let tag, let preset = DiceDieColorPreset.fromNotation(tag) {
+				overrides[index] = preset
+			}
+		}
+		appState.dieColorOverrides = overrides
 	}
 
 	private func appendHistory(for configuration: RollConfiguration, outcome: RollOutcome) {
