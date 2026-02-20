@@ -1051,12 +1051,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			options: .displayInline,
 			children: finishActions
 		)
-		let outlinesAction = UIAction(
-			title: NSLocalizedString("menu.control.edgeOutlines", comment: "Edge outlines toggle menu title"),
-			state: viewModel.edgeOutlinesEnabled ? .on : .off
-		) { [weak self] _ in
-			self?.toggleEdgeOutlines()
-		}
 		let motionBlurAction = UIAction(
 			title: NSLocalizedString("menu.control.motionBlur", comment: "Motion blur toggle menu title"),
 			state: viewModel.motionBlurEnabled ? .on : .off
@@ -1103,7 +1097,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		) { [weak self] _ in
 			self?.confirmVisualReset()
 		}
-		menuButton.menu = UIMenu(children: [historyAction, repeatAction, animationAction, animationIntensityMenu, soundPackMenu, soundEffectsAction, hapticsAction, statsAction, themeMenu, textureMenu, layoutMenu, finishMenu, outlinesAction, motionBlurAction, largeLabelsAction, previewStyleAction, resetVisualsAction])
+		menuButton.menu = UIMenu(children: [historyAction, repeatAction, animationAction, animationIntensityMenu, motionBlurAction, soundPackMenu, soundEffectsAction, hapticsAction, themeMenu, textureMenu, layoutMenu, finishMenu, largeLabelsAction, statsAction, previewStyleAction, resetVisualsAction])
 	}
 
 	@objc private func toggleStatsVisibility() {

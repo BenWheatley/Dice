@@ -3,9 +3,9 @@
 - [x] "Reroll This Dice" animates every dice, it should only animate the once die being re-rolled
 - [x] Die Finish "Stone" should use a marble (3d simplex noise) effect
 - [x] Wood needs some more natural irregularity, shift grain boundaries with light simplex noise
-- [ ] "Show Stats" shouldn't be in the "animations" group
-- [ ] "Motion Blur" should be in the "animations" group
-- [ ] "Edge Outlines" does nothing, remove it
+- [x] "Show Stats" shouldn't be in the "animations" group
+- [x] "Motion Blur" should be in the "animations" group
+- [x] "Edge Outlines" does nothing, remove it
 - [ ] Stats box should use a graph instead of text
 - [ ] Remove long-press wherever it's being used, that's bad for discovery
 - [ ] The "Roll History" view incorrectly ignores light/dark mode

@@ -92,7 +92,7 @@ final class DiceOptionsSheetViewController: UIViewController {
 				guard DiceAnimationIntensity.allCases.indices.contains(index) else { return }
 				self?.onSetAnimationIntensity?(DiceAnimationIntensity.allCases[index])
 			}
-			section.addSwitchRow(title: NSLocalizedString("menu.control.showStats", comment: "Show stats toggle menu title"), isOn: state.showStats) { [weak self] _ in self?.onToggleStats?() }
+			section.addSwitchRow(title: NSLocalizedString("menu.control.motionBlur", comment: "Motion blur toggle menu title"), isOn: state.motionBlurEnabled) { [weak self] _ in self?.onToggleMotionBlur?() }
 		}
 		addSection(title: NSLocalizedString("menu.control.theme", comment: "Visual section")) { section in
 			section.addSegmentRow(title: NSLocalizedString("menu.control.theme", comment: "Theme submenu title"), items: DiceTheme.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Theme option title") }, selectedIndex: DiceTheme.allCases.firstIndex(of: state.theme) ?? 0) { [weak self] index in
@@ -111,9 +111,8 @@ final class DiceOptionsSheetViewController: UIViewController {
 				guard DiceDieFinish.allCases.indices.contains(index) else { return }
 				self?.onSetFinish?(DiceDieFinish.allCases[index])
 			}
-			section.addSwitchRow(title: NSLocalizedString("menu.control.edgeOutlines", comment: "Edge outlines toggle menu title"), isOn: state.edgeOutlinesEnabled) { [weak self] _ in self?.onToggleEdgeOutlines?() }
-			section.addSwitchRow(title: NSLocalizedString("menu.control.motionBlur", comment: "Motion blur toggle menu title"), isOn: state.motionBlurEnabled) { [weak self] _ in self?.onToggleMotionBlur?() }
 			section.addSwitchRow(title: NSLocalizedString("menu.control.largeFaceLabels", comment: "Large face labels toggle title"), isOn: state.largeFaceLabelsEnabled) { [weak self] _ in self?.onToggleLargeLabels?() }
+			section.addSwitchRow(title: NSLocalizedString("menu.control.showStats", comment: "Show stats toggle menu title"), isOn: state.showStats) { [weak self] _ in self?.onToggleStats?() }
 		}
 		addSection(title: NSLocalizedString("menu.control.soundPack", comment: "Sound section")) { section in
 			section.addSegmentRow(title: NSLocalizedString("menu.control.soundPack", comment: "Sound pack submenu title"), items: DiceSoundPack.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Sound pack option") }, selectedIndex: DiceSoundPack.allCases.firstIndex(of: state.soundPack) ?? 0) { [weak self] index in

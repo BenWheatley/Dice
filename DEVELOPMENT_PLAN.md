@@ -175,6 +175,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Restrict per-die reroll animation to the selected die while keeping all non-target dice visually settled.
 - [x] Implement shader-based stone die finish with procedural marble-style veining and retain finish behavior under automated material tests.
 - [x] Increase wood table shader realism by warping grain boundaries with low-amplitude procedural noise instead of perfectly regular bands.
+- [x] Rebalance options sheet grouping: move Motion Blur under Animations, move Show Stats out of Animations, and remove non-functional Edge Outlines control.
 
 ## 12. watchOS Small-Screen Interface Plan
 
