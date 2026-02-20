@@ -72,10 +72,9 @@ final class DiceUITests: XCTestCase {
 
 		XCTAssertTrue(menuButton.waitForExistence(timeout: 5))
 		menuButton.tap()
-		app.buttons["Animations"].tap()
+		app.switches["Animations"].tap()
 
-		menuButton.tap()
-		app.buttons["Animations"].tap()
+		app.switches["Animations"].tap()
 		XCTAssertTrue(totalsLabel.exists)
 	}
 

@@ -215,7 +215,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		menuButton.setImage(UIImage(systemName: "line.3.horizontal"), for: .normal)
 		menuButton.accessibilityLabel = NSLocalizedString("a11y.menu.label", comment: "Main menu accessibility label")
 		menuButton.accessibilityIdentifier = "menuButton"
-		menuButton.showsMenuAsPrimaryAction = true
+		menuButton.showsMenuAsPrimaryAction = false
+		menuButton.addTarget(self, action: #selector(showControlSheet), for: .touchUpInside)
 
 		let row = UIStackView(arrangedSubviews: [notationField, rollButton, presetsButton, menuButton])
 		row.translatesAutoresizingMaskIntoConstraints = false
@@ -504,17 +505,18 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 		for row in 0..<itemCount {
 			let indexPath = IndexPath(row: row, section: 0)
-			let cellFrame: CGRect
-			if let attrs = collectionView.layoutAttributesForItem(at: indexPath) {
-				cellFrame = attrs.frame
+			let centerInBoard: CGPoint
+			if let cell = collectionView.cellForItem(at: indexPath) {
+				centerInBoard = cell.convert(CGPoint(x: cell.bounds.midX, y: cell.bounds.midY), to: diceBoardView)
+			} else if let attrs = collectionView.layoutAttributesForItem(at: indexPath) {
+				let visibleCenter = CGPoint(
+					x: attrs.frame.midX - collectionView.contentOffset.x,
+					y: attrs.frame.midY - collectionView.contentOffset.y
+				)
+				centerInBoard = diceBoardView.convert(visibleCenter, from: collectionView)
 			} else {
 				continue
 			}
-			let visibleCenter = CGPoint(
-				x: cellFrame.midX - collectionView.contentOffset.x,
-				y: cellFrame.midY - collectionView.contentOffset.y
-			)
-			let centerInBoard = diceBoardView.convert(visibleCenter, from: collectionView)
 			centers.append(centerInBoard)
 			values.append(viewModel.diceValues[row])
 			boardSideCounts.append(sideCounts[row])
@@ -912,6 +914,55 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	private func updateControlMenu() {
+		menuButton.menu = nil
+	}
+
+	@objc private func showControlSheet() {
+		let sheet = DiceOptionsSheetViewController(
+			state: DiceOptionsSheetViewController.State(
+				animationsEnabled: viewModel.animationsEnabled,
+				animationIntensity: viewModel.animationIntensity,
+				showStats: statsVisible,
+				theme: viewModel.theme,
+				texture: viewModel.tableTexture,
+				layout: viewModel.boardLayoutPreset,
+				finish: viewModel.dieFinish,
+				edgeOutlinesEnabled: viewModel.edgeOutlinesEnabled,
+				motionBlurEnabled: viewModel.motionBlurEnabled,
+				largeFaceLabelsEnabled: viewModel.largeFaceLabelsEnabled,
+				soundPack: viewModel.soundPack,
+				soundEffectsEnabled: viewModel.soundEffectsEnabled,
+				hapticsEnabled: viewModel.hapticsEnabled
+			)
+		)
+		sheet.onToggleAnimations = { [weak self] in self?.toggleAnimations() }
+		sheet.onSetAnimationIntensity = { [weak self] intensity in self?.selectAnimationIntensity(intensity) }
+		sheet.onToggleStats = { [weak self] in self?.toggleStatsVisibility() }
+		sheet.onSetTheme = { [weak self] theme in self?.selectTheme(theme) }
+		sheet.onSetTexture = { [weak self] texture in self?.selectTexture(texture) }
+		sheet.onSetLayout = { [weak self] preset in self?.selectBoardLayoutPreset(preset) }
+		sheet.onSetFinish = { [weak self] finish in self?.selectDieFinish(finish) }
+		sheet.onToggleEdgeOutlines = { [weak self] in self?.toggleEdgeOutlines() }
+		sheet.onToggleMotionBlur = { [weak self] in self?.toggleMotionBlur() }
+		sheet.onToggleLargeLabels = { [weak self] in self?.toggleLargeFaceLabels() }
+		sheet.onSetSoundPack = { [weak self] pack in self?.selectSoundPack(pack) }
+		sheet.onToggleSoundEffects = { [weak self] in self?.toggleSoundEffects() }
+		sheet.onToggleHaptics = { [weak self] in self?.toggleHaptics() }
+		sheet.onShowHistory = { [weak self] in self?.showHistory() }
+		sheet.onRepeatLastRoll = { [weak self] in self?.repeatLastRoll() }
+		sheet.onPreviewStyle = { [weak self] in self?.presentStylePreview() }
+		sheet.onResetVisuals = { [weak self] in self?.confirmVisualReset() }
+
+		let navigationController = UINavigationController(rootViewController: sheet)
+		navigationController.modalPresentationStyle = .formSheet
+		if let popover = navigationController.popoverPresentationController {
+			popover.sourceView = menuButton
+			popover.sourceRect = menuButton.bounds
+		}
+		present(navigationController, animated: true)
+	}
+
+	private func updateLegacyControlMenu() {
 		let animationAction = UIAction(
 			title: NSLocalizedString("menu.control.animations", comment: "Animations toggle menu title"),
 			state: viewModel.animationsEnabled ? .on : .off
@@ -1260,6 +1311,188 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		case .system:
 			return traitCollection.userInterfaceStyle == .dark ? .dark : .light
 		}
+	}
+}
+
+private final class DiceOptionsSheetViewController: UIViewController {
+	struct State {
+		let animationsEnabled: Bool
+		let animationIntensity: DiceAnimationIntensity
+		let showStats: Bool
+		let theme: DiceTheme
+		let texture: DiceTableTexture
+		let layout: DiceBoardLayoutPreset
+		let finish: DiceDieFinish
+		let edgeOutlinesEnabled: Bool
+		let motionBlurEnabled: Bool
+		let largeFaceLabelsEnabled: Bool
+		let soundPack: DiceSoundPack
+		let soundEffectsEnabled: Bool
+		let hapticsEnabled: Bool
+	}
+
+	var onToggleAnimations: (() -> Void)?
+	var onSetAnimationIntensity: ((DiceAnimationIntensity) -> Void)?
+	var onToggleStats: (() -> Void)?
+	var onSetTheme: ((DiceTheme) -> Void)?
+	var onSetTexture: ((DiceTableTexture) -> Void)?
+	var onSetLayout: ((DiceBoardLayoutPreset) -> Void)?
+	var onSetFinish: ((DiceDieFinish) -> Void)?
+	var onToggleEdgeOutlines: (() -> Void)?
+	var onToggleMotionBlur: (() -> Void)?
+	var onToggleLargeLabels: (() -> Void)?
+	var onSetSoundPack: ((DiceSoundPack) -> Void)?
+	var onToggleSoundEffects: (() -> Void)?
+	var onToggleHaptics: (() -> Void)?
+	var onShowHistory: (() -> Void)?
+	var onRepeatLastRoll: (() -> Void)?
+	var onPreviewStyle: (() -> Void)?
+	var onResetVisuals: (() -> Void)?
+
+	private let state: State
+	private let scrollView = UIScrollView()
+	private let stackView = UIStackView()
+
+	init(state: State) {
+		self.state = state
+		super.init(nibName: nil, bundle: nil)
+	}
+
+	required init?(coder: NSCoder) {
+		fatalError("init(coder:) has not been implemented")
+	}
+
+	override func viewDidLoad() {
+		super.viewDidLoad()
+		title = NSLocalizedString("a11y.menu.label", comment: "Main menu accessibility label")
+		view.backgroundColor = .systemBackground
+		navigationItem.rightBarButtonItem = UIBarButtonItem(
+			barButtonSystemItem: .close,
+			target: self,
+			action: #selector(closeSheet)
+		)
+		buildForm()
+	}
+
+	@objc private func closeSheet() {
+		dismiss(animated: true)
+	}
+
+	private func buildForm() {
+		scrollView.translatesAutoresizingMaskIntoConstraints = false
+		stackView.translatesAutoresizingMaskIntoConstraints = false
+		stackView.axis = .vertical
+		stackView.spacing = 12
+		view.addSubview(scrollView)
+		scrollView.addSubview(stackView)
+
+		NSLayoutConstraint.activate([
+			scrollView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+			scrollView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+			scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+			scrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+			stackView.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor, constant: 16),
+			stackView.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor, constant: -16),
+			stackView.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 16),
+			stackView.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -16),
+			stackView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor, constant: -32),
+		])
+
+		addSwitchRow(title: NSLocalizedString("menu.control.animations", comment: "Animations toggle menu title"), isOn: state.animationsEnabled) { [weak self] _ in
+			self?.onToggleAnimations?()
+		}
+		addSegmentRow(
+			title: NSLocalizedString("menu.control.animationIntensity", comment: "Animation intensity submenu title"),
+			items: DiceAnimationIntensity.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Animation intensity option") },
+			selectedIndex: DiceAnimationIntensity.allCases.firstIndex(of: state.animationIntensity) ?? 0
+		) { [weak self] index in
+			guard DiceAnimationIntensity.allCases.indices.contains(index) else { return }
+			self?.onSetAnimationIntensity?(DiceAnimationIntensity.allCases[index])
+		}
+		addSwitchRow(title: NSLocalizedString("menu.control.showStats", comment: "Show stats toggle menu title"), isOn: state.showStats) { [weak self] _ in
+			self?.onToggleStats?()
+		}
+		addSegmentRow(title: NSLocalizedString("menu.control.theme", comment: "Theme submenu title"), items: DiceTheme.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Theme option title") }, selectedIndex: DiceTheme.allCases.firstIndex(of: state.theme) ?? 0) { [weak self] index in
+			guard DiceTheme.allCases.indices.contains(index) else { return }
+			self?.onSetTheme?(DiceTheme.allCases[index])
+		}
+		addSegmentRow(title: NSLocalizedString("menu.control.texture", comment: "Texture submenu title"), items: DiceTableTexture.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Table texture option") }, selectedIndex: DiceTableTexture.allCases.firstIndex(of: state.texture) ?? 0) { [weak self] index in
+			guard DiceTableTexture.allCases.indices.contains(index) else { return }
+			self?.onSetTexture?(DiceTableTexture.allCases[index])
+		}
+		addSegmentRow(title: NSLocalizedString("menu.control.layout", comment: "Layout submenu title"), items: DiceBoardLayoutPreset.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Board layout option") }, selectedIndex: DiceBoardLayoutPreset.allCases.firstIndex(of: state.layout) ?? 0) { [weak self] index in
+			guard DiceBoardLayoutPreset.allCases.indices.contains(index) else { return }
+			self?.onSetLayout?(DiceBoardLayoutPreset.allCases[index])
+		}
+		addSegmentRow(title: NSLocalizedString("menu.control.finish", comment: "Finish submenu title"), items: DiceDieFinish.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Die finish option") }, selectedIndex: DiceDieFinish.allCases.firstIndex(of: state.finish) ?? 0) { [weak self] index in
+			guard DiceDieFinish.allCases.indices.contains(index) else { return }
+			self?.onSetFinish?(DiceDieFinish.allCases[index])
+		}
+		addSwitchRow(title: NSLocalizedString("menu.control.edgeOutlines", comment: "Edge outlines toggle menu title"), isOn: state.edgeOutlinesEnabled) { [weak self] _ in
+			self?.onToggleEdgeOutlines?()
+		}
+		addSwitchRow(title: NSLocalizedString("menu.control.motionBlur", comment: "Motion blur toggle menu title"), isOn: state.motionBlurEnabled) { [weak self] _ in
+			self?.onToggleMotionBlur?()
+		}
+		addSwitchRow(title: NSLocalizedString("menu.control.largeFaceLabels", comment: "Large face labels toggle title"), isOn: state.largeFaceLabelsEnabled) { [weak self] _ in
+			self?.onToggleLargeLabels?()
+		}
+		addSegmentRow(title: NSLocalizedString("menu.control.soundPack", comment: "Sound pack submenu title"), items: DiceSoundPack.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Sound pack option") }, selectedIndex: DiceSoundPack.allCases.firstIndex(of: state.soundPack) ?? 0) { [weak self] index in
+			guard DiceSoundPack.allCases.indices.contains(index) else { return }
+			self?.onSetSoundPack?(DiceSoundPack.allCases[index])
+		}
+		addSwitchRow(title: NSLocalizedString("menu.control.soundEffects", comment: "Sound effects toggle title"), isOn: state.soundEffectsEnabled) { [weak self] _ in
+			self?.onToggleSoundEffects?()
+		}
+		addSwitchRow(title: NSLocalizedString("menu.control.haptics", comment: "Haptics toggle title"), isOn: state.hapticsEnabled) { [weak self] _ in
+			self?.onToggleHaptics?()
+		}
+		addActionButton(title: NSLocalizedString("button.history", comment: "History button title")) { [weak self] in self?.onShowHistory?() }
+		addActionButton(title: NSLocalizedString("menu.control.repeatLast", comment: "Repeat last roll menu title")) { [weak self] in self?.onRepeatLastRoll?() }
+		addActionButton(title: NSLocalizedString("menu.control.previewStyle", comment: "Preview style action title")) { [weak self] in self?.onPreviewStyle?() }
+		addActionButton(title: NSLocalizedString("menu.control.resetVisuals", comment: "Reset visual settings menu title"), destructive: true) { [weak self] in self?.onResetVisuals?() }
+	}
+
+	private func addSwitchRow(title: String, isOn: Bool, action: @escaping (Bool) -> Void) {
+		let row = UIStackView()
+		row.axis = .horizontal
+		row.alignment = .center
+		row.spacing = 12
+		let label = UILabel()
+		label.text = title
+		label.numberOfLines = 0
+		let toggle = UISwitch()
+		toggle.isOn = isOn
+		toggle.accessibilityLabel = title
+		toggle.addAction(UIAction { _ in action(toggle.isOn) }, for: .valueChanged)
+		row.addArrangedSubview(label)
+		row.addArrangedSubview(toggle)
+		stackView.addArrangedSubview(row)
+	}
+
+	private func addSegmentRow(title: String, items: [String], selectedIndex: Int, action: @escaping (Int) -> Void) {
+		let container = UIStackView()
+		container.axis = .vertical
+		container.spacing = 8
+		let label = UILabel()
+		label.text = title
+		let segmented = UISegmentedControl(items: items)
+		segmented.selectedSegmentIndex = selectedIndex
+		segmented.addAction(UIAction { _ in action(segmented.selectedSegmentIndex) }, for: .valueChanged)
+		container.addArrangedSubview(label)
+		container.addArrangedSubview(segmented)
+		stackView.addArrangedSubview(container)
+	}
+
+	private func addActionButton(title: String, destructive: Bool = false, action: @escaping () -> Void) {
+		let button = UIButton(type: .system)
+		button.setTitle(title, for: .normal)
+		button.contentHorizontalAlignment = .leading
+		if destructive {
+			button.setTitleColor(.systemRed, for: .normal)
+		}
+		button.addAction(UIAction { _ in action() }, for: .touchUpInside)
+		stackView.addArrangedSubview(button)
 	}
 }
 
