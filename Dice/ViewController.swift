@@ -89,10 +89,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-		guard let cell = collectionView.cellForItem(at: indexPath) else { return }
-		let anchorPoint = cell.convert(CGPoint(x: cell.bounds.midX, y: cell.bounds.midY), to: view)
-		let anchorRect = CGRect(x: anchorPoint.x - 1, y: anchorPoint.y - 1, width: 2, height: 2)
-		presentDieOptions(for: indexPath.row, sourceView: view, sourceRect: anchorRect)
+		// Per-die options are surfaced directly through button menus.
 	}
 
 	override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -107,12 +104,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			isLocked: viewModel.isDieLocked(at: indexPath.row),
 			largeFaceLabelsEnabled: viewModel.largeFaceLabelsEnabled
 		)
-		cell.onTapDie = { [weak self, weak cell] point in
-			guard let self, let cell else { return }
-			let anchorPoint = cell.convert(point, to: self.view)
-			let anchorRect = CGRect(x: anchorPoint.x - 1, y: anchorPoint.y - 1, width: 2, height: 2)
-			self.presentDieOptions(for: indexPath.row, sourceView: self.view, sourceRect: anchorRect)
-		}
+		cell.diceButton.menu = dieContextMenu(for: indexPath.row)
+		cell.diceButton.showsMenuAsPrimaryAction = true
 		return cell
 	}
 
@@ -315,110 +308,72 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		updateDiceBoard(animated: false)
 	}
 
-	private func presentDieOptions(for index: Int, sourceView: UIView, sourceRect: CGRect? = nil) {
-		guard viewModel.diceValues.indices.contains(index) else { return }
-		guard viewModel.diceSideCounts.indices.contains(index) else { return }
+	private func dieContextMenu(for index: Int) -> UIMenu? {
+		guard viewModel.diceValues.indices.contains(index) else { return nil }
+		guard viewModel.diceSideCounts.indices.contains(index) else { return nil }
 		let sideCount = viewModel.diceSideCounts[index]
-		let faceValue = viewModel.diceValues[index]
 		let lockTitleKey = viewModel.isDieLocked(at: index) ? "die.options.unlock" : "die.options.lock"
 
-		let alert = UIAlertController(
-			title: String(format: NSLocalizedString("die.options.title", comment: "Per-die options title"), index + 1, sideCount),
-			message: String(format: NSLocalizedString("die.options.message", comment: "Per-die options message"), faceValue),
-			preferredStyle: .actionSheet
-		)
-		let rerollAction = UIAlertAction(title: NSLocalizedString("die.options.reroll", comment: "Reroll one die action"), style: .default) { [weak self] _ in
+		let rerollAttributes: UIMenuElement.Attributes = viewModel.isDieLocked(at: index) ? .disabled : []
+		let rerollAction = UIAction(
+			title: NSLocalizedString("die.options.reroll", comment: "Reroll one die action"),
+			attributes: rerollAttributes
+		) { [weak self] _ in
 			self?.rerollDie(at: index)
 		}
-		rerollAction.isEnabled = !viewModel.isDieLocked(at: index)
-		alert.addAction(rerollAction)
-		alert.addAction(UIAlertAction(title: NSLocalizedString(lockTitleKey, comment: "Toggle lock action"), style: .default) { [weak self] _ in
+		let lockAction = UIAction(title: NSLocalizedString(lockTitleKey, comment: "Toggle lock action")) { [weak self] _ in
 			self?.toggleDieLock(at: index)
-		})
-		alert.addAction(UIAlertAction(title: NSLocalizedString("die.options.color", comment: "Change die color action"), style: .default) { [weak self] _ in
-			self?.presentDieColorOptions(forDieAt: index, sideCount: sideCount, sourceView: sourceView, sourceRect: sourceRect)
-		})
-		if sideCount == 6 {
-			alert.addAction(UIAlertAction(title: NSLocalizedString("die.options.pips", comment: "Change d6 pip style action"), style: .default) { [weak self] _ in
-				self?.presentD6PipStyleOptions(sourceView: sourceView)
-			})
-		} else {
-			alert.addAction(UIAlertAction(title: NSLocalizedString("die.options.font", comment: "Change numeral font action"), style: .default) { [weak self] _ in
-				self?.presentNumeralFontOptions(forDieAt: index, sourceView: sourceView, sourceRect: sourceRect)
-			})
 		}
-		alert.addAction(UIAlertAction(title: NSLocalizedString("button.cancel", comment: "Cancel action"), style: .cancel))
-		if let popover = alert.popoverPresentationController {
-			popover.sourceView = sourceView
-			popover.sourceRect = sourceRect ?? sourceView.bounds
-		}
-		present(alert, animated: true)
-	}
 
-	private func presentDieColorOptions(forDieAt index: Int, sideCount: Int, sourceView: UIView, sourceRect: CGRect?) {
-		let alert = UIAlertController(
-			title: String(format: NSLocalizedString("die.options.color.title", comment: "Die color sheet title"), sideCount),
-			message: nil,
-			preferredStyle: .actionSheet
-		)
-		for preset in DiceDieColorPreset.allCases {
-			let isCurrent = (viewModel.dieColorPreset(forDieAt: index) ?? viewModel.dieColorPreset(for: sideCount)) == preset
-			let marker = isCurrent ? " ✓" : ""
-			let title = NSLocalizedString(preset.menuTitleKey, comment: "Die color option") + marker
-			alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
+		let selectedColor = viewModel.dieColorPreset(forDieAt: index) ?? viewModel.dieColorPreset(for: sideCount)
+		let colorActions = DiceDieColorPreset.allCases.map { preset in
+			UIAction(
+				title: NSLocalizedString(preset.menuTitleKey, comment: "Die color option"),
+				state: preset == selectedColor ? .on : .off
+			) { [weak self] _ in
 				self?.selectDieColorPreset(preset, index: index)
-			})
+			}
 		}
-		alert.addAction(UIAlertAction(title: NSLocalizedString("button.cancel", comment: "Cancel action"), style: .cancel))
-		if let popover = alert.popoverPresentationController {
-			popover.sourceView = sourceView
-			popover.sourceRect = sourceRect ?? sourceView.bounds
-		}
-		present(alert, animated: true)
-	}
-
-	private func presentD6PipStyleOptions(sourceView: UIView) {
-		let alert = UIAlertController(
-			title: NSLocalizedString("die.options.pips.title", comment: "D6 pip style sheet title"),
-			message: nil,
-			preferredStyle: .actionSheet
+		let colorMenu = UIMenu(
+			title: NSLocalizedString("die.options.color", comment: "Change die color action"),
+			options: .displayInline,
+			children: colorActions
 		)
-		for style in DiceD6PipStyle.allCases {
-			let isCurrent = viewModel.d6PipStyle == style
-			let marker = isCurrent ? " ✓" : ""
-			let title = NSLocalizedString(style.menuTitleKey, comment: "D6 pip style option") + marker
-			alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
-				self?.selectD6PipStyle(style)
-			})
-		}
-		alert.addAction(UIAlertAction(title: NSLocalizedString("button.cancel", comment: "Cancel action"), style: .cancel))
-		if let popover = alert.popoverPresentationController {
-			popover.sourceView = sourceView
-			popover.sourceRect = sourceView.bounds
-		}
-		present(alert, animated: true)
-	}
 
-	private func presentNumeralFontOptions(forDieAt index: Int, sourceView: UIView, sourceRect: CGRect?) {
-		let alert = UIAlertController(
-			title: NSLocalizedString("die.options.font.title", comment: "Numeral font sheet title"),
-			message: nil,
-			preferredStyle: .actionSheet
-		)
-		for font in DiceFaceNumeralFont.allCases {
-			let isCurrent = (viewModel.faceNumeralFont(forDieAt: index) ?? viewModel.faceNumeralFont) == font
-			let marker = isCurrent ? " ✓" : ""
-			let title = NSLocalizedString(font.menuTitleKey, comment: "Numeral font option") + marker
-			alert.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
-				self?.selectFaceNumeralFont(font, dieIndex: index)
-			})
+		let styleMenu: UIMenu
+		if sideCount == 6 {
+			let pipActions = DiceD6PipStyle.allCases.map { style in
+				UIAction(
+					title: NSLocalizedString(style.menuTitleKey, comment: "D6 pip style option"),
+					state: viewModel.d6PipStyle == style ? .on : .off
+				) { [weak self] _ in
+					self?.selectD6PipStyle(style)
+				}
+			}
+			styleMenu = UIMenu(
+				title: NSLocalizedString("die.options.pips", comment: "Change d6 pip style action"),
+				options: .displayInline,
+				children: pipActions
+			)
+		} else {
+			let selectedFont = viewModel.faceNumeralFont(forDieAt: index) ?? viewModel.faceNumeralFont
+			let fontActions = DiceFaceNumeralFont.allCases.map { font in
+				UIAction(
+					title: NSLocalizedString(font.menuTitleKey, comment: "Numeral font option"),
+					state: selectedFont == font ? .on : .off
+				) { [weak self] _ in
+					self?.selectFaceNumeralFont(font, dieIndex: index)
+				}
+			}
+			styleMenu = UIMenu(
+				title: NSLocalizedString("die.options.font", comment: "Change numeral font action"),
+				options: .displayInline,
+				children: fontActions
+			)
 		}
-		alert.addAction(UIAlertAction(title: NSLocalizedString("button.cancel", comment: "Cancel action"), style: .cancel))
-		if let popover = alert.popoverPresentationController {
-			popover.sourceView = sourceView
-			popover.sourceRect = sourceRect ?? sourceView.bounds
-		}
-		present(alert, animated: true)
+
+		let title = String(format: NSLocalizedString("die.options.title", comment: "Per-die options title"), index + 1, sideCount)
+		return UIMenu(title: title, children: [rerollAction, lockAction, colorMenu, styleMenu])
 	}
 
 	@discardableResult

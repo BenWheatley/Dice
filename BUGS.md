@@ -9,4 +9,4 @@
 - [ ] Stats box should use a graph instead of text
 - [x] Remove long-press wherever it's being used, that's bad for discovery
 - [x] The "Roll History" view incorrectly ignores light/dark mode
-- [ ] The options for each die are being shown with a UIAlertController, and not, as I asked for a CONTEXT MENU: https://developer.apple.com/design/human-interface-guidelines/context-menus
+- [x] The options for each die are being shown with a UIAlertController, and not, as I asked for a CONTEXT MENU: https://developer.apple.com/design/human-interface-guidelines/context-menus
