@@ -173,6 +173,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Fix startup dice color/render state by applying notation-based per-die color overrides and restored dice count immediately on app restore.
 - [x] Keep die color changes scoped to the tapped die in per-die options (do not mutate side-count defaults for the full group).
 - [x] Restrict per-die reroll animation to the selected die while keeping all non-target dice visually settled.
+- [x] Implement shader-based stone die finish with procedural marble-style veining and retain finish behavior under automated material tests.
 
 ## 12. watchOS Small-Screen Interface Plan
 

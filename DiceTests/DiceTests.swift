@@ -1398,14 +1398,19 @@ final class DiceTests: XCTestCase {
 	}
 
 	func testDieFinishPresetAppliesDistinctMaterialParameters() {
+		let matte = SCNMaterial()
 		let gloss = SCNMaterial()
 		let stone = SCNMaterial()
+		DiceDieFinish.matte.apply(to: matte)
 		DiceDieFinish.gloss.apply(to: gloss)
 		DiceDieFinish.stone.apply(to: stone)
 
+		XCTAssertNil(matte.shaderModifiers?[.surface])
 		XCTAssertEqual(gloss.lightingModel, .blinn)
+		XCTAssertNil(gloss.shaderModifiers?[.surface])
 		XCTAssertEqual(stone.lightingModel, .lambert)
 		XCTAssertGreaterThan(gloss.shininess, stone.shininess)
+		XCTAssertNotNil(stone.shaderModifiers?[.surface])
 	}
 
 	func testViewModelFormattedTotalsOmitsBoardWarningForSupportedMixedDice() {

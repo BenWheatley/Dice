@@ -1,7 +1,7 @@
 - [x] Dice colors are absent on initial app load
 - [x] If I have e.g. "3d6" or "3d6(red) 2d6(blue), then tap on the first d6 and choose to change its color, that should ONLY change the color of the first d6, not all d6 in that group
 - [x] "Reroll This Dice" animates every dice, it should only animate the once die being re-rolled
-- [ ] Die Finish "Stone" should use a marble (3d simplex noise) effect
+- [x] Die Finish "Stone" should use a marble (3d simplex noise) effect
 - [ ] Wood needs some more natural irregularity, shift grain boundaries with light simplex noise
 - [ ] "Show Stats" shouldn't be in the "animations" group
 - [ ] "Motion Blur" should be in the "animations" group
