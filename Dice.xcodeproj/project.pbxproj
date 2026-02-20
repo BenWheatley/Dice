@@ -91,6 +91,7 @@
 		D2CE11162F51001600D1CE00 /* RollHistoryModeFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10162F51001600D1CE00 /* RollHistoryModeFilter.swift */; };
 		D2CE11172F51001700D1CE00 /* RollOutcome.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10172F51001700D1CE00 /* RollOutcome.swift */; };
 		D2CE11182F51001800D1CE00 /* RollSessionSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10182F51001800D1CE00 /* RollSessionSummary.swift */; };
+		D4CE11012F52000100D1CE00 /* DiceBackgroundShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = D4CE10012F52000100D1CE00 /* DiceBackgroundShaders.metal */; };
 		C0DE00212F44022100D1CE00 /* DiceNotationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00002F44000100D1CE00 /* DiceNotationParser.swift */; };
 		C0DE00232F44022300D1CE00 /* TrueRandomRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00022F44003200D1CE00 /* TrueRandomRoller.swift */; };
 		C0DE00252F44022500D1CE00 /* IntuitiveRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00042F44005400D1CE00 /* IntuitiveRoller.swift */; };
@@ -245,6 +246,7 @@
 		D2CE10162F51001600D1CE00 /* RollHistoryModeFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollHistoryModeFilter.swift; sourceTree = "<group>"; };
 		D2CE10172F51001700D1CE00 /* RollOutcome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollOutcome.swift; sourceTree = "<group>"; };
 		D2CE10182F51001800D1CE00 /* RollSessionSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollSessionSummary.swift; sourceTree = "<group>"; };
+		D4CE10012F52000100D1CE00 /* DiceBackgroundShaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = DiceBackgroundShaders.metal; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -347,6 +349,7 @@
 				D1CE100A2F50000A00D1CE00 /* DiceStylePreviewViewController.swift */,
 				D1CE10062F50000600D1CE00 /* DiceShaderBackgroundView.swift */,
 				D1CE10032F50000300D1CE00 /* DiceMetalTextureRenderer.swift */,
+				D4CE10012F52000100D1CE00 /* DiceBackgroundShaders.metal */,
 				D1CE100F2F50000F00D1CE00 /* RollHistoryViewController.swift */,
 				D1CE10012F50000100D1CE00 /* DiceCollectionViewCell.swift */,
 				D2CE10012F51000100D1CE00 /* D6FaceOrientation.swift */,
@@ -653,6 +656,7 @@
 				D1CE110A2F50000A00D1CE00 /* DiceStylePreviewViewController.swift in Sources */,
 				D1CE11062F50000600D1CE00 /* DiceShaderBackgroundView.swift in Sources */,
 				D1CE11032F50000300D1CE00 /* DiceMetalTextureRenderer.swift in Sources */,
+				D4CE11012F52000100D1CE00 /* DiceBackgroundShaders.metal in Sources */,
 				D1CE110F2F50000F00D1CE00 /* RollHistoryViewController.swift in Sources */,
 				D1CE11012F50000100D1CE00 /* DiceCollectionViewCell.swift in Sources */,
 				D2CE11012F51000100D1CE00 /* D6FaceOrientation.swift in Sources */,

@@ -164,6 +164,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Add crash/telemetry event aggregation dashboard document for release triage workflow.
 - [x] Enforce single-responsibility split for UI support types by extracting controller-adjacent classes/helpers into dedicated Swift files and wiring target membership.
 - [x] Enforce single-responsibility split for domain/support models by ensuring each remaining multi-type Swift file is decomposed into single-type files with explicit target membership.
+- [x] Move Metal background shader source from inline Swift strings to dedicated `.metal` source files compiled through the default Metal library.
 
 ## 12. watchOS Small-Screen Interface Plan
 
