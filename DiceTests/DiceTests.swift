@@ -1431,7 +1431,9 @@ final class DiceTests: XCTestCase {
 		XCTAssertNil(gloss.shaderModifiers?[.surface])
 		XCTAssertEqual(stone.lightingModel, .lambert)
 		XCTAssertGreaterThan(gloss.shininess, stone.shininess)
-		XCTAssertNotNil(stone.shaderModifiers?[.surface])
+		let stoneSurface = stone.shaderModifiers?[.surface]
+		XCTAssertNotNil(stoneSurface)
+		XCTAssertTrue(stoneSurface?.contains("simplexNoise3D") == true)
 	}
 
 	func testViewModelFormattedTotalsOmitsBoardWarningForSupportedMixedDice() {

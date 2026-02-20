@@ -41,25 +41,23 @@ private enum DiceStoneSurfaceShader {
 	// 3D procedural marble veins in model space to avoid per-face seams.
 	static let surfaceModifier = """
 #pragma body
-float hash31(float3 p) {
-	p = fract(p * 0.1031);
-	p += dot(p, p.yzx + 33.33);
-	return fract((p.x + p.y) * p.z);
+float hash13(float3 p) {
+	return fract(sin(dot(p, float3(127.1, 311.7, 74.7))) * 43758.5453123);
 }
 
-float valueNoise3(float3 p) {
+float simplexNoise3D(float3 p) {
 	float3 i = floor(p);
 	float3 f = fract(p);
 	float3 u = f * f * (3.0 - 2.0 * f);
 
-	float n000 = hash31(i + float3(0.0, 0.0, 0.0));
-	float n100 = hash31(i + float3(1.0, 0.0, 0.0));
-	float n010 = hash31(i + float3(0.0, 1.0, 0.0));
-	float n110 = hash31(i + float3(1.0, 1.0, 0.0));
-	float n001 = hash31(i + float3(0.0, 0.0, 1.0));
-	float n101 = hash31(i + float3(1.0, 0.0, 1.0));
-	float n011 = hash31(i + float3(0.0, 1.0, 1.0));
-	float n111 = hash31(i + float3(1.0, 1.0, 1.0));
+	float n000 = hash13(i + float3(0.0, 0.0, 0.0));
+	float n100 = hash13(i + float3(1.0, 0.0, 0.0));
+	float n010 = hash13(i + float3(0.0, 1.0, 0.0));
+	float n110 = hash13(i + float3(1.0, 1.0, 0.0));
+	float n001 = hash13(i + float3(0.0, 0.0, 1.0));
+	float n101 = hash13(i + float3(1.0, 0.0, 1.0));
+	float n011 = hash13(i + float3(0.0, 1.0, 1.0));
+	float n111 = hash13(i + float3(1.0, 1.0, 1.0));
 
 	float nx00 = mix(n000, n100, u.x);
 	float nx10 = mix(n010, n110, u.x);
@@ -70,33 +68,24 @@ float valueNoise3(float3 p) {
 	return mix(nxy0, nxy1, u.z);
 }
 
-float fbm3(float3 p) {
-	float total = 0.0;
-	float amplitude = 0.5;
-	float frequency = 1.0;
-	for (int octave = 0; octave < 5; octave++) {
-		total += amplitude * valueNoise3(p * frequency);
-		frequency *= 2.03;
-		amplitude *= 0.5;
-	}
-	return total;
-}
-
 float3 modelPos = _surface.position.xyz;
-float3 p = modelPos * 6.4;
-float swirl = fbm3(p + float3(0.0, 3.2, 0.0)) * 4.8;
-float veins = sin((p.x + p.y + p.z) + swirl);
-float veinMask = smoothstep(0.28, 0.94, 0.5 + 0.5 * veins);
-float grain = fbm3(p * 2.0 + 17.0);
-float fleck = smoothstep(0.86, 0.98, valueNoise3(p * 3.7 + 11.0));
+float3 p = modelPos * 5.8;
+float n1 = simplexNoise3D(p * 1.0 + float3(1.7, 2.3, 3.1));
+float n2 = simplexNoise3D(p * 2.1 + float3(7.3, 5.9, 11.2));
+float n3 = simplexNoise3D(p * 3.7 + float3(13.4, 9.1, 4.6));
+float swirl = (n1 * 0.65) + (n2 * 0.28) + (n3 * 0.07);
+float veins = sin((p.x + p.y + p.z) * 1.4 + swirl * 6.2);
+float veinMask = smoothstep(0.36, 0.95, 0.5 + 0.5 * veins);
+float grain = (n1 * 0.52) + (n2 * 0.33) + (n3 * 0.15);
+float fleck = smoothstep(0.88, 0.985, simplexNoise3D(p * 4.6 + 19.0));
 
 float3 base = _surface.diffuse.rgb;
 float luminance = dot(base, float3(0.2126, 0.7152, 0.0722));
-float3 neutral = float3(luminance, luminance, luminance);
-float3 marbleBase = mix(neutral * 0.74, neutral * 1.14, grain);
-float3 veinColor = mix(float3(0.24, 0.24, 0.26), float3(0.42, 0.42, 0.44), grain);
-float3 marble = mix(marbleBase, veinColor, veinMask * 0.62);
-marble += fleck * 0.05;
+float3 neutral = float3(luminance, luminance, luminance) * 0.97;
+float3 marbleBase = mix(neutral * 0.70, neutral * 1.10, grain);
+float3 veinColor = mix(float3(0.22, 0.22, 0.23), float3(0.39, 0.39, 0.41), grain);
+float3 marble = mix(marbleBase, veinColor, veinMask * 0.58);
+marble += fleck * 0.04;
 
 _surface.diffuse.rgb = clamp(marble, 0.0, 1.0);
 _surface.specular.rgb *= 0.72;

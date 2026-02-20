@@ -1,5 +1,5 @@
 - [x] If I have e.g. "3d6" or "3d6(red) 2d6(blue), then tap on the first d6 and choose to change its color, that should ONLY change the color of the first d6, not all d6 in that group
-- [ ] Die Finish "Stone" should use a marble (3d simplex noise) effect. Currently it is solid purple.
+- [x] Die Finish "Stone" should use a marble (3d simplex noise) effect. Currently it is solid purple.
 - [ ] Stats box graph needs labels, gridlines
 - [ ] Tap area for bringing up contextual menu is too small, should be about same size as dice themselves, a little bigger
 - [ ] Remove "Dyslexia Friendly" font
