@@ -36,6 +36,9 @@ These rules apply to all agents working in this repository.
    - each file should have a single, focused responsibility
    - avoid mixing unrelated UI, domain logic, rendering, persistence, and utility concerns in the same file
    - when new work crosses concerns, split types/helpers into appropriately scoped files
+12. Do not require non-standard local tooling:
+   - do not assume user machines have optional CLI tools installed
+   - when suggesting or requiring commands, prefer broadly available defaults or provide a fallback
 
 ## Platform/Feature Scope
 
