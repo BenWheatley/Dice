@@ -5,7 +5,6 @@ enum DiceFaceNumeralFont: String, CaseIterable {
 	case serif
 	case rounded
 	case mono
-	case dyslexiaFriendly
 
 	var menuTitleKey: String {
 		switch self {
@@ -17,8 +16,6 @@ enum DiceFaceNumeralFont: String, CaseIterable {
 			return "font.rounded"
 		case .mono:
 			return "font.mono"
-		case .dyslexiaFriendly:
-			return "font.dyslexiaFriendly"
 		}
 	}
 
@@ -36,11 +33,6 @@ enum DiceFaceNumeralFont: String, CaseIterable {
 		case .mono:
 			guard let descriptor = base.fontDescriptor.withDesign(.monospaced) else { return base }
 			return UIFont(descriptor: descriptor, size: size)
-		case .dyslexiaFriendly:
-			return UIFont(name: "OpenDyslexic3-Regular", size: size)
-				?? UIFont(name: "OpenDyslexic-Regular", size: size)
-				?? UIFont(name: "AtkinsonHyperlegible-Bold", size: size)
-				?? UIFont.systemFont(ofSize: size, weight: .semibold)
 		}
 	}
 
@@ -48,9 +40,6 @@ enum DiceFaceNumeralFont: String, CaseIterable {
 		switch self {
 		case .mono:
 			return UIFont.monospacedSystemFont(ofSize: size, weight: .medium)
-		case .dyslexiaFriendly:
-			return UIFont(name: "AtkinsonHyperlegible-Regular", size: size)
-				?? UIFont.systemFont(ofSize: size, weight: .regular)
 		default:
 			return UIFont.systemFont(ofSize: size, weight: .medium)
 		}

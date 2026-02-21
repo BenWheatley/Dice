@@ -2,7 +2,7 @@
 - [x] Die Finish "Stone" should use a marble (3d simplex noise) effect. Currently it is solid purple.
 - [x] Stats box graph needs labels, gridlines
 - [x] Tap area for bringing up contextual menu is too small, should be about same size as dice themselves, a little bigger
-- [ ] Remove "Dyslexia Friendly" font
+- [x] Remove "Dyslexia Friendly" font
 - [ ] Presets menu doesn't respect dark/light mode
 - [ ] Presets menu should be single-column table view with something like [1d6-4d6, 1d6i, d6(red) + d20(green), d6(blue,serif) + d4(red,monospace)] as defaults, that list should itself also contain whatever custom presets exist, and be able to delete anything including the defaults
 - [ ] Manage Presets menu should be replaced with an add button to the new Presets menu table

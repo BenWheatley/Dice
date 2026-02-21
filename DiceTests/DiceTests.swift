@@ -1642,11 +1642,9 @@ final class DiceTests: XCTestCase {
 		}
 	}
 
-	func testDyslexiaFriendlyFontOptionProvidesNumeralAndCaptionFonts() {
-		let numeral = DiceFaceNumeralFont.dyslexiaFriendly.numeralFont(ofSize: 28)
-		let caption = DiceFaceNumeralFont.dyslexiaFriendly.captionFont(ofSize: 16)
-		XCTAssertGreaterThan(numeral.pointSize, 0)
-		XCTAssertGreaterThan(caption.pointSize, 0)
+	func testFaceNumeralFontOptionsExcludeDyslexiaFriendlyEntry() {
+		let keys = Set(DiceFaceNumeralFont.allCases.map(\.menuTitleKey))
+		XCTFalse(keys.contains("font.dyslexiaFriendly"))
 	}
 
 	func testLargeFaceLabelSizingIncreasesTextureAndFallbackSizes() {
