@@ -7,6 +7,7 @@ class DiceCollectionViewCell: UICollectionViewCell {
 	private var isLocked = false
 	private let lockIconView = UIImageView(image: UIImage(systemName: "lock.fill"))
 	private let menuHitPadding: CGFloat = 10
+	private var hasInstalledFullSizeButtonConstraints = false
 
 	@IBOutlet weak var diceButton: UIButton!
 
@@ -23,11 +24,11 @@ class DiceCollectionViewCell: UICollectionViewCell {
 	override func awakeFromNib() {
 		super.awakeFromNib()
 		configureLockIcon()
+		installFullSizeButtonConstraintsIfNeeded()
 	}
 
 	override func layoutSubviews() {
 		super.layoutSubviews()
-		diceButton.frame = contentView.bounds
 		let iconSize: CGFloat = 18
 		lockIconView.frame = CGRect(x: contentView.bounds.maxX - iconSize - 4, y: 4, width: iconSize, height: iconSize)
 	}
@@ -87,6 +88,34 @@ class DiceCollectionViewCell: UICollectionViewCell {
 		lockIconView.isHidden = true
 		contentView.addSubview(lockIconView)
 		contentView.bringSubviewToFront(lockIconView)
+	}
+
+	private func installFullSizeButtonConstraintsIfNeeded() {
+		guard !hasInstalledFullSizeButtonConstraints else { return }
+		hasInstalledFullSizeButtonConstraints = true
+		let constraintsToReplace = Self.constraintsInvolvingButton(
+			diceButton,
+			cellConstraints: constraints,
+			contentConstraints: contentView.constraints
+		)
+		NSLayoutConstraint.deactivate(constraintsToReplace)
+		diceButton.translatesAutoresizingMaskIntoConstraints = false
+		NSLayoutConstraint.activate([
+			diceButton.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+			diceButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+			diceButton.topAnchor.constraint(equalTo: contentView.topAnchor),
+			diceButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+		])
+	}
+
+	static func constraintsInvolvingButton(
+		_ button: UIView,
+		cellConstraints: [NSLayoutConstraint],
+		contentConstraints: [NSLayoutConstraint]
+	) -> [NSLayoutConstraint] {
+		(cellConstraints + contentConstraints).filter { constraint in
+			(constraint.firstItem as? UIView) == button || (constraint.secondItem as? UIView) == button
+		}
 	}
 
 	static func expandedHitBounds(for bounds: CGRect, padding: CGFloat) -> CGRect {

@@ -1928,6 +1928,31 @@ final class DiceTests: XCTestCase {
 		)
 	}
 
+	func testDiceCellConstraintsInvolvingButtonFiltersOnlyRelatedConstraints() {
+		let button = UIButton(type: .system)
+		let container = UIView()
+		let other = UIView()
+		button.translatesAutoresizingMaskIntoConstraints = false
+		other.translatesAutoresizingMaskIntoConstraints = false
+		container.addSubview(button)
+		container.addSubview(other)
+
+		let buttonCenterX = button.centerXAnchor.constraint(equalTo: container.centerXAnchor)
+		let buttonCenterY = button.centerYAnchor.constraint(equalTo: container.centerYAnchor)
+		let unrelated = other.leadingAnchor.constraint(equalTo: container.leadingAnchor)
+
+		let filtered = DiceCollectionViewCell.constraintsInvolvingButton(
+			button,
+			cellConstraints: [buttonCenterX, unrelated],
+			contentConstraints: [buttonCenterY]
+		)
+
+		XCTAssertEqual(filtered.count, 2)
+		XCTAssertTrue(filtered.contains(buttonCenterX))
+		XCTAssertTrue(filtered.contains(buttonCenterY))
+		XCTAssertFalse(filtered.contains(unrelated))
+	}
+
 	func testGraphBarHeightsScaleRelativeToLargestBin() {
 		let heights = DiceCollectionViewController.graphBarHeights(
 			for: [0, 2, 4],
