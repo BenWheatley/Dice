@@ -156,7 +156,7 @@ final class PresetPickerViewController: UIViewController, UITableViewDataSource,
 	static func mergedPresets(saved: [DiceSavedPreset], initialized: Bool) -> [DiceSavedPreset] {
 		guard !initialized else { return saved }
 		var merged = builtInPresets()
-		let existingNotations = Set(merged.map(\.notation.lowercased))
+		let existingNotations = Set(merged.map { $0.notation.lowercased() })
 		for preset in saved where !existingNotations.contains(preset.notation.lowercased()) {
 			merged.append(preset)
 		}
