@@ -1900,6 +1900,20 @@ final class DiceTests: XCTestCase {
 		XCTAssertNil(nearest)
 	}
 
+	func testContextMenuActivationRadiusUsesExpandedTargetOnly() {
+		let radius = DiceCollectionViewController.contextMenuActivationRadius(
+			cellExtent: 56,
+			boardSideLength: 60
+		)
+		XCTAssertEqual(radius, 96, accuracy: 0.001)
+
+		let largeRadius = DiceCollectionViewController.contextMenuActivationRadius(
+			cellExtent: 80,
+			boardSideLength: 120
+		)
+		XCTAssertEqual(largeRadius, 174, accuracy: 0.001)
+	}
+
 	func testGraphBarHeightsScaleRelativeToLargestBin() {
 		let heights = DiceCollectionViewController.graphBarHeights(
 			for: [0, 2, 4],

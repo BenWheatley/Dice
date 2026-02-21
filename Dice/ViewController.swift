@@ -523,7 +523,14 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.setMotionBlurEnabled(viewModel.motionBlurEnabled)
 
 		let mixed = Set(sideCounts).count > 1
-		let sideLength = boardSideLength(mixed: mixed)
+		let baseScale: CGFloat
+		switch viewModel.boardLayoutPreset {
+		case .compact:
+			baseScale = mixed ? 0.24 : 0.27
+		case .spacious:
+			baseScale = mixed ? 0.19 : 0.22
+		}
+		let sideLength = baseScale * min(collectionView.bounds.width, collectionView.bounds.height)
 		lastBoardSideLength = sideLength
 		let itemCount = collectionView.numberOfItems(inSection: 0)
 		var centers: [CGPoint] = []
@@ -632,7 +639,10 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let candidates: [(index: Int, center: CGPoint, maxDistance: CGFloat)] = collectionView.indexPathsForVisibleItems.compactMap { indexPath in
 			guard let cell = collectionView.cellForItem(at: indexPath) as? DiceCollectionViewCell else { return nil }
 			let center = cell.convert(CGPoint(x: cell.bounds.midX, y: cell.bounds.midY), to: collectionView)
-			let maxDistance = max(max(cell.bounds.width, cell.bounds.height) * 1.35, lastBoardSideLength * 0.90)
+			let maxDistance = Self.contextMenuActivationRadius(
+				cellExtent: max(cell.bounds.width, cell.bounds.height),
+				boardSideLength: lastBoardSideLength
+			)
 			return (index: indexPath.row, center: center, maxDistance: maxDistance)
 		}
 		guard !candidates.isEmpty else { return }
@@ -961,26 +971,10 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		totalsGraphBottomLabel.text = labels.bottom
 	}
 
-	private func boardSideLength(mixed: Bool) -> CGFloat {
-		var candidateSizes: [CGFloat] = []
-		for indexPath in collectionView.indexPathsForVisibleItems {
-			if let cell = collectionView.cellForItem(at: indexPath) {
-				candidateSizes.append(min(cell.bounds.width, cell.bounds.height))
-			} else if let attrs = collectionView.layoutAttributesForItem(at: indexPath) {
-				candidateSizes.append(min(attrs.frame.width, attrs.frame.height))
-			}
-		}
-		if let largestCell = candidateSizes.max(), largestCell > 1 {
-			return largestCell * 0.94
-		}
-		let baseScale: CGFloat
-		switch viewModel.boardLayoutPreset {
-		case .compact:
-			baseScale = mixed ? 0.24 : 0.27
-		case .spacious:
-			baseScale = mixed ? 0.19 : 0.22
-		}
-		return baseScale * min(collectionView.bounds.width, collectionView.bounds.height)
+	static func contextMenuActivationRadius(cellExtent: CGFloat, boardSideLength: CGFloat) -> CGFloat {
+		let fromCell = cellExtent * 1.7
+		let fromBoard = boardSideLength * 1.45
+		return max(96, max(fromCell, fromBoard))
 	}
 
 	private func makeGraphGridLine() -> UIView {
