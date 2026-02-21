@@ -1490,7 +1490,7 @@ final class DiceTests: XCTestCase {
 		let stone = SCNMaterial()
 		DiceDieFinish.matte.apply(to: matte)
 		DiceDieFinish.gloss.apply(to: gloss)
-		DiceDieFinish.stone.apply(to: stone)
+		DiceDieFinish.stone.apply(to: stone, baseColor: .red, dieIndex: 7)
 
 		XCTAssertNil(matte.shaderModifiers?[.surface])
 		XCTAssertEqual(gloss.lightingModel, .blinn)
@@ -1499,16 +1499,20 @@ final class DiceTests: XCTestCase {
 		XCTAssertGreaterThan(gloss.shininess, stone.shininess)
 		let stoneSurface = stone.shaderModifiers?[.surface]
 		XCTAssertNotNil(stoneSurface)
+		XCTAssertEqual(stone.shininess, 0.2007, accuracy: 0.00001)
 		XCTAssertTrue(stoneSurface?.contains("simplexNoise3D") == true)
 		XCTAssertTrue(stoneSurface?.contains("scn_frame.inverseViewTransform") == true)
 		XCTAssertTrue(stoneSurface?.contains("scn_node.inverseModelTransform") == true)
-		XCTAssertTrue(stoneSurface?.contains("scn_node.modelTransform[3][0]") == true)
-		XCTAssertTrue(stoneSurface?.contains("0.9659258") == true)
+		XCTAssertTrue(stoneSurface?.contains("_surface.shininess - 0.20") == true)
+		XCTAssertTrue(stoneSurface?.contains("0.7071068") == true)
 		XCTAssertTrue(stoneSurface?.contains("_surface.position.xyz") == true)
 		XCTAssertTrue(stoneSurface?.contains("(p.x + p.y + p.z)") == true)
-		XCTAssertTrue(stoneSurface?.contains("float3 mainColor") == true)
+		XCTAssertTrue(stoneSurface?.contains("float3 originalDiffuse") == true)
 		XCTAssertTrue(stoneSurface?.contains("float3 contrastColor") == true)
 		XCTAssertTrue(stoneSurface?.contains("mix(mainColor, contrastColor, marblePattern)") == true)
+		XCTAssertTrue(stoneSurface?.contains("symbolMask") == true)
+		XCTAssertTrue(stoneSurface?.contains("symbolMaskFromMetalness") == true)
+		XCTAssertTrue(stoneSurface?.contains("* 4096.0") == true)
 	}
 
 	func testStoneFinishShaderRendersNeutralMarbleVariation() {
@@ -1532,7 +1536,7 @@ final class DiceTests: XCTestCase {
 		let geometry = SCNBox(width: 1.7, height: 1.7, length: 1.7, chamferRadius: 0.18)
 		let material = SCNMaterial()
 		material.diffuse.contents = UIColor.white
-		DiceDieFinish.stone.apply(to: material)
+		DiceDieFinish.stone.apply(to: material, baseColor: .white, dieIndex: 1)
 		geometry.materials = [material]
 		scene.rootNode.addChildNode(SCNNode(geometry: geometry))
 
@@ -1549,6 +1553,43 @@ final class DiceTests: XCTestCase {
 		XCTAssertGreaterThan(stats.luminanceStdDev, 0.012)
 		XCTAssertLessThan(abs(stats.meanR - stats.meanG), 0.15)
 		XCTAssertLessThan(abs(stats.meanG - stats.meanB), 0.15)
+	}
+
+	func testBoardRenderLayoutReturnsCenterForEveryDieWithinBounds() {
+		let bounds = CGRect(x: 0, y: 0, width: 720, height: 520)
+		let layout = DiceCollectionViewController.boardRenderLayout(
+			itemCount: 8,
+			bounds: bounds,
+			layoutPreset: .spacious,
+			mixed: true
+		)
+		XCTAssertEqual(layout.centers.count, 8)
+		XCTAssertGreaterThan(layout.sideLength, 0)
+		for center in layout.centers {
+			XCTAssertGreaterThanOrEqual(center.x, bounds.minX)
+			XCTAssertLessThanOrEqual(center.x, bounds.maxX)
+			XCTAssertGreaterThanOrEqual(center.y, bounds.minY)
+			XCTAssertLessThanOrEqual(center.y, bounds.maxY)
+		}
+	}
+
+	func testBoardRenderLayoutHandlesMixedDiceAtV1UpperBound() {
+		let bounds = CGRect(x: 0, y: 0, width: 1180, height: 760)
+		let layout = DiceCollectionViewController.boardRenderLayout(
+			itemCount: 30,
+			bounds: bounds,
+			layoutPreset: .compact,
+			mixed: true
+		)
+
+		XCTAssertEqual(layout.centers.count, 30)
+		XCTAssertGreaterThan(layout.sideLength, 0)
+		for center in layout.centers {
+			XCTAssertGreaterThanOrEqual(center.x, bounds.minX)
+			XCTAssertLessThanOrEqual(center.x, bounds.maxX)
+			XCTAssertGreaterThanOrEqual(center.y, bounds.minY)
+			XCTAssertLessThanOrEqual(center.y, bounds.maxY)
+		}
 	}
 
 	func testViewModelFormattedTotalsOmitsBoardWarningForSupportedMixedDice() {
@@ -1754,6 +1795,12 @@ final class DiceTests: XCTestCase {
 
 		XCTAssertFalse(roundRed.diffuse === squareRed.diffuse)
 		XCTAssertFalse(roundRed.diffuse === roundBlue.diffuse)
+	}
+
+	func testUnsupportedSideCountUsesRoundedRectGeometryFallback() {
+		let summary = DiceCubeView.debugGeometrySummary(sideCount: 5)
+		XCTAssertEqual(summary.typeName, "SCNBox")
+		XCTAssertEqual(summary.materialCount, 6)
 	}
 
 	func testNonD6NumeralFontsRemainReadableAcrossDieTypeFaceSizes() {

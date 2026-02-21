@@ -12,7 +12,6 @@ import SwiftUI
 private let reuseIdentifier = "DiceCell"
 
 class DiceCollectionViewController: UICollectionViewController, UITextFieldDelegate {
-	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 	private let viewModel = DiceViewModel()
 	private let soundEngine = DiceSoundEngine()
 	private let hapticsEngine = DiceHapticsEngine()
@@ -407,8 +406,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	private func updateDiceBoard(animated: Bool, animatingIndices: Set<Int>? = nil) {
 		let sideCounts = viewModel.diceSideCounts
-		guard !sideCounts.isEmpty,
-			  sideCounts.allSatisfy({ boardSupportedSides.contains($0) }) else {
+		guard !sideCounts.isEmpty else {
 			diceBoardView.isHidden = true
 			return
 		}
@@ -424,37 +422,21 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.setMotionBlurEnabled(viewModel.motionBlurEnabled)
 
 		let mixed = Set(sideCounts).count > 1
-		let baseScale: CGFloat
-		switch viewModel.boardLayoutPreset {
-		case .compact:
-			baseScale = mixed ? 0.24 : 0.27
-		case .spacious:
-			baseScale = mixed ? 0.19 : 0.22
-		}
-		let sideLength = baseScale * min(collectionView.bounds.width, collectionView.bounds.height)
 		let itemCount = collectionView.numberOfItems(inSection: 0)
-		var centers: [CGPoint] = []
+		let layout = Self.boardRenderLayout(
+			itemCount: itemCount,
+			bounds: diceBoardView.bounds,
+			layoutPreset: viewModel.boardLayoutPreset,
+			mixed: mixed
+		)
+		let centers = layout.centers
+		let sideLength = layout.sideLength
 		var values: [Int] = []
 		var boardSideCounts: [Int] = []
-		centers.reserveCapacity(itemCount)
 		values.reserveCapacity(itemCount)
 		boardSideCounts.reserveCapacity(itemCount)
 
 		for row in 0..<itemCount {
-			let indexPath = IndexPath(row: row, section: 0)
-			let centerInBoard: CGPoint
-			if let cell = collectionView.cellForItem(at: indexPath) {
-				centerInBoard = cell.convert(CGPoint(x: cell.bounds.midX, y: cell.bounds.midY), to: diceBoardView)
-			} else if let attrs = collectionView.layoutAttributesForItem(at: indexPath) {
-				let visibleCenter = CGPoint(
-					x: attrs.frame.midX - collectionView.contentOffset.x,
-					y: attrs.frame.midY - collectionView.contentOffset.y
-				)
-				centerInBoard = diceBoardView.convert(visibleCenter, from: collectionView)
-			} else {
-				continue
-			}
-			centers.append(centerInBoard)
 			values.append(viewModel.diceValues[row])
 			boardSideCounts.append(sideCounts[row])
 		}
@@ -486,6 +468,56 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			locked.insert(index)
 		}
 		return locked
+	}
+
+	static func boardRenderLayout(
+		itemCount: Int,
+		bounds: CGRect,
+		layoutPreset: DiceBoardLayoutPreset,
+		mixed: Bool
+	) -> (centers: [CGPoint], sideLength: CGFloat) {
+		guard itemCount > 0, bounds.width > 1, bounds.height > 1 else { return ([], 0) }
+		let spacingFactor: CGFloat
+		switch layoutPreset {
+		case .compact:
+			spacingFactor = mixed ? 0.16 : 0.13
+		case .spacious:
+			spacingFactor = mixed ? 0.26 : 0.22
+		}
+
+		var bestColumns = 1
+		var bestRows = itemCount
+		var bestSideLength: CGFloat = 0
+		for columns in 1...itemCount {
+			let rows = Int(ceil(Double(itemCount) / Double(columns)))
+			let sideByWidth = bounds.width / (CGFloat(columns) + CGFloat(columns + 1) * spacingFactor)
+			let sideByHeight = bounds.height / (CGFloat(rows) + CGFloat(rows + 1) * spacingFactor)
+			let candidate = min(sideByWidth, sideByHeight)
+			if candidate > bestSideLength {
+				bestSideLength = candidate
+				bestColumns = columns
+				bestRows = rows
+			}
+		}
+
+		let sideLength = max(44, min(bestSideLength, min(bounds.width, bounds.height) * 0.34))
+		let gap = sideLength * spacingFactor
+		let rowCapacity = min(bestColumns, itemCount)
+		let totalGridWidth = CGFloat(rowCapacity) * sideLength + CGFloat(max(0, rowCapacity - 1)) * gap
+		let totalGridHeight = CGFloat(bestRows) * sideLength + CGFloat(max(0, bestRows - 1)) * gap
+		let startX = bounds.midX - totalGridWidth / 2 + sideLength / 2
+		let startY = bounds.midY - totalGridHeight / 2 + sideLength / 2
+
+		var centers: [CGPoint] = []
+		centers.reserveCapacity(itemCount)
+		for index in 0..<itemCount {
+			let row = index / bestColumns
+			let column = index % bestColumns
+			let x = startX + CGFloat(column) * (sideLength + gap)
+			let y = startY + CGFloat(row) * (sideLength + gap)
+			centers.append(CGPoint(x: x, y: y))
+		}
+		return (centers, sideLength)
 	}
 
 	private func showInvalidNotationAlert(message: String) {

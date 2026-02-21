@@ -18,6 +18,10 @@ enum DiceDieFinish: String, CaseIterable {
 	}
 
 	func apply(to material: SCNMaterial) {
+		apply(to: material, baseColor: nil, dieIndex: 0)
+	}
+
+	func apply(to material: SCNMaterial, baseColor: UIColor?, dieIndex: Int) {
 		material.shaderModifiers = nil
 		switch self {
 		case .matte:
@@ -31,7 +35,9 @@ enum DiceDieFinish: String, CaseIterable {
 		case .stone:
 			material.lightingModel = .lambert
 			material.specular.contents = UIColor(white: 0.25, alpha: 1.0)
-			material.shininess = 0.20
+			_ = baseColor
+			// Encode a stable per-die seed in shininess (read back by shader).
+			material.shininess = 0.20 + CGFloat(dieIndex) * 0.0001
 			material.shaderModifiers = [.surface: DiceStoneSurfaceShader.surfaceModifier]
 		}
 	}
@@ -71,20 +77,15 @@ return mix(nxy0, nxy1, u.z);
 // Convert surface position (view space) back into this die's local model space.
 float4 worldPos = scn_frame.inverseViewTransform * float4(_surface.position.xyz, 1.0);
 float3 modelPos = (scn_node.inverseModelTransform * worldPos).xyz;
-// Rotate marble sampling basis by 15 degrees to avoid alignment with die planes.
-const float c = 0.9659258; // cos(15 deg)
-const float s = 0.2588190; // sin(15 deg)
+// Rotate marble sampling basis by 45 degrees to keep veins off face-plane alignment.
+const float c = 0.7071068; // cos(45 deg)
+const float s = 0.7071068; // sin(45 deg)
 float3x3 veinBasis = float3x3(
 	float3(c, -s, 0.0),
 	float3(s,  c, 0.0),
 	float3(0.0, 0.0, 1.0)
 );
-float3 nodeWorld = float3(
-	scn_node.modelTransform[3][0],
-	scn_node.modelTransform[3][1],
-	scn_node.modelTransform[3][2]
-);
-float dieSeed = dot(nodeWorld, float3(0.73, 1.21, 1.93)) * 19.0;
+float dieSeed = ((_surface.shininess - 0.20) * 10000.0) * 4096.0;
 float3 seedOffset = float3(dieSeed, dieSeed * 0.41, dieSeed * 0.73);
 float3 p = (veinBasis * modelPos) * 0.34;
 float n1 = simplexNoise3D(p * 0.28 + float3(1.7, 2.3, 3.1) + seedOffset);
@@ -96,7 +97,8 @@ float veinMask = smoothstep(0.50, 0.965, 0.5 + 0.5 * veins);
 float grain = (n1 * 0.56) + (n2 * 0.31) + (n3 * 0.13);
 float fleck = smoothstep(0.95, 0.994, simplexNoise3D(p * 1.45 + 19.0));
 
-float3 base = _surface.diffuse.rgb;
+float3 originalDiffuse = _surface.diffuse.rgb;
+float3 base = originalDiffuse;
 float luminance = dot(base, float3(0.2126, 0.7152, 0.0722));
 float mainShade = mix(0.74, 1.13, grain);
 float3 mainColor = clamp(base * mainShade, 0.0, 1.0);
@@ -105,8 +107,11 @@ float3 darkContrast = base * 0.34;
 float3 contrastColor = luminance > 0.52 ? darkContrast : lightContrast;
 float marblePattern = clamp(veinMask * 0.78 + fleck * 0.22, 0.0, 1.0);
 float3 marble = mix(mainColor, contrastColor, marblePattern);
+float symbolMaskFromRoughness = 1.0 - smoothstep(0.62, 0.74, _surface.roughness);
+float symbolMaskFromMetalness = smoothstep(0.50, 0.72, _surface.metalness);
+float symbolMask = max(symbolMaskFromRoughness, symbolMaskFromMetalness);
 
-_surface.diffuse.rgb = clamp(marble, 0.0, 1.0);
+_surface.diffuse.rgb = mix(clamp(marble, 0.0, 1.0), originalDiffuse, symbolMask);
 _surface.specular.rgb *= 0.72;
 _surface.shininess = max(_surface.shininess, 0.18);
 """

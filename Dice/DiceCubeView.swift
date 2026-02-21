@@ -78,6 +78,7 @@ final class DiceCubeView: UIView {
 	private var needsMeshRefresh = false
 	private var activeRollAnimationToken: Int = 0
 	private var pendingRollAnimationCompletions = 0
+	private let supportedPolyhedralSideCounts: Set<Int> = [4, 6, 8, 10, 12, 20]
 	// D4 numbering is vertex-based and intentionally decoupled from raw mesh indices.
 	private let d4VertexValueByIndex: [Int] = [4, 3, 2, 1]
 	var onRollSettled: (() -> Void)?
@@ -162,7 +163,8 @@ final class DiceCubeView: UIView {
 				sideCount: sideCount,
 				sideLength: sideLength,
 				colorPresetOverride: colorPreset,
-				faceNumeralFontOverride: numeralFont
+				faceNumeralFontOverride: numeralFont,
+				dieIndex: index
 			)
 
 			let showLabel = sideCount != 6
@@ -484,6 +486,12 @@ final class DiceCubeView: UIView {
 		guard let g0, let g1 else { return false }
 		return g0 !== g1
 	}
+
+	static func debugGeometrySummary(sideCount: Int) -> (typeName: String, materialCount: Int) {
+		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
+		let mesh = view.builtMesh(sideLength: 96, sideCount: sideCount)
+		return (typeName: String(describing: type(of: mesh.geometry)), materialCount: mesh.geometry.materials.count)
+	}
 #endif
 
 	private func buildGeometry(sideLength: CGFloat, sideCount: Int) -> BuiltMesh {
@@ -581,6 +589,22 @@ final class DiceCubeView: UIView {
 			let box = D6SceneKitRenderConfig.beveledCube(sideLength: sideLength)
 			box.materials = materials
 			geometry = box
+		} else if !supportedPolyhedralSideCounts.contains(sideCount) {
+			// Non-standard dice are shown as rounded rectangular slabs for now.
+			let slab = SCNBox(
+				width: sideLength * 0.94,
+				height: sideLength * 0.94,
+				length: sideLength * 0.42,
+				chamferRadius: sideLength * 0.08
+			)
+			let fallbackMaterials: [SCNMaterial]
+			if let front = materials.first {
+				fallbackMaterials = (0..<6).map { _ in (front.copy() as? SCNMaterial) ?? front }
+			} else {
+				fallbackMaterials = (0..<6).map { _ in faceMaterial(faceIndex: 0, face: [], sideCount: sideCount) }
+			}
+			slab.materials = fallbackMaterials
+			geometry = slab
 		} else {
 			geometry = SCNGeometry(sources: [vSource, uvSource], elements: elements)
 			geometry.materials = materials
@@ -604,7 +628,8 @@ final class DiceCubeView: UIView {
 		face: [Int],
 		sideCount: Int,
 		fillColor: UIColor? = nil,
-		numeralFont: DiceFaceNumeralFont? = nil
+		numeralFont: DiceFaceNumeralFont? = nil,
+		dieIndex: Int = 0
 	) -> SCNMaterial {
 		let material = SCNMaterial()
 		let value = faceIndex + 1
@@ -649,7 +674,7 @@ final class DiceCubeView: UIView {
 		material.roughness.contents = textureSet.roughness
 		material.locksAmbientWithDiffuse = true
 		material.isDoubleSided = false
-		activeDieFinish.apply(to: material)
+		activeDieFinish.apply(to: material, baseColor: resolvedFillColor, dieIndex: dieIndex)
 		material.specular.contents = textureSet.metalness
 		material.shininess = max(material.shininess, 0.42)
 		return material
@@ -709,14 +734,22 @@ final class DiceCubeView: UIView {
 		sideCount: Int,
 		sideLength: CGFloat,
 		colorPresetOverride: DiceDieColorPreset?,
-		faceNumeralFontOverride: DiceFaceNumeralFont?
+		faceNumeralFontOverride: DiceFaceNumeralFont?,
+		dieIndex: Int
 	) {
 		guard let geometry else { return }
 		let fillColor = (colorPresetOverride ?? activeDieColorPreferences.preset(for: sideCount)).fillColor
 		let font = faceNumeralFontOverride ?? activeFaceNumeralFont
 		let faces = builtMesh(sideLength: sideLength, sideCount: sideCount).materialFaces
 		geometry.materials = faces.enumerated().map { faceIndex, face in
-			faceMaterial(faceIndex: faceIndex, face: face, sideCount: sideCount, fillColor: fillColor, numeralFont: font)
+			faceMaterial(
+				faceIndex: faceIndex,
+				face: face,
+				sideCount: sideCount,
+				fillColor: fillColor,
+				numeralFont: font,
+				dieIndex: dieIndex
+			)
 		}
 	}
 
