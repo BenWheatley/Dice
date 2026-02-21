@@ -1500,6 +1500,9 @@ final class DiceTests: XCTestCase {
 		let stoneSurface = stone.shaderModifiers?[.surface]
 		XCTAssertNotNil(stoneSurface)
 		XCTAssertTrue(stoneSurface?.contains("simplexNoise3D") == true)
+		XCTAssertTrue(stoneSurface?.contains("_surface.position.xyz") == true)
+		XCTAssertTrue(stoneSurface?.contains("(p.x + p.y + p.z)") == true)
+		XCTAssertFalse(stoneSurface?.contains("inverse4x4") == true)
 	}
 
 	func testStoneFinishShaderRendersNeutralMarbleVariation() {

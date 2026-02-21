@@ -33,6 +33,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let presetsButton = UIButton(type: .system)
 	private let menuButton = UIButton(type: .system)
 	private let diceBoardView = DiceCubeView()
+	private let contextMenuHitOverlayView = UIView()
+	private var contextMenuHitZoneLayers: [CAShapeLayer] = []
 	private var controlsContainer: UIView?
 	private var currentPalette = DiceTheme.system.palette
 	private var currentTexture: DiceTableTexture = .neutral
@@ -356,6 +358,10 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		}
 		diceBoardView.setLargeFaceLabelsEnabled(viewModel.largeFaceLabelsEnabled)
 		view.addSubview(diceBoardView)
+		contextMenuHitOverlayView.translatesAutoresizingMaskIntoConstraints = false
+		contextMenuHitOverlayView.backgroundColor = .clear
+		contextMenuHitOverlayView.isUserInteractionEnabled = false
+		view.addSubview(contextMenuHitOverlayView)
 		view.bringSubviewToFront(controlsContainer ?? UIView())
 		view.bringSubviewToFront(totalsContainer)
 		NSLayoutConstraint.activate([
@@ -363,6 +369,10 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			diceBoardView.trailingAnchor.constraint(equalTo: collectionView.trailingAnchor),
 			diceBoardView.topAnchor.constraint(equalTo: collectionView.topAnchor),
 			diceBoardView.bottomAnchor.constraint(equalTo: collectionView.bottomAnchor),
+			contextMenuHitOverlayView.leadingAnchor.constraint(equalTo: collectionView.leadingAnchor),
+			contextMenuHitOverlayView.trailingAnchor.constraint(equalTo: collectionView.trailingAnchor),
+			contextMenuHitOverlayView.topAnchor.constraint(equalTo: collectionView.topAnchor),
+			contextMenuHitOverlayView.bottomAnchor.constraint(equalTo: collectionView.bottomAnchor),
 		])
 	}
 
@@ -509,6 +519,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			  sideCounts.allSatisfy({ boardSupportedSides.contains($0) }) else {
 			lastBoardSideLength = 0
 			diceBoardView.isHidden = true
+			renderContextMenuHitZones(centers: [], radii: [])
 			return
 		}
 
@@ -536,28 +547,35 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		var centers: [CGPoint] = []
 		var values: [Int] = []
 		var boardSideCounts: [Int] = []
+		var hitZoneRadii: [CGFloat] = []
 		centers.reserveCapacity(itemCount)
 		values.reserveCapacity(itemCount)
 		boardSideCounts.reserveCapacity(itemCount)
+		hitZoneRadii.reserveCapacity(itemCount)
 
 		for row in 0..<itemCount {
 			let indexPath = IndexPath(row: row, section: 0)
 			let centerInBoard: CGPoint
+			let cellExtent: CGFloat
 			if let cell = collectionView.cellForItem(at: indexPath) {
 				centerInBoard = cell.convert(CGPoint(x: cell.bounds.midX, y: cell.bounds.midY), to: diceBoardView)
+				cellExtent = max(cell.bounds.width, cell.bounds.height)
 			} else if let attrs = collectionView.layoutAttributesForItem(at: indexPath) {
 				let visibleCenter = CGPoint(
 					x: attrs.frame.midX - collectionView.contentOffset.x,
 					y: attrs.frame.midY - collectionView.contentOffset.y
 				)
 				centerInBoard = diceBoardView.convert(visibleCenter, from: collectionView)
+				cellExtent = max(attrs.frame.width, attrs.frame.height)
 			} else {
 				continue
 			}
 			centers.append(centerInBoard)
 			values.append(viewModel.diceValues[row])
 			boardSideCounts.append(sideCounts[row])
+			hitZoneRadii.append(Self.contextMenuActivationRadius(cellExtent: cellExtent, boardSideLength: sideLength))
 		}
+		renderContextMenuHitZones(centers: centers, radii: hitZoneRadii)
 
 		let colorOverrides = (0..<values.count).map { viewModel.dieColorOverridesByIndex[$0] }
 		let fontOverrides = (0..<values.count).map { viewModel.dieFaceNumeralFontOverridesByIndex[$0] }
@@ -975,6 +993,28 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let fromCell = cellExtent * 1.7
 		let fromBoard = boardSideLength * 1.45
 		return max(96, max(fromCell, fromBoard))
+	}
+
+	private func renderContextMenuHitZones(centers: [CGPoint], radii: [CGFloat]) {
+		for layer in contextMenuHitZoneLayers {
+			layer.removeFromSuperlayer()
+		}
+		contextMenuHitZoneLayers.removeAll()
+		guard centers.count == radii.count else { return }
+		for (index, center) in centers.enumerated() {
+			guard radii.indices.contains(index) else { continue }
+			let radius = radii[index]
+			let frame = CGRect(x: center.x - radius, y: center.y - radius, width: radius * 2, height: radius * 2)
+			let layer = CAShapeLayer()
+			layer.frame = frame
+			layer.path = UIBezierPath(ovalIn: layer.bounds).cgPath
+			layer.strokeColor = UIColor.systemRed.withAlphaComponent(0.52).cgColor
+			layer.fillColor = UIColor.systemRed.withAlphaComponent(0.07).cgColor
+			layer.lineWidth = 1.5
+			layer.lineDashPattern = [6, 4]
+			contextMenuHitOverlayView.layer.addSublayer(layer)
+			contextMenuHitZoneLayers.append(layer)
+		}
 	}
 
 	private func makeGraphGridLine() -> UIView {
