@@ -1474,6 +1474,46 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(stoneSurface?.contains("simplexNoise3D") == true)
 	}
 
+	func testStoneFinishShaderRendersNeutralMarbleVariation() {
+		let scene = SCNScene()
+		let camera = SCNCamera()
+		camera.usesOrthographicProjection = true
+		camera.orthographicScale = 1.25
+		let cameraNode = SCNNode()
+		cameraNode.camera = camera
+		cameraNode.position = SCNVector3(0, 0, 4)
+		scene.rootNode.addChildNode(cameraNode)
+
+		let light = SCNLight()
+		light.type = .omni
+		light.intensity = 1200
+		let lightNode = SCNNode()
+		lightNode.light = light
+		lightNode.position = SCNVector3(1.5, 1.8, 2.8)
+		scene.rootNode.addChildNode(lightNode)
+
+		let geometry = SCNBox(width: 1.7, height: 1.7, length: 1.7, chamferRadius: 0.18)
+		let material = SCNMaterial()
+		material.diffuse.contents = UIColor.white
+		DiceDieFinish.stone.apply(to: material)
+		geometry.materials = [material]
+		scene.rootNode.addChildNode(SCNNode(geometry: geometry))
+
+		let renderer = SCNRenderer(device: nil, options: nil)
+		renderer.scene = scene
+		renderer.pointOfView = cameraNode
+		let image = renderer.snapshot(atTime: 0, with: CGSize(width: 160, height: 160), antialiasingMode: .none)
+
+		guard let stats = pixelStats(in: image, sampleRect: CGRect(x: 50, y: 50, width: 60, height: 60)) else {
+			XCTFail("Expected readable pixel stats from stone finish snapshot")
+			return
+		}
+
+		XCTAssertGreaterThan(stats.luminanceStdDev, 0.012)
+		XCTAssertLessThan(abs(stats.meanR - stats.meanG), 0.15)
+		XCTAssertLessThan(abs(stats.meanG - stats.meanB), 0.15)
+	}
+
 	func testViewModelFormattedTotalsOmitsBoardWarningForSupportedMixedDice() {
 		let suiteName = "DiceTests.viewmodel.board.supportedmixed.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!
@@ -2143,6 +2183,71 @@ final class DiceTests: XCTestCase {
 			hash = hash &* prime
 		}
 		return String(format: "%016llx", hash)
+	}
+
+	private struct PixelStats {
+		let meanR: Double
+		let meanG: Double
+		let meanB: Double
+		let luminanceStdDev: Double
+	}
+
+	private func pixelStats(in image: UIImage, sampleRect: CGRect) -> PixelStats? {
+		guard let cgImage = image.cgImage else { return nil }
+		let width = cgImage.width
+		let height = cgImage.height
+		guard width > 0, height > 0 else { return nil }
+
+		let bytesPerPixel = 4
+		let bytesPerRow = bytesPerPixel * width
+		var pixels = Array(repeating: UInt8(0), count: bytesPerRow * height)
+		guard let context = CGContext(
+			data: &pixels,
+			width: width,
+			height: height,
+			bitsPerComponent: 8,
+			bytesPerRow: bytesPerRow,
+			space: CGColorSpaceCreateDeviceRGB(),
+			bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+		) else { return nil }
+		context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+		let sx = max(0, Int(sampleRect.minX))
+		let sy = max(0, Int(sampleRect.minY))
+		let ex = min(width, Int(sampleRect.maxX))
+		let ey = min(height, Int(sampleRect.maxY))
+		guard sx < ex, sy < ey else { return nil }
+
+		var sumR = 0.0
+		var sumG = 0.0
+		var sumB = 0.0
+		var luminances: [Double] = []
+		luminances.reserveCapacity((ex - sx) * (ey - sy))
+
+		for y in sy..<ey {
+			for x in sx..<ex {
+				let offset = y * bytesPerRow + x * bytesPerPixel
+				let r = Double(pixels[offset]) / 255.0
+				let g = Double(pixels[offset + 1]) / 255.0
+				let b = Double(pixels[offset + 2]) / 255.0
+				sumR += r
+				sumG += g
+				sumB += b
+				luminances.append((0.2126 * r) + (0.7152 * g) + (0.0722 * b))
+			}
+		}
+
+		let count = Double(luminances.count)
+		guard count > 0 else { return nil }
+		let meanR = sumR / count
+		let meanG = sumG / count
+		let meanB = sumB / count
+		let meanL = luminances.reduce(0, +) / count
+		let variance = luminances.reduce(0) { partial, value in
+			let delta = value - meanL
+			return partial + (delta * delta)
+		} / count
+		return PixelStats(meanR: meanR, meanG: meanG, meanB: meanB, luminanceStdDev: sqrt(variance))
 	}
 
 }

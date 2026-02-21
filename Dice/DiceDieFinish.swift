@@ -40,7 +40,6 @@ enum DiceDieFinish: String, CaseIterable {
 private enum DiceStoneSurfaceShader {
 	// 3D procedural marble veins in model space to avoid per-face seams.
 	static let surfaceModifier = """
-#pragma body
 float hash13(float3 p) {
 	return fract(sin(dot(p, float3(127.1, 311.7, 74.7))) * 43758.5453123);
 }
@@ -68,6 +67,7 @@ float simplexNoise3D(float3 p) {
 	return mix(nxy0, nxy1, u.z);
 }
 
+#pragma body
 float3 modelPos = _surface.position.xyz;
 float3 p = modelPos * 5.8;
 float n1 = simplexNoise3D(p * 1.0 + float3(1.7, 2.3, 3.1));
