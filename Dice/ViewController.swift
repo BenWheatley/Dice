@@ -677,7 +677,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		guard distance <= matched.maxDistance else { return }
 		let indexPath = IndexPath(row: matched.index, section: 0)
 		guard let cell = collectionView.cellForItem(at: indexPath) as? DiceCollectionViewCell else { return }
-		cell.diceButton.sendActions(for: .touchUpInside)
+		cell.diceButton.sendActions(for: Self.menuActivationEvent(hasMenu: cell.diceButton.menu != nil))
 	}
 
 	@objc private func toggleAnimations() {
@@ -993,6 +993,10 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let fromCell = cellExtent * 1.7
 		let fromBoard = boardSideLength * 1.45
 		return max(96, max(fromCell, fromBoard))
+	}
+
+	static func menuActivationEvent(hasMenu: Bool) -> UIControl.Event {
+		hasMenu ? .primaryActionTriggered : .touchUpInside
 	}
 
 	private func renderContextMenuHitZones(centers: [CGPoint], radii: [CGFloat]) {

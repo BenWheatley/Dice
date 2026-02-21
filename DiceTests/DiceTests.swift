@@ -1917,6 +1917,17 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(largeRadius, 174, accuracy: 0.001)
 	}
 
+	func testMenuActivationEventPrefersPrimaryActionWhenButtonHasMenu() {
+		XCTAssertEqual(
+			DiceCollectionViewController.menuActivationEvent(hasMenu: true),
+			.primaryActionTriggered
+		)
+		XCTAssertEqual(
+			DiceCollectionViewController.menuActivationEvent(hasMenu: false),
+			.touchUpInside
+		)
+	}
+
 	func testGraphBarHeightsScaleRelativeToLargestBin() {
 		let heights = DiceCollectionViewController.graphBarHeights(
 			for: [0, 2, 4],
