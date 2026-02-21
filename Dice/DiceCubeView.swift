@@ -889,12 +889,10 @@ final class DiceCubeView: UIView {
 			drawLabels(context.cgContext, attrs)
 		}
 
-		let normal = D6SceneKitRenderConfig.makeNormalMap(fromMask: symbolFillMask, strength: 2.0)
-		let metalness = D6SceneKitRenderConfig.scalarMap(size: size, base: 0.0, fills: [(mask: symbolOutlineMask, value: 1.0)])
-		let roughness = D6SceneKitRenderConfig.scalarMap(size: size, base: 0.84, fills: [
-			(mask: symbolFillMask, value: 0.44),
-			(mask: symbolOutlineMask, value: 0.14),
-		])
+		let normal = D6SceneKitRenderConfig.flatNormalMapImage()
+		// Roughness/metalness textures carry masks; final PBR treatment is shader-based.
+		let metalness = symbolOutlineMask
+		let roughness = symbolFillMask
 		return FaceTextureSet(diffuse: diffuse, normal: normal, metalness: metalness, roughness: roughness)
 	}
 
@@ -999,12 +997,10 @@ final class DiceCubeView: UIView {
 			)
 		}
 
-		let normal = D6SceneKitRenderConfig.makeNormalMap(fromMask: symbolFillMask, strength: 2.0)
-		let metalness = D6SceneKitRenderConfig.scalarMap(size: size, base: 0.0, fills: [(mask: symbolOutlineMask, value: 1.0)])
-		let roughness = D6SceneKitRenderConfig.scalarMap(size: size, base: 0.84, fills: [
-			(mask: symbolFillMask, value: 0.44),
-			(mask: symbolOutlineMask, value: 0.14),
-		])
+		let normal = D6SceneKitRenderConfig.flatNormalMapImage()
+		// Roughness/metalness textures carry masks; final PBR treatment is shader-based.
+		let metalness = symbolOutlineMask
+		let roughness = symbolFillMask
 		return FaceTextureSet(diffuse: diffuse, normal: normal, metalness: metalness, roughness: roughness)
 	}
 

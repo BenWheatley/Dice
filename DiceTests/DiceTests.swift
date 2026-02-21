@@ -1492,9 +1492,11 @@ final class DiceTests: XCTestCase {
 		DiceDieFinish.gloss.apply(to: gloss)
 		DiceDieFinish.stone.apply(to: stone, baseColor: .red, dieIndex: 7)
 
-		XCTAssertNil(matte.shaderModifiers?[.surface])
+		let matteSurface = matte.shaderModifiers?[.surface]
+		XCTAssertNotNil(matteSurface)
+		XCTAssertTrue(matteSurface?.contains("dfdx(fillMask)") == true)
 		XCTAssertEqual(gloss.lightingModel, .blinn)
-		XCTAssertNil(gloss.shaderModifiers?[.surface])
+		XCTAssertNotNil(gloss.shaderModifiers?[.surface])
 		XCTAssertEqual(stone.lightingModel, .lambert)
 		XCTAssertGreaterThan(gloss.shininess, stone.shininess)
 		let stoneSurface = stone.shaderModifiers?[.surface]
@@ -1513,6 +1515,7 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(stoneSurface?.contains("symbolMask") == true)
 		XCTAssertTrue(stoneSurface?.contains("symbolMaskFromMetalness") == true)
 		XCTAssertTrue(stoneSurface?.contains("* 4096.0") == true)
+		XCTAssertTrue(stoneSurface?.contains("dfdx(fillMask)") == true)
 	}
 
 	func testStoneFinishShaderRendersNeutralMarbleVariation() {
@@ -1795,6 +1798,12 @@ final class DiceTests: XCTestCase {
 
 		XCTAssertFalse(roundRed.diffuse === squareRed.diffuse)
 		XCTAssertFalse(roundRed.diffuse === roundBlue.diffuse)
+	}
+
+	func testD6FlatNormalMapImageIsSharedTexture() {
+		let first = D6SceneKitRenderConfig.flatNormalMapImage()
+		let second = D6SceneKitRenderConfig.flatNormalMapImage()
+		XCTAssertTrue(first === second)
 	}
 
 	func testUnsupportedSideCountUsesRoundedRectGeometryFallback() {

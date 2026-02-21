@@ -21,6 +21,17 @@ struct D6SceneKitRenderConfig {
 	static let goldOutlineColor = UIColor(red: 0.84, green: 0.70, blue: 0.28, alpha: 1.0)
 	private static var faceTextureSetCache: [FaceTextureCacheKey: FaceTextureSet] = [:]
 	private static let faceTextureSetCacheLock = NSLock()
+	private static let flatNormalTexture: UIImage = {
+		let size = CGSize(width: 1, height: 1)
+		return UIGraphicsImageRenderer(size: size).image { _ in
+			UIColor(red: 0.5, green: 0.5, blue: 1.0, alpha: 1.0).setFill()
+			UIBezierPath(rect: CGRect(origin: .zero, size: size)).fill()
+		}
+	}()
+
+	static func flatNormalMapImage() -> UIImage {
+		flatNormalTexture
+	}
 
 	static func beveledCube(sideLength: CGFloat) -> SCNBox {
 		let box = SCNBox(
@@ -134,14 +145,10 @@ struct D6SceneKitRenderConfig {
 			}
 		}
 
-		let normal = makeNormalMap(fromMask: symbolFillMask, strength: 2.0)
-		let metalness = scalarMap(size: size, base: 0.0, fills: [
-			(mask: symbolOutlineMask, value: 1.0),
-		])
-		let roughness = scalarMap(size: size, base: 0.86, fills: [
-			(mask: symbolFillMask, value: 0.46),
-			(mask: symbolOutlineMask, value: 0.14),
-		])
+		let normal = flatNormalTexture
+		// Roughness/metalness channels carry symbol masks. Final PBR response is shader-driven.
+		let metalness = symbolOutlineMask
+		let roughness = symbolFillMask
 
 		let textureSet = FaceTextureSet(diffuse: diffuse, normal: normal, metalness: metalness, roughness: roughness)
 		faceTextureSetCacheLock.lock()
@@ -182,94 +189,6 @@ struct D6SceneKitRenderConfig {
 			return (r: channel, g: channel, b: channel, a: UInt8((a * 255).rounded()))
 		}
 		return (r: 245, g: 245, b: 245, a: 255)
-	}
-
-	static func makeNormalMap(fromMask maskImage: UIImage, strength: CGFloat = 2.0) -> UIImage {
-		guard let maskCG = maskImage.cgImage else { return UIImage() }
-		let width = maskCG.width
-		let height = maskCG.height
-		guard width > 2, height > 2 else { return maskImage }
-
-		let bytesPerPixel = 1
-		let bytesPerRow = width * bytesPerPixel
-		var maskData = [UInt8](repeating: 0, count: width * height)
-		guard let grayscale = CGContext(
-			data: &maskData,
-			width: width,
-			height: height,
-			bitsPerComponent: 8,
-			bytesPerRow: bytesPerRow,
-			space: CGColorSpaceCreateDeviceGray(),
-			bitmapInfo: CGImageAlphaInfo.none.rawValue
-		) else {
-			return UIImage()
-		}
-		grayscale.draw(maskCG, in: CGRect(x: 0, y: 0, width: width, height: height))
-
-		let normalBytesPerPixel = 4
-		let normalBytesPerRow = width * normalBytesPerPixel
-		var normalData = [UInt8](repeating: 0, count: width * height * normalBytesPerPixel)
-
-		func sample(_ x: Int, _ y: Int) -> Float {
-			let clampedX = max(0, min(width - 1, x))
-			let clampedY = max(0, min(height - 1, y))
-			let index = clampedY * width + clampedX
-			return Float(maskData[index]) / 255.0
-		}
-
-		for y in 0..<height {
-			for x in 0..<width {
-				let left = sample(x - 1, y)
-				let right = sample(x + 1, y)
-				let up = sample(x, y - 1)
-				let down = sample(x, y + 1)
-				let dx = (right - left) * Float(strength)
-				let dy = (down - up) * Float(strength)
-				var nx = -dx
-				var ny = -dy
-				var nz: Float = 1.0
-				let len = max(0.0001, sqrt(nx * nx + ny * ny + nz * nz))
-				nx /= len
-				ny /= len
-				nz /= len
-
-				let pixelIndex = (y * width + x) * normalBytesPerPixel
-				normalData[pixelIndex] = UInt8(max(0, min(255, Int((nx * 0.5 + 0.5) * 255.0))))
-				normalData[pixelIndex + 1] = UInt8(max(0, min(255, Int((ny * 0.5 + 0.5) * 255.0))))
-				normalData[pixelIndex + 2] = UInt8(max(0, min(255, Int((nz * 0.5 + 0.5) * 255.0))))
-				normalData[pixelIndex + 3] = 255
-			}
-		}
-
-		guard let colorContext = CGContext(
-			data: &normalData,
-			width: width,
-			height: height,
-			bitsPerComponent: 8,
-			bytesPerRow: normalBytesPerRow,
-			space: CGColorSpace(name: CGColorSpace.sRGB) ?? CGColorSpaceCreateDeviceRGB(),
-			bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-		),
-		let normalCG = colorContext.makeImage() else {
-			return UIImage()
-		}
-		return UIImage(cgImage: normalCG)
-	}
-
-	static func scalarMap(size: CGSize, base: CGFloat, fills: [(mask: UIImage, value: CGFloat)]) -> UIImage {
-		let rect = CGRect(origin: .zero, size: size)
-		return UIGraphicsImageRenderer(size: size).image { context in
-			UIColor(white: base, alpha: 1.0).setFill()
-			context.cgContext.fill(rect)
-			for fill in fills {
-				guard let mask = fill.mask.cgImage else { continue }
-				context.cgContext.saveGState()
-				context.cgContext.clip(to: rect, mask: mask)
-				UIColor(white: fill.value, alpha: 1.0).setFill()
-				context.cgContext.fill(rect)
-				context.cgContext.restoreGState()
-			}
-		}
 	}
 
 	private static func renderMask(size: CGSize, draw: (CGContext) -> Void) -> UIImage {

@@ -22,7 +22,6 @@ enum DiceDieFinish: String, CaseIterable {
 	}
 
 	func apply(to material: SCNMaterial, baseColor: UIColor?, dieIndex: Int) {
-		material.shaderModifiers = nil
 		switch self {
 		case .matte:
 			material.lightingModel = .lambert
@@ -38,14 +37,36 @@ enum DiceDieFinish: String, CaseIterable {
 			_ = baseColor
 			// Encode a stable per-die seed in shininess (read back by shader).
 			material.shininess = 0.20 + CGFloat(dieIndex) * 0.0001
-			material.shaderModifiers = [.surface: DiceStoneSurfaceShader.surfaceModifier]
 		}
+		material.shaderModifiers = [.surface: DiceSurfaceShader.surfaceModifier(includeStone: self == .stone)]
 	}
 }
 
-private enum DiceStoneSurfaceShader {
-	// 3D procedural marble veins in model space to avoid per-face seams.
-	static let surfaceModifier = """
+private enum DiceSurfaceShader {
+	static func surfaceModifier(includeStone: Bool) -> String {
+		let stoneBody = includeStone ? stoneSurfaceBody : ""
+		return commonSurfaceHeader + """
+
+#pragma body
+float fillMask = _surface.roughness;
+float outlineMask = _surface.metalness;
+float symbolMaskFromRoughness = smoothstep(0.18, 0.92, fillMask);
+float symbolMaskFromMetalness = smoothstep(0.10, 0.82, outlineMask);
+float symbolMask = clamp(max(symbolMaskFromRoughness, symbolMaskFromMetalness), 0.0, 1.0);
+
+float dx = dfdx(fillMask);
+float dy = dfdy(fillMask);
+_surface.normal = normalize(_surface.normal + float3(-dx * 0.95, -dy * 0.95, 0.0));
+
+float baseRoughness = mix(0.86, 0.46, symbolMaskFromRoughness);
+_surface.roughness = mix(baseRoughness, 0.14, symbolMaskFromMetalness);
+_surface.metalness = symbolMaskFromMetalness;
+
+""" + stoneBody + """
+"""
+	}
+
+	private static let commonSurfaceHeader = """
 float hash13(float3 p) {
 	return fract(sin(dot(p, float3(127.1, 311.7, 74.7))) * 43758.5453123);
 }
@@ -69,11 +90,13 @@ float simplexNoise3D(float3 p) {
 	float nx01 = mix(n001, n101, u.x);
 	float nx11 = mix(n011, n111, u.x);
 	float nxy0 = mix(nx00, nx10, u.y);
-float nxy1 = mix(nx01, nx11, u.y);
-return mix(nxy0, nxy1, u.z);
+	float nxy1 = mix(nx01, nx11, u.y);
+	return mix(nxy0, nxy1, u.z);
 }
+"""
 
-#pragma body
+	// 3D procedural marble veins in model space to avoid per-face seams.
+	private static let stoneSurfaceBody = """
 // Convert surface position (view space) back into this die's local model space.
 float4 worldPos = scn_frame.inverseViewTransform * float4(_surface.position.xyz, 1.0);
 float3 modelPos = (scn_node.inverseModelTransform * worldPos).xyz;
@@ -107,9 +130,6 @@ float3 darkContrast = base * 0.34;
 float3 contrastColor = luminance > 0.52 ? darkContrast : lightContrast;
 float marblePattern = clamp(veinMask * 0.78 + fleck * 0.22, 0.0, 1.0);
 float3 marble = mix(mainColor, contrastColor, marblePattern);
-float symbolMaskFromRoughness = 1.0 - smoothstep(0.62, 0.74, _surface.roughness);
-float symbolMaskFromMetalness = smoothstep(0.50, 0.72, _surface.metalness);
-float symbolMask = max(symbolMaskFromRoughness, symbolMaskFromMetalness);
 
 _surface.diffuse.rgb = mix(clamp(marble, 0.0, 1.0), originalDiffuse, symbolMask);
 _surface.specular.rgb *= 0.72;
