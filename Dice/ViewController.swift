@@ -23,6 +23,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let totalsGraphStack = UIStackView()
 	private let totalsGraphGrid = UIView()
 	private let totalsGraphYAxisLabels = UIStackView()
+	private let totalsGraphYAxisTitleLabel = UILabel()
 	private let totalsGraphTopLabel = UILabel()
 	private let totalsGraphMidLabel = UILabel()
 	private let totalsGraphBottomLabel = UILabel()
@@ -227,6 +228,12 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		totalsGraphYAxisLabels.distribution = .equalSpacing
 		totalsGraphYAxisLabels.alignment = .trailing
 		totalsGraphYAxisLabels.isUserInteractionEnabled = false
+		totalsGraphYAxisTitleLabel.translatesAutoresizingMaskIntoConstraints = false
+		totalsGraphYAxisTitleLabel.font = UIFont.preferredFont(forTextStyle: .caption2)
+		totalsGraphYAxisTitleLabel.adjustsFontForContentSizeCategory = true
+		totalsGraphYAxisTitleLabel.textColor = currentPalette.secondaryTextColor
+		totalsGraphYAxisTitleLabel.textAlignment = .right
+		totalsGraphYAxisTitleLabel.text = NSLocalizedString("stats.graph.yAxis", comment: "Graph y-axis title")
 		for label in [totalsGraphTopLabel, totalsGraphMidLabel, totalsGraphBottomLabel] {
 			label.font = UIFont.preferredFont(forTextStyle: .caption2)
 			label.adjustsFontForContentSizeCategory = true
@@ -260,6 +267,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 		totalsContainer.addSubview(totalsLabel)
 		totalsContainer.addSubview(totalsGraphGrid)
+		totalsContainer.addSubview(totalsGraphYAxisTitleLabel)
 		totalsContainer.addSubview(totalsGraphYAxisLabels)
 		totalsContainer.addSubview(totalsGraphStack)
 
@@ -287,8 +295,11 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			totalsLabel.leadingAnchor.constraint(equalTo: totalsContainer.leadingAnchor, constant: 8),
 			totalsLabel.topAnchor.constraint(equalTo: totalsContainer.topAnchor, constant: 8),
 			totalsLabel.trailingAnchor.constraint(equalTo: totalsContainer.trailingAnchor, constant: -8),
+			totalsGraphYAxisTitleLabel.leadingAnchor.constraint(equalTo: totalsContainer.leadingAnchor, constant: 8),
+			totalsGraphYAxisTitleLabel.widthAnchor.constraint(equalToConstant: 36),
+			totalsGraphYAxisTitleLabel.bottomAnchor.constraint(equalTo: totalsGraphYAxisLabels.topAnchor, constant: -2),
 			totalsGraphYAxisLabels.leadingAnchor.constraint(equalTo: totalsContainer.leadingAnchor, constant: 8),
-			totalsGraphYAxisLabels.widthAnchor.constraint(equalToConstant: 26),
+			totalsGraphYAxisLabels.widthAnchor.constraint(equalToConstant: 36),
 			totalsGraphYAxisLabels.topAnchor.constraint(equalTo: totalsLabel.bottomAnchor, constant: 8),
 			totalsGraphYAxisLabels.bottomAnchor.constraint(equalTo: totalsContainer.bottomAnchor, constant: -8),
 			totalsGraphGrid.leadingAnchor.constraint(equalTo: totalsGraphYAxisLabels.trailingAnchor, constant: 6),
@@ -1394,9 +1405,13 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		controlsContainer?.backgroundColor = palette.panelBackgroundColor
 		totalsContainer.backgroundColor = palette.panelBackgroundColor
 		totalsLabel.textColor = palette.secondaryTextColor
+		totalsGraphYAxisTitleLabel.textColor = palette.secondaryTextColor
 		totalsGraphTopLabel.textColor = palette.secondaryTextColor
 		totalsGraphMidLabel.textColor = palette.secondaryTextColor
 		totalsGraphBottomLabel.textColor = palette.secondaryTextColor
+		for gridLine in totalsGraphGrid.subviews {
+			gridLine.backgroundColor = UIColor.separator.withAlphaComponent(0.32)
+		}
 		for bar in totalsBarViews {
 			bar.backgroundColor = palette.primaryTextColor
 		}

@@ -1,5 +1,5 @@
 - [x] Context menu to change die color currently only works with single die groups. If I have 4d6(red), open menu on second die, change colour to blue, I should get d6(red) + d6(blue) + 2d6(red)
 - [x] Die Finish "Stone" should use a marble (3d simplex noise) effect. Currently it is solid purple.
-- [ ] Stats box graph needs labels (including y-axis!), gridlines
+- [x] Stats box graph needs labels (including y-axis!), gridlines
 - [ ] Tap area for bringing up contextual menu is too small, should be about same size as dice themselves, a little bigger
 - [ ] Presets menu only has swipe button for delete, should also have swipe button for edit
