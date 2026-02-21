@@ -1500,10 +1500,11 @@ final class DiceTests: XCTestCase {
 		let stoneSurface = stone.shaderModifiers?[.surface]
 		XCTAssertNotNil(stoneSurface)
 		XCTAssertTrue(stoneSurface?.contains("simplexNoise3D") == true)
-		XCTAssertTrue(stoneSurface?.contains("scn_node.modelTransform") == true)
-		XCTAssertTrue(stoneSurface?.contains("inverse4x4") == true)
+		XCTAssertTrue(stoneSurface?.contains("float3 modelPos = _surface.position.xyz;") == true)
 		XCTAssertTrue(stoneSurface?.contains("_surface.position.xyz") == true)
 		XCTAssertTrue(stoneSurface?.contains("(p.x + p.y + p.z)") == true)
+		XCTAssertTrue(stoneSurface?.contains("tintStrength") == true)
+		XCTAssertTrue(stoneSurface?.contains("float3 hue") == true)
 	}
 
 	func testStoneFinishShaderRendersNeutralMarbleVariation() {
@@ -1901,56 +1902,18 @@ final class DiceTests: XCTestCase {
 		XCTAssertFalse(filtered.contains(unrelated))
 	}
 
-	func testGraphBarHeightsScaleRelativeToLargestBin() {
-		let heights = DiceCollectionViewController.graphBarHeights(
-			for: [0, 2, 4],
-			maxBarHeight: 46,
-			minBarHeight: 2
-		)
-		XCTAssertEqual(heights.count, 3)
-		XCTAssertEqual(heights[0], 2, accuracy: 0.001)
-		XCTAssertEqual(heights[1], 25, accuracy: 0.001)
-		XCTAssertEqual(heights[2], 48, accuracy: 0.001)
+	func testGraphPointsProvideAllFacesAndCounts() {
+		let points = DiceRollDistributionChartData.points(from: [0, 2, 4])
+		XCTAssertEqual(points, [
+			DiceRollDistributionPoint(face: 1, count: 0),
+			DiceRollDistributionPoint(face: 2, count: 2),
+			DiceRollDistributionPoint(face: 3, count: 4),
+		])
 	}
 
-	func testGraphBarHeightsUseMinimumWhenAllBinsAreZero() {
-		let heights = DiceCollectionViewController.graphBarHeights(
-			for: [0, 0, 0],
-			maxBarHeight: 46,
-			minBarHeight: 2
-		)
-		XCTAssertEqual(heights, [2, 2, 2])
-	}
-
-	func testGraphAxisLabelsReflectTopMidBottomScale() {
-		let labels = DiceCollectionViewController.graphAxisLabels(maxCount: 9)
-		XCTAssertEqual(labels.top, "9")
-		XCTAssertEqual(labels.mid, "5")
-		XCTAssertEqual(labels.bottom, "0")
-	}
-
-	func testGraphAxisLabelsRemainZeroWhenNoSamplesPresent() {
-		let labels = DiceCollectionViewController.graphAxisLabels(maxCount: 0)
-		XCTAssertEqual(labels.top, "0")
-		XCTAssertEqual(labels.mid, "0")
-		XCTAssertEqual(labels.bottom, "0")
-	}
-
-	func testGraphAxisLabelsAvoidDuplicateTopWhenMaxCountIsOne() {
-		let labels = DiceCollectionViewController.graphAxisLabels(maxCount: 1)
-		XCTAssertEqual(labels.top, "1")
-		XCTAssertEqual(labels.mid, "0")
-		XCTAssertEqual(labels.bottom, "0")
-	}
-
-	func testGraphFaceLabelsProvideAllBins() {
-		let labels = DiceCollectionViewController.graphFaceLabels(binCount: 6)
-		XCTAssertEqual(labels, ["1", "2", "3", "4", "5", "6"])
-	}
-
-	func testGraphFaceLabelsAreEmptyWhenNoBinsPresent() {
-		let labels = DiceCollectionViewController.graphFaceLabels(binCount: 0)
-		XCTAssertTrue(labels.isEmpty)
+	func testGraphPointsAreEmptyWhenNoBinsPresent() {
+		let points = DiceRollDistributionChartData.points(from: [])
+		XCTAssertTrue(points.isEmpty)
 	}
 
 	func testWatchViewModelRepeatLastRollUsesPreviousModeConfiguration() {
