@@ -71,10 +71,25 @@ return mix(nxy0, nxy1, u.z);
 // Convert surface position (view space) back into this die's local model space.
 float4 worldPos = scn_frame.inverseViewTransform * float4(_surface.position.xyz, 1.0);
 float3 modelPos = (scn_node.inverseModelTransform * worldPos).xyz;
-float3 p = modelPos * 0.34;
-float n1 = simplexNoise3D(p * 0.28 + float3(1.7, 2.3, 3.1));
-float n2 = simplexNoise3D(p * 0.58 + float3(7.3, 5.9, 11.2));
-float n3 = simplexNoise3D(p * 0.96 + float3(13.4, 9.1, 4.6));
+// Rotate marble sampling basis by 15 degrees to avoid alignment with die planes.
+const float c = 0.9659258; // cos(15 deg)
+const float s = 0.2588190; // sin(15 deg)
+float3x3 veinBasis = float3x3(
+	float3(c, -s, 0.0),
+	float3(s,  c, 0.0),
+	float3(0.0, 0.0, 1.0)
+);
+float3 nodeWorld = float3(
+	scn_node.modelTransform[3][0],
+	scn_node.modelTransform[3][1],
+	scn_node.modelTransform[3][2]
+);
+float dieSeed = dot(nodeWorld, float3(0.73, 1.21, 1.93)) * 19.0;
+float3 seedOffset = float3(dieSeed, dieSeed * 0.41, dieSeed * 0.73);
+float3 p = (veinBasis * modelPos) * 0.34;
+float n1 = simplexNoise3D(p * 0.28 + float3(1.7, 2.3, 3.1) + seedOffset);
+float n2 = simplexNoise3D(p * 0.58 + float3(7.3, 5.9, 11.2) + seedOffset * 0.67);
+float n3 = simplexNoise3D(p * 0.96 + float3(13.4, 9.1, 4.6) + seedOffset * 1.29);
 float swirl = (n1 * 0.62) + (n2 * 0.28) + (n3 * 0.10);
 float veins = sin((p.x + p.y + p.z) * 0.24 + swirl * 3.1);
 float veinMask = smoothstep(0.50, 0.965, 0.5 + 0.5 * veins);

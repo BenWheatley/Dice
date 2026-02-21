@@ -1306,9 +1306,9 @@ final class DiceTests: XCTestCase {
 		)
 
 		XCTAssertEqual(viewModel.d6PipStyle, .round)
-		viewModel.setD6PipStyle(.inset)
-		XCTAssertEqual(viewModel.d6PipStyle, .inset)
-		XCTAssertEqual(preferencesStore.load().d6PipStyle, .inset)
+		viewModel.setD6PipStyle(.square)
+		XCTAssertEqual(viewModel.d6PipStyle, .square)
+		XCTAssertEqual(preferencesStore.load().d6PipStyle, .square)
 	}
 
 	func testViewModelFaceNumeralFontSelectionPersistsToPreferences() {
@@ -1453,7 +1453,7 @@ final class DiceTests: XCTestCase {
 		viewModel.setDieFinish(.stone)
 		viewModel.setEdgeOutlinesEnabled(true)
 		viewModel.setDieColorPreset(.sapphire, for: 20)
-		viewModel.setD6PipStyle(.inset)
+		viewModel.setD6PipStyle(.square)
 		viewModel.setFaceNumeralFont(.mono)
 		viewModel.setLargeFaceLabelsEnabled(true)
 		viewModel.setMotionBlurEnabled(true)
@@ -1502,6 +1502,8 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(stoneSurface?.contains("simplexNoise3D") == true)
 		XCTAssertTrue(stoneSurface?.contains("scn_frame.inverseViewTransform") == true)
 		XCTAssertTrue(stoneSurface?.contains("scn_node.inverseModelTransform") == true)
+		XCTAssertTrue(stoneSurface?.contains("scn_node.modelTransform[3][0]") == true)
+		XCTAssertTrue(stoneSurface?.contains("0.9659258") == true)
 		XCTAssertTrue(stoneSurface?.contains("_surface.position.xyz") == true)
 		XCTAssertTrue(stoneSurface?.contains("(p.x + p.y + p.z)") == true)
 		XCTAssertTrue(stoneSurface?.contains("float3 mainColor") == true)
@@ -1712,18 +1714,13 @@ final class DiceTests: XCTestCase {
 	func testD6PipStylesGenerateDistinctTexturesForSameFaceValue() {
 		let round = D6SceneKitRenderConfig.faceTexture(value: 5, pipStyle: .round)
 		let square = D6SceneKitRenderConfig.faceTexture(value: 5, pipStyle: .square)
-		let inset = D6SceneKitRenderConfig.faceTexture(value: 5, pipStyle: .inset)
 
 		let roundData = round.pngData()
 		let squareData = square.pngData()
-		let insetData = inset.pngData()
 
 		XCTAssertNotNil(roundData)
 		XCTAssertNotNil(squareData)
-		XCTAssertNotNil(insetData)
 		XCTAssertNotEqual(roundData, squareData)
-		XCTAssertNotEqual(roundData, insetData)
-		XCTAssertNotEqual(squareData, insetData)
 	}
 
 	func testD6PipFaceTexturesAreDistinctAcrossAllFaceValues() {

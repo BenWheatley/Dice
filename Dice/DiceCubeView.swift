@@ -35,6 +35,13 @@ final class DiceCubeView: UIView {
 		let materialFaces: [[Int]]
 	}
 
+	private struct FaceTextureSet {
+		let diffuse: UIImage
+		let normal: UIImage
+		let metalness: UIImage
+		let roughness: UIImage
+	}
+
 	private let scnView = SCNView()
 	private let scene = SCNScene()
 	private let cameraNode = SCNNode()
@@ -575,21 +582,42 @@ final class DiceCubeView: UIView {
 		return mesh
 	}
 
-	private func faceMaterial(faceIndex: Int, face: [Int], sideCount: Int, fillColor: UIColor? = nil, numeralFont: DiceFaceNumeralFont? = nil) -> SCNMaterial {
+	private func faceMaterial(
+		faceIndex: Int,
+		face: [Int],
+		sideCount: Int,
+		fillColor: UIColor? = nil,
+		numeralFont: DiceFaceNumeralFont? = nil
+	) -> SCNMaterial {
 		let material = SCNMaterial()
 		let value = faceIndex + 1
 		let resolvedFillColor = fillColor ?? activeDieColorPreferences.fillColor(for: sideCount)
 		let resolvedFont = numeralFont ?? activeFaceNumeralFont
+		let textureSet: FaceTextureSet
 		if sideCount == 6 {
-			material.diffuse.contents = D6SceneKitRenderConfig.faceTexture(value: value, fillColor: resolvedFillColor, pipStyle: activeD6PipStyle)
+			let d6TextureSet = D6SceneKitRenderConfig.faceTextureSet(value: value, fillColor: resolvedFillColor, pipStyle: activeD6PipStyle)
+			textureSet = FaceTextureSet(
+				diffuse: d6TextureSet.diffuse,
+				normal: d6TextureSet.normal,
+				metalness: d6TextureSet.metalness,
+				roughness: d6TextureSet.roughness
+			)
 		} else if sideCount == 4 {
-			material.diffuse.contents = d4FaceTexture(vertexLabels: d4VertexLabels(forFace: face), fillColor: resolvedFillColor, numeralFont: resolvedFont)
+			textureSet = d4FaceTextureSet(vertexLabels: d4VertexLabels(forFace: face), fillColor: resolvedFillColor, numeralFont: resolvedFont)
 		} else {
-			material.diffuse.contents = faceValueTexture(value: value, sideCount: sideCount, fillColor: resolvedFillColor, numeralFont: resolvedFont)
+			textureSet = faceValueTextureSet(value: value, sideCount: sideCount, fillColor: resolvedFillColor, numeralFont: resolvedFont)
 		}
+		material.diffuse.contents = textureSet.diffuse
+		material.normal.contents = textureSet.normal
+		material.normal.intensity = 0.95
+		material.specular.contents = textureSet.metalness
+		material.metalness.contents = textureSet.metalness
+		material.roughness.contents = textureSet.roughness
 		material.locksAmbientWithDiffuse = true
 		material.isDoubleSided = false
 		activeDieFinish.apply(to: material)
+		material.specular.contents = textureSet.metalness
+		material.shininess = max(material.shininess, 0.42)
 		return material
 	}
 
@@ -674,16 +702,57 @@ final class DiceCubeView: UIView {
 		return [top.vertex, left.vertex, right.vertex]
 	}
 
-	private func d4FaceTexture(vertexLabels: [Int], fillColor: UIColor, numeralFont: DiceFaceNumeralFont) -> UIImage {
+	private func d4FaceTextureSet(vertexLabels: [Int], fillColor: UIColor, numeralFont: DiceFaceNumeralFont) -> FaceTextureSet {
 		let size = CGSize(width: 256, height: 256)
-		let renderer = UIGraphicsImageRenderer(size: size)
-		return renderer.image { ctx in
-			let rect = CGRect(origin: .zero, size: size)
-			let style = DiceFaceContrast.style(for: fillColor)
-			ctx.cgContext.setFillColor(style.fillColor.cgColor)
-			ctx.cgContext.fill(rect)
+		let rect = CGRect(origin: .zero, size: size)
+		let style = DiceFaceContrast.style(for: fillColor)
+		let trianglePoints = d4TrianglePoints(size: size)
+		let placements = d4LabelPlacements(triangle: trianglePoints)
+		let numeralSize = DiceFaceLabelSizing.textureNumeralPointSize(sideCount: 4, large: activeLargeFaceLabelsEnabled)
 
-			let trianglePoints = d4TrianglePoints(size: size)
+		let drawLabels: (_ context: CGContext, _ attributes: [NSAttributedString.Key: Any]) -> Void = { context, attributes in
+			for (index, placement) in placements.enumerated() where index < vertexLabels.count {
+				let text = "\(vertexLabels[index])" as NSString
+				let textSize = text.size(withAttributes: attributes)
+				let textRect = CGRect(
+					x: -textSize.width / 2,
+					y: -textSize.height / 2,
+					width: textSize.width,
+					height: textSize.height
+				)
+				context.saveGState()
+				context.translateBy(x: placement.position.x, y: placement.position.y)
+				context.rotate(by: placement.angle)
+				text.draw(in: textRect, withAttributes: attributes)
+				context.restoreGState()
+			}
+		}
+
+		let symbolFillMask = UIGraphicsImageRenderer(size: size).image { context in
+			UIColor.black.setFill()
+			context.cgContext.fill(rect)
+			let attrs: [NSAttributedString.Key: Any] = [
+				.font: numeralFont.numeralFont(ofSize: numeralSize),
+				.foregroundColor: UIColor.white
+			]
+			drawLabels(context.cgContext, attrs)
+		}
+		let symbolOutlineMask = UIGraphicsImageRenderer(size: size).image { context in
+			UIColor.black.setFill()
+			context.cgContext.fill(rect)
+			let attrs: [NSAttributedString.Key: Any] = [
+				.font: numeralFont.numeralFont(ofSize: numeralSize),
+				.foregroundColor: UIColor.clear,
+				.strokeColor: UIColor.white,
+				.strokeWidth: 2.2
+			]
+			drawLabels(context.cgContext, attrs)
+		}
+
+		let diffuse = UIGraphicsImageRenderer(size: size).image { context in
+			context.cgContext.setFillColor(style.fillColor.cgColor)
+			context.cgContext.fill(rect)
+
 			let triangle = UIBezierPath()
 			triangle.move(to: trianglePoints[0])
 			triangle.addLine(to: trianglePoints[1])
@@ -695,29 +764,22 @@ final class DiceCubeView: UIView {
 			triangle.lineWidth = 6
 			triangle.stroke()
 
-			let placements = d4LabelPlacements(triangle: trianglePoints)
 			let attrs: [NSAttributedString.Key: Any] = [
-				.font: numeralFont.numeralFont(
-					ofSize: DiceFaceLabelSizing.textureNumeralPointSize(sideCount: 4, large: activeLargeFaceLabelsEnabled)
-				),
-				.foregroundColor: style.primaryInkColor
+				.font: numeralFont.numeralFont(ofSize: numeralSize),
+				.foregroundColor: style.primaryInkColor,
+				.strokeColor: D6SceneKitRenderConfig.goldOutlineColor,
+				.strokeWidth: -2.2
 			]
-			for (index, placement) in placements.enumerated() where index < vertexLabels.count {
-				let text = "\(vertexLabels[index])" as NSString
-				let textSize = text.size(withAttributes: attrs)
-				let textRect = CGRect(
-					x: -textSize.width / 2,
-					y: -textSize.height / 2,
-					width: textSize.width,
-					height: textSize.height
-				)
-				ctx.cgContext.saveGState()
-				ctx.cgContext.translateBy(x: placement.position.x, y: placement.position.y)
-				ctx.cgContext.rotate(by: placement.angle)
-				text.draw(in: textRect, withAttributes: attrs)
-				ctx.cgContext.restoreGState()
-			}
+			drawLabels(context.cgContext, attrs)
 		}
+
+		let normal = D6SceneKitRenderConfig.makeNormalMap(fromMask: symbolFillMask, strength: 2.0)
+		let metalness = D6SceneKitRenderConfig.scalarMap(size: size, base: 0.0, fills: [(mask: symbolOutlineMask, value: 1.0)])
+		let roughness = D6SceneKitRenderConfig.scalarMap(size: size, base: 0.84, fills: [
+			(mask: symbolFillMask, value: 0.44),
+			(mask: symbolOutlineMask, value: 0.14),
+		])
+		return FaceTextureSet(diffuse: diffuse, normal: normal, metalness: metalness, roughness: roughness)
 	}
 
 	private func d4TrianglePoints(size: CGSize) -> [CGPoint] {
@@ -746,40 +808,88 @@ final class DiceCubeView: UIView {
 		}
 	}
 
-	private func faceValueTexture(value: Int, sideCount: Int, fillColor: UIColor, numeralFont: DiceFaceNumeralFont) -> UIImage {
+	private func faceValueTextureSet(value: Int, sideCount: Int, fillColor: UIColor, numeralFont: DiceFaceNumeralFont) -> FaceTextureSet {
 		let size = CGSize(width: 256, height: 256)
-		let renderer = UIGraphicsImageRenderer(size: size)
-		return renderer.image { ctx in
-			let rect = CGRect(origin: .zero, size: size)
-			let style = DiceFaceContrast.style(for: fillColor)
-			ctx.cgContext.setFillColor(style.fillColor.cgColor)
-			ctx.cgContext.fill(rect)
-			ctx.cgContext.setStrokeColor(style.borderColor.cgColor)
-			ctx.cgContext.setLineWidth(8)
-			ctx.cgContext.stroke(rect.insetBy(dx: 6, dy: 6))
+		let rect = CGRect(origin: .zero, size: size)
+		let style = DiceFaceContrast.style(for: fillColor)
+		let numeralSize = DiceFaceLabelSizing.textureNumeralPointSize(sideCount: sideCount, large: activeLargeFaceLabelsEnabled)
+		let captionSize = DiceFaceLabelSizing.textureCaptionPointSize(large: activeLargeFaceLabelsEnabled)
+		let text = "\(value)" as NSString
+		let subtitle = "d\(sideCount)" as NSString
 
-			let text = "\(value)" as NSString
-			let attrs: [NSAttributedString.Key: Any] = [
-				.font: numeralFont.numeralFont(
-					ofSize: DiceFaceLabelSizing.textureNumeralPointSize(sideCount: sideCount, large: activeLargeFaceLabelsEnabled)
-				),
-				.foregroundColor: style.primaryInkColor
-			]
-			let tSize = text.size(withAttributes: attrs)
+		func drawText(attributes: [NSAttributedString.Key: Any], subtitleAttributes: [NSAttributedString.Key: Any]) {
+			let tSize = text.size(withAttributes: attributes)
 			let tRect = CGRect(x: (size.width - tSize.width) / 2, y: (size.height - tSize.height) / 2 - 4, width: tSize.width, height: tSize.height)
-			text.draw(in: tRect, withAttributes: attrs)
+			text.draw(in: tRect, withAttributes: attributes)
 
-			let subtitle = "d\(sideCount)" as NSString
-			let subAttrs: [NSAttributedString.Key: Any] = [
-				.font: numeralFont.captionFont(
-					ofSize: DiceFaceLabelSizing.textureCaptionPointSize(large: activeLargeFaceLabelsEnabled)
-				),
-				.foregroundColor: style.secondaryInkColor
-			]
-			let sSize = subtitle.size(withAttributes: subAttrs)
+			let sSize = subtitle.size(withAttributes: subtitleAttributes)
 			let sRect = CGRect(x: (size.width - sSize.width) / 2, y: size.height * 0.78, width: sSize.width, height: sSize.height)
-			subtitle.draw(in: sRect, withAttributes: subAttrs)
+			subtitle.draw(in: sRect, withAttributes: subtitleAttributes)
 		}
+
+		let symbolFillMask = UIGraphicsImageRenderer(size: size).image { context in
+			UIColor.black.setFill()
+			context.cgContext.fill(rect)
+			drawText(
+				attributes: [
+					.font: numeralFont.numeralFont(ofSize: numeralSize),
+					.foregroundColor: UIColor.white
+				],
+				subtitleAttributes: [
+					.font: numeralFont.captionFont(ofSize: captionSize),
+					.foregroundColor: UIColor.white
+				]
+			)
+		}
+		let symbolOutlineMask = UIGraphicsImageRenderer(size: size).image { context in
+			UIColor.black.setFill()
+			context.cgContext.fill(rect)
+			drawText(
+				attributes: [
+					.font: numeralFont.numeralFont(ofSize: numeralSize),
+					.foregroundColor: UIColor.clear,
+					.strokeColor: UIColor.white,
+					.strokeWidth: 2.0
+				],
+				subtitleAttributes: [
+					.font: numeralFont.captionFont(ofSize: captionSize),
+					.foregroundColor: UIColor.clear,
+					.strokeColor: UIColor.white,
+					.strokeWidth: 1.6
+				]
+			)
+		}
+
+		let diffuse = UIGraphicsImageRenderer(size: size).image { context in
+			context.cgContext.setFillColor(style.fillColor.cgColor)
+			context.cgContext.fill(rect)
+			context.cgContext.setStrokeColor(style.borderColor.cgColor)
+			context.cgContext.setLineWidth(8)
+			context.cgContext.stroke(rect.insetBy(dx: 6, dy: 6))
+
+			drawText(
+				attributes: [
+					.font: numeralFont.numeralFont(ofSize: numeralSize),
+					.foregroundColor: style.primaryInkColor,
+					.strokeColor: D6SceneKitRenderConfig.goldOutlineColor,
+					.strokeWidth: -2.0
+				],
+				subtitleAttributes: [
+					.font: numeralFont.captionFont(ofSize: captionSize),
+					.foregroundColor: style.secondaryInkColor,
+					.strokeColor: D6SceneKitRenderConfig.goldOutlineColor.withAlphaComponent(0.85),
+					.strokeWidth: -1.4
+				]
+			)
+		}
+
+		let normal = D6SceneKitRenderConfig.makeNormalMap(fromMask: symbolFillMask, strength: 2.0)
+		let metalness = D6SceneKitRenderConfig.scalarMap(size: size, base: 0.0, fills: [(mask: symbolOutlineMask, value: 1.0)])
+		let roughness = D6SceneKitRenderConfig.scalarMap(size: size, base: 0.84, fills: [
+			(mask: symbolFillMask, value: 0.44),
+			(mask: symbolOutlineMask, value: 0.14),
+		])
+		return FaceTextureSet(diffuse: diffuse, normal: normal, metalness: metalness, roughness: roughness)
 	}
 
 	private func makeLabelGeometry(sideLength: CGFloat) -> SCNGeometry {

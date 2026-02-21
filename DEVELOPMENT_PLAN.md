@@ -184,6 +184,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Re-verify grouped-notation per-die recolor behavior and add regression coverage ensuring recoloring one die never mutates sibling dice in the same side-count group.
 - [x] Rework stone finish shader to a stable 3D simplex-noise-based marble surface path and assert shader intent in automated finish tests to prevent solid-purple regressions.
 - [x] Correct stone/marble shader space and color semantics: derive die-local sampling from inverse view+model transforms and interpolate veins between selected base color and contrast color.
+- [x] Improve face readability and material realism: add raised symbol relief maps + metallic gold outlines for pips/numerals, remove D6 inset pip style, rotate marble vein basis by 15 degrees, and introduce per-die marble seed variation.
 - [x] Add stats graph axis labeling and horizontal gridlines with deterministic axis-scaling helpers so the stats panel is readable at a glance.
 - [x] Migrate roll-distribution stats UI to Swift Charts (`BarMark` + explicit axis marks for all faces) and lock marble shader sampling to object-space coordinates with hue-preserving tinting.
 - [x] Expand dice contextual-menu hit targets so tapping near die edges still opens per-die options, and lock this behavior with hit-bounds regression coverage.
