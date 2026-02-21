@@ -981,6 +981,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = Dice/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
+				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1000,6 +1001,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = Dice/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
+				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1020,6 +1022,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = DiceTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
+				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1041,6 +1044,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = DiceTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
+				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1061,6 +1065,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = DiceUITests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
+				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1081,6 +1086,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				INFOPLIST_FILE = DiceUITests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
+				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
