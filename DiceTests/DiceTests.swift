@@ -1844,6 +1844,34 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(locked, Set([0, 1, 2, 4]))
 	}
 
+	func testNearestDieIndexReturnsClosestCenterWithinDistance() {
+		let centers = [
+			CGPoint(x: 20, y: 20),
+			CGPoint(x: 80, y: 20),
+			CGPoint(x: 140, y: 20)
+		]
+		let nearest = DiceCollectionViewController.nearestDieIndex(
+			to: CGPoint(x: 92, y: 26),
+			centers: centers,
+			maxDistance: 30
+		)
+		XCTAssertEqual(nearest, 1)
+	}
+
+	func testNearestDieIndexReturnsNilWhenTapIsOutsideRadius() {
+		let centers = [
+			CGPoint(x: 20, y: 20),
+			CGPoint(x: 80, y: 20),
+			CGPoint(x: 140, y: 20)
+		]
+		let nearest = DiceCollectionViewController.nearestDieIndex(
+			to: CGPoint(x: 220, y: 160),
+			centers: centers,
+			maxDistance: 24
+		)
+		XCTAssertNil(nearest)
+	}
+
 	func testGraphBarHeightsScaleRelativeToLargestBin() {
 		let heights = DiceCollectionViewController.graphBarHeights(
 			for: [0, 2, 4],

@@ -41,6 +41,11 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private var statsVisible = true
 	private var totalsBarHeightConstraints: [NSLayoutConstraint] = []
 	private var totalsBarViews: [UIView] = []
+	private lazy var nearDieMenuTapRecognizer: UITapGestureRecognizer = {
+		let recognizer = UITapGestureRecognizer(target: self, action: #selector(handleNearDieMenuTap(_:)))
+		recognizer.cancelsTouchesInView = false
+		return recognizer
+	}()
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -48,6 +53,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		syncSoundSettings()
 
 		collectionView.keyboardDismissMode = .onDrag
+		collectionView.addGestureRecognizer(nearDieMenuTapRecognizer)
 		configureControls()
 		configureDiceBoard()
 		applyTheme()
@@ -557,6 +563,22 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		return locked
 	}
 
+	static func nearestDieIndex(to point: CGPoint, centers: [CGPoint], maxDistance: CGFloat) -> Int? {
+		guard maxDistance > 0 else { return nil }
+		var bestIndex: Int?
+		var bestDistance = maxDistance
+		for (index, center) in centers.enumerated() {
+			let dx = point.x - center.x
+			let dy = point.y - center.y
+			let distance = sqrt((dx * dx) + (dy * dy))
+			if distance <= bestDistance {
+				bestDistance = distance
+				bestIndex = index
+			}
+		}
+		return bestIndex
+	}
+
 	private func showInvalidNotationAlert(message: String) {
 		let alert = UIAlertController(
 			title: NSLocalizedString("alert.invalid.title", comment: "Invalid notation alert title"),
@@ -581,6 +603,35 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	@objc private func focusNotationField() {
 		notationField.becomeFirstResponder()
+	}
+
+	@objc private func handleNearDieMenuTap(_ recognizer: UITapGestureRecognizer) {
+		guard recognizer.state == .ended else { return }
+		let tapPoint = recognizer.location(in: collectionView)
+		if let tappedView = collectionView.hitTest(tapPoint, with: nil), tappedView is UIButton || tappedView.superview is UIButton {
+			return
+		}
+		let candidates: [(index: Int, center: CGPoint, maxDistance: CGFloat)] = collectionView.indexPathsForVisibleItems.compactMap { indexPath in
+			guard let cell = collectionView.cellForItem(at: indexPath) as? DiceCollectionViewCell else { return nil }
+			let center = cell.convert(CGPoint(x: cell.bounds.midX, y: cell.bounds.midY), to: collectionView)
+			let maxDistance = max(cell.bounds.width, cell.bounds.height) * 0.65
+			return (index: indexPath.row, center: center, maxDistance: maxDistance)
+		}
+		guard !candidates.isEmpty else { return }
+		let nearestCandidateIndex = Self.nearestDieIndex(
+			to: tapPoint,
+			centers: candidates.map(\.center),
+			maxDistance: candidates.map(\.maxDistance).max() ?? 0
+		)
+		guard let nearestCandidateIndex, candidates.indices.contains(nearestCandidateIndex) else { return }
+		let matched = candidates[nearestCandidateIndex]
+		let dx = tapPoint.x - matched.center.x
+		let dy = tapPoint.y - matched.center.y
+		let distance = sqrt((dx * dx) + (dy * dy))
+		guard distance <= matched.maxDistance else { return }
+		let indexPath = IndexPath(row: matched.index, section: 0)
+		guard let cell = collectionView.cellForItem(at: indexPath) as? DiceCollectionViewCell else { return }
+		cell.diceButton.sendActions(for: .touchUpInside)
 	}
 
 	@objc private func toggleAnimations() {
