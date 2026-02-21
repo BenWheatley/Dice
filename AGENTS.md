@@ -51,6 +51,10 @@ These rules apply to all agents working in this repository.
 16. Acceptance completion standard:
    - acceptance tests must be evaluated against realistic UX expectations and Apple Human Interface Guidelines
    - do not update task checklists to complete until UX/HIG acceptance is satisfied
+17. Treat sandbox limitations as environment artifacts, not product failures:
+   - if simulator/device discovery fails in sandbox (for example CoreSimulatorService invalid, missing destinations, or DerivedData/log permission errors), rerun the same `xcodebuild` command outside sandbox before concluding there is an app issue
+   - if Metal toolchain/component commands disagree between sandbox and host, trust outside-sandbox `xcodebuild -showComponent` results
+   - when reporting failures, explicitly label whether they are sandbox-only or reproducible outside sandbox
 
 ## Platform/Feature Scope
 
