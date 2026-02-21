@@ -58,6 +58,9 @@ These rules apply to all agents working in this repository.
 18. Never do per-pixel rendering work on CPU:
    - if behavior requires per-pixel work, implement it with GPU shaders
    - do not add or keep CPU loops that generate textures/pixels at runtime for production rendering paths
+19. Enforce first-class shader source paths:
+   - shader logic must live in dedicated `.metal` source files, not embedded Swift multiline strings
+   - if `SCNMaterial.shaderModifiers` is used, the shader source must be loaded from a `.metal` file or generated from file-backed assets
 
 ## Platform/Feature Scope
 
