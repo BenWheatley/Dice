@@ -8,6 +8,16 @@ on:
   pull_request:
 
 jobs:
+  rendering-guard:
+    name: Rendering Guard
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enforce shader/per-pixel guardrails
+        run: ./scripts/guards/rendering_guard.sh
+
   ios-tests:
     name: iOS Unit + UI Tests
     runs-on: macos-15
@@ -59,4 +69,3 @@ jobs:
             -project Dice.xcodeproj \
             -scheme Dice \
             -destination 'platform=macOS,variant=Mac Catalyst'
-
