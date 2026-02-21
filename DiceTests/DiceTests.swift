@@ -1500,11 +1500,13 @@ final class DiceTests: XCTestCase {
 		let stoneSurface = stone.shaderModifiers?[.surface]
 		XCTAssertNotNil(stoneSurface)
 		XCTAssertTrue(stoneSurface?.contains("simplexNoise3D") == true)
-		XCTAssertTrue(stoneSurface?.contains("float3 modelPos = _surface.position.xyz;") == true)
+		XCTAssertTrue(stoneSurface?.contains("scn_frame.inverseViewTransform") == true)
+		XCTAssertTrue(stoneSurface?.contains("scn_node.inverseModelTransform") == true)
 		XCTAssertTrue(stoneSurface?.contains("_surface.position.xyz") == true)
 		XCTAssertTrue(stoneSurface?.contains("(p.x + p.y + p.z)") == true)
-		XCTAssertTrue(stoneSurface?.contains("tintStrength") == true)
-		XCTAssertTrue(stoneSurface?.contains("float3 hue") == true)
+		XCTAssertTrue(stoneSurface?.contains("float3 mainColor") == true)
+		XCTAssertTrue(stoneSurface?.contains("float3 contrastColor") == true)
+		XCTAssertTrue(stoneSurface?.contains("mix(mainColor, contrastColor, marblePattern)") == true)
 	}
 
 	func testStoneFinishShaderRendersNeutralMarbleVariation() {
