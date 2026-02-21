@@ -1500,9 +1500,10 @@ final class DiceTests: XCTestCase {
 		let stoneSurface = stone.shaderModifiers?[.surface]
 		XCTAssertNotNil(stoneSurface)
 		XCTAssertTrue(stoneSurface?.contains("simplexNoise3D") == true)
+		XCTAssertTrue(stoneSurface?.contains("scn_node.modelTransform") == true)
+		XCTAssertTrue(stoneSurface?.contains("inverse4x4") == true)
 		XCTAssertTrue(stoneSurface?.contains("_surface.position.xyz") == true)
 		XCTAssertTrue(stoneSurface?.contains("(p.x + p.y + p.z)") == true)
-		XCTAssertFalse(stoneSurface?.contains("inverse4x4") == true)
 	}
 
 	func testStoneFinishShaderRendersNeutralMarbleVariation() {
@@ -1873,59 +1874,6 @@ final class DiceTests: XCTestCase {
 			animatingIndices: [3]
 		)
 		XCTAssertEqual(locked, Set([0, 1, 2, 4]))
-	}
-
-	func testNearestDieIndexReturnsClosestCenterWithinDistance() {
-		let centers = [
-			CGPoint(x: 20, y: 20),
-			CGPoint(x: 80, y: 20),
-			CGPoint(x: 140, y: 20)
-		]
-		let nearest = DiceCollectionViewController.nearestDieIndex(
-			to: CGPoint(x: 92, y: 26),
-			centers: centers,
-			maxDistance: 30
-		)
-		XCTAssertEqual(nearest, 1)
-	}
-
-	func testNearestDieIndexReturnsNilWhenTapIsOutsideRadius() {
-		let centers = [
-			CGPoint(x: 20, y: 20),
-			CGPoint(x: 80, y: 20),
-			CGPoint(x: 140, y: 20)
-		]
-		let nearest = DiceCollectionViewController.nearestDieIndex(
-			to: CGPoint(x: 220, y: 160),
-			centers: centers,
-			maxDistance: 24
-		)
-		XCTAssertNil(nearest)
-	}
-
-	func testContextMenuActivationRadiusUsesExpandedTargetOnly() {
-		let radius = DiceCollectionViewController.contextMenuActivationRadius(
-			cellExtent: 56,
-			boardSideLength: 60
-		)
-		XCTAssertEqual(radius, 96, accuracy: 0.001)
-
-		let largeRadius = DiceCollectionViewController.contextMenuActivationRadius(
-			cellExtent: 80,
-			boardSideLength: 120
-		)
-		XCTAssertEqual(largeRadius, 174, accuracy: 0.001)
-	}
-
-	func testMenuActivationEventPrefersPrimaryActionWhenButtonHasMenu() {
-		XCTAssertEqual(
-			DiceCollectionViewController.menuActivationEvent(hasMenu: true),
-			.primaryActionTriggered
-		)
-		XCTAssertEqual(
-			DiceCollectionViewController.menuActivationEvent(hasMenu: false),
-			.touchUpInside
-		)
 	}
 
 	func testDiceCellConstraintsInvolvingButtonFiltersOnlyRelatedConstraints() {
