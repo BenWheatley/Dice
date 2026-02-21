@@ -94,13 +94,21 @@ final class PresetPickerViewController: UIViewController, UITableViewDataSource,
 	}
 
 	func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+		let edit = UIContextualAction(style: .normal, title: NSLocalizedString("button.edit", comment: "Edit button title")) { [weak self] _, _, done in
+			guard let self else { return }
+			presentEditPreset(at: indexPath.row)
+			done(true)
+		}
+		edit.backgroundColor = .systemBlue
 		let delete = UIContextualAction(style: .destructive, title: NSLocalizedString("button.delete", comment: "Delete button title")) { [weak self] _, _, done in
 			guard let self else { return }
 			presets.remove(at: indexPath.row)
 			tableView.deleteRows(at: [indexPath], with: .automatic)
 			done(true)
 		}
-		return UISwipeActionsConfiguration(actions: [delete])
+		let config = UISwipeActionsConfiguration(actions: [delete, edit])
+		config.performsFirstActionWithFullSwipe = false
+		return config
 	}
 
 	@objc private func addPreset() {
@@ -143,6 +151,43 @@ final class PresetPickerViewController: UIViewController, UITableViewDataSource,
 		dismiss(animated: true)
 	}
 
+	private func presentEditPreset(at index: Int) {
+		guard presets.indices.contains(index) else { return }
+		let existing = presets[index]
+		let alert = UIAlertController(
+			title: NSLocalizedString("presets.manage.edit.title", comment: "Edit preset dialog title"),
+			message: NSLocalizedString("presets.manage.edit.message", comment: "Edit preset dialog message"),
+			preferredStyle: .alert
+		)
+		alert.addTextField { field in
+			field.placeholder = NSLocalizedString("presets.manage.field.title", comment: "Preset title field placeholder")
+			field.text = existing.title
+		}
+		alert.addTextField { field in
+			field.placeholder = NSLocalizedString("presets.manage.field.notation", comment: "Preset notation field placeholder")
+			field.text = existing.notation
+			field.autocapitalizationType = .none
+			field.autocorrectionType = .no
+		}
+		alert.addAction(UIAlertAction(title: NSLocalizedString("button.cancel", comment: "Cancel action"), style: .cancel))
+		alert.addAction(UIAlertAction(title: NSLocalizedString("button.save", comment: "Save button title"), style: .default) { [weak self, weak alert] _ in
+			guard let self, let fields = alert?.textFields, fields.count == 2 else { return }
+			let result = Self.updatedPreset(
+				from: existing,
+				rawTitle: fields[0].text ?? "",
+				rawNotation: fields[1].text ?? ""
+			)
+			switch result {
+			case let .success(updated):
+				presets[index] = updated
+				tableView.reloadRows(at: [IndexPath(row: index, section: 0)], with: .automatic)
+			case let .failure(error):
+				presentInlineError(error.userMessage)
+			}
+		})
+		present(alert, animated: true)
+	}
+
 	private func presentInlineError(_ message: String) {
 		let alert = UIAlertController(
 			title: NSLocalizedString("alert.invalid.title", comment: "Invalid notation alert title"),
@@ -161,6 +206,22 @@ final class PresetPickerViewController: UIViewController, UITableViewDataSource,
 			merged.append(preset)
 		}
 		return merged
+	}
+
+	static func updatedPreset(from existing: DiceSavedPreset, rawTitle: String, rawNotation: String) -> Result<DiceSavedPreset, DiceInputError> {
+		let parser = DiceNotationParser()
+		let notation = rawNotation.trimmingCharacters(in: .whitespacesAndNewlines)
+		guard !notation.isEmpty else {
+			return .failure(.invalidFormat)
+		}
+		switch parser.parseResult(notation) {
+		case let .failure(error):
+			return .failure(error)
+		case .success:
+			let trimmedTitle = rawTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+			let title = trimmedTitle.isEmpty ? notation : trimmedTitle
+			return .success(DiceSavedPreset(id: existing.id, title: title, notation: notation, pinned: existing.pinned))
+		}
 	}
 
 	static func builtInPresets() -> [DiceSavedPreset] {

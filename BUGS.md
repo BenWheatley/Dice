@@ -2,4 +2,4 @@
 - [x] Die Finish "Stone" should use a marble (3d simplex noise) effect. Currently it is solid purple.
 - [x] Stats box graph needs labels (including y-axis!), gridlines
 - [x] Tap area for bringing up contextual menu is too small, should be about same size as dice themselves, a little bigger
-- [ ] Presets menu only has swipe button for delete, should also have swipe button for edit
+- [x] Presets menu only has swipe button for delete, should also have swipe button for edit

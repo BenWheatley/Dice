@@ -8,6 +8,7 @@
 "button.close" = "Close";
 "button.manage" = "Manage";
 "button.save" = "Save";
+"button.edit" = "Edit";
 "button.delete" = "Delete";
 "button.rename" = "Rename";
 "button.pin" = "Pin";
@@ -28,6 +29,8 @@
 "presets.manage.title" = "Manage Presets";
 "presets.manage.add.title" = "Add Preset";
 "presets.manage.add.message" = "Create a named preset for any notation.";
+"presets.manage.edit.title" = "Edit Preset";
+"presets.manage.edit.message" = "Update this preset title or notation.";
 "presets.manage.rename.title" = "Rename Preset";
 "presets.manage.field.title" = "Preset name";
 "presets.manage.field.notation" = "Notation (e.g. 3d6+2d4)";

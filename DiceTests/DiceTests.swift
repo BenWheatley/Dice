@@ -929,6 +929,34 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(merged.isEmpty)
 	}
 
+	func testPresetPickerUpdatedPresetUsesNotationAsFallbackTitle() {
+		let preset = DiceSavedPreset(id: "preset-1", title: "Old", notation: "1d6")
+		let result = PresetPickerViewController.updatedPreset(
+			from: preset,
+			rawTitle: "   ",
+			rawNotation: "3d6+2d4"
+		)
+		guard case let .success(updated) = result else {
+			return XCTFail("Expected successful update")
+		}
+		XCTAssertEqual(updated.id, "preset-1")
+		XCTAssertEqual(updated.title, "3d6+2d4")
+		XCTAssertEqual(updated.notation, "3d6+2d4")
+	}
+
+	func testPresetPickerUpdatedPresetRejectsInvalidNotation() {
+		let preset = DiceSavedPreset(id: "preset-2", title: "Old", notation: "1d6")
+		let result = PresetPickerViewController.updatedPreset(
+			from: preset,
+			rawTitle: "Broken",
+			rawNotation: "3x6"
+		)
+		guard case let .failure(error) = result else {
+			return XCTFail("Expected invalid notation failure")
+		}
+		XCTAssertEqual(error, .invalidSegment(segment: "x", hintKey: "error.input.hint.invalidCharacter"))
+	}
+
 	func testViewModelCreateCustomPresetValidatesNotationAndPersists() {
 		let suiteName = "DiceTests.viewmodel.custompresets.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!
