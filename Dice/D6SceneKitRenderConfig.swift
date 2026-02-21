@@ -2,6 +2,15 @@ import UIKit
 import SceneKit
 
 struct D6SceneKitRenderConfig {
+	private struct FaceTextureCacheKey: Hashable {
+		let value: Int
+		let pipStyle: DiceD6PipStyle
+		let fillRed: UInt8
+		let fillGreen: UInt8
+		let fillBlue: UInt8
+		let fillAlpha: UInt8
+	}
+
 	struct FaceTextureSet {
 		let diffuse: UIImage
 		let normal: UIImage
@@ -10,6 +19,8 @@ struct D6SceneKitRenderConfig {
 	}
 
 	static let goldOutlineColor = UIColor(red: 0.84, green: 0.70, blue: 0.28, alpha: 1.0)
+	private static var faceTextureSetCache: [FaceTextureCacheKey: FaceTextureSet] = [:]
+	private static let faceTextureSetCacheLock = NSLock()
 
 	static func beveledCube(sideLength: CGFloat) -> SCNBox {
 		let box = SCNBox(
@@ -43,6 +54,14 @@ struct D6SceneKitRenderConfig {
 	}
 
 	static func faceTextureSet(value: Int, fillColor: UIColor = UIColor(white: 0.96, alpha: 1.0), pipStyle: DiceD6PipStyle = .round) -> FaceTextureSet {
+		let key = cacheKey(value: value, fillColor: fillColor, pipStyle: pipStyle)
+		faceTextureSetCacheLock.lock()
+		if let cached = faceTextureSetCache[key] {
+			faceTextureSetCacheLock.unlock()
+			return cached
+		}
+		faceTextureSetCacheLock.unlock()
+
 		let size = CGSize(width: 256, height: 256)
 		let rect = CGRect(origin: .zero, size: size)
 		let style = DiceFaceContrast.style(for: fillColor)
@@ -124,7 +143,45 @@ struct D6SceneKitRenderConfig {
 			(mask: symbolOutlineMask, value: 0.14),
 		])
 
-		return FaceTextureSet(diffuse: diffuse, normal: normal, metalness: metalness, roughness: roughness)
+		let textureSet = FaceTextureSet(diffuse: diffuse, normal: normal, metalness: metalness, roughness: roughness)
+		faceTextureSetCacheLock.lock()
+		faceTextureSetCache[key] = textureSet
+		faceTextureSetCacheLock.unlock()
+		return textureSet
+	}
+
+	private static func cacheKey(value: Int, fillColor: UIColor, pipStyle: DiceD6PipStyle) -> FaceTextureCacheKey {
+		let rgba = colorComponents(fillColor)
+		return FaceTextureCacheKey(
+			value: value,
+			pipStyle: pipStyle,
+			fillRed: rgba.r,
+			fillGreen: rgba.g,
+			fillBlue: rgba.b,
+			fillAlpha: rgba.a
+		)
+	}
+
+	private static func colorComponents(_ color: UIColor) -> (r: UInt8, g: UInt8, b: UInt8, a: UInt8) {
+		var r: CGFloat = 0
+		var g: CGFloat = 0
+		var b: CGFloat = 0
+		var a: CGFloat = 0
+		if color.getRed(&r, green: &g, blue: &b, alpha: &a) {
+			return (
+				r: UInt8((r * 255).rounded()),
+				g: UInt8((g * 255).rounded()),
+				b: UInt8((b * 255).rounded()),
+				a: UInt8((a * 255).rounded())
+			)
+		}
+
+		var white: CGFloat = 0
+		if color.getWhite(&white, alpha: &a) {
+			let channel = UInt8((white * 255).rounded())
+			return (r: channel, g: channel, b: channel, a: UInt8((a * 255).rounded()))
+		}
+		return (r: 245, g: 245, b: 245, a: 255)
 	}
 
 	static func makeNormalMap(fromMask maskImage: UIImage, strength: CGFloat = 2.0) -> UIImage {

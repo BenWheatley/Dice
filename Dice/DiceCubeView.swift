@@ -42,6 +42,18 @@ final class DiceCubeView: UIView {
 		let roughness: UIImage
 	}
 
+	private struct FaceTextureCacheKey: Hashable {
+		let sideCount: Int
+		let value: Int
+		let d4VertexLabels: [Int]
+		let fillRed: UInt8
+		let fillGreen: UInt8
+		let fillBlue: UInt8
+		let fillAlpha: UInt8
+		let fontRawValue: String
+		let largeLabels: Bool
+	}
+
 	private let scnView = SCNView()
 	private let scene = SCNScene()
 	private let cameraNode = SCNNode()
@@ -50,6 +62,7 @@ final class DiceCubeView: UIView {
 	private var dieSideCounts: [Int] = []
 	private var orientationCache: [Int: [Int: SCNVector3]] = [:]
 	private var meshCache: [MeshCacheKey: BuiltMesh] = [:]
+	private var faceTextureSetCache: [FaceTextureCacheKey: FaceTextureSet] = [:]
 	private var badgeImageCache: [BadgeCacheKey: UIImage] = [:]
 	private var labelValueCache: [ObjectIdentifier: Int] = [:]
 	private var lifecycleObservers: [NSObjectProtocol] = []
@@ -209,6 +222,7 @@ final class DiceCubeView: UIView {
 		guard activeDieColorPreferences != preferences else { return }
 		activeDieColorPreferences = preferences
 		meshCache.removeAll()
+		faceTextureSetCache.removeAll()
 		needsMeshRefresh = true
 	}
 
@@ -216,6 +230,7 @@ final class DiceCubeView: UIView {
 		guard activeD6PipStyle != style else { return }
 		activeD6PipStyle = style
 		meshCache.removeAll()
+		faceTextureSetCache.removeAll()
 		needsMeshRefresh = true
 	}
 
@@ -223,6 +238,7 @@ final class DiceCubeView: UIView {
 		guard activeFaceNumeralFont != font else { return }
 		activeFaceNumeralFont = font
 		meshCache.removeAll()
+		faceTextureSetCache.removeAll()
 		badgeImageCache.removeAll()
 		needsMeshRefresh = true
 	}
@@ -231,6 +247,7 @@ final class DiceCubeView: UIView {
 		guard activeLargeFaceLabelsEnabled != enabled else { return }
 		activeLargeFaceLabelsEnabled = enabled
 		meshCache.removeAll()
+		faceTextureSetCache.removeAll()
 		badgeImageCache.removeAll()
 		needsMeshRefresh = true
 	}
@@ -603,9 +620,26 @@ final class DiceCubeView: UIView {
 				roughness: d6TextureSet.roughness
 			)
 		} else if sideCount == 4 {
-			textureSet = d4FaceTextureSet(vertexLabels: d4VertexLabels(forFace: face), fillColor: resolvedFillColor, numeralFont: resolvedFont)
+			let vertexLabels = d4VertexLabels(forFace: face)
+			textureSet = cachedFaceTextureSet(
+				sideCount: sideCount,
+				value: value,
+				d4VertexLabels: vertexLabels,
+				fillColor: resolvedFillColor,
+				numeralFont: resolvedFont
+			) {
+				d4FaceTextureSet(vertexLabels: vertexLabels, fillColor: resolvedFillColor, numeralFont: resolvedFont)
+			}
 		} else {
-			textureSet = faceValueTextureSet(value: value, sideCount: sideCount, fillColor: resolvedFillColor, numeralFont: resolvedFont)
+			textureSet = cachedFaceTextureSet(
+				sideCount: sideCount,
+				value: value,
+				d4VertexLabels: [],
+				fillColor: resolvedFillColor,
+				numeralFont: resolvedFont
+			) {
+				faceValueTextureSet(value: value, sideCount: sideCount, fillColor: resolvedFillColor, numeralFont: resolvedFont)
+			}
 		}
 		material.diffuse.contents = textureSet.diffuse
 		material.normal.contents = textureSet.normal
@@ -619,6 +653,55 @@ final class DiceCubeView: UIView {
 		material.specular.contents = textureSet.metalness
 		material.shininess = max(material.shininess, 0.42)
 		return material
+	}
+
+	private func cachedFaceTextureSet(
+		sideCount: Int,
+		value: Int,
+		d4VertexLabels: [Int],
+		fillColor: UIColor,
+		numeralFont: DiceFaceNumeralFont,
+		build: () -> FaceTextureSet
+	) -> FaceTextureSet {
+		let rgba = rgbaComponents(fillColor)
+		let key = FaceTextureCacheKey(
+			sideCount: sideCount,
+			value: value,
+			d4VertexLabels: d4VertexLabels,
+			fillRed: rgba.r,
+			fillGreen: rgba.g,
+			fillBlue: rgba.b,
+			fillAlpha: rgba.a,
+			fontRawValue: numeralFont.rawValue,
+			largeLabels: activeLargeFaceLabelsEnabled
+		)
+		if let cached = faceTextureSetCache[key] {
+			return cached
+		}
+		let generated = build()
+		faceTextureSetCache[key] = generated
+		return generated
+	}
+
+	private func rgbaComponents(_ color: UIColor) -> (r: UInt8, g: UInt8, b: UInt8, a: UInt8) {
+		var r: CGFloat = 0
+		var g: CGFloat = 0
+		var b: CGFloat = 0
+		var a: CGFloat = 0
+		if color.getRed(&r, green: &g, blue: &b, alpha: &a) {
+			return (
+				r: UInt8((r * 255).rounded()),
+				g: UInt8((g * 255).rounded()),
+				b: UInt8((b * 255).rounded()),
+				a: UInt8((a * 255).rounded())
+			)
+		}
+		var white: CGFloat = 0
+		if color.getWhite(&white, alpha: &a) {
+			let channel = UInt8((white * 255).rounded())
+			return (r: channel, g: channel, b: channel, a: UInt8((a * 255).rounded()))
+		}
+		return (r: 245, g: 245, b: 245, a: 255)
 	}
 
 	private func applyFaceMaterials(

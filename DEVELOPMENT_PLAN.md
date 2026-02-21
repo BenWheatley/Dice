@@ -190,6 +190,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Expand dice contextual-menu hit targets so tapping near die edges still opens per-die options, and lock this behavior with hit-bounds regression coverage.
 - [x] Remove Dyslexia Friendly font option from selectable numeral styles and keep font-option tests aligned with the reduced menu set.
 - [x] Replace dual-column presets/manage flow with a single themed presets table that seeds editable defaults, includes custom entries, supports deletion of any row, and uses an inline add button.
+- [x] Optimize startup render hot path by caching generated face texture sets (including normal/metalness maps) for repeated dice/material inputs, with regression tests proving cache reuse and key separation.
 
 ## 12. watchOS Small-Screen Interface Plan
 

@@ -1733,6 +1733,29 @@ final class DiceTests: XCTestCase {
 		}
 	}
 
+	func testD6FaceTextureSetReusesCachedMapsForSameInputs() {
+		let fillColor = UIColor(red: 0.72, green: 0.14, blue: 0.22, alpha: 1.0)
+		let first = D6SceneKitRenderConfig.faceTextureSet(value: 4, fillColor: fillColor, pipStyle: .round)
+		let second = D6SceneKitRenderConfig.faceTextureSet(value: 4, fillColor: fillColor, pipStyle: .round)
+
+		XCTAssertTrue(first.diffuse === second.diffuse)
+		XCTAssertTrue(first.normal === second.normal)
+		XCTAssertTrue(first.metalness === second.metalness)
+		XCTAssertTrue(first.roughness === second.roughness)
+	}
+
+	func testD6FaceTextureSetCacheSeparatesDistinctStylesAndColors() {
+		let red = UIColor(red: 0.72, green: 0.14, blue: 0.22, alpha: 1.0)
+		let blue = UIColor(red: 0.14, green: 0.24, blue: 0.72, alpha: 1.0)
+
+		let roundRed = D6SceneKitRenderConfig.faceTextureSet(value: 5, fillColor: red, pipStyle: .round)
+		let squareRed = D6SceneKitRenderConfig.faceTextureSet(value: 5, fillColor: red, pipStyle: .square)
+		let roundBlue = D6SceneKitRenderConfig.faceTextureSet(value: 5, fillColor: blue, pipStyle: .round)
+
+		XCTAssertFalse(roundRed.diffuse === squareRed.diffuse)
+		XCTAssertFalse(roundRed.diffuse === roundBlue.diffuse)
+	}
+
 	func testNonD6NumeralFontsRemainReadableAcrossDieTypeFaceSizes() {
 		let dieSamples: [(sample: String, pointSize: CGFloat, canvas: CGSize, inset: CGFloat, label: String)] = [
 			("4", 36, CGSize(width: 96, height: 96), 10, "d4"),
