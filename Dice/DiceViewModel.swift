@@ -344,7 +344,15 @@ final class DiceViewModel {
 	}
 
 	func applyPerDieColorSelection(_ preset: DiceDieColorPreset, at index: Int) {
-		setDieColorPreset(preset, forDieAt: index)
+		guard appState.configuration.sideCountsPerDie.indices.contains(index) else { return }
+		let updatedPools = recoloredPools(
+			from: appState.configuration.pools,
+			dieIndex: index,
+			colorTag: preset.notationName
+		)
+		appState.configuration = RollConfiguration(pools: updatedPools)
+		applyNotationColorOverrides(from: appState.configuration)
+		persistPreferences()
 	}
 
 	func setDieColorPreset(_ preset: DiceDieColorPreset, for sideCount: Int) {
@@ -643,5 +651,75 @@ final class DiceViewModel {
 			return top.map { "\($0.offset + 1)s:\($0.element)" }.joined(separator: " ")
 		}
 		return totals.enumerated().map { "\($0.offset + 1)s:\($0.element)" }.joined(separator: " ")
+	}
+
+	private func recoloredPools(from pools: [DicePool], dieIndex: Int, colorTag: String) -> [DicePool] {
+		var rebuilt: [DicePool] = []
+		rebuilt.reserveCapacity(pools.count + 2)
+
+		var remainingIndex = dieIndex
+		var didApply = false
+		for pool in pools {
+			if didApply {
+				rebuilt.append(pool)
+				continue
+			}
+			if remainingIndex >= pool.diceCount {
+				rebuilt.append(pool)
+				remainingIndex -= pool.diceCount
+				continue
+			}
+
+			let leftCount = remainingIndex
+			let rightCount = pool.diceCount - remainingIndex - 1
+			if leftCount > 0 {
+				rebuilt.append(DicePool(
+					diceCount: leftCount,
+					sideCount: pool.sideCount,
+					intuitive: pool.intuitive,
+					colorTag: pool.colorTag
+				))
+			}
+			rebuilt.append(DicePool(
+				diceCount: 1,
+				sideCount: pool.sideCount,
+				intuitive: pool.intuitive,
+				colorTag: colorTag
+			))
+			if rightCount > 0 {
+				rebuilt.append(DicePool(
+					diceCount: rightCount,
+					sideCount: pool.sideCount,
+					intuitive: pool.intuitive,
+					colorTag: pool.colorTag
+				))
+			}
+			didApply = true
+		}
+
+		return mergedAdjacentPools(rebuilt)
+	}
+
+	private func mergedAdjacentPools(_ pools: [DicePool]) -> [DicePool] {
+		guard var current = pools.first else { return [] }
+		var merged: [DicePool] = []
+		for pool in pools.dropFirst() {
+			let canMerge = current.sideCount == pool.sideCount &&
+				current.intuitive == pool.intuitive &&
+				current.colorTag == pool.colorTag
+			if canMerge {
+				current = DicePool(
+					diceCount: current.diceCount + pool.diceCount,
+					sideCount: current.sideCount,
+					intuitive: current.intuitive,
+					colorTag: current.colorTag
+				)
+			} else {
+				merged.append(current)
+				current = pool
+			}
+		}
+		merged.append(current)
+		return merged
 	}
 }

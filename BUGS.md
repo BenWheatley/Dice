@@ -1,8 +1,5 @@
-- [x] If I have e.g. "3d6" or "3d6(red) 2d6(blue), then tap on the first d6 and choose to change its color, that should ONLY change the color of the first d6, not all d6 in that group
-- [x] Die Finish "Stone" should use a marble (3d simplex noise) effect. Currently it is solid purple.
-- [x] Stats box graph needs labels, gridlines
-- [x] Tap area for bringing up contextual menu is too small, should be about same size as dice themselves, a little bigger
-- [x] Remove "Dyslexia Friendly" font
-- [x] Presets menu doesn't respect dark/light mode
-- [x] Presets menu should be single-column table view with something like [1d6-4d6, 1d6i, d6(red) + d20(green), d6(blue,serif) + d4(red,monospace)] as defaults, that list should itself also contain whatever custom presets exist, and be able to delete anything including the defaults
-- [x] Manage Presets menu should be replaced with an add button to the new Presets menu table
+- [x] Context menu to change die color currently only works with single die groups. If I have 4d6(red), open menu on second die, change colour to blue, I should get d6(red) + d6(blue) + 2d6(red)
+- [ ] Die Finish "Stone" should use a marble (3d simplex noise) effect. Currently it is solid purple.
+- [ ] Stats box graph needs labels (including y-axis!), gridlines
+- [ ] Tap area for bringing up contextual menu is too small, should be about same size as dice themselves, a little bigger
+- [ ] Presets menu only has swipe button for delete, should also have swipe button for edit

@@ -926,7 +926,7 @@ final class DiceTests: XCTestCase {
 
 	func testPresetPickerUsesSavedPresetsAsAuthoritativeAfterInitialization() {
 		let merged = PresetPickerViewController.mergedPresets(saved: [], initialized: true)
-		XCTTrue(merged.isEmpty)
+		XCTAssertTrue(merged.isEmpty)
 	}
 
 	func testViewModelCreateCustomPresetValidatesNotationAndPersists() {
@@ -1204,6 +1204,27 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(viewModel.dieColorPreset(forDieAt: 3), .sapphire)
 		XCTAssertEqual(viewModel.dieColorPreset(forDieAt: 4), .sapphire)
 		XCTAssertEqual(viewModel.dieColorPreset(for: 6), .ivory)
+	}
+
+	func testViewModelPerDieColorSelectionSplitsOnlyTargetedDieFromColorTaggedGroup() {
+		let suiteName = "DiceTests.viewmodel.diecolors.split-group.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let viewModel = DiceViewModel(
+			preferencesStore: DicePreferencesStore(defaults: defaults),
+			historyStore: DiceRollHistoryStore(defaults: defaults),
+			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { $0.lowerBound }, randomDouble: { 0.5 }))
+		)
+
+		_ = viewModel.rollFromInput("4d6(red)")
+		viewModel.applyPerDieColorSelection(.sapphire, at: 1)
+
+		XCTAssertEqual(viewModel.configuration.notation, "1d6(red)+1d6(blue)+2d6(red)")
+		XCTAssertEqual(viewModel.configuration.perDieColorTags, ["red", "blue", "red", "red"])
+		XCTAssertEqual(viewModel.dieColorPreset(forDieAt: 0), .crimson)
+		XCTAssertEqual(viewModel.dieColorPreset(forDieAt: 1), .sapphire)
+		XCTAssertEqual(viewModel.dieColorPreset(forDieAt: 2), .crimson)
+		XCTAssertEqual(viewModel.dieColorPreset(forDieAt: 3), .crimson)
 	}
 
 	func testViewModelRollFromInputAppliesNotationColorOverridesPerDie() {
@@ -1661,7 +1682,7 @@ final class DiceTests: XCTestCase {
 
 	func testFaceNumeralFontOptionsExcludeDyslexiaFriendlyEntry() {
 		let keys = Set(DiceFaceNumeralFont.allCases.map(\.menuTitleKey))
-		XCTFalse(keys.contains("font.dyslexiaFriendly"))
+		XCTAssertFalse(keys.contains("font.dyslexiaFriendly"))
 	}
 
 	func testLargeFaceLabelSizingIncreasesTextureAndFallbackSizes() {
