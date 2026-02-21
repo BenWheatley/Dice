@@ -5,7 +5,7 @@ IOS_DEST := platform=iOS Simulator,name=iPhone 16
 WATCH_DEST := platform=watchOS Simulator,name=Apple Watch Series 10 (46mm)
 CATALYST_DEST := platform=macOS,variant=Mac Catalyst
 
-.PHONY: list test-ios build-watch build-catalyst analyze-ios lint format-check guard-rendering
+.PHONY: list test-ios build-watch build-catalyst analyze-ios lint format-check guard-rendering install-hooks
 
 list:
 	xcodebuild -list -project "$(PROJECT)"
@@ -40,3 +40,6 @@ format-check:
 
 guard-rendering:
 	./scripts/guards/rendering_guard.sh
+
+install-hooks:
+	./scripts/install-git-hooks.sh

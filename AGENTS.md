@@ -61,6 +61,9 @@ These rules apply to all agents working in this repository.
 19. Enforce first-class shader source paths:
    - shader logic must live in dedicated `.metal` source files, not embedded Swift multiline strings
    - if `SCNMaterial.shaderModifiers` is used, the shader source must be loaded from a `.metal` file or generated from file-backed assets
+20. Enforce first-class-path commit attestation:
+   - every commit message must include a line `First-class path used: YES` or `First-class path used: NO`
+   - `First-class path used: NO` is not allowed for production changes; block commit until implementation uses a first-class path
 
 ## Platform/Feature Scope
 

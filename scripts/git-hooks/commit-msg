@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+
+msg_file=$1
+
+if ! grep -q '^First-class path used: ' "$msg_file"; then
+  echo "ERROR: Commit message must include: First-class path used: YES|NO" >&2
+  exit 1
+fi
+
+status=$(grep '^First-class path used: ' "$msg_file" | tail -n 1 | awk -F': ' '{print $2}')
+if [ "$status" = "NO" ]; then
+  echo "ERROR: First-class path used: NO is not allowed." >&2
+  exit 1
+fi
+
+if [ "$status" != "YES" ]; then
+  echo "ERROR: First-class path used must be YES or NO." >&2
+  exit 1
+fi
