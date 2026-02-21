@@ -12,6 +12,7 @@ import SwiftUI
 private let reuseIdentifier = "DiceCell"
 
 class DiceCollectionViewController: UICollectionViewController, UITextFieldDelegate {
+	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 	private let viewModel = DiceViewModel()
 	private let soundEngine = DiceSoundEngine()
 	private let hapticsEngine = DiceHapticsEngine()
@@ -893,7 +894,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	private var shouldAnimateBoard: Bool {
 		let sideCounts = viewModel.diceSideCounts
-		return !sideCounts.isEmpty && sideCounts.allSatisfy({ boardSupportedSides.contains($0) }) && viewModel.animationIntensity != .off
+		return !sideCounts.isEmpty && viewModel.animationIntensity != .off
 	}
 
 	@objc private func showPresetPicker() {
