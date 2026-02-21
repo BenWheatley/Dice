@@ -48,6 +48,9 @@ These rules apply to all agents working in this repository.
 15. Only code that compiles and passes tests is ready to commit:
    - do not commit code with known compile errors
    - do not mark work complete unless relevant tests pass (or environment blockers are explicitly documented and resolved with the user)
+16. Acceptance completion standard:
+   - acceptance tests must be evaluated against realistic UX expectations and Apple Human Interface Guidelines
+   - do not update task checklists to complete until UX/HIG acceptance is satisfied
 
 ## Platform/Feature Scope
 
