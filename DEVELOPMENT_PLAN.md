@@ -13,6 +13,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Create and document branch/commit workflow: one completed checklist unit per commit, with test evidence in commit message.
 - [x] Set up CI pipeline skeleton for build + unit tests for all targets.
 - [x] Add lint/format/static analysis baseline and document local developer commands.
+- [x] Add completion gate: no checklist item may be marked done unless a first-class platform implementation path is active and any workaround path is removed from production code.
 
 ## 2. Shared Domain Engine
 
