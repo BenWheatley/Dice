@@ -125,9 +125,12 @@ final class DiceCubeView: UIView {
 			if didSideChange || sizeChanged || styleChanged {
 				let body = container.childNode(withName: "body", recursively: false)
 				let mesh = builtMesh(sideLength: sideLength, sideCount: sideCount)
-				body?.geometry = mesh.geometry
+				// Geometry materials are mutated per die (color/font overrides); avoid sharing instances.
+				body?.geometry = (mesh.geometry.copy() as? SCNGeometry) ?? mesh.geometry
 				let outline = container.childNode(withName: "outline", recursively: false)
-				outline?.geometry = makeOutlineGeometry(from: mesh.geometry)
+				if let bodyGeometry = body?.geometry {
+					outline?.geometry = makeOutlineGeometry(from: bodyGeometry)
+				}
 				outline?.isHidden = !activeEdgeOutlinesEnabled
 				dieSideCounts[index] = sideCount
 			}
@@ -437,6 +440,25 @@ final class DiceCubeView: UIView {
 		let triangle = view.d4TrianglePoints(size: size)
 		let placements = view.d4LabelPlacements(triangle: triangle)
 		return (triangle: triangle, placements: placements)
+	}
+
+	static func debugUsesUniqueGeometryPerDie(sideCount: Int) -> Bool {
+		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
+		view.setDice(
+			values: [1, 2],
+			centers: [CGPoint(x: 90, y: 120), CGPoint(x: 230, y: 120)],
+			sideLength: 96,
+			sideCounts: [sideCount, sideCount],
+			dieColorPresets: [.crimson, .sapphire],
+			faceNumeralFonts: [.classic, .classic],
+			lockedIndices: [],
+			animated: false
+		)
+		guard view.dieNodes.count >= 2 else { return false }
+		let g0 = view.dieNodes[0].childNode(withName: "body", recursively: false)?.geometry
+		let g1 = view.dieNodes[1].childNode(withName: "body", recursively: false)?.geometry
+		guard let g0, let g1 else { return false }
+		return g0 !== g1
 	}
 #endif
 

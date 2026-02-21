@@ -1984,6 +1984,10 @@ final class DiceTests: XCTestCase {
 		}
 	}
 
+	func testDiceCubeViewUsesUniqueGeometryInstancesPerDie() {
+		XCTAssertTrue(DiceCubeView.debugUsesUniqueGeometryPerDie(sideCount: 6))
+	}
+
 	func testD4MeshGeometryMatchesTetrahedronExpectations() {
 		let mesh = DiceCubeView.debugMeshData(sideCount: 4)
 		XCTAssertEqual(mesh.vertices.count, 4)
