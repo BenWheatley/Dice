@@ -22,6 +22,7 @@
 "toolbar.roll" = "Roll";
 "menu.presets.title" = "eDice Presets";
 "menu.presets.recent" = "Recent";
+"menu.presets.all" = "All Presets";
 "menu.presets.normal" = "Normal";
 "menu.presets.intuitive" = "Intuitive";
 "presets.manage.title" = "Manage Presets";

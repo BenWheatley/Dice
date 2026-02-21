@@ -912,6 +912,23 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(viewModel.recentPresets.prefix(2), ["2d20", "7d8"])
 	}
 
+	func testPresetPickerSeedsBuiltinsAndAppendsSavedPresetsBeforeInitialization() {
+		let saved = [DiceSavedPreset(title: "My Mix", notation: "3d6+2d4")]
+		let merged = PresetPickerViewController.mergedPresets(saved: saved, initialized: false)
+		let notations = merged.map(\.notation)
+		XCTAssertTrue(notations.contains("1d6"))
+		XCTAssertTrue(notations.contains("4d6"))
+		XCTAssertTrue(notations.contains("1d6i"))
+		XCTAssertTrue(notations.contains("d6(red)+d20(green)"))
+		XCTAssertTrue(notations.contains("d6(blue)+d4(red)"))
+		XCTAssertTrue(notations.contains("3d6+2d4"))
+	}
+
+	func testPresetPickerUsesSavedPresetsAsAuthoritativeAfterInitialization() {
+		let merged = PresetPickerViewController.mergedPresets(saved: [], initialized: true)
+		XCTTrue(merged.isEmpty)
+	}
+
 	func testViewModelCreateCustomPresetValidatesNotationAndPersists() {
 		let suiteName = "DiceTests.viewmodel.custompresets.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!

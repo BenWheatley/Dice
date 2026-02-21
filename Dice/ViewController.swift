@@ -967,9 +967,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			currentNotation: notationField.text ?? viewModel.configuration.notation,
 			customPresets: viewModel.customPresets
 		)
-		picker.onSelectPreset = { [weak self] diceCount, intuitive in
-			self?.applyPreset(diceCount: diceCount, intuitive: intuitive)
-		}
 		picker.onSelectNotationPreset = { [weak self] notation in
 			guard let self else { return }
 			self.notationField.text = notation
@@ -983,6 +980,14 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			return self.viewModel.createCustomPreset(title: title, notation: notation)
 		}
 		let navigationController = UINavigationController(rootViewController: picker)
+		switch viewModel.theme {
+		case .lightMode:
+			navigationController.overrideUserInterfaceStyle = .light
+		case .darkMode:
+			navigationController.overrideUserInterfaceStyle = .dark
+		case .system:
+			navigationController.overrideUserInterfaceStyle = .unspecified
+		}
 		navigationController.modalPresentationStyle = .formSheet
 		if let popover = navigationController.popoverPresentationController {
 			popover.sourceView = presetsButton

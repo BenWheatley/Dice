@@ -186,6 +186,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Add stats graph axis labeling and horizontal gridlines with deterministic axis-scaling helpers so the stats panel is readable at a glance.
 - [x] Expand dice contextual-menu hit targets so tapping near die edges still opens per-die options, and lock this behavior with hit-bounds regression coverage.
 - [x] Remove Dyslexia Friendly font option from selectable numeral styles and keep font-option tests aligned with the reduced menu set.
+- [x] Replace dual-column presets/manage flow with a single themed presets table that seeds editable defaults, includes custom entries, supports deletion of any row, and uses an inline add button.
 
 ## 12. watchOS Small-Screen Interface Plan
 
