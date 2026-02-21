@@ -1942,18 +1942,14 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(labels.bottom, "0")
 	}
 
-	func testGraphXAxisLabelsProvideStartMidAndEndBins() {
-		let labels = DiceCollectionViewController.graphXAxisLabels(binCount: 6)
-		XCTAssertEqual(labels.left, "1")
-		XCTAssertEqual(labels.mid, "3")
-		XCTAssertEqual(labels.right, "6")
+	func testGraphFaceLabelsProvideAllBins() {
+		let labels = DiceCollectionViewController.graphFaceLabels(binCount: 6)
+		XCTAssertEqual(labels, ["1", "2", "3", "4", "5", "6"])
 	}
 
-	func testGraphXAxisLabelsRemainZeroWhenNoBinsPresent() {
-		let labels = DiceCollectionViewController.graphXAxisLabels(binCount: 0)
-		XCTAssertEqual(labels.left, "0")
-		XCTAssertEqual(labels.mid, "0")
-		XCTAssertEqual(labels.right, "0")
+	func testGraphFaceLabelsAreEmptyWhenNoBinsPresent() {
+		let labels = DiceCollectionViewController.graphFaceLabels(binCount: 0)
+		XCTAssertTrue(labels.isEmpty)
 	}
 
 	func testWatchViewModelRepeatLastRollUsesPreviousModeConfiguration() {

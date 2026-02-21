@@ -22,12 +22,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let totalsLabel = UILabel()
 	private let totalsGraphStack = UIStackView()
 	private let totalsGraphGrid = UIView()
-	private let totalsGraphYAxisLabels = UIStackView()
+	private let totalsGraphYAxisLabels = UIView()
 	private let totalsGraphYAxisTitleLabel = UILabel()
 	private let totalsGraphXAxisLabels = UIStackView()
-	private let totalsGraphXMinLabel = UILabel()
-	private let totalsGraphXMidLabel = UILabel()
-	private let totalsGraphXMaxLabel = UILabel()
 	private let totalsGraphTopLabel = UILabel()
 	private let totalsGraphMidLabel = UILabel()
 	private let totalsGraphBottomLabel = UILabel()
@@ -45,6 +42,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private var statsVisible = true
 	private var totalsBarHeightConstraints: [NSLayoutConstraint] = []
 	private var totalsBarViews: [UIView] = []
+	private var totalsXAxisTickLabels: [UILabel] = []
 	private var lastBoardSideLength: CGFloat = 0
 	private lazy var nearDieMenuTapRecognizer: UITapGestureRecognizer = {
 		let recognizer = UITapGestureRecognizer(target: self, action: #selector(handleNearDieMenuTap(_:)))
@@ -235,9 +233,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		totalsGraphGrid.isUserInteractionEnabled = false
 
 		totalsGraphYAxisLabels.translatesAutoresizingMaskIntoConstraints = false
-		totalsGraphYAxisLabels.axis = .vertical
-		totalsGraphYAxisLabels.distribution = .equalSpacing
-		totalsGraphYAxisLabels.alignment = .trailing
 		totalsGraphYAxisLabels.isUserInteractionEnabled = false
 		totalsGraphYAxisTitleLabel.translatesAutoresizingMaskIntoConstraints = false
 		totalsGraphYAxisTitleLabel.font = UIFont.preferredFont(forTextStyle: .caption2)
@@ -247,29 +242,19 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		totalsGraphYAxisTitleLabel.text = NSLocalizedString("stats.graph.yAxis", comment: "Graph y-axis title")
 		totalsGraphXAxisLabels.translatesAutoresizingMaskIntoConstraints = false
 		totalsGraphXAxisLabels.axis = .horizontal
-		totalsGraphXAxisLabels.distribution = .equalSpacing
-		totalsGraphXAxisLabels.alignment = .center
+		totalsGraphXAxisLabels.distribution = .fillEqually
+		totalsGraphXAxisLabels.alignment = .fill
+		totalsGraphXAxisLabels.spacing = 3
 		totalsGraphXAxisLabels.isUserInteractionEnabled = false
 		for label in [totalsGraphTopLabel, totalsGraphMidLabel, totalsGraphBottomLabel] {
 			label.font = UIFont.preferredFont(forTextStyle: .caption2)
 			label.adjustsFontForContentSizeCategory = true
 			label.textColor = currentPalette.secondaryTextColor
-		}
-		for label in [totalsGraphXMinLabel, totalsGraphXMidLabel, totalsGraphXMaxLabel] {
-			label.font = UIFont.preferredFont(forTextStyle: .caption2)
-			label.adjustsFontForContentSizeCategory = true
-			label.textColor = currentPalette.secondaryTextColor
-			label.text = "0"
+			label.textAlignment = .right
 		}
 		totalsGraphTopLabel.text = "0"
 		totalsGraphMidLabel.text = "0"
 		totalsGraphBottomLabel.text = "0"
-		totalsGraphYAxisLabels.addArrangedSubview(totalsGraphTopLabel)
-		totalsGraphYAxisLabels.addArrangedSubview(totalsGraphMidLabel)
-		totalsGraphYAxisLabels.addArrangedSubview(totalsGraphBottomLabel)
-		totalsGraphXAxisLabels.addArrangedSubview(totalsGraphXMinLabel)
-		totalsGraphXAxisLabels.addArrangedSubview(totalsGraphXMidLabel)
-		totalsGraphXAxisLabels.addArrangedSubview(totalsGraphXMaxLabel)
 
 		let gridLineTop = makeGraphGridLine()
 		let gridLineMid = makeGraphGridLine()
@@ -288,6 +273,20 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			gridLineBottom.leadingAnchor.constraint(equalTo: totalsGraphGrid.leadingAnchor),
 			gridLineBottom.trailingAnchor.constraint(equalTo: totalsGraphGrid.trailingAnchor),
 			gridLineBottom.bottomAnchor.constraint(equalTo: totalsGraphGrid.bottomAnchor),
+		])
+		totalsGraphYAxisLabels.addSubview(totalsGraphTopLabel)
+		totalsGraphYAxisLabels.addSubview(totalsGraphMidLabel)
+		totalsGraphYAxisLabels.addSubview(totalsGraphBottomLabel)
+		totalsGraphTopLabel.translatesAutoresizingMaskIntoConstraints = false
+		totalsGraphMidLabel.translatesAutoresizingMaskIntoConstraints = false
+		totalsGraphBottomLabel.translatesAutoresizingMaskIntoConstraints = false
+		NSLayoutConstraint.activate([
+			totalsGraphTopLabel.trailingAnchor.constraint(equalTo: totalsGraphYAxisLabels.trailingAnchor),
+			totalsGraphTopLabel.topAnchor.constraint(equalTo: totalsGraphYAxisLabels.topAnchor),
+			totalsGraphMidLabel.trailingAnchor.constraint(equalTo: totalsGraphYAxisLabels.trailingAnchor),
+			totalsGraphMidLabel.centerYAnchor.constraint(equalTo: totalsGraphYAxisLabels.centerYAnchor),
+			totalsGraphBottomLabel.trailingAnchor.constraint(equalTo: totalsGraphYAxisLabels.trailingAnchor),
+			totalsGraphBottomLabel.bottomAnchor.constraint(equalTo: totalsGraphYAxisLabels.bottomAnchor),
 		])
 
 		totalsContainer.addSubview(totalsLabel)
@@ -323,11 +322,11 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			totalsLabel.trailingAnchor.constraint(equalTo: totalsContainer.trailingAnchor, constant: -8),
 			totalsGraphYAxisTitleLabel.leadingAnchor.constraint(equalTo: totalsContainer.leadingAnchor, constant: 8),
 			totalsGraphYAxisTitleLabel.widthAnchor.constraint(equalToConstant: 36),
-			totalsGraphYAxisTitleLabel.bottomAnchor.constraint(equalTo: totalsGraphYAxisLabels.topAnchor, constant: -2),
+			totalsGraphYAxisTitleLabel.topAnchor.constraint(equalTo: totalsLabel.bottomAnchor, constant: 6),
 			totalsGraphYAxisLabels.leadingAnchor.constraint(equalTo: totalsContainer.leadingAnchor, constant: 8),
 			totalsGraphYAxisLabels.widthAnchor.constraint(equalToConstant: 36),
-			totalsGraphYAxisLabels.topAnchor.constraint(equalTo: totalsLabel.bottomAnchor, constant: 8),
-			totalsGraphYAxisLabels.bottomAnchor.constraint(equalTo: totalsContainer.bottomAnchor, constant: -8),
+			totalsGraphYAxisLabels.topAnchor.constraint(equalTo: totalsGraphGrid.topAnchor),
+			totalsGraphYAxisLabels.bottomAnchor.constraint(equalTo: totalsGraphGrid.bottomAnchor),
 			totalsGraphGrid.leadingAnchor.constraint(equalTo: totalsGraphYAxisLabels.trailingAnchor, constant: 6),
 			totalsGraphGrid.trailingAnchor.constraint(equalTo: totalsContainer.trailingAnchor, constant: -8),
 			totalsGraphGrid.topAnchor.constraint(equalTo: totalsLabel.bottomAnchor, constant: 6),
@@ -340,6 +339,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			totalsGraphXAxisLabels.leadingAnchor.constraint(equalTo: totalsGraphStack.leadingAnchor),
 			totalsGraphXAxisLabels.trailingAnchor.constraint(equalTo: totalsGraphStack.trailingAnchor),
 			totalsGraphXAxisLabels.bottomAnchor.constraint(equalTo: totalsContainer.bottomAnchor, constant: -2),
+			totalsGraphXAxisLabels.heightAnchor.constraint(equalToConstant: 16),
 
 			rollButton.widthAnchor.constraint(equalToConstant: 52),
 			presetsButton.widthAnchor.constraint(equalToConstant: 72),
@@ -877,8 +877,13 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private func configureTotalsGraphBars(count: Int) {
 		totalsBarHeightConstraints.removeAll()
 		totalsBarViews.removeAll()
+		totalsXAxisTickLabels.removeAll()
 		totalsGraphStack.arrangedSubviews.forEach { view in
 			totalsGraphStack.removeArrangedSubview(view)
+			view.removeFromSuperview()
+		}
+		totalsGraphXAxisLabels.arrangedSubviews.forEach { view in
+			totalsGraphXAxisLabels.removeArrangedSubview(view)
 			view.removeFromSuperview()
 		}
 		for _ in 0..<count {
@@ -900,15 +905,26 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			totalsBarViews.append(bar)
 			totalsGraphStack.addArrangedSubview(container)
 		}
+		for faceLabel in Self.graphFaceLabels(binCount: count) {
+			let label = UILabel()
+			label.font = UIFont.preferredFont(forTextStyle: .caption2)
+			label.adjustsFontForContentSizeCategory = true
+			label.minimumScaleFactor = 0.6
+			label.adjustsFontSizeToFitWidth = true
+			label.textAlignment = .center
+			label.textColor = currentPalette.secondaryTextColor
+			label.text = faceLabel
+			totalsXAxisTickLabels.append(label)
+			totalsGraphXAxisLabels.addArrangedSubview(label)
+		}
 	}
 
 	private func updateTotalsGraph(with counts: [Int]) {
 		if counts.count != totalsBarHeightConstraints.count {
-			configureTotalsGraphBars(count: max(4, counts.count))
+			configureTotalsGraphBars(count: counts.count)
 		}
 		let clampedBins = Array(counts.prefix(totalsBarHeightConstraints.count))
 		updateTotalsGraphAxisLabels(maxCount: clampedBins.max() ?? 0)
-		updateTotalsGraphXAxisLabels(binCount: clampedBins.count)
 		let heights = Self.graphBarHeights(for: clampedBins, maxBarHeight: 46, minBarHeight: 2)
 		for index in totalsBarHeightConstraints.indices {
 			let bin = index < clampedBins.count ? clampedBins[index] : 0
@@ -933,10 +949,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		return (top: "\(maxCount)", mid: "\(midValue)", bottom: "0")
 	}
 
-	static func graphXAxisLabels(binCount: Int) -> (left: String, mid: String, right: String) {
-		guard binCount > 0 else { return ("0", "0", "0") }
-		let mid = max(1, Int(ceil(Double(binCount) / 2.0)))
-		return (left: "1", mid: "\(mid)", right: "\(binCount)")
+	static func graphFaceLabels(binCount: Int) -> [String] {
+		guard binCount > 0 else { return [] }
+		return (1...binCount).map { "\($0)" }
 	}
 
 	private func updateTotalsGraphAxisLabels(maxCount: Int) {
@@ -944,13 +959,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		totalsGraphTopLabel.text = labels.top
 		totalsGraphMidLabel.text = labels.mid
 		totalsGraphBottomLabel.text = labels.bottom
-	}
-
-	private func updateTotalsGraphXAxisLabels(binCount: Int) {
-		let labels = Self.graphXAxisLabels(binCount: binCount)
-		totalsGraphXMinLabel.text = labels.left
-		totalsGraphXMidLabel.text = labels.mid
-		totalsGraphXMaxLabel.text = labels.right
 	}
 
 	private func boardSideLength(mixed: Bool) -> CGFloat {
@@ -1517,9 +1525,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		totalsGraphTopLabel.textColor = palette.secondaryTextColor
 		totalsGraphMidLabel.textColor = palette.secondaryTextColor
 		totalsGraphBottomLabel.textColor = palette.secondaryTextColor
-		totalsGraphXMinLabel.textColor = palette.secondaryTextColor
-		totalsGraphXMidLabel.textColor = palette.secondaryTextColor
-		totalsGraphXMaxLabel.textColor = palette.secondaryTextColor
+		for label in totalsXAxisTickLabels {
+			label.textColor = palette.secondaryTextColor
+		}
 		for gridLine in totalsGraphGrid.subviews {
 			gridLine.backgroundColor = UIColor.separator.withAlphaComponent(0.32)
 		}
