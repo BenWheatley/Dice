@@ -45,6 +45,9 @@ These rules apply to all agents working in this repository.
 14. Prioritize strong engineering quality and low technical debt:
    - choose maintainable, testable designs over expedient hacks
    - keep abstractions clear and cohesive, and reduce future rework during current implementation
+15. Only code that compiles and passes tests is ready to commit:
+   - do not commit code with known compile errors
+   - do not mark work complete unless relevant tests pass (or environment blockers are explicitly documented and resolved with the user)
 
 ## Platform/Feature Scope
 
