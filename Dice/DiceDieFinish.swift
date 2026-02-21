@@ -100,9 +100,9 @@ float simplexNoise3D(float3 p) {
 // Convert surface position (view space) back into this die's local model space.
 float4 worldPos = scn_frame.inverseViewTransform * float4(_surface.position.xyz, 1.0);
 float3 modelPos = (scn_node.inverseModelTransform * worldPos).xyz;
-// Rotate marble sampling basis by 45 degrees to keep veins off face-plane alignment.
-const float c = 0.7071068; // cos(45 deg)
-const float s = 0.7071068; // sin(45 deg)
+// Rotate marble sampling basis by 37 degrees to keep veins off face-plane alignment.
+const float c = 0.79863551; // cos(37 deg)
+const float s = 0.6018150232; // sin(37 deg)
 float3x3 veinBasis = float3x3(
 	float3(c, -s, 0.0),
 	float3(s,  c, 0.0),
