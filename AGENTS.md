@@ -55,6 +55,9 @@ These rules apply to all agents working in this repository.
    - if simulator/device discovery fails in sandbox (for example CoreSimulatorService invalid, missing destinations, or DerivedData/log permission errors), rerun the same `xcodebuild` command outside sandbox before concluding there is an app issue
    - if Metal toolchain/component commands disagree between sandbox and host, trust outside-sandbox `xcodebuild -showComponent` results
    - when reporting failures, explicitly label whether they are sandbox-only or reproducible outside sandbox
+18. Never do per-pixel rendering work on CPU:
+   - if behavior requires per-pixel work, implement it with GPU shaders
+   - do not add or keep CPU loops that generate textures/pixels at runtime for production rendering paths
 
 ## Platform/Feature Scope
 
