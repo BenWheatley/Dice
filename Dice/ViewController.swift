@@ -24,6 +24,10 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let totalsGraphGrid = UIView()
 	private let totalsGraphYAxisLabels = UIStackView()
 	private let totalsGraphYAxisTitleLabel = UILabel()
+	private let totalsGraphXAxisLabels = UIStackView()
+	private let totalsGraphXMinLabel = UILabel()
+	private let totalsGraphXMidLabel = UILabel()
+	private let totalsGraphXMaxLabel = UILabel()
 	private let totalsGraphTopLabel = UILabel()
 	private let totalsGraphMidLabel = UILabel()
 	private let totalsGraphBottomLabel = UILabel()
@@ -41,6 +45,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private var statsVisible = true
 	private var totalsBarHeightConstraints: [NSLayoutConstraint] = []
 	private var totalsBarViews: [UIView] = []
+	private var lastBoardSideLength: CGFloat = 0
 	private lazy var nearDieMenuTapRecognizer: UITapGestureRecognizer = {
 		let recognizer = UITapGestureRecognizer(target: self, action: #selector(handleNearDieMenuTap(_:)))
 		recognizer.cancelsTouchesInView = false
@@ -240,10 +245,21 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		totalsGraphYAxisTitleLabel.textColor = currentPalette.secondaryTextColor
 		totalsGraphYAxisTitleLabel.textAlignment = .right
 		totalsGraphYAxisTitleLabel.text = NSLocalizedString("stats.graph.yAxis", comment: "Graph y-axis title")
+		totalsGraphXAxisLabels.translatesAutoresizingMaskIntoConstraints = false
+		totalsGraphXAxisLabels.axis = .horizontal
+		totalsGraphXAxisLabels.distribution = .equalSpacing
+		totalsGraphXAxisLabels.alignment = .center
+		totalsGraphXAxisLabels.isUserInteractionEnabled = false
 		for label in [totalsGraphTopLabel, totalsGraphMidLabel, totalsGraphBottomLabel] {
 			label.font = UIFont.preferredFont(forTextStyle: .caption2)
 			label.adjustsFontForContentSizeCategory = true
 			label.textColor = currentPalette.secondaryTextColor
+		}
+		for label in [totalsGraphXMinLabel, totalsGraphXMidLabel, totalsGraphXMaxLabel] {
+			label.font = UIFont.preferredFont(forTextStyle: .caption2)
+			label.adjustsFontForContentSizeCategory = true
+			label.textColor = currentPalette.secondaryTextColor
+			label.text = "0"
 		}
 		totalsGraphTopLabel.text = "0"
 		totalsGraphMidLabel.text = "0"
@@ -251,6 +267,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		totalsGraphYAxisLabels.addArrangedSubview(totalsGraphTopLabel)
 		totalsGraphYAxisLabels.addArrangedSubview(totalsGraphMidLabel)
 		totalsGraphYAxisLabels.addArrangedSubview(totalsGraphBottomLabel)
+		totalsGraphXAxisLabels.addArrangedSubview(totalsGraphXMinLabel)
+		totalsGraphXAxisLabels.addArrangedSubview(totalsGraphXMidLabel)
+		totalsGraphXAxisLabels.addArrangedSubview(totalsGraphXMaxLabel)
 
 		let gridLineTop = makeGraphGridLine()
 		let gridLineMid = makeGraphGridLine()
@@ -276,6 +295,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		totalsContainer.addSubview(totalsGraphYAxisTitleLabel)
 		totalsContainer.addSubview(totalsGraphYAxisLabels)
 		totalsContainer.addSubview(totalsGraphStack)
+		totalsContainer.addSubview(totalsGraphXAxisLabels)
 
 		controlsContainer.addSubview(row)
 		controlsContainer.addSubview(validationLabel)
@@ -299,7 +319,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			totalsContainer.heightAnchor.constraint(greaterThanOrEqualToConstant: 116),
 
 			totalsLabel.leadingAnchor.constraint(equalTo: totalsContainer.leadingAnchor, constant: 8),
-			totalsLabel.topAnchor.constraint(equalTo: totalsContainer.topAnchor, constant: 8),
+			totalsLabel.topAnchor.constraint(equalTo: totalsContainer.topAnchor, constant: 4),
 			totalsLabel.trailingAnchor.constraint(equalTo: totalsContainer.trailingAnchor, constant: -8),
 			totalsGraphYAxisTitleLabel.leadingAnchor.constraint(equalTo: totalsContainer.leadingAnchor, constant: 8),
 			totalsGraphYAxisTitleLabel.widthAnchor.constraint(equalToConstant: 36),
@@ -310,13 +330,16 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			totalsGraphYAxisLabels.bottomAnchor.constraint(equalTo: totalsContainer.bottomAnchor, constant: -8),
 			totalsGraphGrid.leadingAnchor.constraint(equalTo: totalsGraphYAxisLabels.trailingAnchor, constant: 6),
 			totalsGraphGrid.trailingAnchor.constraint(equalTo: totalsContainer.trailingAnchor, constant: -8),
-			totalsGraphGrid.topAnchor.constraint(equalTo: totalsLabel.bottomAnchor, constant: 8),
-			totalsGraphGrid.bottomAnchor.constraint(equalTo: totalsContainer.bottomAnchor, constant: -8),
+			totalsGraphGrid.topAnchor.constraint(equalTo: totalsLabel.bottomAnchor, constant: 6),
+			totalsGraphGrid.bottomAnchor.constraint(equalTo: totalsGraphXAxisLabels.topAnchor, constant: -2),
 			totalsGraphStack.leadingAnchor.constraint(equalTo: totalsGraphGrid.leadingAnchor),
 			totalsGraphStack.trailingAnchor.constraint(equalTo: totalsGraphGrid.trailingAnchor),
-			totalsGraphStack.topAnchor.constraint(equalTo: totalsLabel.bottomAnchor, constant: 8),
+			totalsGraphStack.topAnchor.constraint(equalTo: totalsLabel.bottomAnchor, constant: 6),
 			totalsGraphStack.heightAnchor.constraint(equalToConstant: 48),
-			totalsGraphStack.bottomAnchor.constraint(equalTo: totalsContainer.bottomAnchor, constant: -8),
+			totalsGraphStack.bottomAnchor.constraint(equalTo: totalsGraphXAxisLabels.topAnchor, constant: -2),
+			totalsGraphXAxisLabels.leadingAnchor.constraint(equalTo: totalsGraphStack.leadingAnchor),
+			totalsGraphXAxisLabels.trailingAnchor.constraint(equalTo: totalsGraphStack.trailingAnchor),
+			totalsGraphXAxisLabels.bottomAnchor.constraint(equalTo: totalsContainer.bottomAnchor, constant: -2),
 
 			rollButton.widthAnchor.constraint(equalToConstant: 52),
 			presetsButton.widthAnchor.constraint(equalToConstant: 72),
@@ -484,6 +507,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let sideCounts = viewModel.diceSideCounts
 		guard !sideCounts.isEmpty,
 			  sideCounts.allSatisfy({ boardSupportedSides.contains($0) }) else {
+			lastBoardSideLength = 0
 			diceBoardView.isHidden = true
 			return
 		}
@@ -507,6 +531,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			baseScale = mixed ? 0.19 : 0.22
 		}
 		let sideLength = baseScale * min(collectionView.bounds.width, collectionView.bounds.height)
+		lastBoardSideLength = sideLength
 		let itemCount = collectionView.numberOfItems(inSection: 0)
 		var centers: [CGPoint] = []
 		var values: [Int] = []
@@ -614,7 +639,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let candidates: [(index: Int, center: CGPoint, maxDistance: CGFloat)] = collectionView.indexPathsForVisibleItems.compactMap { indexPath in
 			guard let cell = collectionView.cellForItem(at: indexPath) as? DiceCollectionViewCell else { return nil }
 			let center = cell.convert(CGPoint(x: cell.bounds.midX, y: cell.bounds.midY), to: collectionView)
-			let maxDistance = max(cell.bounds.width, cell.bounds.height) * 0.65
+			let maxDistance = max(max(cell.bounds.width, cell.bounds.height) * 1.05, lastBoardSideLength * 0.70)
 			return (index: indexPath.row, center: center, maxDistance: maxDistance)
 		}
 		guard !candidates.isEmpty else { return }
@@ -890,6 +915,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		}
 		let clampedBins = Array(counts.prefix(totalsBarHeightConstraints.count))
 		updateTotalsGraphAxisLabels(maxCount: clampedBins.max() ?? 0)
+		updateTotalsGraphXAxisLabels(binCount: clampedBins.count)
 		let heights = Self.graphBarHeights(for: clampedBins, maxBarHeight: 46, minBarHeight: 2)
 		for index in totalsBarHeightConstraints.indices {
 			let bin = index < clampedBins.count ? clampedBins[index] : 0
@@ -910,7 +936,14 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	static func graphAxisLabels(maxCount: Int) -> (top: String, mid: String, bottom: String) {
 		guard maxCount > 0 else { return ("0", "0", "0") }
-		return (top: "\(maxCount)", mid: "\(Int(ceil(Double(maxCount) / 2.0)))", bottom: "0")
+		let midValue = maxCount == 1 ? 0 : Int(ceil(Double(maxCount) / 2.0))
+		return (top: "\(maxCount)", mid: "\(midValue)", bottom: "0")
+	}
+
+	static func graphXAxisLabels(binCount: Int) -> (left: String, mid: String, right: String) {
+		guard binCount > 0 else { return ("0", "0", "0") }
+		let mid = max(1, Int(ceil(Double(binCount) / 2.0)))
+		return (left: "1", mid: "\(mid)", right: "\(binCount)")
 	}
 
 	private func updateTotalsGraphAxisLabels(maxCount: Int) {
@@ -918,6 +951,13 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		totalsGraphTopLabel.text = labels.top
 		totalsGraphMidLabel.text = labels.mid
 		totalsGraphBottomLabel.text = labels.bottom
+	}
+
+	private func updateTotalsGraphXAxisLabels(binCount: Int) {
+		let labels = Self.graphXAxisLabels(binCount: binCount)
+		totalsGraphXMinLabel.text = labels.left
+		totalsGraphXMidLabel.text = labels.mid
+		totalsGraphXMaxLabel.text = labels.right
 	}
 
 	private func makeGraphGridLine() -> UIView {
@@ -1357,6 +1397,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	private func selectDieColorPreset(_ preset: DiceDieColorPreset, index: Int) {
 		viewModel.applyPerDieColorSelection(preset, at: index)
+		updateNotationField()
+		collectionView.reloadData()
 		diceBoardView.setDieColorPreferences(viewModel.dieColorPreferences)
 		updateDiceBoard(animated: false)
 		updateControlMenu()
@@ -1460,6 +1502,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		totalsGraphTopLabel.textColor = palette.secondaryTextColor
 		totalsGraphMidLabel.textColor = palette.secondaryTextColor
 		totalsGraphBottomLabel.textColor = palette.secondaryTextColor
+		totalsGraphXMinLabel.textColor = palette.secondaryTextColor
+		totalsGraphXMidLabel.textColor = palette.secondaryTextColor
+		totalsGraphXMaxLabel.textColor = palette.secondaryTextColor
 		for gridLine in totalsGraphGrid.subviews {
 			gridLine.backgroundColor = UIColor.separator.withAlphaComponent(0.32)
 		}

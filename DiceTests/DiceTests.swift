@@ -1935,6 +1935,27 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(labels.bottom, "0")
 	}
 
+	func testGraphAxisLabelsAvoidDuplicateTopWhenMaxCountIsOne() {
+		let labels = DiceCollectionViewController.graphAxisLabels(maxCount: 1)
+		XCTAssertEqual(labels.top, "1")
+		XCTAssertEqual(labels.mid, "0")
+		XCTAssertEqual(labels.bottom, "0")
+	}
+
+	func testGraphXAxisLabelsProvideStartMidAndEndBins() {
+		let labels = DiceCollectionViewController.graphXAxisLabels(binCount: 6)
+		XCTAssertEqual(labels.left, "1")
+		XCTAssertEqual(labels.mid, "3")
+		XCTAssertEqual(labels.right, "6")
+	}
+
+	func testGraphXAxisLabelsRemainZeroWhenNoBinsPresent() {
+		let labels = DiceCollectionViewController.graphXAxisLabels(binCount: 0)
+		XCTAssertEqual(labels.left, "0")
+		XCTAssertEqual(labels.mid, "0")
+		XCTAssertEqual(labels.right, "0")
+	}
+
 	func testWatchViewModelRepeatLastRollUsesPreviousModeConfiguration() {
 		let model = WatchRollViewModel(
 			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { $0.lowerBound }, randomDouble: { 0.5 })),

@@ -63,29 +63,29 @@ float simplexNoise3D(float3 p) {
 	float nx01 = mix(n001, n101, u.x);
 	float nx11 = mix(n011, n111, u.x);
 	float nxy0 = mix(nx00, nx10, u.y);
-	float nxy1 = mix(nx01, nx11, u.y);
-	return mix(nxy0, nxy1, u.z);
+float nxy1 = mix(nx01, nx11, u.y);
+return mix(nxy0, nxy1, u.z);
 }
 
 #pragma body
 float3 modelPos = _surface.position.xyz;
-float3 p = modelPos * 5.8;
-float n1 = simplexNoise3D(p * 1.0 + float3(1.7, 2.3, 3.1));
-float n2 = simplexNoise3D(p * 2.1 + float3(7.3, 5.9, 11.2));
-float n3 = simplexNoise3D(p * 3.7 + float3(13.4, 9.1, 4.6));
-float swirl = (n1 * 0.65) + (n2 * 0.28) + (n3 * 0.07);
-float veins = sin((p.x + p.y + p.z) * 1.4 + swirl * 6.2);
-float veinMask = smoothstep(0.36, 0.95, 0.5 + 0.5 * veins);
-float grain = (n1 * 0.52) + (n2 * 0.33) + (n3 * 0.15);
-float fleck = smoothstep(0.88, 0.985, simplexNoise3D(p * 4.6 + 19.0));
+float3 p = modelPos * 2.15;
+float n1 = simplexNoise3D(p * 0.8 + float3(1.7, 2.3, 3.1));
+float n2 = simplexNoise3D(p * 1.5 + float3(7.3, 5.9, 11.2));
+float n3 = simplexNoise3D(p * 2.4 + float3(13.4, 9.1, 4.6));
+float swirl = (n1 * 0.64) + (n2 * 0.27) + (n3 * 0.09);
+float veins = sin((p.x + p.y + p.z) * 0.92 + swirl * 5.3);
+float veinMask = smoothstep(0.44, 0.96, 0.5 + 0.5 * veins);
+float grain = (n1 * 0.54) + (n2 * 0.32) + (n3 * 0.14);
+float fleck = smoothstep(0.90, 0.988, simplexNoise3D(p * 2.9 + 19.0));
 
 float3 base = _surface.diffuse.rgb;
 float luminance = dot(base, float3(0.2126, 0.7152, 0.0722));
 float3 neutral = float3(luminance, luminance, luminance) * 0.97;
 float3 marbleBase = mix(neutral * 0.70, neutral * 1.10, grain);
-float3 veinColor = mix(float3(0.22, 0.22, 0.23), float3(0.39, 0.39, 0.41), grain);
-float3 marble = mix(marbleBase, veinColor, veinMask * 0.58);
-marble += fleck * 0.04;
+float3 veinColor = mix(float3(0.20, 0.20, 0.21), float3(0.36, 0.36, 0.38), grain);
+float3 marble = mix(marbleBase, veinColor, veinMask * 0.62);
+marble += fleck * 0.026;
 
 _surface.diffuse.rgb = clamp(marble, 0.0, 1.0);
 _surface.specular.rgb *= 0.72;
