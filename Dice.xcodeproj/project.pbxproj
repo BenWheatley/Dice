@@ -96,6 +96,12 @@
 		E0CE00012F54000100D1CE00 /* DiceShaderModifierSourceLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0CE10012F54000100D1CE00 /* DiceShaderModifierSourceLoader.swift */; };
 		E0CE00022F54000200D1CE00 /* DiceSurfaceBaseShader.metal in Resources */ = {isa = PBXBuildFile; fileRef = E0CE10022F54000200D1CE00 /* DiceSurfaceBaseShader.metal */; };
 		E0CE00032F54000300D1CE00 /* DiceSurfaceStoneShader.metal in Resources */ = {isa = PBXBuildFile; fileRef = E0CE10032F54000300D1CE00 /* DiceSurfaceStoneShader.metal */; };
+		F1CE00012F55000100D1CE00 /* DiceWidgetSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1CE10012F55000100D1CE00 /* DiceWidgetSnapshotStore.swift */; };
+		W10000012F56000100D1CE00 /* DiceWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = W40000022F56000200D1CE00 /* DiceWidgetsBundle.swift */; };
+		W10000022F56000200D1CE00 /* DiceRollWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = W40000032F56000300D1CE00 /* DiceRollWidget.swift */; };
+		W10000032F56000300D1CE00 /* DiceWidgetSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1CE10012F55000100D1CE00 /* DiceWidgetSnapshotStore.swift */; };
+		W10000042F56000400D1CE00 /* RollHistoryEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10112F51001100D1CE00 /* RollHistoryEntry.swift */; };
+		W10000052F56000500D1CE00 /* Dice Widgets Extension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = W40000012F56000100D1CE00 /* Dice Widgets Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C0DE00212F44022100D1CE00 /* DiceNotationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00002F44000100D1CE00 /* DiceNotationParser.swift */; };
 		C0DE00232F44022300D1CE00 /* TrueRandomRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00022F44003200D1CE00 /* TrueRandomRoller.swift */; };
 		C0DE00252F44022500D1CE00 /* IntuitiveRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00042F44005400D1CE00 /* IntuitiveRoller.swift */; };
@@ -132,6 +138,13 @@
 			remoteGlobalIDString = B50B4503215D804200A6399B;
 			remoteInfo = "Dice WatchKit Extension";
 		};
+		W20000012F56000100D1CE00 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B50B44C5215D803C00A6399B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = W70000012F56000100D1CE00;
+			remoteInfo = "Dice Widgets Extension";
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -156,6 +169,17 @@
 			);
 			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 1;
+		};
+		W30000012F56000100D1CE00 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				W10000052F56000500D1CE00 /* Dice Widgets Extension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
@@ -255,6 +279,11 @@
 		E0CE10012F54000100D1CE00 /* DiceShaderModifierSourceLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceShaderModifierSourceLoader.swift; sourceTree = "<group>"; };
 		E0CE10022F54000200D1CE00 /* DiceSurfaceBaseShader.metal */ = {isa = PBXFileReference; lastKnownFileType = text; path = DiceSurfaceBaseShader.metal; sourceTree = "<group>"; };
 		E0CE10032F54000300D1CE00 /* DiceSurfaceStoneShader.metal */ = {isa = PBXFileReference; lastKnownFileType = text; path = DiceSurfaceStoneShader.metal; sourceTree = "<group>"; };
+		F1CE10012F55000100D1CE00 /* DiceWidgetSnapshotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceWidgetSnapshotStore.swift; sourceTree = "<group>"; };
+		W40000012F56000100D1CE00 /* Dice Widgets Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Dice Widgets Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		W40000022F56000200D1CE00 /* DiceWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceWidgetsBundle.swift; sourceTree = "<group>"; };
+		W40000032F56000300D1CE00 /* DiceRollWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceRollWidget.swift; sourceTree = "<group>"; };
+		W40000042F56000400D1CE00 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -286,6 +315,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		W50000012F56000100D1CE00 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -297,6 +333,7 @@
 				B50B44EF215D804100A6399B /* DiceUITests */,
 				B50B44F9215D804200A6399B /* Dice WatchKit App */,
 				B50B4508215D804200A6399B /* Dice WatchKit Extension */,
+				W60000012F56000100D1CE00 /* Dice Widgets */,
 				B50B44CE215D803D00A6399B /* Products */,
 			);
 			sourceTree = "<group>";
@@ -309,6 +346,7 @@
 				B50B44EC215D804100A6399B /* DiceUITests.xctest */,
 				B50B44F5215D804200A6399B /* Dice WatchKit App.app */,
 				B50B4504215D804200A6399B /* Dice WatchKit Extension.appex */,
+				W40000012F56000100D1CE00 /* Dice Widgets Extension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -387,6 +425,7 @@
 				D2CE10162F51001600D1CE00 /* RollHistoryModeFilter.swift */,
 				D2CE10172F51001700D1CE00 /* RollOutcome.swift */,
 				D2CE10182F51001800D1CE00 /* RollSessionSummary.swift */,
+				F1CE10012F55000100D1CE00 /* DiceWidgetSnapshotStore.swift */,
 				E0CE10012F54000100D1CE00 /* DiceShaderModifierSourceLoader.swift */,
 				B50B44D4215D803D00A6399B /* Main.storyboard */,
 				B50B44D7215D804100A6399B /* Assets.xcassets */,
@@ -438,6 +477,16 @@
 			path = "Dice WatchKit Extension";
 			sourceTree = "<group>";
 		};
+		W60000012F56000100D1CE00 /* Dice Widgets */ = {
+			isa = PBXGroup;
+			children = (
+				W40000022F56000200D1CE00 /* DiceWidgetsBundle.swift */,
+				W40000032F56000300D1CE00 /* DiceRollWidget.swift */,
+				W40000042F56000400D1CE00 /* Info.plist */,
+			);
+			path = "Dice Widgets";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -449,10 +498,12 @@
 				B50B44CA215D803C00A6399B /* Frameworks */,
 				B50B44CB215D803C00A6399B /* Resources */,
 				B50B451C215D804300A6399B /* Embed Watch Content */,
+				W30000012F56000100D1CE00 /* Embed App Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				WA0000012F56000100D1CE00 /* PBXTargetDependency */,
 			);
 			name = Dice;
 			productName = Dice;
@@ -529,6 +580,23 @@
 			productReference = B50B4504215D804200A6399B /* Dice WatchKit Extension.appex */;
 			productType = "com.apple.product-type.watchkit2-extension";
 		};
+		W70000012F56000100D1CE00 /* Dice Widgets Extension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = WC0000012F56000100D1CE00 /* Build configuration list for PBXNativeTarget "Dice Widgets Extension" */;
+			buildPhases = (
+				W90000012F56000100D1CE00 /* Sources */,
+				W50000012F56000100D1CE00 /* Frameworks */,
+				W80000012F56000100D1CE00 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Dice Widgets Extension";
+			productName = "Dice Widgets Extension";
+			productReference = W40000012F56000100D1CE00 /* Dice Widgets Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -556,6 +624,9 @@
 					B50B4503215D804200A6399B = {
 						CreatedOnToolsVersion = 10.0;
 					};
+					W70000012F56000100D1CE00 = {
+						CreatedOnToolsVersion = 16.0;
+					};
 				};
 			};
 			buildConfigurationList = B50B44C8215D803C00A6399B /* Build configuration list for PBXProject "Dice" */;
@@ -576,6 +647,7 @@
 				B50B44EB215D804100A6399B /* DiceUITests */,
 				B50B44F4215D804100A6399B /* Dice WatchKit App */,
 				B50B4503215D804200A6399B /* Dice WatchKit Extension */,
+				W70000012F56000100D1CE00 /* Dice Widgets Extension */,
 			);
 		};
 /* End PBXProject section */
@@ -622,6 +694,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				B50B4510215D804300A6399B /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		W80000012F56000100D1CE00 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -673,6 +752,7 @@
 				D4CE11012F52000100D1CE00 /* DiceBackgroundShaders.metal in Sources */,
 				D5CE11012F53000100D1CE00 /* DiceRollDistributionChartView.swift in Sources */,
 				E0CE00012F54000100D1CE00 /* DiceShaderModifierSourceLoader.swift in Sources */,
+				F1CE00012F55000100D1CE00 /* DiceWidgetSnapshotStore.swift in Sources */,
 				D1CE110F2F50000F00D1CE00 /* RollHistoryViewController.swift in Sources */,
 				D1CE11012F50000100D1CE00 /* DiceCollectionViewCell.swift in Sources */,
 				D2CE11012F51000100D1CE00 /* D6FaceOrientation.swift in Sources */,
@@ -739,6 +819,17 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		W90000012F56000100D1CE00 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				W10000012F56000100D1CE00 /* DiceWidgetsBundle.swift in Sources */,
+				W10000022F56000200D1CE00 /* DiceRollWidget.swift in Sources */,
+				W10000032F56000300D1CE00 /* DiceWidgetSnapshotStore.swift in Sources */,
+				W10000042F56000400D1CE00 /* RollHistoryEntry.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -761,6 +852,11 @@
 			isa = PBXTargetDependency;
 			target = B50B4503215D804200A6399B /* Dice WatchKit Extension */;
 			targetProxy = B50B4506215D804200A6399B /* PBXContainerItemProxy */;
+		};
+		WA0000012F56000100D1CE00 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = W70000012F56000100D1CE00 /* Dice Widgets Extension */;
+			targetProxy = W20000012F56000100D1CE00 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1112,6 +1208,40 @@
 			};
 			name = Release;
 		};
+		WB0000012F56000100D1CE00 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = "Dice Widgets/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
+				MACOSX_DEPLOYMENT_TARGET = 15.7;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kitsunesoftware.Dice.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		WB0000022F56000200D1CE00 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = "Dice Widgets/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
+				MACOSX_DEPLOYMENT_TARGET = 15.7;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kitsunesoftware.Dice.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1165,6 +1295,15 @@
 			buildConfigurations = (
 				B50B4524215D804300A6399B /* Debug */,
 				B50B4525215D804300A6399B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		WC0000012F56000100D1CE00 /* Build configuration list for PBXNativeTarget "Dice Widgets Extension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				WB0000012F56000100D1CE00 /* Debug */,
+				WB0000022F56000200D1CE00 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

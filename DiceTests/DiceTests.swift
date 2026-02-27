@@ -228,6 +228,42 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(resolved?.channelCount, 1)
 	}
 
+	func testWidgetSnapshotStoreReturnsDefaultWhenNoPersistedState() {
+		let defaults = UserDefaults(suiteName: "DiceTests.WidgetSnapshotStore.Empty.\(UUID().uuidString)")!
+		let store = DiceWidgetSnapshotStore(defaults: defaults)
+
+		let snapshot = store.loadSnapshot()
+
+		XCTAssertEqual(snapshot.notation, "6d6")
+		XCTAssertEqual(snapshot.lastTotal, 0)
+		XCTAssertEqual(snapshot.modeToken, .trueRandom)
+		XCTAssertTrue(snapshot.recentTotals.isEmpty)
+		XCTAssertTrue(snapshot.isEmptyState)
+	}
+
+	func testWidgetSnapshotStoreUsesPersistedNotationAndHistory() throws {
+		let defaults = UserDefaults(suiteName: "DiceTests.WidgetSnapshotStore.History.\(UUID().uuidString)")!
+		defaults.set("3d20+1d6", forKey: "Dice.lastNotation")
+
+		let history = [
+			RollHistoryEntry(timestamp: Date(timeIntervalSince1970: 100), notation: "2d6", values: [4, 5], sum: 9, intuitive: false),
+			RollHistoryEntry(timestamp: Date(timeIntervalSince1970: 200), notation: "3d20+1d6", values: [11, 19, 3, 5], sum: 38, intuitive: true),
+			RollHistoryEntry(timestamp: Date(timeIntervalSince1970: 300), notation: "1d6", values: [2], sum: 2, intuitive: false),
+		]
+		let encoder = JSONEncoder()
+		encoder.dateEncodingStrategy = .iso8601
+		defaults.set(try encoder.encode(history), forKey: "Dice.persistedHistory")
+
+		let store = DiceWidgetSnapshotStore(defaults: defaults)
+		let snapshot = store.loadSnapshot()
+
+		XCTAssertEqual(snapshot.notation, "3d20+1d6")
+		XCTAssertEqual(snapshot.lastTotal, 2)
+		XCTAssertEqual(snapshot.modeToken, .trueRandom)
+		XCTAssertEqual(snapshot.recentTotals, [2, 38, 9])
+		XCTAssertFalse(snapshot.isEmptyState)
+	}
+
 	func testTrueRandomRollerUsesProvidedRandomSourceAndRange() {
 		var capturedRange: ClosedRange<Int>?
 		let roller = TrueRandomRoller { range in
