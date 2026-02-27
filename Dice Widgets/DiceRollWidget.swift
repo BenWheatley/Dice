@@ -61,11 +61,18 @@ private struct DiceRollWidgetView: View {
 		switch family {
 		case .accessoryInline:
 			Text(inlineText)
+				lineLimit(1)
 		case .accessoryCircular:
 			ZStack {
 				AccessoryWidgetBackground()
-				Text(circularText)
-					.font(.caption.bold())
+				VStack(spacing: 0) {
+					Text(circularText)
+						.font(.system(size: 14, weight: .bold, design: .rounded))
+						.monospacedDigit()
+					Text(circularModeToken)
+						.font(.system(size: 8, weight: .semibold, design: .rounded))
+						.foregroundStyle(.secondary)
+				}
 			}
 		case .systemSmall:
 			VStack(alignment: .leading, spacing: 6) {
@@ -137,13 +144,21 @@ private struct DiceRollWidgetView: View {
 
 	private var inlineText: String {
 		if entry.snapshot.isEmptyState {
-			return "Dice: ready"
+			return "Dice ready"
 		}
-		return "\(entry.snapshot.notation) = \(entry.snapshot.lastTotal)"
+		return "\(compactModeToken) \(entry.snapshot.notation) \(entry.snapshot.lastTotal)"
 	}
 
 	private var circularText: String {
 		entry.snapshot.isEmptyState ? "--" : "\(entry.snapshot.lastTotal)"
+	}
+
+	private var compactModeToken: String {
+		entry.snapshot.modeToken == .intuitive ? "I" : "R"
+	}
+
+	private var circularModeToken: String {
+		entry.snapshot.modeToken == .intuitive ? "INT" : "RND"
 	}
 
 	private var modeLabel: String {
