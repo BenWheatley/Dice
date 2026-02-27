@@ -37,7 +37,11 @@ float n2 = simplexNoise3D(p * 0.58 + float3(7.3, 5.9, 11.2));
 float n3 = simplexNoise3D(p * 0.96 + float3(13.4, 9.1, 4.6));
 
 float swirl = (n1 * 0.62) + (n2 * 0.28) + (n3 * 0.10);
-float veins = sin((p.x + p.y + p.z) * 0.24 + swirl * 3.1);
+
+const float3 v = normalize(float3(3.0, 2.0, 1.0));
+float d = dot(p, v);
+
+float veins = sin(d * 0.24 + swirl * 3.1);
 float veinMask = smoothstep(0.50, 0.965, 0.5 + 0.5 * veins);
 float grain = (n1 * 0.56) + (n2 * 0.31) + (n3 * 0.13);
 float fleck = smoothstep(0.95, 0.994, simplexNoise3D(p * 1.45 + 19.0));
