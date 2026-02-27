@@ -26,6 +26,12 @@
 - `DiceCollectionViewController`: UIKit binding and interaction flow for notation, rolling, rerolling, history, and controls.
 - `DiceCubeView`: SceneKit-backed rendering surface for 3D dice preview.
 
+
+### Widgets and Entry Points
+- `WidgetKit` extension will own Home Screen and Lock Screen widgets.
+- Widget data providers consume persisted roll summary snapshots from shared app data services.
+- `UIApplicationShortcutItem` routes app icon long-press actions into scene-aware deep-link destinations.
+
 ## Data Flow
 1. User input arrives as notation text or preset action.
 2. `DiceViewModel` parses/validates via `DiceNotationParser`.

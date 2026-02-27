@@ -21,6 +21,12 @@ v1 must be verifiable without joining an Apple Developer Team or enabling provis
 - macOS:
   - Mac Catalyst app run/tests on macOS 15.7+
 
+## Widget and Quick Action Validation (v1.1)
+
+- Widget families validated on simulator only (`systemSmall`, `systemMedium`, `accessoryInline`, `accessoryCircular`).
+- Quick action routes validated on simulator for cold and warm app launches.
+- Keep widget data flow entitlement-free for simulator testing (no iCloud/App Group dependency required for v1.1).
+
 ## Capability Rules for v1
 
 Do not introduce capabilities that require team provisioning to test:
