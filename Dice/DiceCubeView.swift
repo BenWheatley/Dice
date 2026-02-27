@@ -733,6 +733,16 @@ final class DiceCubeView: UIView {
 		material.specular.contents = textureSet.metalness
 		material.metalness.contents = textureSet.metalness
 		material.roughness.contents = textureSet.roughness
+		material.diffuse.wrapS = .clamp
+		material.diffuse.wrapT = .clamp
+		material.normal.wrapS = .clamp
+		material.normal.wrapT = .clamp
+		material.specular.wrapS = .clamp
+		material.specular.wrapT = .clamp
+		material.metalness.wrapS = .clamp
+		material.metalness.wrapT = .clamp
+		material.roughness.wrapS = .clamp
+		material.roughness.wrapT = .clamp
 		material.locksAmbientWithDiffuse = true
 		material.isDoubleSided = false
 		if activeDieFinish == .stone {
