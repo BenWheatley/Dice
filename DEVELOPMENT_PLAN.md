@@ -240,4 +240,4 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Add dynamic quick actions update path based on recent notation/history availability.
 - [x] Implement scene startup routing for quick-action launches with per-window state isolation on Catalyst/iPad multiwindow.
 - [x] Add unit tests for quick-action parsing/routing and no-op handling for unavailable actions.
-- [ ] Add simulator manual QA checklist for long-press action invocation from SpringBoard and cold-start/warm-start behavior.
+- [x] Add simulator manual QA checklist for long-press action invocation from SpringBoard and cold-start/warm-start behavior.
