@@ -219,6 +219,40 @@ final class DiceTests: XCTestCase {
 		XCTAssertNil(DiceAppRoute(url: URL(string: "dice://unknown")!))
 	}
 
+	func testWidgetTimelinePolicyUsesLongerIntervalForEmptyState() {
+		let snapshot = DiceWidgetRollSnapshot(
+			notation: "6d6",
+			lastTotal: 0,
+			modeToken: .trueRandom,
+			recentTotals: [],
+			isEmptyState: true,
+			themeToken: .system
+		)
+		XCTAssertEqual(DiceWidgetTimelinePolicy.refreshIntervalMinutes(for: snapshot), 120)
+	}
+
+	func testWidgetTimelinePolicyUsesShortIntervalForRecentState() {
+		let snapshot = DiceWidgetRollSnapshot(
+			notation: "3d20+1d6",
+			lastTotal: 44,
+			modeToken: .intuitive,
+			recentTotals: [44, 38, 27],
+			isEmptyState: false,
+			themeToken: .darkMode
+		)
+		XCTAssertEqual(DiceWidgetTimelinePolicy.refreshIntervalMinutes(for: snapshot), 30)
+	}
+
+	func testWidgetTimelinePlaceholderFixtureIsDeterministic() {
+		let fixture = DiceWidgetTimelinePolicy.placeholderSnapshot
+		XCTAssertEqual(fixture.notation, "6d6")
+		XCTAssertEqual(fixture.lastTotal, 21)
+		XCTAssertEqual(fixture.modeToken, .trueRandom)
+		XCTAssertEqual(fixture.recentTotals, [21, 18, 24])
+		XCTAssertFalse(fixture.isEmptyState)
+		XCTAssertEqual(fixture.themeToken, .system)
+	}
+
 	func testAudioFormatResolverPrefersPlayerOutputFormat() {
 		let playerOutput = AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 2)
 		let mixerOutput = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!

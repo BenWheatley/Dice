@@ -12,14 +12,7 @@ struct DiceRollWidgetProvider: TimelineProvider {
 	func placeholder(in context: Context) -> DiceRollWidgetEntry {
 		DiceRollWidgetEntry(
 			date: Date(),
-			snapshot: DiceWidgetRollSnapshot(
-				notation: "6d6",
-				lastTotal: 21,
-				modeToken: .trueRandom,
-				recentTotals: [21, 18, 24],
-				isEmptyState: false,
-				themeToken: .system
-			)
+			snapshot: DiceWidgetTimelinePolicy.placeholderSnapshot
 		)
 	}
 
@@ -33,7 +26,7 @@ struct DiceRollWidgetProvider: TimelineProvider {
 
 	func getTimeline(in context: Context, completion: @escaping (Timeline<DiceRollWidgetEntry>) -> Void) {
 		let entry = DiceRollWidgetEntry(date: Date(), snapshot: store.loadSnapshot())
-		let refreshMinutes = entry.snapshot.isEmptyState ? 120 : 30
+		let refreshMinutes = DiceWidgetTimelinePolicy.refreshIntervalMinutes(for: entry.snapshot)
 		let refresh = Calendar.current.date(byAdding: .minute, value: refreshMinutes, to: entry.date) ?? entry.date.addingTimeInterval(TimeInterval(refreshMinutes * 60))
 		completion(Timeline(entries: [entry], policy: .after(refresh)))
 	}
