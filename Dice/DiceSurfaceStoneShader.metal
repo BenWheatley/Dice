@@ -1,4 +1,4 @@
-uniform float3 symbolInkColor;
+uniform float4 symbolInkColor;
 
 float hash13(float3 p) {
     return fract(sin(dot(p, float3(127.1, 311.7, 74.7))) * 43758.5453123);
@@ -72,7 +72,7 @@ float3 contrastColor = luminance > 0.52 ? darkContrast : lightContrast;
 float marblePattern = clamp(veinMask * 0.78 + fleck * 0.22, 0.0, 1.0);
 float3 marble = mix(mainColor, contrastColor, marblePattern);
 
-float3 symbolColor = clamp(symbolInkColor, 0.0, 1.0);
+float3 symbolColor = clamp(symbolInkColor.rgb, 0.0, 1.0);
 _surface.diffuse.rgb = mix(clamp(marble, 0.0, 1.0), symbolColor, symbolMask);
 _surface.specular.rgb *= 0.72;
 _surface.shininess = max(_surface.shininess, 0.18);

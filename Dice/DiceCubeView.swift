@@ -735,8 +735,7 @@ final class DiceCubeView: UIView {
 		material.roughness.contents = textureSet.roughness
 		material.locksAmbientWithDiffuse = true
 		material.isDoubleSided = false
-		let symbolInkVector = rgbComponents(symbolInkColor(for: resolvedFillColor))
-		material.setValue(SCNVector3(symbolInkVector.x, symbolInkVector.y, symbolInkVector.z), forKey: "symbolInkColor")
+		material.setValue(symbolInkColor(for: resolvedFillColor), forKey: "symbolInkColor")
 		activeDieFinish.apply(to: material, baseColor: resolvedFillColor, dieIndex: dieIndex)
 		material.specular.contents = textureSet.metalness
 		material.shininess = max(material.shininess, 0.42)
@@ -826,21 +825,6 @@ final class DiceCubeView: UIView {
 		return style.primaryInkColor
 	}
 
-	private func rgbComponents(_ color: UIColor) -> SIMD3<Float> {
-		var r: CGFloat = 0
-		var g: CGFloat = 0
-		var b: CGFloat = 0
-		var a: CGFloat = 0
-		if color.getRed(&r, green: &g, blue: &b, alpha: &a) {
-			return SIMD3<Float>(Float(r), Float(g), Float(b))
-		}
-		var white: CGFloat = 0
-		if color.getWhite(&white, alpha: &a) {
-			let w = Float(white)
-			return SIMD3<Float>(w, w, w)
-		}
-		return SIMD3<Float>(0, 0, 0)
-	}
 
 	private func makeOutlineGeometry(from source: SCNGeometry) -> SCNGeometry {
 		let outline = source.copy() as! SCNGeometry
