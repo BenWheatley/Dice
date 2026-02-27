@@ -231,7 +231,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Add widget deep-link routing into app destinations (roll screen, history, presets) using URL-based scene handling.
 - [x] Add widget timeline refresh policy and placeholder/snapshot handling for empty-state and first-launch flows.
 - [x] Add unit tests for widget timeline entries and snapshot fallback logic using deterministic fixtures.
-- [ ] Add simulator UI validation checklist for widget families (iPhone and iPad where supported) including light/dark appearances.
+- [x] Add simulator UI validation checklist for widget families (iPhone and iPad where supported) including light/dark appearances.
 
 ### SpringBoard Long-Press App Icon Options
 
