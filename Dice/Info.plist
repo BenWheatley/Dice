@@ -60,6 +60,49 @@
 			</array>
 		</dict>
 	</dict>
+	<key>UIApplicationShortcutItems</key>
+	<array>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>com.kitsunesoftware.Dice.rollNow</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Roll Now</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>Roll using current notation</string>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>die.face.5.fill</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>com.kitsunesoftware.Dice.repeatLastRoll</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Repeat Last Roll</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>Roll the previous configuration again</string>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>arrow.clockwise</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>com.kitsunesoftware.Dice.presets</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Presets</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>Open saved dice presets</string>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>list.bullet</string>
+		</dict>
+		<dict>
+			<key>UIApplicationShortcutItemType</key>
+			<string>com.kitsunesoftware.Dice.rollHistory</string>
+			<key>UIApplicationShortcutItemTitle</key>
+			<string>Roll History</string>
+			<key>UIApplicationShortcutItemSubtitle</key>
+			<string>View recent results</string>
+			<key>UIApplicationShortcutItemIconSymbolName</key>
+			<string>clock.arrow.trianglehead.counterclockwise.rotate.90</string>
+		</dict>
+	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

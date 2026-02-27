@@ -1,0 +1,8 @@
+"UIApplicationShortcutItems.0.UIApplicationShortcutItemTitle" = "Roll Now";
+"UIApplicationShortcutItems.0.UIApplicationShortcutItemSubtitle" = "Roll using current notation";
+"UIApplicationShortcutItems.1.UIApplicationShortcutItemTitle" = "Repeat Last Roll";
+"UIApplicationShortcutItems.1.UIApplicationShortcutItemSubtitle" = "Roll the previous configuration again";
+"UIApplicationShortcutItems.2.UIApplicationShortcutItemTitle" = "Presets";
+"UIApplicationShortcutItems.2.UIApplicationShortcutItemSubtitle" = "Open saved dice presets";
+"UIApplicationShortcutItems.3.UIApplicationShortcutItemTitle" = "Roll History";
+"UIApplicationShortcutItems.3.UIApplicationShortcutItemSubtitle" = "View recent results";

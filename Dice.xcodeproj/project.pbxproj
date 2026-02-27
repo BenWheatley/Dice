@@ -14,6 +14,7 @@
 		B50B44D8215D804100A6399B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B50B44D7215D804100A6399B /* Assets.xcassets */; };
 		B50B44DB215D804100A6399B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B50B44D9215D804100A6399B /* LaunchScreen.storyboard */; };
 		C0DE00312F44033100D1CE00 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C0DE00302F44033100D1CE00 /* Localizable.strings */; };
+		QA0100012F57000100D1CE00 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = QA0100022F57000100D1CE00 /* InfoPlist.strings */; };
 		B50B44E6215D804100A6399B /* DiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B44E5215D804100A6399B /* DiceTests.swift */; };
 		B50B44F1215D804100A6399B /* DiceUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B50B44F0215D804100A6399B /* DiceUITests.swift */; };
 		B50B44F6215D804200A6399B /* Dice WatchKit App.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = B50B44F5215D804200A6399B /* Dice WatchKit App.app */; };
@@ -237,6 +238,7 @@
 		C0DE004D2F44A00100D1CE00 /* DiceFaceLabelSizing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceFaceLabelSizing.swift; sourceTree = "<group>"; };
 		C0DE004F2F44A20100D1CE00 /* DiceMotionBehaviorProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceMotionBehaviorProfile.swift; sourceTree = "<group>"; };
 		C0DE00302F44033100D1CE00 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		QA0100022F57000100D1CE00 /* InfoPlist.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = InfoPlist.strings; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		C0DE00142F44016400D1CE00 /* WatchRollViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRollViewModel.swift; sourceTree = "<group>"; };
 		D1CE10012F50000100D1CE00 /* DiceCollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceCollectionViewCell.swift; sourceTree = "<group>"; };
 		D1CE10022F50000200D1CE00 /* DiceHapticsEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceHapticsEngine.swift; sourceTree = "<group>"; };
@@ -438,6 +440,7 @@
 				B50B44D7215D804100A6399B /* Assets.xcassets */,
 				B50B44D9215D804100A6399B /* LaunchScreen.storyboard */,
 				C0DE00302F44033100D1CE00 /* Localizable.strings */,
+				QA0100022F57000100D1CE00 /* InfoPlist.strings */,
 				B50B44DC215D804100A6399B /* Info.plist */,
 			);
 			path = Dice;
@@ -669,6 +672,7 @@
 				B50B44DB215D804100A6399B /* LaunchScreen.storyboard in Resources */,
 				B50B44D8215D804100A6399B /* Assets.xcassets in Resources */,
 				C0DE00312F44033100D1CE00 /* Localizable.strings in Resources */,
+				QA0100012F57000100D1CE00 /* InfoPlist.strings in Resources */,
 				B50B44D6215D803D00A6399B /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
