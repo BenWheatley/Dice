@@ -736,7 +736,7 @@ final class DiceCubeView: UIView {
 		material.locksAmbientWithDiffuse = true
 		material.isDoubleSided = false
 		let symbolInkVector = rgbComponents(symbolInkColor(for: resolvedFillColor))
-		material.setValue(NSValue(scnVector3: SCNVector3(symbolInkVector.x, symbolInkVector.y, symbolInkVector.z)), forKey: "symbolInkColor")
+		material.setValue(SCNVector3(symbolInkVector.x, symbolInkVector.y, symbolInkVector.z), forKey: "symbolInkColor")
 		activeDieFinish.apply(to: material, baseColor: resolvedFillColor, dieIndex: dieIndex)
 		material.specular.contents = textureSet.metalness
 		material.shininess = max(material.shininess, 0.42)
