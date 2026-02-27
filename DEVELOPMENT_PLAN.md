@@ -238,6 +238,6 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Define app-icon quick actions set (Roll Now, Repeat Last Roll, Presets, Roll History) and map each to stable deep-link routes.
 - [x] Implement static quick actions in `Info.plist` with localized titles/subtitles and SF Symbols.
 - [x] Add dynamic quick actions update path based on recent notation/history availability.
-- [ ] Implement scene startup routing for quick-action launches with per-window state isolation on Catalyst/iPad multiwindow.
+- [x] Implement scene startup routing for quick-action launches with per-window state isolation on Catalyst/iPad multiwindow.
 - [ ] Add unit tests for quick-action parsing/routing and no-op handling for unavailable actions.
 - [ ] Add simulator manual QA checklist for long-press action invocation from SpringBoard and cold-start/warm-start behavior.

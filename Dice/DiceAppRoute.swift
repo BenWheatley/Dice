@@ -2,6 +2,7 @@ import Foundation
 
 enum DiceAppRoute: Equatable {
 	case roll
+	case repeatLastRoll
 	case history
 	case presets
 
@@ -12,11 +13,16 @@ enum DiceAppRoute: Equatable {
 		let token = (host?.isEmpty == false ? host : path)
 		switch token {
 		case "roll": self = .roll
+		case "repeat": self = .repeatLastRoll
 		case "history": self = .history
 		case "presets": self = .presets
 		default: return nil
 		}
 	}
+}
+
+enum DiceRouteNotificationKey {
+	static let route = "route"
 }
 
 extension Notification.Name {

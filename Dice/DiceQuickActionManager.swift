@@ -37,6 +37,19 @@ enum DiceQuickActionType: String, CaseIterable {
 	}
 
 	var shortcutType: String { rawValue }
+
+	var route: DiceAppRoute {
+		switch self {
+		case .rollNow: return .roll
+		case .repeatLastRoll: return .repeatLastRoll
+		case .presets: return .presets
+		case .rollHistory: return .history
+		}
+	}
+
+	init?(shortcutType: String) {
+		self.init(rawValue: shortcutType)
+	}
 }
 
 enum DiceQuickActionLibrary {

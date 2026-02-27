@@ -265,8 +265,14 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			object: nil,
 			queue: .main
 		) { [weak self] notification in
-			guard let route = notification.object as? DiceAppRoute else { return }
-			self?.handle(route: route)
+			guard let self else { return }
+			if let sourceScene = notification.object as? UIWindowScene,
+			   let currentScene = self.view.window?.windowScene,
+			   sourceScene !== currentScene {
+				return
+			}
+			guard let route = notification.userInfo?[DiceRouteNotificationKey.route] as? DiceAppRoute else { return }
+			self.handle(route: route)
 		}
 	}
 
@@ -274,6 +280,8 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		switch route {
 		case .roll:
 			rollFromInput()
+		case .repeatLastRoll:
+			repeatLastRoll()
 		case .history:
 			showHistory()
 		case .presets:
