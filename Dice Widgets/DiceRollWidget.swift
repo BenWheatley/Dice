@@ -82,6 +82,38 @@ private struct DiceRollWidgetView: View {
 			.padding(12)
 			.foregroundStyle(widgetPalette.foreground)
 			.containerBackground(widgetPalette.background, for: .widget)
+		case .systemMedium:
+			VStack(alignment: .leading, spacing: 8) {
+				HStack(alignment: .firstTextBaseline) {
+					Text(entry.snapshot.notation)
+						.font(.headline)
+						.lineLimit(1)
+					Spacer(minLength: 8)
+					Text(modeLabel)
+						.font(.caption)
+						.foregroundStyle(.secondary)
+				}
+				HStack(alignment: .firstTextBaseline, spacing: 6) {
+					Text("Last")
+						.font(.caption)
+						.foregroundStyle(.secondary)
+					Text("\(entry.snapshot.lastTotal)")
+						.font(.system(size: 34, weight: .bold, design: .rounded))
+						.lineLimit(1)
+				}
+				HStack(spacing: 6) {
+					ForEach(recentStripValues.indices, id: \.self) { index in
+						let value = recentStripValues[index]
+						Text("\(value)")
+							.font(.caption2.bold())
+							.frame(maxWidth: .infinity)
+							.padding(.vertical, 6)
+							.background(Color.secondary.opacity(0.14), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+					}
+				}
+			}
+			.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+			.padding(12)
 		default:
 			VStack(alignment: .leading, spacing: 6) {
 				Text(entry.snapshot.notation)
@@ -116,6 +148,12 @@ private struct DiceRollWidgetView: View {
 
 	private var modeLabel: String {
 		entry.snapshot.modeToken == .intuitive ? "Intuitive" : "True-random"
+	}
+
+	private var recentStripValues: [Int] {
+		let values = Array(entry.snapshot.recentTotals.prefix(3))
+		if values.count >= 3 { return values }
+		return values + Array(repeating: 0, count: 3 - values.count)
 	}
 
 	private var widgetPalette: (foreground: Color, background: Color) {
