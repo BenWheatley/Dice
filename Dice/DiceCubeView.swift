@@ -735,7 +735,13 @@ final class DiceCubeView: UIView {
 		material.roughness.contents = textureSet.roughness
 		material.locksAmbientWithDiffuse = true
 		material.isDoubleSided = false
-		material.setValue(symbolInkColor(for: resolvedFillColor), forKey: "symbolInkColor")
+		if activeDieFinish == .stone {
+			material.emission.contents = symbolInkColor(for: resolvedFillColor)
+			material.emission.intensity = 1.0
+		} else {
+			material.emission.contents = UIColor.black
+			material.emission.intensity = 0.0
+		}
 		activeDieFinish.apply(to: material, baseColor: resolvedFillColor, dieIndex: dieIndex)
 		material.specular.contents = textureSet.metalness
 		material.shininess = max(material.shininess, 0.42)
