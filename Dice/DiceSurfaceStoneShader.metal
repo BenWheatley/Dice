@@ -1,3 +1,5 @@
+uniform float3 symbolInkColor;
+
 float hash13(float3 p) {
     return fract(sin(dot(p, float3(127.1, 311.7, 74.7))) * 43758.5453123);
 }
@@ -26,6 +28,20 @@ return mix(nxy0, nxy1, u.z);
 }
 
 #pragma body
+float fillMask = _surface.roughness;
+float outlineMask = _surface.metalness;
+float symbolMaskFromRoughness = smoothstep(0.18, 0.92, fillMask);
+float symbolMaskFromMetalness = smoothstep(0.10, 0.82, outlineMask);
+float symbolMask = clamp(max(symbolMaskFromRoughness, symbolMaskFromMetalness), 0.0, 1.0);
+
+float dx = dfdx(fillMask);
+float dy = dfdy(fillMask);
+_surface.normal = normalize(_surface.normal + float3(-dx * 0.95, -dy * 0.95, 0.0));
+
+float baseRoughness = mix(0.86, 0.46, symbolMaskFromRoughness);
+_surface.roughness = mix(baseRoughness, 0.14, symbolMaskFromMetalness);
+_surface.metalness = symbolMaskFromMetalness;
+
 // Convert surface position (view space) back into this die's local model space.
 float4 worldPos = scn_frame.inverseViewTransform * float4(_surface.position.xyz, 1.0);
 float3 modelPos = (scn_node.inverseModelTransform * worldPos).xyz;
@@ -56,6 +72,7 @@ float3 contrastColor = luminance > 0.52 ? darkContrast : lightContrast;
 float marblePattern = clamp(veinMask * 0.78 + fleck * 0.22, 0.0, 1.0);
 float3 marble = mix(mainColor, contrastColor, marblePattern);
 
-_surface.diffuse.rgb = clamp(marble, 0.0, 1.0);
+float3 symbolColor = clamp(symbolInkColor, 0.0, 1.0);
+_surface.diffuse.rgb = mix(clamp(marble, 0.0, 1.0), symbolColor, symbolMask);
 _surface.specular.rgb *= 0.72;
 _surface.shininess = max(_surface.shininess, 0.18);

@@ -469,6 +469,11 @@ final class DiceCubeView: UIView {
 		return view.resolvedColorPreset(sideCount: sideCount, colorPresetOverride: colorPresetOverride)
 	}
 
+	static func debugSymbolInkColor(fillColor: UIColor) -> UIColor {
+		let view = DiceCubeView(frame: .zero)
+		return view.symbolInkColor(for: fillColor)
+	}
+
 	static func debugMeshData(sideCount: Int) -> (vertices: [SIMD3<Float>], faces: [[Int]]) {
 		let view = DiceCubeView(frame: .zero)
 		let mesh = view.meshData(for: sideCount)
@@ -730,6 +735,8 @@ final class DiceCubeView: UIView {
 		material.roughness.contents = textureSet.roughness
 		material.locksAmbientWithDiffuse = true
 		material.isDoubleSided = false
+		let symbolInkVector = rgbComponents(symbolInkColor(for: resolvedFillColor))
+		material.setValue(NSValue(scnVector3: SCNVector3(symbolInkVector.x, symbolInkVector.y, symbolInkVector.z)), forKey: "symbolInkColor")
 		activeDieFinish.apply(to: material, baseColor: resolvedFillColor, dieIndex: dieIndex)
 		material.specular.contents = textureSet.metalness
 		material.shininess = max(material.shininess, 0.42)
@@ -812,6 +819,27 @@ final class DiceCubeView: UIView {
 	private func resolvedColorPreset(sideCount: Int, colorPresetOverride: DiceDieColorPreset?) -> DiceDieColorPreset {
 		_ = sideCount
 		return colorPresetOverride ?? .ivory
+	}
+
+	private func symbolInkColor(for fillColor: UIColor) -> UIColor {
+		let style = DiceFaceContrast.style(for: fillColor)
+		return style.primaryInkColor
+	}
+
+	private func rgbComponents(_ color: UIColor) -> SIMD3<Float> {
+		var r: CGFloat = 0
+		var g: CGFloat = 0
+		var b: CGFloat = 0
+		var a: CGFloat = 0
+		if color.getRed(&r, green: &g, blue: &b, alpha: &a) {
+			return SIMD3<Float>(Float(r), Float(g), Float(b))
+		}
+		var white: CGFloat = 0
+		if color.getWhite(&white, alpha: &a) {
+			let w = Float(white)
+			return SIMD3<Float>(w, w, w)
+		}
+		return SIMD3<Float>(0, 0, 0)
 	}
 
 	private func makeOutlineGeometry(from source: SCNGeometry) -> SCNGeometry {

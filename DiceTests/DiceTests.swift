@@ -334,6 +334,16 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(resolved, .crimson)
 	}
 
+	func testCubeViewSymbolInkColorIsDarkForLightFill() {
+		let ink = DiceCubeView.debugSymbolInkColor(fillColor: .white)
+		XCTAssertEqual(ink, UIColor.black)
+	}
+
+	func testCubeViewSymbolInkColorIsLightForDarkFill() {
+		let ink = DiceCubeView.debugSymbolInkColor(fillColor: .black)
+		XCTAssertEqual(ink, UIColor.white)
+	}
+
 	func testAudioFormatResolverPrefersPlayerOutputFormat() {
 		let playerOutput = AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 2)
 		let mixerOutput = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
