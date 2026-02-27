@@ -41,13 +41,13 @@ float dy = dfdy(fillMask);
 _surface.normal = normalize(_surface.normal + float3(-dx * 0.95, -dy * 0.95, 0.0));
 
 float baseRoughness = 0.82;
-// Fill remains matte paint; outline is metallic/shiny gold trim.
+// Fill remains matte paint; outline stays gold but is roughened to avoid white specular blowout.
 float fillRoughness = 0.97;
-float outlineRoughness = 0.16;
+float outlineRoughness = 0.58;
 _surface.roughness = baseRoughness;
 _surface.roughness = mix(_surface.roughness, fillRoughness, fillSymbolMask);
 _surface.roughness = mix(_surface.roughness, outlineRoughness, outlineSymbolMask);
-_surface.metalness = outlineSymbolMask;
+_surface.metalness = outlineSymbolMask * 0.55;
 
 // Convert surface position (view space) back into this die's local model space.
 float4 worldPos = scn_frame.inverseViewTransform * float4(_surface.position.xyz, 1.0);
@@ -84,5 +84,5 @@ const float3 goldOutlineColor = float3(0.84, 0.70, 0.28);
 float3 painted = mix(clamp(marble, 0.0, 1.0), symbolColor, fillSymbolMask);
 _surface.diffuse.rgb = mix(painted, goldOutlineColor, outlineSymbolMask);
 _surface.emission.rgb = float3(0.0);
-_surface.specular.rgb *= 0.72;
+_surface.specular.rgb *= 0.32;
 _surface.shininess = max(_surface.shininess, 0.18);
