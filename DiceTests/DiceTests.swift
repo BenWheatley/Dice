@@ -314,6 +314,26 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(fixture.themeToken, .system)
 	}
 
+	func testCubeViewDefaultsToIvoryWithoutPerDieOverride() {
+		let preferences = DiceDieColorPreferences(presetsBySideCount: [6: .amber])
+		let resolved = DiceCubeView.debugResolvedColorPreset(
+			sideCount: 6,
+			colorPresetOverride: nil,
+			dieColorPreferences: preferences
+		)
+		XCTAssertEqual(resolved, .ivory)
+	}
+
+	func testCubeViewUsesPerDieOverrideColorWhenProvided() {
+		let preferences = DiceDieColorPreferences(presetsBySideCount: [6: .amber])
+		let resolved = DiceCubeView.debugResolvedColorPreset(
+			sideCount: 6,
+			colorPresetOverride: .crimson,
+			dieColorPreferences: preferences
+		)
+		XCTAssertEqual(resolved, .crimson)
+	}
+
 	func testAudioFormatResolverPrefersPlayerOutputFormat() {
 		let playerOutput = AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 2)
 		let mixerOutput = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!

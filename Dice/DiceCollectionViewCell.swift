@@ -55,26 +55,16 @@ class DiceCollectionViewCell: UICollectionViewCell {
 		lockIconView.isHidden = !isLocked
 	}
 
-	private func setFaceValue(_ value: Int, sideCount: Int, largeFaceLabelsEnabled: Bool) {
-		if boardSupportedSides.contains(sideCount) {
-			diceButton.setTitle(nil, for: .normal)
-			diceButton.setImage(nil, for: .normal)
-			diceButton.layer.borderWidth = 0
-			diceButton.layer.cornerRadius = 0
-			diceButton.layer.borderColor = UIColor.clear.cgColor
-			diceButton.backgroundColor = UIColor.clear
-		} else {
-			diceButton.setImage(nil, for: .normal)
-			diceButton.setTitle("\(value)", for: .normal)
-			diceButton.setTitleColor(currentPalette.fallbackDieTextColor, for: .normal)
-			let side = min(contentView.bounds.width, contentView.bounds.height)
-			let pointSize = DiceFaceLabelSizing.staticFallbackPointSize(cellSideLength: side, large: largeFaceLabelsEnabled)
-			diceButton.titleLabel?.font = UIFont.systemFont(ofSize: pointSize, weight: .bold)
-			diceButton.layer.borderColor = isLocked ? UIColor.systemYellow.cgColor : currentPalette.fallbackDieBorderColor.cgColor
-			diceButton.layer.borderWidth = isLocked ? 2 : 1
-			diceButton.layer.cornerRadius = 8
-			diceButton.backgroundColor = currentPalette.fallbackDieBackgroundColor
-		}
+	private func setFaceValue(_ value: Int, sideCount _: Int, largeFaceLabelsEnabled _: Bool) {
+		_ = value
+		diceButton.setTitle(nil, for: .normal)
+		diceButton.setImage(nil, for: .normal)
+		diceButton.layer.borderWidth = 0
+		diceButton.layer.cornerRadius = 0
+		diceButton.layer.borderColor = UIColor.clear.cgColor
+		diceButton.backgroundColor = UIColor.clear
+		contentView.backgroundColor = .clear
+		backgroundColor = .clear
 	}
 
 	private func configureLockIcon() {

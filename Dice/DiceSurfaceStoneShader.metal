@@ -1,28 +1,89 @@
-float hash13(float3 p) {
-	return fract(sin(dot(p, float3(127.1, 311.7, 74.7))) * 43758.5453123);
+float3 mod289(float3 x) {
+	return x - floor(x * (1.0 / 289.0)) * 289.0;
 }
 
-float simplexNoise3D(float3 p) {
-	float3 i = floor(p);
-	float3 f = fract(p);
-	float3 u = f * f * (3.0 - 2.0 * f);
+float4 mod289(float4 x) {
+	return x - floor(x * (1.0 / 289.0)) * 289.0;
+}
 
-	float n000 = hash13(i + float3(0.0, 0.0, 0.0));
-	float n100 = hash13(i + float3(1.0, 0.0, 0.0));
-	float n010 = hash13(i + float3(0.0, 1.0, 0.0));
-	float n110 = hash13(i + float3(1.0, 1.0, 0.0));
-	float n001 = hash13(i + float3(0.0, 0.0, 1.0));
-	float n101 = hash13(i + float3(1.0, 0.0, 1.0));
-	float n011 = hash13(i + float3(0.0, 1.0, 1.0));
-	float n111 = hash13(i + float3(1.0, 1.0, 1.0));
+float4 permute(float4 x) {
+	return mod289(((x * 34.0) + 1.0) * x);
+}
 
-	float nx00 = mix(n000, n100, u.x);
-	float nx10 = mix(n010, n110, u.x);
-	float nx01 = mix(n001, n101, u.x);
-	float nx11 = mix(n011, n111, u.x);
-	float nxy0 = mix(nx00, nx10, u.y);
-	float nxy1 = mix(nx01, nx11, u.y);
-	return mix(nxy0, nxy1, u.z);
+float4 taylorInvSqrt(float4 r) {
+	return 1.79284291400159 - 0.85373472095314 * r;
+}
+
+// 3D simplex noise (Gustavson-style).
+float simplexNoise3D(float3 v) {
+	const float2 C = float2(1.0 / 6.0, 1.0 / 3.0);
+	const float4 D = float4(0.0, 0.5, 1.0, 2.0);
+
+	float3 i = floor(v + dot(v, C.yyy));
+	float3 x0 = v - i + dot(i, C.xxx);
+
+	float3 g = step(x0.yzx, x0.xyz);
+	float3 l = 1.0 - g;
+	float3 i1 = min(g.xyz, l.zxy);
+	float3 i2 = max(g.xyz, l.zxy);
+
+	float3 x1 = x0 - i1 + C.xxx;
+	float3 x2 = x0 - i2 + C.yyy;
+	float3 x3 = x0 - D.yyy;
+
+	i = mod289(i);
+	float4 p = permute(
+		permute(
+			permute(i.z + float4(0.0, i1.z, i2.z, 1.0))
+			+ i.y + float4(0.0, i1.y, i2.y, 1.0)
+		)
+		+ i.x + float4(0.0, i1.x, i2.x, 1.0)
+	);
+
+	float4 j = p - 49.0 * floor(p * (1.0 / 49.0));
+	float4 x_ = floor(j * (1.0 / 7.0));
+	float4 y_ = floor(j - 7.0 * x_);
+
+	float4 x = (x_ * 2.0 + 0.5) / 7.0 - 1.0;
+	float4 y = (y_ * 2.0 + 0.5) / 7.0 - 1.0;
+	float4 h = 1.0 - abs(x) - abs(y);
+
+	float4 b0 = float4(x.xy, y.xy);
+	float4 b1 = float4(x.zw, y.zw);
+
+	float4 s0 = floor(b0) * 2.0 + 1.0;
+	float4 s1 = floor(b1) * 2.0 + 1.0;
+	float4 sh = -step(h, float4(0.0));
+
+	float4 a0 = b0.xzyw + s0.xzyw * sh.xxyy;
+	float4 a1 = b1.xzyw + s1.xzyw * sh.zzww;
+
+	float3 g0 = float3(a0.xy, h.x);
+	float3 g1 = float3(a0.zw, h.y);
+	float3 g2 = float3(a1.xy, h.z);
+	float3 g3 = float3(a1.zw, h.w);
+
+	float4 norm = taylorInvSqrt(float4(dot(g0, g0), dot(g1, g1), dot(g2, g2), dot(g3, g3)));
+	g0 *= norm.x;
+	g1 *= norm.y;
+	g2 *= norm.z;
+	g3 *= norm.w;
+
+	float4 m = max(0.6 - float4(dot(x0, x0), dot(x1, x1), dot(x2, x2), dot(x3, x3)), 0.0);
+	m = m * m;
+	return 42.0 * dot(m * m, float4(dot(g0, x0), dot(g1, x1), dot(g2, x2), dot(g3, x3)));
+}
+
+float fbm3(float3 p) {
+	float value = 0.0;
+	float amplitude = 0.5;
+	float frequency = 1.0;
+	for (int octave = 0; octave < 5; octave++) {
+		value += amplitude * simplexNoise3D(p * frequency);
+		frequency *= 2.03;
+		amplitude *= 0.5;
+	}
+	return value;
 }
 
 #pragma body
@@ -40,38 +101,55 @@ float baseRoughness = mix(0.86, 0.46, symbolMaskFromRoughness);
 _surface.roughness = mix(baseRoughness, 0.14, symbolMaskFromMetalness);
 _surface.metalness = symbolMaskFromMetalness;
 
-// Convert surface position (view space) back into this die's local model space.
+// Convert current fragment from view-space into die-local model-space.
 float4 worldPos = scn_frame.inverseViewTransform * float4(_surface.position.xyz, 1.0);
 float3 modelPos = (scn_node.inverseModelTransform * worldPos).xyz;
-// Rotate marble sampling basis by 45 degrees to keep veins off face-plane alignment.
-const float c = 0.7071068; // cos(45 deg)
-const float s = 0.7071068; // sin(45 deg)
-float3x3 veinBasis = float3x3(
+
+// Rotate sampling basis 15 degrees to avoid alignment to any primary face plane.
+const float angle = 0.2617994; // 15 deg
+const float c = 0.9659258;
+const float s = 0.2588190;
+float3x3 basis = float3x3(
 	float3(c, -s, 0.0),
 	float3(s,  c, 0.0),
 	float3(0.0, 0.0, 1.0)
 );
+
 float dieSeed = ((_surface.shininess - 0.20) * 10000.0) * 4096.0;
 float3 seedOffset = float3(dieSeed, dieSeed * 0.41, dieSeed * 0.73);
-float3 p = (veinBasis * modelPos) * 0.34;
-float n1 = simplexNoise3D(p * 0.28 + float3(1.7, 2.3, 3.1) + seedOffset);
-float n2 = simplexNoise3D(p * 0.58 + float3(7.3, 5.9, 11.2) + seedOffset * 0.67);
-float n3 = simplexNoise3D(p * 0.96 + float3(13.4, 9.1, 4.6) + seedOffset * 1.29);
-float swirl = (n1 * 0.62) + (n2 * 0.28) + (n3 * 0.10);
-float veins = sin((p.x + p.y + p.z) * 0.24 + swirl * 3.1);
-float veinMask = smoothstep(0.50, 0.965, 0.5 + 0.5 * veins);
-float grain = (n1 * 0.56) + (n2 * 0.31) + (n3 * 0.13);
-float fleck = smoothstep(0.95, 0.994, simplexNoise3D(p * 1.45 + 19.0));
+float3 p = (basis * modelPos) * 0.95 + seedOffset;
+
+float3 warpA = float3(
+	fbm3(p * 0.36 + float3(11.0, 5.0, 3.0)),
+	fbm3(p * 0.36 + float3(7.0, 19.0, 13.0)),
+	fbm3(p * 0.36 + float3(17.0, 2.0, 23.0))
+);
+float3 q = p + warpA * 1.75;
+float3 warpB = float3(
+	fbm3(q * 0.72 + float3(2.0, 13.0, 5.0)),
+	fbm3(q * 0.72 + float3(29.0, 3.0, 11.0)),
+	fbm3(q * 0.72 + float3(5.0, 7.0, 31.0))
+);
+float3 r = q + warpB * 1.10;
+
+float swirl = fbm3(r * 1.12);
+float swirlSecondary = fbm3(r * 1.84 + float3(5.0, 13.0, 2.0));
+float veins = clamp((swirl * 0.64) + (swirlSecondary * 0.36), -1.0, 1.0);
+float veins01 = 0.5 + 0.5 * veins;
+float ridge = 1.0 - abs(2.0 * veins01 - 1.0);
+float veinMask = smoothstep(0.24, 0.86, pow(ridge, 1.35));
+float fleck = smoothstep(0.67, 0.93, fbm3(r * 3.2 + 17.0) * 0.5 + 0.5);
 
 float3 originalDiffuse = _surface.diffuse.rgb;
 float3 base = originalDiffuse;
 float luminance = dot(base, float3(0.2126, 0.7152, 0.0722));
-float mainShade = mix(0.74, 1.13, grain);
-float3 mainColor = clamp(base * mainShade, 0.0, 1.0);
-float3 lightContrast = mix(base, float3(1.0, 1.0, 1.0), 0.72);
-float3 darkContrast = base * 0.34;
+
+float3 mainColor = clamp(base * (0.87 + 0.18 * (veins01 - 0.5)), 0.0, 1.0);
+float3 lightContrast = mix(base, float3(1.0, 1.0, 1.0), 0.64);
+float3 darkContrast = base * 0.30;
 float3 contrastColor = luminance > 0.52 ? darkContrast : lightContrast;
-float marblePattern = clamp(veinMask * 0.78 + fleck * 0.22, 0.0, 1.0);
+
+float marblePattern = clamp(veinMask * 0.84 + fleck * 0.16, 0.0, 1.0);
 float3 marble = mix(mainColor, contrastColor, marblePattern);
 
 _surface.diffuse.rgb = mix(clamp(marble, 0.0, 1.0), originalDiffuse, symbolMask);

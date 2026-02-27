@@ -82,6 +82,7 @@ final class DiceCubeView: UIView {
 	// D4 numbering is vertex-based and intentionally decoupled from raw mesh indices.
 	private let d4VertexValueByIndex: [Int] = [4, 3, 2, 1]
 	var onRollSettled: (() -> Void)?
+	var onDieTapped: ((Int, CGPoint) -> Void)?
 
 	override init(frame: CGRect) {
 		super.init(frame: frame)
@@ -141,6 +142,7 @@ final class DiceCubeView: UIView {
 		let styleChanged = needsMeshRefresh
 		for index in values.indices {
 			let container = dieNodes[index]
+			container.name = "die_\(index)"
 			let sideCount = sideCounts[index]
 			let didSideChange = dieSideCounts[index] != sideCount
 			if didSideChange || sizeChanged || styleChanged {
@@ -265,11 +267,11 @@ final class DiceCubeView: UIView {
 
 	private func configureScene() {
 		backgroundColor = .clear
-		isUserInteractionEnabled = false
+		isUserInteractionEnabled = true
 
 		scnView.translatesAutoresizingMaskIntoConstraints = false
 		scnView.backgroundColor = .clear
-		scnView.isUserInteractionEnabled = false
+		scnView.isUserInteractionEnabled = true
 		scnView.antialiasingMode = .multisampling4X
 		scnView.autoenablesDefaultLighting = true
 		scnView.scene = scene
@@ -281,6 +283,8 @@ final class DiceCubeView: UIView {
 			scnView.topAnchor.constraint(equalTo: topAnchor),
 			scnView.bottomAnchor.constraint(equalTo: bottomAnchor),
 		])
+		let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
+		scnView.addGestureRecognizer(tapRecognizer)
 
 		cameraNode.camera = SCNCamera()
 		cameraNode.camera?.usesOrthographicProjection = true
@@ -390,6 +394,26 @@ final class DiceCubeView: UIView {
 		}
 	}
 
+	@objc private func handleTap(_ recognizer: UITapGestureRecognizer) {
+		let point = recognizer.location(in: scnView)
+		guard let index = dieIndex(at: point) else { return }
+		onDieTapped?(index, recognizer.location(in: self))
+	}
+
+	private func dieIndex(at point: CGPoint) -> Int? {
+		let hits = scnView.hitTest(point, options: [SCNHitTestOption.ignoreHiddenNodes: true])
+		for hit in hits {
+			var current: SCNNode? = hit.node
+			while let node = current {
+				if let name = node.name, name.hasPrefix("die_"), let dieIndex = Int(name.dropFirst(4)) {
+					return dieIndex
+				}
+				current = node.parent
+			}
+		}
+		return nil
+	}
+
 	private func meshData(for sideCount: Int) -> MeshData {
 		switch sideCount {
 		case 4:
@@ -413,6 +437,16 @@ final class DiceCubeView: UIView {
 	}
 
 #if DEBUG
+	static func debugResolvedColorPreset(
+		sideCount: Int,
+		colorPresetOverride: DiceDieColorPreset?,
+		dieColorPreferences: DiceDieColorPreferences
+	) -> DiceDieColorPreset {
+		let view = DiceCubeView(frame: .zero)
+		view.activeDieColorPreferences = dieColorPreferences
+		return view.resolvedColorPreset(sideCount: sideCount, colorPresetOverride: colorPresetOverride)
+	}
+
 	static func debugMeshData(sideCount: Int) -> (vertices: [SIMD3<Float>], faces: [[Int]]) {
 		let view = DiceCubeView(frame: .zero)
 		let mesh = view.meshData(for: sideCount)
@@ -738,7 +772,7 @@ final class DiceCubeView: UIView {
 		dieIndex: Int
 	) {
 		guard let geometry else { return }
-		let fillColor = (colorPresetOverride ?? activeDieColorPreferences.preset(for: sideCount)).fillColor
+		let fillColor = resolvedColorPreset(sideCount: sideCount, colorPresetOverride: colorPresetOverride).fillColor
 		let font = faceNumeralFontOverride ?? activeFaceNumeralFont
 		let faces = builtMesh(sideLength: sideLength, sideCount: sideCount).materialFaces
 		geometry.materials = faces.enumerated().map { faceIndex, face in
@@ -751,6 +785,11 @@ final class DiceCubeView: UIView {
 				dieIndex: dieIndex
 			)
 		}
+	}
+
+	private func resolvedColorPreset(sideCount: Int, colorPresetOverride: DiceDieColorPreset?) -> DiceDieColorPreset {
+		_ = sideCount
+		return colorPresetOverride ?? .ivory
 	}
 
 	private func makeOutlineGeometry(from source: SCNGeometry) -> SCNGeometry {

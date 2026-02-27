@@ -37,6 +37,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private var totalsChartHostingController: UIHostingController<DiceRollDistributionChartView>?
 	private var currentTotalsGraphCounts: [Int] = []
 	private var routeObserver: NSObjectProtocol?
+	private let dieMenuAnchorButton = UIButton(type: .system)
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -44,6 +45,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		syncSoundSettings()
 
 		collectionView.keyboardDismissMode = .onDrag
+		collectionView.allowsSelection = false
 		configureControls()
 		configureDiceBoard()
 		applyTheme()
@@ -117,8 +119,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			isLocked: viewModel.isDieLocked(at: indexPath.row),
 			largeFaceLabelsEnabled: viewModel.largeFaceLabelsEnabled
 		)
-		cell.diceButton.menu = dieContextMenu(for: indexPath.row)
-		cell.diceButton.showsMenuAsPrimaryAction = true
+		cell.diceButton.menu = nil
+		cell.diceButton.showsMenuAsPrimaryAction = false
+		cell.isUserInteractionEnabled = false
 		return cell
 	}
 
@@ -292,12 +295,22 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private func configureDiceBoard() {
 		diceBoardView.translatesAutoresizingMaskIntoConstraints = false
 		diceBoardView.backgroundColor = .clear
-		diceBoardView.isUserInteractionEnabled = false
 		diceBoardView.onRollSettled = { [weak self] in
 			self?.playSettleTickSound()
 		}
+		diceBoardView.onDieTapped = { [weak self] index, location in
+			self?.presentDieMenu(for: index, at: location)
+		}
 		diceBoardView.setLargeFaceLabelsEnabled(viewModel.largeFaceLabelsEnabled)
 		view.addSubview(diceBoardView)
+		dieMenuAnchorButton.translatesAutoresizingMaskIntoConstraints = true
+		dieMenuAnchorButton.frame = .zero
+		dieMenuAnchorButton.backgroundColor = .clear
+		dieMenuAnchorButton.tintColor = .clear
+		dieMenuAnchorButton.setTitle("", for: .normal)
+		dieMenuAnchorButton.showsMenuAsPrimaryAction = true
+		dieMenuAnchorButton.isHidden = true
+		view.addSubview(dieMenuAnchorButton)
 		view.bringSubviewToFront(controlsContainer ?? UIView())
 		view.bringSubviewToFront(totalsContainer)
 		NSLayoutConstraint.activate([
@@ -341,6 +354,24 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		updateDiceBoard(animated: shouldAnimateBoard)
 		playRollSound()
 		refreshSystemSurfaces()
+	}
+
+	private func presentDieMenu(for index: Int, at locationInBoard: CGPoint) {
+		guard let menu = dieContextMenu(for: index) else { return }
+		let pointInView = diceBoardView.convert(locationInBoard, to: view)
+		let anchorSize: CGFloat = 44
+		dieMenuAnchorButton.menu = menu
+		dieMenuAnchorButton.frame = CGRect(
+			x: pointInView.x - (anchorSize / 2),
+			y: pointInView.y - (anchorSize / 2),
+			width: anchorSize,
+			height: anchorSize
+		)
+		dieMenuAnchorButton.isHidden = false
+		dieMenuAnchorButton.sendActions(for: .touchUpInside)
+		DispatchQueue.main.async { [weak self] in
+			self?.dieMenuAnchorButton.isHidden = true
+		}
 	}
 
 	private func performRoll() {
