@@ -100,6 +100,7 @@
 		F1CE00012F55000100D1CE00 /* DiceWidgetSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1CE10012F55000100D1CE00 /* DiceWidgetSnapshotStore.swift */; };
 		F2CE00012F56010100D1CE00 /* DiceAppRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2CE10012F56010100D1CE00 /* DiceAppRoute.swift */; };
 		F3CE00012F56020100D1CE00 /* DiceWidgetTimelinePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3CE10012F56020100D1CE00 /* DiceWidgetTimelinePolicy.swift */; };
+		QA0200012F57000100D1CE00 /* DiceQuickActionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = QA0200022F57000100D1CE00 /* DiceQuickActionManager.swift */; };
 		W10000012F56000100D1CE00 /* DiceWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = W40000022F56000200D1CE00 /* DiceWidgetsBundle.swift */; };
 		W10000022F56000200D1CE00 /* DiceRollWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = W40000032F56000300D1CE00 /* DiceRollWidget.swift */; };
 		W10000032F56000300D1CE00 /* DiceWidgetSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1CE10012F55000100D1CE00 /* DiceWidgetSnapshotStore.swift */; };
@@ -287,6 +288,7 @@
 		F1CE10012F55000100D1CE00 /* DiceWidgetSnapshotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceWidgetSnapshotStore.swift; sourceTree = "<group>"; };
 		F2CE10012F56010100D1CE00 /* DiceAppRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceAppRoute.swift; sourceTree = "<group>"; };
 		F3CE10012F56020100D1CE00 /* DiceWidgetTimelinePolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceWidgetTimelinePolicy.swift; sourceTree = "<group>"; };
+		QA0200022F57000100D1CE00 /* DiceQuickActionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceQuickActionManager.swift; sourceTree = "<group>"; };
 		W40000012F56000100D1CE00 /* Dice Widgets Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Dice Widgets Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		W40000022F56000200D1CE00 /* DiceWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceWidgetsBundle.swift; sourceTree = "<group>"; };
 		W40000032F56000300D1CE00 /* DiceRollWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceRollWidget.swift; sourceTree = "<group>"; };
@@ -434,6 +436,7 @@
 				D2CE10182F51001800D1CE00 /* RollSessionSummary.swift */,
 				F1CE10012F55000100D1CE00 /* DiceWidgetSnapshotStore.swift */,
 				F2CE10012F56010100D1CE00 /* DiceAppRoute.swift */,
+				QA0200022F57000100D1CE00 /* DiceQuickActionManager.swift */,
 				F3CE10012F56020100D1CE00 /* DiceWidgetTimelinePolicy.swift */,
 				E0CE10012F54000100D1CE00 /* DiceShaderModifierSourceLoader.swift */,
 				B50B44D4215D803D00A6399B /* Main.storyboard */,
@@ -765,6 +768,7 @@
 				E0CE00012F54000100D1CE00 /* DiceShaderModifierSourceLoader.swift in Sources */,
 				F1CE00012F55000100D1CE00 /* DiceWidgetSnapshotStore.swift in Sources */,
 				F2CE00012F56010100D1CE00 /* DiceAppRoute.swift in Sources */,
+				QA0200012F57000100D1CE00 /* DiceQuickActionManager.swift in Sources */,
 				F3CE00012F56020100D1CE00 /* DiceWidgetTimelinePolicy.swift in Sources */,
 				D1CE110F2F50000F00D1CE00 /* RollHistoryViewController.swift in Sources */,
 				D1CE11012F50000100D1CE00 /* DiceCollectionViewCell.swift in Sources */,

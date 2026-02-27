@@ -7,6 +7,15 @@
 "button.ok" = "OK";
 "button.close" = "Close";
 "button.manage" = "Manage";
+"quickaction.rollNow.title" = "Roll Now";
+"quickaction.rollNow.subtitle" = "Roll using current notation";
+"quickaction.repeatLast.title" = "Repeat Last Roll";
+"quickaction.repeatLast.subtitle" = "Roll the previous configuration again";
+"quickaction.repeatLast.subtitle.withNotation" = "Last: %@";
+"quickaction.presets.title" = "Presets";
+"quickaction.presets.subtitle" = "Open saved dice presets";
+"quickaction.history.title" = "Roll History";
+"quickaction.history.subtitle" = "View recent results";
 "button.save" = "Save";
 "button.edit" = "Edit";
 "button.delete" = "Delete";

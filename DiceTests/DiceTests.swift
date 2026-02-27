@@ -219,6 +219,34 @@ final class DiceTests: XCTestCase {
 		XCTAssertNil(DiceAppRoute(url: URL(string: "dice://unknown")!))
 	}
 
+	func testDynamicQuickActionsHideRepeatWhenNoHistory() {
+		let snapshot = DiceWidgetRollSnapshot(
+			notation: "6d6",
+			lastTotal: 0,
+			modeToken: .trueRandom,
+			recentTotals: [],
+			isEmptyState: true,
+			themeToken: .system
+		)
+		let items = DiceQuickActionLibrary.dynamicItems(for: snapshot)
+		XCTAssertFalse(items.map(\.type).contains(DiceQuickActionType.repeatLastRoll.shortcutType))
+	}
+
+	func testDynamicQuickActionsIncludeRepeatWhenHistoryExists() {
+		let snapshot = DiceWidgetRollSnapshot(
+			notation: "3d20+1d6",
+			lastTotal: 44,
+			modeToken: .intuitive,
+			recentTotals: [44, 38, 27],
+			isEmptyState: false,
+			themeToken: .darkMode
+		)
+		let items = DiceQuickActionLibrary.dynamicItems(for: snapshot)
+		XCTAssertTrue(items.map(\.type).contains(DiceQuickActionType.repeatLastRoll.shortcutType))
+		let repeatItem = items.first(where: { $0.type == DiceQuickActionType.repeatLastRoll.shortcutType })
+		XCTAssertEqual(repeatItem?.localizedSubtitle, "Last: 3d20+1d6")
+	}
+
 	func testWidgetTimelinePolicyUsesLongerIntervalForEmptyState() {
 		let snapshot = DiceWidgetRollSnapshot(
 			notation: "6d6",

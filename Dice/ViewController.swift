@@ -55,6 +55,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		updateControlMenu()
 		renderRestoredState()
 		observeSceneRoutes()
+		refreshSystemSurfaces()
 	}
 
 	deinit {
@@ -131,6 +132,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			collectionView.layoutIfNeeded()
 			updateDiceBoard(animated: shouldAnimateBoard)
 			playRollSound()
+			refreshSystemSurfaces()
 		}
 	}
 
@@ -315,6 +317,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			collectionView.layoutIfNeeded()
 			updateDiceBoard(animated: shouldAnimateBoard)
 			playRollSound()
+			refreshSystemSurfaces()
 		case let .failure(error):
 			showValidationError(message: error.userMessage)
 		}
@@ -329,6 +332,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		collectionView.layoutIfNeeded()
 		updateDiceBoard(animated: shouldAnimateBoard)
 		playRollSound()
+		refreshSystemSurfaces()
 	}
 
 	private func performRoll() {
@@ -340,6 +344,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		collectionView.layoutIfNeeded()
 		updateDiceBoard(animated: shouldAnimateBoard)
 		playRollSound()
+		refreshSystemSurfaces()
 	}
 
 	private func renderRestoredState() {
@@ -427,6 +432,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		collectionView.layoutIfNeeded()
 		updateDiceBoard(animated: shouldAnimateBoard, animatingIndices: [index])
 		playRollSound()
+		refreshSystemSurfaces()
 		return outcome
 	}
 
@@ -692,11 +698,13 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			guard let self else { return }
 			self.viewModel.clearRecentHistory()
 			historyViewController?.updateEntries([], histogramSummary: nil, indicatorSummary: nil, indicatorTooltip: nil)
+			self.refreshSystemSurfaces()
 		}
 		historyViewController.onClearPersistedAll = { [weak self, weak historyViewController] in
 			guard let self else { return }
 			self.viewModel.clearPersistedHistory()
 			historyViewController?.updateEntries([], histogramSummary: nil, indicatorSummary: nil, indicatorTooltip: nil)
+			self.refreshSystemSurfaces()
 		}
 		historyViewController.onShareSummary = { [weak self] entries in
 			self?.shareHistorySummaryCard(entries: entries)
@@ -759,6 +767,10 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			alert.addAction(UIAlertAction(title: NSLocalizedString("button.ok", comment: "Generic confirmation button"), style: .default))
 			present(alert, animated: true)
 		}
+	}
+
+	private func refreshSystemSurfaces() {
+		DiceQuickActionManager.shared.refresh()
 	}
 
 	private func shareHistorySummaryCard(entries: [RollHistoryEntry]) {
