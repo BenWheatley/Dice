@@ -24,12 +24,17 @@ struct DiceRollWidgetProvider: TimelineProvider {
 	}
 
 	func getSnapshot(in context: Context, completion: @escaping (DiceRollWidgetEntry) -> Void) {
+		if context.isPreview {
+			completion(placeholder(in: context))
+			return
+		}
 		completion(DiceRollWidgetEntry(date: Date(), snapshot: store.loadSnapshot()))
 	}
 
 	func getTimeline(in context: Context, completion: @escaping (Timeline<DiceRollWidgetEntry>) -> Void) {
 		let entry = DiceRollWidgetEntry(date: Date(), snapshot: store.loadSnapshot())
-		let refresh = Calendar.current.date(byAdding: .minute, value: 30, to: entry.date) ?? entry.date.addingTimeInterval(1800)
+		let refreshMinutes = entry.snapshot.isEmptyState ? 120 : 30
+		let refresh = Calendar.current.date(byAdding: .minute, value: refreshMinutes, to: entry.date) ?? entry.date.addingTimeInterval(TimeInterval(refreshMinutes * 60))
 		completion(Timeline(entries: [entry], policy: .after(refresh)))
 	}
 }
@@ -78,13 +83,13 @@ private struct DiceRollWidgetView: View {
 			.widgetURL(URL(string: "dice://presets"))
 		case .systemSmall:
 			VStack(alignment: .leading, spacing: 6) {
-				Text(entry.snapshot.notation)
+				Text(entry.snapshot.isEmptyState ? "Ready" : entry.snapshot.notation)
 					.font(.caption.bold())
 					.lineLimit(1)
-				Text("\(entry.snapshot.lastTotal)")
+				Text(entry.snapshot.isEmptyState ? "--" : "\(entry.snapshot.lastTotal)")
 					.font(.system(size: 34, weight: .bold, design: .rounded))
 					.lineLimit(1)
-				Text(modeLabel)
+				Text(entry.snapshot.isEmptyState ? "Roll to start" : modeLabel)
 					.font(.caption2)
 			}
 			.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -95,11 +100,11 @@ private struct DiceRollWidgetView: View {
 		case .systemMedium:
 			VStack(alignment: .leading, spacing: 8) {
 				HStack(alignment: .firstTextBaseline) {
-					Text(entry.snapshot.notation)
+					Text(entry.snapshot.isEmptyState ? "No roll yet" : entry.snapshot.notation)
 						.font(.headline)
 						.lineLimit(1)
 					Spacer(minLength: 8)
-					Text(modeLabel)
+					Text(entry.snapshot.isEmptyState ? "Ready" : modeLabel)
 						.font(.caption)
 						.foregroundStyle(.secondary)
 				}
@@ -107,7 +112,7 @@ private struct DiceRollWidgetView: View {
 					Text("Last")
 						.font(.caption)
 						.foregroundStyle(.secondary)
-					Text("\(entry.snapshot.lastTotal)")
+					Text(entry.snapshot.isEmptyState ? "--" : "\(entry.snapshot.lastTotal)")
 						.font(.system(size: 34, weight: .bold, design: .rounded))
 						.lineLimit(1)
 				}

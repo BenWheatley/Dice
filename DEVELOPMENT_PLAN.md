@@ -229,7 +229,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Implement Home Screen medium widget showing last roll summary plus compact recent-history strip (latest 3 outcomes).
 - [x] Implement Lock Screen inline and circular widgets optimized for truncation limits and legibility.
 - [x] Add widget deep-link routing into app destinations (roll screen, history, presets) using URL-based scene handling.
-- [ ] Add widget timeline refresh policy and placeholder/snapshot handling for empty-state and first-launch flows.
+- [x] Add widget timeline refresh policy and placeholder/snapshot handling for empty-state and first-launch flows.
 - [ ] Add unit tests for widget timeline entries and snapshot fallback logic using deterministic fixtures.
 - [ ] Add simulator UI validation checklist for widget families (iPhone and iPad where supported) including light/dark appearances.
 
