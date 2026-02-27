@@ -15,6 +15,8 @@ float4 taylorInvSqrt(float4 r) {
 }
 
 // 3D simplex noise (Gustavson-style).
+// Keep this as-is unless you are replacing the noise algorithm entirely.
+// Practical tuning happens lower down where this noise is sampled/mixed.
 float simplexNoise3D(float3 v) {
 	const float2 C = float2(1.0 / 6.0, 1.0 / 3.0);
 	const float4 D = float4(0.0, 0.5, 1.0, 2.0);
@@ -75,6 +77,9 @@ float simplexNoise3D(float3 v) {
 }
 
 float fbm3(float3 p) {
+	// Fractal Brownian Motion stack.
+	// More octaves => finer detail + cost.
+	// Fewer octaves => smoother, cheaper pattern.
 	float value = 0.0;
 	float amplitude = 0.5;
 	float frequency = 1.0;
@@ -106,6 +111,8 @@ float4 worldPos = scn_frame.inverseViewTransform * float4(_surface.position.xyz,
 float3 modelPos = (scn_node.inverseModelTransform * worldPos).xyz;
 
 // Rotate sampling basis 15 degrees to avoid alignment to any primary face plane.
+// If veins appear too "face-aligned", increase angle slightly (e.g. 20-30 deg).
+// If orientation feels arbitrary/noisy, lower angle.
 const float angle = 0.2617994; // 15 deg
 const float c = 0.9659258;
 const float s = 0.2588190;
@@ -119,14 +126,23 @@ float dieSeed = ((_surface.shininess - 0.20) * 10000.0) * 4096.0;
 float3 seedOffset = float3(dieSeed, dieSeed * 0.41, dieSeed * 0.73);
 // Sample in die-local space at a die-relative frequency so the pattern reads per die,
 // not as a flat world-space gradient.
+// MASTER SCALE CONTROL:
+// - Increase 2.8 => smaller/finer veins.
+// - Decrease 2.8 => larger/broader veins.
 float3 p = (basis * modelPos) * 2.8 + seedOffset;
 
+// Domain warp stage A:
+// Lower multipliers here for smoother/larger marble flow.
+// Raise for more turbulent swirls.
 float3 warpA = float3(
 	fbm3(p * 0.36 + float3(11.0, 5.0, 3.0)),
 	fbm3(p * 0.36 + float3(7.0, 19.0, 13.0)),
 	fbm3(p * 0.36 + float3(17.0, 2.0, 23.0))
 );
 float3 q = p + warpA * 1.75;
+// Domain warp stage B:
+// Acts like a second distortion pass.
+// Reducing 1.10/0.72 gives calmer marble; increasing adds complexity.
 float3 warpB = float3(
 	fbm3(q * 0.72 + float3(2.0, 13.0, 5.0)),
 	fbm3(q * 0.72 + float3(29.0, 3.0, 11.0)),
@@ -139,23 +155,41 @@ float swirlSecondary = fbm3(r * 2.05 + float3(5.0, 13.0, 2.0));
 float veins = clamp((swirl * 0.64) + (swirlSecondary * 0.36), -1.0, 1.0);
 float veins01 = 0.5 + 0.5 * veins;
 float ridge = 1.0 - abs(2.0 * veins01 - 1.0);
+// Swirl mask: broad "cloud" style marble.
+// Raise 1.22 exponent => narrower structures; lower => softer transitions.
 float swirlMask = smoothstep(0.30, 0.88, pow(ridge, 1.22));
+// Band mask: directional veining layered over swirl.
+// Increase 3.6 for denser bands, decrease for wider bands.
+// If banding dominates too much, reduce its final weight in marblePattern.
 float bandField = sin((r.x * 1.4 + r.y * 0.9 + r.z * 1.1) * 3.6 + swirl * 2.7);
 float bandMask = smoothstep(0.38, 0.82, 0.5 + 0.5 * bandField);
+// Fleck mask: high-frequency inclusions.
+// Reduce 4.1 or lower contribution to make a cleaner polished stone.
 float fleck = smoothstep(0.74, 0.95, fbm3(r * 4.1 + 17.0) * 0.5 + 0.5);
 
 float3 originalDiffuse = _surface.diffuse.rgb;
 float3 base = originalDiffuse;
 float luminance = dot(base, float3(0.2126, 0.7152, 0.0722));
 
+// Keep mainColor close to base so selected die color remains visible.
+// First scalar controls average dark/light shift around base hue.
 float3 mainColor = clamp(base * (0.96 + 0.16 * (veins01 - 0.5)), 0.0, 1.0);
+// Contrast color selection:
+// Light dice get darker veins; dark dice get lighter veins.
+// Change 0.64 / 0.30 to control contrast strength.
 float3 lightContrast = mix(base, float3(1.0, 1.0, 1.0), 0.64);
 float3 darkContrast = base * 0.30;
 float3 contrastColor = luminance > 0.52 ? darkContrast : lightContrast;
 
+// Final pattern mixer:
+// - swirlMask weight controls cloudy marble body.
+// - bandMask weight controls obvious veins.
+// - fleck weight controls speckle noise.
+// Ensure weights sum to ~1 for predictable behavior.
 float marblePattern = clamp(swirlMask * 0.58 + bandMask * 0.30 + fleck * 0.12, 0.0, 1.0);
 float3 marble = mix(mainColor, contrastColor, marblePattern);
 
+// Preserve symbols (numerals/pips/outlines): symbolMask==1 means keep original face artwork.
 _surface.diffuse.rgb = mix(clamp(marble, 0.0, 1.0), originalDiffuse, symbolMask);
 _surface.specular.rgb *= 0.72;
 _surface.shininess = max(_surface.shininess, 0.18);
