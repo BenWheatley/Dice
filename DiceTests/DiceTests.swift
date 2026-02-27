@@ -239,11 +239,13 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(snapshot.modeToken, .trueRandom)
 		XCTAssertTrue(snapshot.recentTotals.isEmpty)
 		XCTAssertTrue(snapshot.isEmptyState)
+		XCTAssertEqual(snapshot.themeToken, .system)
 	}
 
 	func testWidgetSnapshotStoreUsesPersistedNotationAndHistory() throws {
 		let defaults = UserDefaults(suiteName: "DiceTests.WidgetSnapshotStore.History.\(UUID().uuidString)")!
 		defaults.set("3d20+1d6", forKey: "Dice.lastNotation")
+		defaults.set("darkMode", forKey: "Dice.theme")
 
 		let history = [
 			RollHistoryEntry(timestamp: Date(timeIntervalSince1970: 100), notation: "2d6", values: [4, 5], sum: 9, intuitive: false),
@@ -262,6 +264,7 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(snapshot.modeToken, .trueRandom)
 		XCTAssertEqual(snapshot.recentTotals, [2, 38, 9])
 		XCTAssertFalse(snapshot.isEmptyState)
+		XCTAssertEqual(snapshot.themeToken, .darkMode)
 	}
 
 	func testTrueRandomRollerUsesProvidedRandomSourceAndRange() {

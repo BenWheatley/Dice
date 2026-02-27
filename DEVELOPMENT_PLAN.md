@@ -225,7 +225,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 - [x] Define widget scope for v1.1: Home Screen small/medium widgets and Lock Screen inline/circular widgets with simulator-only validation constraints.
 - [x] Create WidgetKit extension target scaffold and shared timeline/provider model wired to existing persisted roll state.
-- [ ] Implement Home Screen small widget showing last notation, last total, and mode token with theme-aware rendering.
+- [x] Implement Home Screen small widget showing last notation, last total, and mode token with theme-aware rendering.
 - [ ] Implement Home Screen medium widget showing last roll summary plus compact recent-history strip (latest 3 outcomes).
 - [ ] Implement Lock Screen inline and circular widgets optimized for truncation limits and legibility.
 - [ ] Add widget deep-link routing into app destinations (roll screen, history, presets) using URL-based scene handling.

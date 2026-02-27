@@ -12,7 +12,14 @@ struct DiceRollWidgetProvider: TimelineProvider {
 	func placeholder(in context: Context) -> DiceRollWidgetEntry {
 		DiceRollWidgetEntry(
 			date: Date(),
-			snapshot: DiceWidgetRollSnapshot(notation: "6d6", lastTotal: 21, modeToken: .trueRandom, recentTotals: [21, 18, 24], isEmptyState: false)
+			snapshot: DiceWidgetRollSnapshot(
+				notation: "6d6",
+				lastTotal: 21,
+				modeToken: .trueRandom,
+				recentTotals: [21, 18, 24],
+				isEmptyState: false,
+				themeToken: .system
+			)
 		)
 	}
 
@@ -48,6 +55,7 @@ struct DiceRollWidget: Widget {
 private struct DiceRollWidgetView: View {
 	let entry: DiceRollWidgetEntry
 	@Environment(\.widgetFamily) private var family
+	@Environment(\.colorScheme) private var colorScheme
 
 	var body: some View {
 		switch family {
@@ -59,6 +67,21 @@ private struct DiceRollWidgetView: View {
 				Text(circularText)
 					.font(.caption.bold())
 			}
+		case .systemSmall:
+			VStack(alignment: .leading, spacing: 6) {
+				Text(entry.snapshot.notation)
+					.font(.caption.bold())
+					.lineLimit(1)
+				Text("\(entry.snapshot.lastTotal)")
+					.font(.system(size: 34, weight: .bold, design: .rounded))
+					.lineLimit(1)
+				Text(modeLabel)
+					.font(.caption2)
+			}
+			.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+			.padding(12)
+			.foregroundStyle(widgetPalette.foreground)
+			.containerBackground(widgetPalette.background, for: .widget)
 		default:
 			VStack(alignment: .leading, spacing: 6) {
 				Text(entry.snapshot.notation)
@@ -89,5 +112,20 @@ private struct DiceRollWidgetView: View {
 
 	private var circularText: String {
 		entry.snapshot.isEmptyState ? "--" : "\(entry.snapshot.lastTotal)"
+	}
+
+	private var modeLabel: String {
+		entry.snapshot.modeToken == .intuitive ? "Intuitive" : "True-random"
+	}
+
+	private var widgetPalette: (foreground: Color, background: Color) {
+		switch entry.snapshot.themeToken {
+		case .lightMode:
+			return (.black, Color(white: 0.95))
+		case .darkMode:
+			return (.white, Color(white: 0.16))
+		case .system:
+			return colorScheme == .dark ? (.white, Color(white: 0.16)) : (.black, Color(white: 0.95))
+		}
 	}
 }

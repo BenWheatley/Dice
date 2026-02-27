@@ -12,18 +12,26 @@ enum DiceWidgetModeToken: String, Codable {
 	case intuitive
 }
 
+enum DiceWidgetThemeToken: String, Codable {
+	case system
+	case lightMode
+	case darkMode
+}
+
 struct DiceWidgetRollSnapshot: Equatable {
 	let notation: String
 	let lastTotal: Int
 	let modeToken: DiceWidgetModeToken
 	let recentTotals: [Int]
 	let isEmptyState: Bool
+	let themeToken: DiceWidgetThemeToken
 }
 
 final class DiceWidgetSnapshotStore {
 	private enum Keys {
 		static let lastNotation = "Dice.lastNotation"
 		static let persistedHistory = "Dice.persistedHistory"
+		static let theme = "Dice.theme"
 	}
 
 	private let defaults: UserDefaults
@@ -40,13 +48,15 @@ final class DiceWidgetSnapshotStore {
 		let entries = loadPersistedEntries()
 		let latest = entries.last
 		let recent = entries.suffix(3).reversed().map(\.sum)
+		let themeToken = DiceWidgetThemeToken(rawValue: defaults.string(forKey: Keys.theme) ?? "") ?? .system
 
 		return DiceWidgetRollSnapshot(
 			notation: notation,
 			lastTotal: latest?.sum ?? 0,
 			modeToken: latest?.intuitive == true ? .intuitive : .trueRandom,
 			recentTotals: recent,
-			isEmptyState: entries.isEmpty
+			isEmptyState: entries.isEmpty,
+			themeToken: themeToken
 		)
 	}
 
