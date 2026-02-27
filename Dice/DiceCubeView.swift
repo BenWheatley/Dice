@@ -743,6 +743,13 @@ final class DiceCubeView: UIView {
 		material.metalness.wrapT = .clamp
 		material.roughness.wrapS = .clamp
 		material.roughness.wrapT = .clamp
+		// Keep symbol masks crisp; filtered+mipped mask sampling causes edge bleed on beveled D6 geometry.
+		material.metalness.minificationFilter = .nearest
+		material.metalness.magnificationFilter = .nearest
+		material.metalness.mipFilter = .none
+		material.roughness.minificationFilter = .nearest
+		material.roughness.magnificationFilter = .nearest
+		material.roughness.mipFilter = .none
 		material.locksAmbientWithDiffuse = true
 		material.isDoubleSided = false
 		if activeDieFinish == .stone {

@@ -29,8 +29,8 @@ return mix(nxy0, nxy1, u.z);
 float fillMask = _surface.roughness;
 float outlineMask = _surface.metalness;
 // Use hard symbol cutout so marble cannot bleed into glyph interiors.
-float symbolMaskFromRoughness = step(0.02, fillMask);
-float symbolMaskFromMetalness = step(0.02, outlineMask);
+float symbolMaskFromRoughness = step(0.90, fillMask);
+float symbolMaskFromMetalness = step(0.90, outlineMask);
 float symbolMask = max(symbolMaskFromRoughness, symbolMaskFromMetalness);
 
 float dx = dfdx(fillMask);
