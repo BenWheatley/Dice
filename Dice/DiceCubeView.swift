@@ -921,6 +921,7 @@ final class DiceCubeView: UIView {
 		let trianglePoints = d4TrianglePoints(size: size)
 		let placements = d4LabelPlacements(triangle: trianglePoints)
 		let numeralSize = DiceFaceLabelSizing.textureNumeralPointSize(sideCount: 4, large: activeLargeFaceLabelsEnabled)
+		let numeralOutlineWidth = max(1.6, numeralSize * 0.075)
 
 		let drawLabels: (_ context: CGContext, _ attributes: [NSAttributedString.Key: Any]) -> Void = { context, attributes in
 			for (index, placement) in placements.enumerated() where index < vertexLabels.count {
@@ -956,7 +957,7 @@ final class DiceCubeView: UIView {
 				.font: numeralFont.numeralFont(ofSize: numeralSize),
 				.foregroundColor: UIColor.clear,
 				.strokeColor: UIColor.white,
-				.strokeWidth: 2.2
+				.strokeWidth: numeralOutlineWidth
 			]
 			drawLabels(context.cgContext, attrs)
 		}
@@ -980,7 +981,7 @@ final class DiceCubeView: UIView {
 				.font: numeralFont.numeralFont(ofSize: numeralSize),
 				.foregroundColor: style.primaryInkColor,
 				.strokeColor: D6SceneKitRenderConfig.goldOutlineColor,
-				.strokeWidth: -2.2
+				.strokeWidth: -numeralOutlineWidth
 			]
 			drawLabels(context.cgContext, attrs)
 		}
@@ -1024,6 +1025,8 @@ final class DiceCubeView: UIView {
 		let style = DiceFaceContrast.style(for: fillColor)
 		let numeralSize = DiceFaceLabelSizing.textureNumeralPointSize(sideCount: sideCount, large: activeLargeFaceLabelsEnabled)
 		let captionSize = DiceFaceLabelSizing.textureCaptionPointSize(large: activeLargeFaceLabelsEnabled)
+		let numeralOutlineWidth = max(1.4, numeralSize * 0.075)
+		let captionOutlineWidth = max(1.0, captionSize * 0.08)
 		let text = "\(value)" as NSString
 		let subtitle = "d\(sideCount)" as NSString
 
@@ -1059,13 +1062,13 @@ final class DiceCubeView: UIView {
 					.font: numeralFont.numeralFont(ofSize: numeralSize),
 					.foregroundColor: UIColor.clear,
 					.strokeColor: UIColor.white,
-					.strokeWidth: 2.0
+					.strokeWidth: numeralOutlineWidth
 				],
 				subtitleAttributes: [
 					.font: numeralFont.captionFont(ofSize: captionSize),
 					.foregroundColor: UIColor.clear,
 					.strokeColor: UIColor.white,
-					.strokeWidth: 1.6
+					.strokeWidth: captionOutlineWidth
 				]
 			)
 		}
@@ -1082,13 +1085,13 @@ final class DiceCubeView: UIView {
 					.font: numeralFont.numeralFont(ofSize: numeralSize),
 					.foregroundColor: style.primaryInkColor,
 					.strokeColor: D6SceneKitRenderConfig.goldOutlineColor,
-					.strokeWidth: -2.0
+					.strokeWidth: -numeralOutlineWidth
 				],
 				subtitleAttributes: [
 					.font: numeralFont.captionFont(ofSize: captionSize),
 					.foregroundColor: style.secondaryInkColor,
 					.strokeColor: D6SceneKitRenderConfig.goldOutlineColor.withAlphaComponent(0.85),
-					.strokeWidth: -1.4
+					.strokeWidth: -captionOutlineWidth
 				]
 			)
 		}

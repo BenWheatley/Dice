@@ -31,16 +31,22 @@ float outlineMask = _surface.metalness;
 // Use hard symbol cutout so marble cannot bleed into glyph interiors.
 float symbolMaskFromRoughness = step(0.90, fillMask);
 float symbolMaskFromMetalness = step(0.90, outlineMask);
-float symbolMask = max(symbolMaskFromRoughness, symbolMaskFromMetalness);
+float fillSymbolMask = symbolMaskFromRoughness;
+float outlineSymbolMask = symbolMaskFromMetalness;
+float symbolMask = max(fillSymbolMask, outlineSymbolMask);
 
 float dx = dfdx(fillMask);
 float dy = dfdy(fillMask);
 _surface.normal = normalize(_surface.normal + float3(-dx * 0.95, -dy * 0.95, 0.0));
 
 float baseRoughness = 0.82;
-// Keep symbols fully matte/non-metal so they read as paint on top of stone.
-_surface.roughness = mix(baseRoughness, 0.97, symbolMask);
-_surface.metalness = 0.0;
+// Fill remains matte paint; outline is metallic/shiny gold trim.
+float fillRoughness = 0.97;
+float outlineRoughness = 0.16;
+_surface.roughness = baseRoughness;
+_surface.roughness = mix(_surface.roughness, fillRoughness, fillSymbolMask);
+_surface.roughness = mix(_surface.roughness, outlineRoughness, outlineSymbolMask);
+_surface.metalness = outlineSymbolMask;
 
 // Convert surface position (view space) back into this die's local model space.
 float4 worldPos = scn_frame.inverseViewTransform * float4(_surface.position.xyz, 1.0);
@@ -73,7 +79,9 @@ float marblePattern = clamp(veinMask * 0.78 + fleck * 0.22, 0.0, 1.0);
 float3 marble = mix(mainColor, contrastColor, marblePattern);
 
 float3 symbolColor = clamp(_surface.emission.rgb, 0.0, 1.0);
-_surface.diffuse.rgb = mix(clamp(marble, 0.0, 1.0), symbolColor, symbolMask);
+const float3 goldOutlineColor = float3(0.84, 0.70, 0.28);
+float3 painted = mix(clamp(marble, 0.0, 1.0), symbolColor, fillSymbolMask);
+_surface.diffuse.rgb = mix(painted, goldOutlineColor, outlineSymbolMask);
 _surface.emission.rgb = float3(0.0);
-_surface.specular.rgb = mix(_surface.specular.rgb * 0.72, float3(0.0), symbolMask);
-_surface.shininess = mix(max(_surface.shininess, 0.18), 0.02, symbolMask);
+_surface.specular.rgb *= 0.72;
+_surface.shininess = max(_surface.shininess, 0.18);

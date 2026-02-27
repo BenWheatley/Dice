@@ -99,6 +99,7 @@ struct D6SceneKitRenderConfig {
 		]
 
 		let radius = size.width * 0.08
+		let pipOutlineWidth = radius * 0.10
 		let symbolFillMask = renderMask(size: size) { context in
 			for index in indexesByValue[value] ?? [] {
 				drawPip(
@@ -121,7 +122,7 @@ struct D6SceneKitRenderConfig {
 					pipStyle: pipStyle,
 					fill: nil,
 					stroke: UIColor.white,
-					lineWidth: 4
+					lineWidth: pipOutlineWidth
 				)
 			}
 		}
@@ -136,7 +137,7 @@ struct D6SceneKitRenderConfig {
 				style.primaryInkColor.setFill()
 				path.fill()
 				goldOutlineColor.setStroke()
-				path.lineWidth = 3
+				path.lineWidth = pipOutlineWidth
 				path.stroke()
 			}
 		}
