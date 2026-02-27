@@ -208,6 +208,17 @@ final class DiceTests: XCTestCase {
 		XCTAssertNil(parser.parse("20d6+20d6"))
 	}
 
+	func testAppRouteParsesSupportedDiceURLs() {
+		XCTAssertEqual(DiceAppRoute(url: URL(string: "dice://roll")!), .roll)
+		XCTAssertEqual(DiceAppRoute(url: URL(string: "dice://history")!), .history)
+		XCTAssertEqual(DiceAppRoute(url: URL(string: "dice://presets")!), .presets)
+	}
+
+	func testAppRouteRejectsUnsupportedURLs() {
+		XCTAssertNil(DiceAppRoute(url: URL(string: "https://example.com/roll")!))
+		XCTAssertNil(DiceAppRoute(url: URL(string: "dice://unknown")!))
+	}
+
 	func testAudioFormatResolverPrefersPlayerOutputFormat() {
 		let playerOutput = AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 2)
 		let mixerOutput = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!

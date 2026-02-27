@@ -36,6 +36,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private var statsVisible = true
 	private var totalsChartHostingController: UIHostingController<DiceRollDistributionChartView>?
 	private var currentTotalsGraphCounts: [Int] = []
+	private var routeObserver: NSObjectProtocol?
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -53,6 +54,13 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		configureAccessibilityRotors()
 		updateControlMenu()
 		renderRestoredState()
+		observeSceneRoutes()
+	}
+
+	deinit {
+		if let routeObserver {
+			NotificationCenter.default.removeObserver(routeObserver)
+		}
 	}
 
 	override func viewDidAppear(_ animated: Bool) {
@@ -247,6 +255,28 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			presetsButton.widthAnchor.constraint(equalToConstant: 72),
 			menuButton.widthAnchor.constraint(equalToConstant: 44),
 		])
+	}
+
+	private func observeSceneRoutes() {
+		routeObserver = NotificationCenter.default.addObserver(
+			forName: .diceRouteRequested,
+			object: nil,
+			queue: .main
+		) { [weak self] notification in
+			guard let route = notification.object as? DiceAppRoute else { return }
+			self?.handle(route: route)
+		}
+	}
+
+	private func handle(route: DiceAppRoute) {
+		switch route {
+		case .roll:
+			rollFromInput()
+		case .history:
+			showHistory()
+		case .presets:
+			showPresetPicker()
+		}
 	}
 
 	private func configureDiceBoard() {

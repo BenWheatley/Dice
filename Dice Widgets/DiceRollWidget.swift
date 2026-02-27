@@ -62,6 +62,7 @@ private struct DiceRollWidgetView: View {
 		case .accessoryInline:
 			Text(inlineText)
 				lineLimit(1)
+				.widgetURL(URL(string: "dice://roll"))
 		case .accessoryCircular:
 			ZStack {
 				AccessoryWidgetBackground()
@@ -74,6 +75,7 @@ private struct DiceRollWidgetView: View {
 						.foregroundStyle(.secondary)
 				}
 			}
+			.widgetURL(URL(string: "dice://presets"))
 		case .systemSmall:
 			VStack(alignment: .leading, spacing: 6) {
 				Text(entry.snapshot.notation)
@@ -89,6 +91,7 @@ private struct DiceRollWidgetView: View {
 			.padding(12)
 			.foregroundStyle(widgetPalette.foreground)
 			.containerBackground(widgetPalette.background, for: .widget)
+			.widgetURL(URL(string: "dice://roll"))
 		case .systemMedium:
 			VStack(alignment: .leading, spacing: 8) {
 				HStack(alignment: .firstTextBaseline) {
@@ -121,6 +124,7 @@ private struct DiceRollWidgetView: View {
 			}
 			.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 			.padding(12)
+			.widgetURL(URL(string: "dice://history"))
 		default:
 			VStack(alignment: .leading, spacing: 6) {
 				Text(entry.snapshot.notation)
@@ -139,6 +143,7 @@ private struct DiceRollWidgetView: View {
 			}
 			.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 			.padding(10)
+			.widgetURL(URL(string: "dice://roll"))
 		}
 	}
 
