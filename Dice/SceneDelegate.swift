@@ -10,6 +10,7 @@ import UIKit
 final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 	var window: UIWindow?
 	private var pendingRoute: DiceAppRoute?
+	private let snapshotStore = DiceWidgetSnapshotStore()
 
 	func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
 		pendingRoute = initialRoute(from: connectionOptions)
@@ -27,11 +28,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 	}
 
 	func windowScene(_ windowScene: UIWindowScene, performActionFor shortcutItem: UIApplicationShortcutItem, completionHandler: @escaping (Bool) -> Void) {
-		guard let action = DiceQuickActionType(shortcutType: shortcutItem.type) else {
+		let snapshot = snapshotStore.loadSnapshot()
+		guard let route = DiceQuickActionRouter.route(for: shortcutItem.type, snapshot: snapshot) else {
 			completionHandler(false)
 			return
 		}
-		post(route: action.route, scene: windowScene)
+		post(route: route, scene: windowScene)
 		completionHandler(true)
 	}
 
@@ -39,8 +41,9 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 		if let route = options.urlContexts.compactMap({ DiceAppRoute(url: $0.url) }).first {
 			return route
 		}
-		if let shortcutItem = options.shortcutItem, let action = DiceQuickActionType(shortcutType: shortcutItem.type) {
-			return action.route
+		if let shortcutItem = options.shortcutItem {
+			let snapshot = snapshotStore.loadSnapshot()
+			return DiceQuickActionRouter.route(for: shortcutItem.type, snapshot: snapshot)
 		}
 		return nil
 	}

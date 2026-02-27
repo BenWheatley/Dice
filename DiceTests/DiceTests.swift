@@ -210,6 +210,7 @@ final class DiceTests: XCTestCase {
 
 	func testAppRouteParsesSupportedDiceURLs() {
 		XCTAssertEqual(DiceAppRoute(url: URL(string: "dice://roll")!), .roll)
+		XCTAssertEqual(DiceAppRoute(url: URL(string: "dice://repeat")!), .repeatLastRoll)
 		XCTAssertEqual(DiceAppRoute(url: URL(string: "dice://history")!), .history)
 		XCTAssertEqual(DiceAppRoute(url: URL(string: "dice://presets")!), .presets)
 	}
@@ -245,6 +246,38 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(items.map(\.type).contains(DiceQuickActionType.repeatLastRoll.shortcutType))
 		let repeatItem = items.first(where: { $0.type == DiceQuickActionType.repeatLastRoll.shortcutType })
 		XCTAssertEqual(repeatItem?.localizedSubtitle, "Last: 3d20+1d6")
+	}
+
+	func testQuickActionRouteResolverReturnsRouteForKnownType() {
+		let snapshot = DiceWidgetRollSnapshot(
+			notation: "6d6",
+			lastTotal: 18,
+			modeToken: .trueRandom,
+			recentTotals: [18, 21, 15],
+			isEmptyState: false,
+			themeToken: .system
+		)
+		let route = DiceQuickActionRouter.route(for: DiceQuickActionType.rollHistory.shortcutType, snapshot: snapshot)
+		XCTAssertEqual(route, .history)
+	}
+
+	func testQuickActionRouteResolverRejectsUnknownType() {
+		let snapshot = DiceWidgetTimelinePolicy.placeholderSnapshot
+		let route = DiceQuickActionRouter.route(for: "com.kitsunesoftware.Dice.unknown", snapshot: snapshot)
+		XCTAssertNil(route)
+	}
+
+	func testQuickActionRouteResolverNoopsRepeatWhenNoHistory() {
+		let snapshot = DiceWidgetRollSnapshot(
+			notation: "6d6",
+			lastTotal: 0,
+			modeToken: .trueRandom,
+			recentTotals: [],
+			isEmptyState: true,
+			themeToken: .system
+		)
+		let route = DiceQuickActionRouter.route(for: DiceQuickActionType.repeatLastRoll.shortcutType, snapshot: snapshot)
+		XCTAssertNil(route)
 	}
 
 	func testWidgetTimelinePolicyUsesLongerIntervalForEmptyState() {

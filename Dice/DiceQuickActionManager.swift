@@ -83,6 +83,16 @@ enum DiceQuickActionLibrary {
 	}
 }
 
+enum DiceQuickActionRouter {
+	static func route(for shortcutType: String, snapshot: DiceWidgetRollSnapshot) -> DiceAppRoute? {
+		guard let action = DiceQuickActionType(shortcutType: shortcutType) else { return nil }
+		if action == .repeatLastRoll, snapshot.isEmptyState {
+			return nil
+		}
+		return action.route
+	}
+}
+
 final class DiceQuickActionManager {
 	static let shared = DiceQuickActionManager()
 
