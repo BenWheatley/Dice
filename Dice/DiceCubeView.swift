@@ -411,6 +411,28 @@ final class DiceCubeView: UIView {
 				current = node.parent
 			}
 		}
+		// Fallback to a generous screen-space die radius so taps work across the full die footprint.
+		let radius = max(36, currentSideLength * 0.62)
+		var nearest: (index: Int, distanceSquared: CGFloat)?
+		for (index, node) in dieNodes.enumerated() {
+			let projected = scnView.projectPoint(node.presentation.position)
+			guard projected.z >= 0, projected.z <= 1 else { continue }
+			let dx = CGFloat(projected.x) - point.x
+			let dy = CGFloat(projected.y) - point.y
+			let distanceSquared = dx * dx + dy * dy
+			if distanceSquared <= radius * radius {
+				if let currentNearest = nearest {
+					if distanceSquared < currentNearest.distanceSquared {
+						nearest = (index, distanceSquared)
+					}
+				} else {
+					nearest = (index, distanceSquared)
+				}
+			}
+		}
+		if let nearest {
+			return nearest.index
+		}
 		return nil
 	}
 

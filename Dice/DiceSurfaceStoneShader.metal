@@ -117,7 +117,9 @@ float3x3 basis = float3x3(
 
 float dieSeed = ((_surface.shininess - 0.20) * 10000.0) * 4096.0;
 float3 seedOffset = float3(dieSeed, dieSeed * 0.41, dieSeed * 0.73);
-float3 p = (basis * modelPos) * 0.95 + seedOffset;
+// Sample in die-local space at a die-relative frequency so the pattern reads per die,
+// not as a flat world-space gradient.
+float3 p = (basis * modelPos) * 2.8 + seedOffset;
 
 float3 warpA = float3(
 	fbm3(p * 0.36 + float3(11.0, 5.0, 3.0)),
@@ -132,24 +134,26 @@ float3 warpB = float3(
 );
 float3 r = q + warpB * 1.10;
 
-float swirl = fbm3(r * 1.12);
-float swirlSecondary = fbm3(r * 1.84 + float3(5.0, 13.0, 2.0));
+float swirl = fbm3(r * 1.22);
+float swirlSecondary = fbm3(r * 2.05 + float3(5.0, 13.0, 2.0));
 float veins = clamp((swirl * 0.64) + (swirlSecondary * 0.36), -1.0, 1.0);
 float veins01 = 0.5 + 0.5 * veins;
 float ridge = 1.0 - abs(2.0 * veins01 - 1.0);
-float veinMask = smoothstep(0.24, 0.86, pow(ridge, 1.35));
-float fleck = smoothstep(0.67, 0.93, fbm3(r * 3.2 + 17.0) * 0.5 + 0.5);
+float swirlMask = smoothstep(0.30, 0.88, pow(ridge, 1.22));
+float bandField = sin((r.x * 1.4 + r.y * 0.9 + r.z * 1.1) * 3.6 + swirl * 2.7);
+float bandMask = smoothstep(0.38, 0.82, 0.5 + 0.5 * bandField);
+float fleck = smoothstep(0.74, 0.95, fbm3(r * 4.1 + 17.0) * 0.5 + 0.5);
 
 float3 originalDiffuse = _surface.diffuse.rgb;
 float3 base = originalDiffuse;
 float luminance = dot(base, float3(0.2126, 0.7152, 0.0722));
 
-float3 mainColor = clamp(base * (0.87 + 0.18 * (veins01 - 0.5)), 0.0, 1.0);
+float3 mainColor = clamp(base * (0.96 + 0.16 * (veins01 - 0.5)), 0.0, 1.0);
 float3 lightContrast = mix(base, float3(1.0, 1.0, 1.0), 0.64);
 float3 darkContrast = base * 0.30;
 float3 contrastColor = luminance > 0.52 ? darkContrast : lightContrast;
 
-float marblePattern = clamp(veinMask * 0.84 + fleck * 0.16, 0.0, 1.0);
+float marblePattern = clamp(swirlMask * 0.58 + bandMask * 0.30 + fleck * 0.12, 0.0, 1.0);
 float3 marble = mix(mainColor, contrastColor, marblePattern);
 
 _surface.diffuse.rgb = mix(clamp(marble, 0.0, 1.0), originalDiffuse, symbolMask);
