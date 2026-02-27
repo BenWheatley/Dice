@@ -32,8 +32,10 @@ enum DiceDieFinish: String, CaseIterable {
 			material.specular.contents = UIColor(white: 0.95, alpha: 1.0)
 			material.shininess = 0.90
 		case .stone:
-			material.lightingModel = .lambert
-			material.specular.contents = UIColor(white: 0.25, alpha: 1.0)
+			// Stone shader relies on roughness/metalness texture channels as symbol masks.
+			// Use physically based lighting so those channels are preserved through shading.
+			material.lightingModel = .physicallyBased
+			material.specular.contents = UIColor(white: 0.0, alpha: 1.0)
 			_ = baseColor
 			// Encode a stable per-die seed in shininess (read back by shader).
 			material.shininess = 0.20 + CGFloat(dieIndex) * 0.0001
