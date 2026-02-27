@@ -93,6 +93,9 @@
 		D2CE11182F51001800D1CE00 /* RollSessionSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10182F51001800D1CE00 /* RollSessionSummary.swift */; };
 		D4CE11012F52000100D1CE00 /* DiceBackgroundShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = D4CE10012F52000100D1CE00 /* DiceBackgroundShaders.metal */; };
 		D5CE11012F53000100D1CE00 /* DiceRollDistributionChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5CE10012F53000100D1CE00 /* DiceRollDistributionChartView.swift */; };
+		E0CE00012F54000100D1CE00 /* DiceShaderModifierSourceLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0CE10012F54000100D1CE00 /* DiceShaderModifierSourceLoader.swift */; };
+		E0CE00022F54000200D1CE00 /* DiceSurfaceBaseShader.metal in Resources */ = {isa = PBXBuildFile; fileRef = E0CE10022F54000200D1CE00 /* DiceSurfaceBaseShader.metal */; };
+		E0CE00032F54000300D1CE00 /* DiceSurfaceStoneShader.metal in Resources */ = {isa = PBXBuildFile; fileRef = E0CE10032F54000300D1CE00 /* DiceSurfaceStoneShader.metal */; };
 		C0DE00212F44022100D1CE00 /* DiceNotationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00002F44000100D1CE00 /* DiceNotationParser.swift */; };
 		C0DE00232F44022300D1CE00 /* TrueRandomRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00022F44003200D1CE00 /* TrueRandomRoller.swift */; };
 		C0DE00252F44022500D1CE00 /* IntuitiveRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00042F44005400D1CE00 /* IntuitiveRoller.swift */; };
@@ -249,6 +252,9 @@
 		D2CE10182F51001800D1CE00 /* RollSessionSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollSessionSummary.swift; sourceTree = "<group>"; };
 		D4CE10012F52000100D1CE00 /* DiceBackgroundShaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = DiceBackgroundShaders.metal; sourceTree = "<group>"; };
 		D5CE10012F53000100D1CE00 /* DiceRollDistributionChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceRollDistributionChartView.swift; sourceTree = "<group>"; };
+		E0CE10012F54000100D1CE00 /* DiceShaderModifierSourceLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceShaderModifierSourceLoader.swift; sourceTree = "<group>"; };
+		E0CE10022F54000200D1CE00 /* DiceSurfaceBaseShader.metal */ = {isa = PBXFileReference; lastKnownFileType = text; path = DiceSurfaceBaseShader.metal; sourceTree = "<group>"; };
+		E0CE10032F54000300D1CE00 /* DiceSurfaceStoneShader.metal */ = {isa = PBXFileReference; lastKnownFileType = text; path = DiceSurfaceStoneShader.metal; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -353,6 +359,8 @@
 				D5CE10012F53000100D1CE00 /* DiceRollDistributionChartView.swift */,
 				D1CE10032F50000300D1CE00 /* DiceMetalTextureRenderer.swift */,
 				D4CE10012F52000100D1CE00 /* DiceBackgroundShaders.metal */,
+				E0CE10022F54000200D1CE00 /* DiceSurfaceBaseShader.metal */,
+				E0CE10032F54000300D1CE00 /* DiceSurfaceStoneShader.metal */,
 				D1CE100F2F50000F00D1CE00 /* RollHistoryViewController.swift */,
 				D1CE10012F50000100D1CE00 /* DiceCollectionViewCell.swift */,
 				D2CE10012F51000100D1CE00 /* D6FaceOrientation.swift */,
@@ -379,6 +387,7 @@
 				D2CE10162F51001600D1CE00 /* RollHistoryModeFilter.swift */,
 				D2CE10172F51001700D1CE00 /* RollOutcome.swift */,
 				D2CE10182F51001800D1CE00 /* RollSessionSummary.swift */,
+				E0CE10012F54000100D1CE00 /* DiceShaderModifierSourceLoader.swift */,
 				B50B44D4215D803D00A6399B /* Main.storyboard */,
 				B50B44D7215D804100A6399B /* Assets.xcassets */,
 				B50B44D9215D804100A6399B /* LaunchScreen.storyboard */,
@@ -576,6 +585,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E0CE00032F54000300D1CE00 /* DiceSurfaceStoneShader.metal in Resources */,
+				E0CE00022F54000200D1CE00 /* DiceSurfaceBaseShader.metal in Resources */,
 				B50B44DB215D804100A6399B /* LaunchScreen.storyboard in Resources */,
 				B50B44D8215D804100A6399B /* Assets.xcassets in Resources */,
 				C0DE00312F44033100D1CE00 /* Localizable.strings in Resources */,
@@ -661,6 +672,7 @@
 				D1CE11032F50000300D1CE00 /* DiceMetalTextureRenderer.swift in Sources */,
 				D4CE11012F52000100D1CE00 /* DiceBackgroundShaders.metal in Sources */,
 				D5CE11012F53000100D1CE00 /* DiceRollDistributionChartView.swift in Sources */,
+				E0CE00012F54000100D1CE00 /* DiceShaderModifierSourceLoader.swift in Sources */,
 				D1CE110F2F50000F00D1CE00 /* RollHistoryViewController.swift in Sources */,
 				D1CE11012F50000100D1CE00 /* DiceCollectionViewCell.swift in Sources */,
 				D2CE11012F51000100D1CE00 /* D6FaceOrientation.swift in Sources */,
