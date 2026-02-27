@@ -129,10 +129,6 @@ struct D6SceneKitRenderConfig {
 		let diffuse = UIGraphicsImageRenderer(size: size).image { _ in
 			style.fillColor.setFill()
 			UIBezierPath(rect: rect).fill()
-			style.borderColor.setStroke()
-			let border = UIBezierPath(rect: rect.insetBy(dx: 6, dy: 6))
-			border.lineWidth = 8
-			border.stroke()
 
 			for index in indexesByValue[value] ?? [] {
 				let center = pipPositions[index]

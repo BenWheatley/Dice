@@ -38,8 +38,8 @@ float dy = dfdy(fillMask);
 _surface.normal = normalize(_surface.normal + float3(-dx * 0.95, -dy * 0.95, 0.0));
 
 float baseRoughness = 0.82;
-// Keep symbols matte/non-metal so their color remains stable and readable.
-_surface.roughness = mix(baseRoughness, 0.28, symbolMask);
+// Keep symbols fully matte/non-metal so they read as paint on top of stone.
+_surface.roughness = mix(baseRoughness, 0.97, symbolMask);
 _surface.metalness = 0.0;
 
 // Convert surface position (view space) back into this die's local model space.
@@ -75,5 +75,5 @@ float3 marble = mix(mainColor, contrastColor, marblePattern);
 float3 symbolColor = clamp(_surface.emission.rgb, 0.0, 1.0);
 _surface.diffuse.rgb = mix(clamp(marble, 0.0, 1.0), symbolColor, symbolMask);
 _surface.emission.rgb = float3(0.0);
-_surface.specular.rgb *= 0.72;
-_surface.shininess = max(_surface.shininess, 0.18);
+_surface.specular.rgb = mix(_surface.specular.rgb * 0.72, float3(0.0), symbolMask);
+_surface.shininess = mix(max(_surface.shininess, 0.18), 0.02, symbolMask);
