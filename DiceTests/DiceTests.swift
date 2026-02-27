@@ -1926,8 +1926,33 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(geometry.chamferSegmentCount, 4)
 
 		let texture = D6SceneKitRenderConfig.faceTexture(value: 6)
-		XCTAssertEqual(texture.size.width, 256, accuracy: 0.1)
-		XCTAssertEqual(texture.size.height, 256, accuracy: 0.1)
+		XCTAssertEqual(texture.size.width, 512, accuracy: 0.1)
+		XCTAssertEqual(texture.size.height, 512, accuracy: 0.1)
+	}
+
+	func testD6OutlineMaskDoesNotCoverPipCenters() {
+		let textureSet = D6SceneKitRenderConfig.faceTextureSet(value: 6, fillColor: .white, pipStyle: .round)
+		guard let width = textureSet.roughness.cgImage?.width else {
+			XCTFail("Expected roughness mask cgImage")
+			return
+		}
+		let pipCenterX = Int((Double(width) * 0.28).rounded())
+		let pipCenterY = Int((Double(width) * 0.28).rounded())
+		let radius = Double(width) * 0.08
+		let outlineWidth = radius * 0.20
+		let ringProbeX = Int((Double(pipCenterX) + radius + (outlineWidth * 0.5)).rounded())
+		guard
+			let fillCenter = grayscalePixel(in: textureSet.roughness, x: pipCenterX, y: pipCenterY),
+			let outlineCenter = grayscalePixel(in: textureSet.metalness, x: pipCenterX, y: pipCenterY),
+			let outlineRing = grayscalePixel(in: textureSet.metalness, x: ringProbeX, y: pipCenterY)
+		else {
+			XCTFail("Expected readable D6 symbol masks")
+			return
+		}
+
+		XCTAssertGreaterThan(fillCenter, 240, "Pip center should belong to the fill mask")
+		XCTAssertLessThan(outlineCenter, 16, "Pip center should not be included in outline mask")
+		XCTAssertGreaterThan(outlineRing, 240, "Outline mask should contain the outer ring")
 	}
 
 	func testD6PipStylesGenerateDistinctTexturesForSameFaceValue() {
@@ -2542,6 +2567,29 @@ final class DiceTests: XCTestCase {
 			return partial + (delta * delta)
 		} / count
 		return PixelStats(meanR: meanR, meanG: meanG, meanB: meanB, luminanceStdDev: sqrt(variance))
+	}
+
+	private func grayscalePixel(in image: UIImage, x: Int, y: Int) -> UInt8? {
+		guard let cgImage = image.cgImage else { return nil }
+		let width = cgImage.width
+		let height = cgImage.height
+		guard width > 0, height > 0, x >= 0, y >= 0, x < width, y < height else { return nil }
+
+		let bytesPerPixel = 4
+		let bytesPerRow = bytesPerPixel * width
+		var pixels = Array(repeating: UInt8(0), count: bytesPerRow * height)
+		guard let context = CGContext(
+			data: &pixels,
+			width: width,
+			height: height,
+			bitsPerComponent: 8,
+			bytesPerRow: bytesPerRow,
+			space: CGColorSpaceCreateDeviceRGB(),
+			bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+		) else { return nil }
+		context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+		let offset = y * bytesPerRow + x * bytesPerPixel
+		return pixels[offset]
 	}
 
 }

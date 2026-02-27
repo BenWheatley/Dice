@@ -32,7 +32,8 @@ float outlineMask = _surface.metalness;
 float symbolMaskFromRoughness = step(0.90, fillMask);
 float symbolMaskFromMetalness = step(0.90, outlineMask);
 float fillSymbolMask = symbolMaskFromRoughness;
-float outlineSymbolMask = symbolMaskFromMetalness;
+// Keep metallic outline outside the fill so gold trim never paints over the symbol interior.
+float outlineSymbolMask = clamp(symbolMaskFromMetalness - fillSymbolMask, 0.0, 1.0);
 float symbolMask = max(fillSymbolMask, outlineSymbolMask);
 
 float dx = dfdx(fillMask);

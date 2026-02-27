@@ -11,6 +11,7 @@ import SceneKit
 import simd
 
 final class DiceCubeView: UIView {
+	private static let faceTextureEdgeLength: CGFloat = 512
 	private struct MeshCacheKey: Hashable {
 		let sideCount: Int
 		let roundedSideLength: Int
@@ -915,7 +916,7 @@ final class DiceCubeView: UIView {
 	}
 
 	private func d4FaceTextureSet(vertexLabels: [Int], fillColor: UIColor, numeralFont: DiceFaceNumeralFont) -> FaceTextureSet {
-		let size = CGSize(width: 256, height: 256)
+		let size = CGSize(width: Self.faceTextureEdgeLength, height: Self.faceTextureEdgeLength)
 		let rect = CGRect(origin: .zero, size: size)
 		let style = DiceFaceContrast.style(for: fillColor)
 		let trianglePoints = d4TrianglePoints(size: size)
@@ -1020,7 +1021,7 @@ final class DiceCubeView: UIView {
 	}
 
 	private func faceValueTextureSet(value: Int, sideCount: Int, fillColor: UIColor, numeralFont: DiceFaceNumeralFont) -> FaceTextureSet {
-		let size = CGSize(width: 256, height: 256)
+		let size = CGSize(width: Self.faceTextureEdgeLength, height: Self.faceTextureEdgeLength)
 		let rect = CGRect(origin: .zero, size: size)
 		let style = DiceFaceContrast.style(for: fillColor)
 		let numeralSize = DiceFaceLabelSizing.textureNumeralPointSize(sideCount: sideCount, large: activeLargeFaceLabelsEnabled)

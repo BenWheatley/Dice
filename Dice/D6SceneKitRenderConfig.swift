@@ -2,6 +2,7 @@ import UIKit
 import SceneKit
 
 struct D6SceneKitRenderConfig {
+	private static let textureEdgeLength: CGFloat = 512
 	private struct FaceTextureCacheKey: Hashable {
 		let value: Int
 		let pipStyle: DiceD6PipStyle
@@ -73,7 +74,7 @@ struct D6SceneKitRenderConfig {
 		}
 		faceTextureSetCacheLock.unlock()
 
-		let size = CGSize(width: 256, height: 256)
+		let size = CGSize(width: textureEdgeLength, height: textureEdgeLength)
 		let rect = CGRect(origin: .zero, size: size)
 		let style = DiceFaceContrast.style(for: fillColor)
 
@@ -99,7 +100,7 @@ struct D6SceneKitRenderConfig {
 		]
 
 		let radius = size.width * 0.08
-		let pipOutlineWidth = radius * 0.10
+		let pipOutlineWidth = radius * 0.20
 		let symbolFillMask = renderMask(size: size) { context in
 			for index in indexesByValue[value] ?? [] {
 				drawPip(
@@ -115,14 +116,13 @@ struct D6SceneKitRenderConfig {
 		}
 		let symbolOutlineMask = renderMask(size: size) { context in
 			for index in indexesByValue[value] ?? [] {
-				drawPip(
+				drawPipOutlineRing(
 					in: context,
 					center: pipPositions[index],
 					radius: radius,
 					pipStyle: pipStyle,
-					fill: nil,
-					stroke: UIColor.white,
-					lineWidth: pipOutlineWidth
+					ringWidth: pipOutlineWidth,
+					fill: UIColor.white
 				)
 			}
 		}
@@ -136,9 +136,14 @@ struct D6SceneKitRenderConfig {
 				let path = pipPath(center: center, radius: radius, pipStyle: pipStyle)
 				style.primaryInkColor.setFill()
 				path.fill()
-				goldOutlineColor.setStroke()
-				path.lineWidth = pipOutlineWidth
-				path.stroke()
+				drawPipOutlineRing(
+					in: UIGraphicsGetCurrentContext(),
+					center: center,
+					radius: radius,
+					pipStyle: pipStyle,
+					ringWidth: pipOutlineWidth,
+					fill: goldOutlineColor
+				)
 			}
 		}
 
@@ -234,5 +239,24 @@ struct D6SceneKitRenderConfig {
 			context.addPath(path.cgPath)
 			context.strokePath()
 		}
+	}
+
+	private static func drawPipOutlineRing(
+		in context: CGContext?,
+		center: CGPoint,
+		radius: CGFloat,
+		pipStyle: DiceD6PipStyle,
+		ringWidth: CGFloat,
+		fill: UIColor
+	) {
+		guard let context else { return }
+		let outerPath = pipPath(center: center, radius: radius + ringWidth, pipStyle: pipStyle)
+		let innerPath = pipPath(center: center, radius: radius, pipStyle: pipStyle)
+		outerPath.append(innerPath.reversing())
+		outerPath.usesEvenOddFillRule = true
+		context.saveGState()
+		fill.setFill()
+		outerPath.fill()
+		context.restoreGState()
 	}
 }
