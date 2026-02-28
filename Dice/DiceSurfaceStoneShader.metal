@@ -32,7 +32,7 @@ float outlineMask = _surface.metalness;
 float symbolMaskFromRoughness = step(0.90, fillMask);
 float symbolMaskFromMetalness = step(0.90, outlineMask);
 float fillSymbolMask = symbolMaskFromRoughness;
-// Keep metallic outline outside the fill so gold trim never paints over the symbol interior.
+// Keep outline outside the fill so trim never paints over the symbol interior.
 float outlineSymbolMask = clamp(symbolMaskFromMetalness - fillSymbolMask, 0.0, 1.0);
 float symbolMask = max(fillSymbolMask, outlineSymbolMask);
 
@@ -41,7 +41,7 @@ float dy = dfdy(fillMask);
 _surface.normal = normalize(_surface.normal + float3(-dx * 0.95, -dy * 0.95, 0.0));
 
 float baseRoughness = 0.82;
-// Fill remains matte paint; outline stays gold but is roughened to avoid white specular blowout.
+// Fill remains matte paint; outline is opposite-ink trim and roughened to avoid glare blowout.
 float fillRoughness = 0.97;
 float outlineRoughness = 0.58;
 _surface.roughness = baseRoughness;
@@ -80,9 +80,10 @@ float marblePattern = clamp(veinMask * 0.78 + fleck * 0.22, 0.0, 1.0);
 float3 marble = mix(mainColor, contrastColor, marblePattern);
 
 float3 symbolColor = clamp(_surface.emission.rgb, 0.0, 1.0);
-const float3 goldOutlineColor = float3(0.84, 0.70, 0.28);
+float symbolLuminance = dot(symbolColor, float3(0.2126, 0.7152, 0.0722));
+float3 outlineColor = symbolLuminance > 0.5 ? float3(0.0, 0.0, 0.0) : float3(1.0, 1.0, 1.0);
 float3 painted = mix(clamp(marble, 0.0, 1.0), symbolColor, fillSymbolMask);
-_surface.diffuse.rgb = mix(painted, goldOutlineColor, outlineSymbolMask);
+_surface.diffuse.rgb = mix(painted, outlineColor, outlineSymbolMask);
 _surface.emission.rgb = float3(0.0);
 _surface.specular.rgb *= 0.32;
 _surface.shininess = max(_surface.shininess, 0.18);

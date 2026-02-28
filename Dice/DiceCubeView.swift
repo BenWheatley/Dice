@@ -846,6 +846,7 @@ final class DiceCubeView: UIView {
 
 	private func symbolInkColor(for fillColor: UIColor) -> UIColor {
 		let style = DiceFaceContrast.style(for: fillColor)
+		let outlineInkColor = oppositeInkColor(for: style.primaryInkColor)
 		return style.primaryInkColor
 	}
 
@@ -919,6 +920,7 @@ final class DiceCubeView: UIView {
 		let size = CGSize(width: Self.faceTextureEdgeLength, height: Self.faceTextureEdgeLength)
 		let rect = CGRect(origin: .zero, size: size)
 		let style = DiceFaceContrast.style(for: fillColor)
+		let outlineInkColor = oppositeInkColor(for: style.primaryInkColor)
 		let trianglePoints = d4TrianglePoints(size: size)
 		let placements = d4LabelPlacements(triangle: trianglePoints)
 		let numeralSize = DiceFaceLabelSizing.textureNumeralPointSize(sideCount: 4, large: activeLargeFaceLabelsEnabled)
@@ -981,7 +983,7 @@ final class DiceCubeView: UIView {
 			let attrs: [NSAttributedString.Key: Any] = [
 				.font: numeralFont.numeralFont(ofSize: numeralSize),
 				.foregroundColor: style.primaryInkColor,
-				.strokeColor: D6SceneKitRenderConfig.goldOutlineColor,
+				.strokeColor: outlineInkColor,
 				.strokeWidth: -numeralOutlineWidth
 			]
 			drawLabels(context.cgContext, attrs)
@@ -1024,6 +1026,8 @@ final class DiceCubeView: UIView {
 		let size = CGSize(width: Self.faceTextureEdgeLength, height: Self.faceTextureEdgeLength)
 		let rect = CGRect(origin: .zero, size: size)
 		let style = DiceFaceContrast.style(for: fillColor)
+		let numeralOutlineColor = oppositeInkColor(for: style.primaryInkColor)
+		let captionOutlineColor = oppositeInkColor(for: style.secondaryInkColor)
 		let numeralSize = DiceFaceLabelSizing.textureNumeralPointSize(sideCount: sideCount, large: activeLargeFaceLabelsEnabled)
 		let captionSize = DiceFaceLabelSizing.textureCaptionPointSize(large: activeLargeFaceLabelsEnabled)
 		let numeralOutlineWidth = max(1.4, numeralSize * 0.075)
@@ -1085,13 +1089,13 @@ final class DiceCubeView: UIView {
 				attributes: [
 					.font: numeralFont.numeralFont(ofSize: numeralSize),
 					.foregroundColor: style.primaryInkColor,
-					.strokeColor: D6SceneKitRenderConfig.goldOutlineColor,
+					.strokeColor: numeralOutlineColor,
 					.strokeWidth: -numeralOutlineWidth
 				],
 				subtitleAttributes: [
 					.font: numeralFont.captionFont(ofSize: captionSize),
 					.foregroundColor: style.secondaryInkColor,
-					.strokeColor: D6SceneKitRenderConfig.goldOutlineColor.withAlphaComponent(0.85),
+					.strokeColor: captionOutlineColor,
 					.strokeWidth: -captionOutlineWidth
 				]
 			)
@@ -1141,6 +1145,11 @@ final class DiceCubeView: UIView {
 		}
 		badgeImageCache[key] = image
 		return image
+	}
+
+	private func oppositeInkColor(for inkColor: UIColor) -> UIColor {
+		let luminance = inkColor.diceRelativeLuminance
+		return luminance >= 0.5 ? .black : .white
 	}
 
 	private func scenePosition(for center: CGPoint) -> SCNVector3 {
@@ -1468,5 +1477,22 @@ final class DiceCubeView: UIView {
 			faces.append([1, l0, u1, l1])
 		}
 		return (vertices, faces)
+	}
+}
+
+private extension UIColor {
+	var diceRelativeLuminance: CGFloat {
+		var red: CGFloat = 0
+		var green: CGFloat = 0
+		var blue: CGFloat = 0
+		var alpha: CGFloat = 0
+		if getRed(&red, green: &green, blue: &blue, alpha: &alpha) {
+			return (0.2126 * red) + (0.7152 * green) + (0.0722 * blue)
+		}
+		var white: CGFloat = 0
+		if getWhite(&white, alpha: &alpha) {
+			return white
+		}
+		return 0.0
 	}
 }

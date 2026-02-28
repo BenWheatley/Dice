@@ -19,7 +19,6 @@ struct D6SceneKitRenderConfig {
 		let roughness: UIImage
 	}
 
-	static let goldOutlineColor = UIColor(red: 0.84, green: 0.70, blue: 0.28, alpha: 1.0)
 	private static var faceTextureSetCache: [FaceTextureCacheKey: FaceTextureSet] = [:]
 	private static let faceTextureSetCacheLock = NSLock()
 	private static let flatNormalTexture: UIImage = {
@@ -77,6 +76,7 @@ struct D6SceneKitRenderConfig {
 		let size = CGSize(width: textureEdgeLength, height: textureEdgeLength)
 		let rect = CGRect(origin: .zero, size: size)
 		let style = DiceFaceContrast.style(for: fillColor)
+		let outlineColor = oppositeInkColor(for: style.primaryInkColor)
 
 		let pipPositions: [CGPoint] = [
 			CGPoint(x: size.width * 0.28, y: size.height * 0.28),
@@ -142,7 +142,7 @@ struct D6SceneKitRenderConfig {
 					radius: radius,
 					pipStyle: pipStyle,
 					ringWidth: pipOutlineWidth,
-					fill: goldOutlineColor
+					fill: outlineColor
 				)
 			}
 		}
@@ -258,5 +258,27 @@ struct D6SceneKitRenderConfig {
 		fill.setFill()
 		outerPath.fill()
 		context.restoreGState()
+	}
+
+	private static func oppositeInkColor(for inkColor: UIColor) -> UIColor {
+		let luminance = inkColor.diceRelativeLuminance
+		return luminance >= 0.5 ? .black : .white
+	}
+}
+
+private extension UIColor {
+	var diceRelativeLuminance: CGFloat {
+		var red: CGFloat = 0
+		var green: CGFloat = 0
+		var blue: CGFloat = 0
+		var alpha: CGFloat = 0
+		if getRed(&red, green: &green, blue: &blue, alpha: &alpha) {
+			return (0.2126 * red) + (0.7152 * green) + (0.0722 * blue)
+		}
+		var white: CGFloat = 0
+		if getWhite(&white, alpha: &alpha) {
+			return white
+		}
+		return 0.0
 	}
 }
