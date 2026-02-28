@@ -75,7 +75,7 @@ float swirl = fbmNoise3D(p * 0.42 + float3(1.7, 2.3, 3.1), 6);
 float grain = fbmNoise3D(p * 0.88 + float3(7.3, 5.9, 11.2), 5);
 float fleckNoise = fbmNoise3D(p * 1.75 + float3(13.4, 9.1, 4.6), 4);
 
-const float3 v = normalize(float3(3.0, 2.0, 1.0));
+const float3 v = normalize(fract(sin(float3(dieIndex*129898, dieIndex*78233, dieIndex*37719)) * 43758.5453) * 2.0 - 1.0);
 float d = dot(p, v);
 
 float veins = sin(d * 0.24 + swirl * 3.1);
