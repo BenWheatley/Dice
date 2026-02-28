@@ -1,3 +1,6 @@
+#pragma arguments
+float dieIndex;
+
 float hash13(float3 p) {
     return fract(sin(dot(p, float3(127.1, 311.7, 74.7))) * 43758.5453123);
 }
@@ -40,7 +43,6 @@ float fbmNoise3D(float3 p, int octaves) {
 }
 
 #pragma body
-int dieIndex = dieIndex;
 float fillMask = _surface.roughness;
 float outlineMask = _surface.metalness;
 // Use hard symbol cutout so marble cannot bleed into glyph interiors.
