@@ -25,6 +25,20 @@ float nxy1 = mix(nx01, nx11, u.y);
 return mix(nxy0, nxy1, u.z);
 }
 
+float fbmNoise3D(float3 p, int octaves) {
+    float sum = 0.0;
+    float amplitude = 0.5;
+    float frequency = 1.0;
+    float amplitudeSum = 0.0;
+    for (int i = 0; i < octaves; ++i) {
+        sum += simplexNoise3D(p * frequency) * amplitude;
+        amplitudeSum += amplitude;
+        frequency *= 2.0;
+        amplitude *= 0.5;
+    }
+    return amplitudeSum > 0.0 ? (sum / amplitudeSum) : 0.0;
+}
+
 #pragma body
 float fillMask = _surface.roughness;
 float outlineMask = _surface.metalness;
@@ -55,19 +69,17 @@ float3 modelPos = (scn_node.inverseModelTransform * worldPos).xyz;
 
 float3 p = modelPos * 0.34;
 
-float n1 = simplexNoise3D(p * 0.28 + float3(1.7, 2.3, 3.1));
-float n2 = simplexNoise3D(p * 0.58 + float3(7.3, 5.9, 11.2));
-float n3 = simplexNoise3D(p * 0.96 + float3(13.4, 9.1, 4.6));
-
-float swirl = (n1 * 0.62) + (n2 * 0.28) + (n3 * 0.10);
+// Higher-octave fBm to add richer marble detail than the prior 3-octave blend.
+float swirl = fbmNoise3D(p * 0.42 + float3(1.7, 2.3, 3.1), 6);
+float grain = fbmNoise3D(p * 0.88 + float3(7.3, 5.9, 11.2), 5);
+float fleckNoise = fbmNoise3D(p * 1.75 + float3(13.4, 9.1, 4.6), 4);
 
 const float3 v = normalize(float3(3.0, 2.0, 1.0));
 float d = dot(p, v);
 
 float veins = sin(d * 0.24 + swirl * 3.1);
 float veinMask = smoothstep(0.50, 0.965, 0.5 + 0.5 * veins);
-float grain = (n1 * 0.56) + (n2 * 0.31) + (n3 * 0.13);
-float fleck = smoothstep(0.95, 0.994, simplexNoise3D(p * 1.45 + 19.0));
+float fleck = smoothstep(0.90, 0.985, fleckNoise);
 
 float3 base = _surface.diffuse.rgb;
 float luminance = dot(base, float3(0.2126, 0.7152, 0.0722));

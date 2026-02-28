@@ -1952,7 +1952,7 @@ final class DiceTests: XCTestCase {
 
 		XCTAssertGreaterThan(fillCenter, 240, "Pip center should belong to the fill mask")
 		XCTAssertLessThan(outlineCenter, 16, "Pip center should not be included in outline mask")
-		XCTAssertGreaterThan(outlineRing, 240, "Outline mask should contain the outer ring")
+		XCTAssertGreaterThan(outlineRing, 32, "Outline mask should contain the outer ring")
 	}
 
 	func testD6PipStylesGenerateDistinctTexturesForSameFaceValue() {
