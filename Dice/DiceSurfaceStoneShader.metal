@@ -40,6 +40,7 @@ float fbmNoise3D(float3 p, int octaves) {
 }
 
 #pragma body
+int dieIndex = dieIndex;
 float fillMask = _surface.roughness;
 float outlineMask = _surface.metalness;
 // Use hard symbol cutout so marble cannot bleed into glyph interiors.
