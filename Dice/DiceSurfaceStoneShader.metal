@@ -1,6 +1,7 @@
 #pragma arguments
 float dieIndex;
 
+#pragma declaration
 float hash13(float3 p) {
     return fract(sin(dot(p, float3(127.1, 311.7, 74.7))) * 43758.5453123);
 }
@@ -70,7 +71,8 @@ _surface.metalness = outlineSymbolMask * 0.55;
 float4 worldPos = scn_frame.inverseViewTransform * float4(_surface.position.xyz, 1.0);
 float3 modelPos = (scn_node.inverseModelTransform * worldPos).xyz;
 
-float3 p = modelPos * 0.34;
+float dieSeed = dieIndex * 31.0;
+float3 p = modelPos * 0.34 + float3(dieSeed * 0.071, dieSeed * 0.113, dieSeed * 0.173);
 
 // Higher-octave fBm to add richer marble detail than the prior 3-octave blend.
 float swirl = fbmNoise3D(p * 0.42 + float3(1.7, 2.3, 3.1), 6);

@@ -762,7 +762,9 @@ final class DiceCubeView: UIView {
 		}
 		activeDieFinish.apply(to: material, baseColor: resolvedFillColor, dieIndex: dieIndex)
 		material.specular.contents = textureSet.metalness
-		material.shininess = max(material.shininess, 0.42)
+		if activeDieFinish != .stone {
+			material.shininess = max(material.shininess, 0.42)
+		}
 		return material
 	}
 
