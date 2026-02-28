@@ -100,7 +100,7 @@ struct D6SceneKitRenderConfig {
 		]
 
 		let radius = size.width * 0.08
-		let pipOutlineWidth = radius * 0.20
+		let pipOutlineWidth = radius * 0.10
 		let symbolFillMask = renderMask(size: size) { context in
 			for index in indexesByValue[value] ?? [] {
 				drawPip(
