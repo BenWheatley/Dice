@@ -37,8 +37,10 @@ enum DiceDieFinish: String, CaseIterable {
 			material.lightingModel = .physicallyBased
 			material.specular.contents = UIColor(white: 0.0, alpha: 1.0)
 			_ = baseColor
-			// Encode a stable per-die seed in shininess (read back by shader).
+			// Preserve existing behavior for legacy shader path.
 			material.shininess = 0.20 + CGFloat(dieIndex) * 0.0001
+			// Inject per-die uniform value through the SCNShadable KVC uniform path.
+			material.setValue(NSNumber(value: dieIndex), forKey: "dieIndex")
 		}
 
 		if let surfaceSource = DiceShaderModifierSourceLoader.surfaceShaderModifier(forStoneFinish: self == .stone) {
