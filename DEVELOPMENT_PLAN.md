@@ -188,6 +188,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Improve face readability and material realism: add raised symbol relief maps + metallic gold outlines for pips/numerals, remove D6 inset pip style, rotate marble vein basis by 15 degrees, and introduce per-die marble seed variation.
 - [x] Add stats graph axis labeling and horizontal gridlines with deterministic axis-scaling helpers so the stats panel is readable at a glance.
 - [x] Migrate roll-distribution stats UI to Swift Charts (`BarMark` + explicit axis marks for all faces) and lock marble shader sampling to object-space coordinates with hue-preserving tinting.
+- [x] Present Roll Distribution in a `UISheetPresentationController` (medium/large detents with grabber) instead of the inline bottom panel.
 - [x] Expand dice contextual-menu hit targets so tapping near die edges still opens per-die options, and lock this behavior with hit-bounds regression coverage.
 - [x] Remove Dyslexia Friendly font option from selectable numeral styles and keep font-option tests aligned with the reduced menu set.
 - [x] Replace dual-column presets/manage flow with a single themed presets table that seeds editable defaults, includes custom entries, supports deletion of any row, and uses an inline add button.

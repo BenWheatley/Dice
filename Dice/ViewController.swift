@@ -7,7 +7,6 @@
 //
 
 import UIKit
-import SwiftUI
 
 private let reuseIdentifier = "DiceCell"
 
@@ -20,9 +19,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	private let notationField = UITextField()
 	private let validationLabel = UILabel()
-	private let totalsLabel = UILabel()
-	private let totalsChartContainer = UIView()
-	private let totalsContainer = UIView()
 	private let rollButton = UIButton(type: .system)
 	private let presetsButton = UIButton(type: .system)
 	private let menuButton = UIButton(type: .system)
@@ -34,8 +30,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private var appliedTextureSize: CGSize = .zero
 	private let statsVisibilityKey = "Dice.showStats"
 	private var statsVisible = true
-	private var totalsChartHostingController: UIHostingController<DiceRollDistributionChartView>?
+	private var rollDistributionSheetController: RollDistributionSheetViewController?
 	private var currentTotalsGraphCounts: [Int] = []
+	private var currentTotalsAccessibilityValue: String?
 	private var routeObserver: NSObjectProtocol?
 	private let dieMenuAnchorButton = UIButton(type: .system)
 
@@ -68,6 +65,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	override func viewDidAppear(_ animated: Bool) {
 		super.viewDidAppear(animated)
+		updateStatsVisibility()
 		guard !hasPerformedInitialRoll else { return }
 		hasPerformedInitialRoll = true
 		DispatchQueue.main.async { [weak self] in
@@ -88,8 +86,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	override func viewDidLayoutSubviews() {
 		super.viewDidLayoutSubviews()
 		guard let controlsContainer else { return }
-		let bottomInset = statsVisible ? totalsContainer.bounds.height + 16 : 8
-		let insets = UIEdgeInsets(top: controlsContainer.bounds.height + 8, left: 0, bottom: bottomInset, right: 0)
+		let insets = UIEdgeInsets(top: controlsContainer.bounds.height + 8, left: 0, bottom: 8, right: 0)
 		if collectionView.contentInset != insets {
 			collectionView.contentInset = insets
 			collectionView.scrollIndicatorInsets = insets
@@ -203,29 +200,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		validationLabel.accessibilityTraits = .staticText
 		validationLabel.accessibilityLabel = NSLocalizedString("a11y.validation.label", comment: "Validation message accessibility label")
 
-		totalsContainer.translatesAutoresizingMaskIntoConstraints = false
-		totalsContainer.backgroundColor = currentPalette.panelBackgroundColor
-		totalsContainer.layer.cornerRadius = 10
-		totalsContainer.layer.masksToBounds = true
-		view.addSubview(totalsContainer)
-
-		totalsLabel.translatesAutoresizingMaskIntoConstraints = false
-		totalsLabel.backgroundColor = .clear
-		totalsLabel.font = UIFont.preferredFont(forTextStyle: .body)
-		totalsLabel.adjustsFontForContentSizeCategory = true
-		totalsLabel.numberOfLines = 1
-		totalsLabel.textColor = currentPalette.secondaryTextColor
-		totalsLabel.textAlignment = .left
-		totalsLabel.text = NSLocalizedString("stats.graph.title", comment: "Stats graph title")
-		totalsLabel.accessibilityIdentifier = "totalsLabel"
-		totalsLabel.accessibilityLabel = NSLocalizedString("a11y.totals.label", comment: "Totals accessibility label")
-		totalsChartContainer.translatesAutoresizingMaskIntoConstraints = false
-		totalsChartContainer.backgroundColor = .clear
-		totalsChartContainer.isUserInteractionEnabled = false
-
-		totalsContainer.addSubview(totalsLabel)
-		totalsContainer.addSubview(totalsChartContainer)
-
 		controlsContainer.addSubview(row)
 		controlsContainer.addSubview(validationLabel)
 
@@ -241,20 +215,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			validationLabel.leadingAnchor.constraint(equalTo: controlsContainer.leadingAnchor, constant: 10),
 			validationLabel.trailingAnchor.constraint(equalTo: controlsContainer.trailingAnchor, constant: -10),
 			validationLabel.bottomAnchor.constraint(equalTo: controlsContainer.bottomAnchor, constant: -8),
-
-			totalsContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
-			totalsContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
-			totalsContainer.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -8),
-			totalsContainer.heightAnchor.constraint(greaterThanOrEqualToConstant: 116),
-
-			totalsLabel.leadingAnchor.constraint(equalTo: totalsContainer.leadingAnchor, constant: 8),
-			totalsLabel.topAnchor.constraint(equalTo: totalsContainer.topAnchor, constant: 4),
-			totalsLabel.trailingAnchor.constraint(equalTo: totalsContainer.trailingAnchor, constant: -8),
-			totalsChartContainer.leadingAnchor.constraint(equalTo: totalsContainer.leadingAnchor, constant: 8),
-			totalsChartContainer.trailingAnchor.constraint(equalTo: totalsContainer.trailingAnchor, constant: -8),
-			totalsChartContainer.topAnchor.constraint(equalTo: totalsLabel.bottomAnchor, constant: 4),
-			totalsChartContainer.bottomAnchor.constraint(equalTo: totalsContainer.bottomAnchor, constant: -4),
-			totalsChartContainer.heightAnchor.constraint(greaterThanOrEqualToConstant: 84),
 
 			rollButton.widthAnchor.constraint(equalToConstant: 52),
 			presetsButton.widthAnchor.constraint(equalToConstant: 72),
@@ -312,7 +272,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		dieMenuAnchorButton.isHidden = true
 		view.addSubview(dieMenuAnchorButton)
 		view.bringSubviewToFront(controlsContainer ?? UIView())
-		view.bringSubviewToFront(totalsContainer)
 		NSLayoutConstraint.activate([
 			diceBoardView.leadingAnchor.constraint(equalTo: collectionView.leadingAnchor),
 			diceBoardView.trailingAnchor.constraint(equalTo: collectionView.trailingAnchor),
@@ -839,46 +798,28 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	@objc private func resetStats() {
 		viewModel.resetStats()
-		totalsLabel.text = NSLocalizedString("stats.graph.title", comment: "Stats graph title")
-		totalsLabel.accessibilityValue = NSLocalizedString("stats.reset", comment: "Stats reset confirmation")
+		currentTotalsAccessibilityValue = NSLocalizedString("stats.reset", comment: "Stats reset confirmation")
 		updateTotalsGraph(with: [])
 	}
 
 	private func updateTotalsText(outcome: RollOutcome) {
-		totalsLabel.text = NSLocalizedString("stats.graph.title", comment: "Stats graph title")
-		totalsLabel.accessibilityValue = viewModel.formattedTotalsText(outcome: outcome, boardSupportedSides: boardSupportedSides)
+		currentTotalsAccessibilityValue = viewModel.formattedTotalsText(outcome: outcome, boardSupportedSides: boardSupportedSides)
 		updateTotalsGraph(with: outcome.localTotals)
 	}
 
 	private func updateTotalsGraph(with counts: [Int]) {
 		currentTotalsGraphCounts = counts
 		let points = DiceRollDistributionChartData.points(from: counts)
-		let rootView = DiceRollDistributionChartView(
+		rollDistributionSheetController?.updateContent(
+			title: NSLocalizedString("stats.graph.title", comment: "Stats graph title"),
+			summary: currentTotalsAccessibilityValue,
 			points: points,
 			yAxisTitle: NSLocalizedString("stats.graph.yAxis", comment: "Graph y-axis title"),
-			barColor: Color(uiColor: currentPalette.primaryTextColor),
-			axisColor: Color(uiColor: currentPalette.secondaryTextColor),
-			gridColor: Color(uiColor: UIColor.separator.withAlphaComponent(0.32))
+			barColor: currentPalette.primaryTextColor,
+			axisColor: currentPalette.secondaryTextColor,
+			gridColor: UIColor.separator.withAlphaComponent(0.32),
+			palette: currentPalette
 		)
-
-		if let hostingController = totalsChartHostingController {
-			hostingController.rootView = rootView
-			return
-		}
-
-		let hostingController = UIHostingController(rootView: rootView)
-		hostingController.view.backgroundColor = .clear
-		hostingController.view.translatesAutoresizingMaskIntoConstraints = false
-		addChild(hostingController)
-		totalsChartContainer.addSubview(hostingController.view)
-		NSLayoutConstraint.activate([
-			hostingController.view.leadingAnchor.constraint(equalTo: totalsChartContainer.leadingAnchor),
-			hostingController.view.trailingAnchor.constraint(equalTo: totalsChartContainer.trailingAnchor),
-			hostingController.view.topAnchor.constraint(equalTo: totalsChartContainer.topAnchor),
-			hostingController.view.bottomAnchor.constraint(equalTo: totalsChartContainer.bottomAnchor),
-		])
-		hostingController.didMove(toParent: self)
-		totalsChartHostingController = hostingController
 	}
 
 	private func showValidationError(message: String) {
@@ -1239,9 +1180,52 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	private func updateStatsVisibility() {
-		totalsContainer.isHidden = !statsVisible
-		view.setNeedsLayout()
-		view.layoutIfNeeded()
+		guard isViewLoaded, view.window != nil else { return }
+		if statsVisible {
+			presentRollDistributionSheetIfNeeded()
+		} else {
+			dismissRollDistributionSheetIfNeeded()
+		}
+	}
+
+	private func presentRollDistributionSheetIfNeeded() {
+		if rollDistributionSheetController != nil { return }
+		guard presentedViewController == nil else { return }
+
+		let sheet = RollDistributionSheetViewController()
+		sheet.onDismiss = { [weak self] in
+			guard let self else { return }
+			self.rollDistributionSheetController = nil
+			if self.statsVisible {
+				self.statsVisible = false
+				UserDefaults.standard.set(false, forKey: self.statsVisibilityKey)
+				self.updateControlMenu()
+			}
+		}
+		switch viewModel.theme {
+		case .lightMode:
+			sheet.overrideUserInterfaceStyle = .light
+		case .darkMode:
+			sheet.overrideUserInterfaceStyle = .dark
+		case .system:
+			sheet.overrideUserInterfaceStyle = .unspecified
+		}
+		sheet.modalPresentationStyle = .pageSheet
+		if let presentationController = sheet.sheetPresentationController {
+			presentationController.detents = [.medium(), .large()]
+			presentationController.prefersGrabberVisible = true
+			presentationController.preferredCornerRadius = 20
+		}
+
+		rollDistributionSheetController = sheet
+		updateTotalsGraph(with: currentTotalsGraphCounts)
+		present(sheet, animated: true)
+	}
+
+	private func dismissRollDistributionSheetIfNeeded() {
+		guard let sheet = rollDistributionSheetController else { return }
+		sheet.dismiss(animated: true)
+		rollDistributionSheetController = nil
 	}
 
 	private func selectTheme(_ theme: DiceTheme) {
@@ -1410,8 +1394,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		view.backgroundColor = palette.screenBackgroundColor
 		applyTexture()
 		controlsContainer?.backgroundColor = palette.panelBackgroundColor
-		totalsContainer.backgroundColor = palette.panelBackgroundColor
-		totalsLabel.textColor = palette.secondaryTextColor
 		updateTotalsGraph(with: currentTotalsGraphCounts)
 		validationLabel.textColor = palette.validationColor
 		notationField.textColor = palette.primaryTextColor

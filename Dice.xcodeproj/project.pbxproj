@@ -68,6 +68,7 @@
 		D1CE110D2F50000D00D1CE00 /* PresetManagerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE100D2F50000D00D1CE00 /* PresetManagerViewController.swift */; };
 		D1CE110E2F50000E00D1CE00 /* PresetPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE100E2F50000E00D1CE00 /* PresetPickerViewController.swift */; };
 		D1CE110F2F50000F00D1CE00 /* RollHistoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE100F2F50000F00D1CE00 /* RollHistoryViewController.swift */; };
+		AACE00012F58000100D1CE00 /* RollDistributionSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACE00022F58000200D1CE00 /* RollDistributionSheetViewController.swift */; };
 		D2CE11012F51000100D1CE00 /* D6FaceOrientation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10012F51000100D1CE00 /* D6FaceOrientation.swift */; };
 		D2CE11022F51000200D1CE00 /* D6SceneKitRenderConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10022F51000200D1CE00 /* D6SceneKitRenderConfig.swift */; };
 		D2CE11032F51000300D1CE00 /* DiceDieColorPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10032F51000300D1CE00 /* DiceDieColorPreset.swift */; };
@@ -256,6 +257,7 @@
 		D1CE100D2F50000D00D1CE00 /* PresetManagerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetManagerViewController.swift; sourceTree = "<group>"; };
 		D1CE100E2F50000E00D1CE00 /* PresetPickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetPickerViewController.swift; sourceTree = "<group>"; };
 		D1CE100F2F50000F00D1CE00 /* RollHistoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollHistoryViewController.swift; sourceTree = "<group>"; };
+		AACE00022F58000200D1CE00 /* RollDistributionSheetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollDistributionSheetViewController.swift; sourceTree = "<group>"; };
 		D2CE10012F51000100D1CE00 /* D6FaceOrientation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = D6FaceOrientation.swift; sourceTree = "<group>"; };
 		D2CE10022F51000200D1CE00 /* D6SceneKitRenderConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = D6SceneKitRenderConfig.swift; sourceTree = "<group>"; };
 		D2CE10032F51000300D1CE00 /* DiceDieColorPreset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceDieColorPreset.swift; sourceTree = "<group>"; };
@@ -404,6 +406,7 @@
 				D1CE100A2F50000A00D1CE00 /* DiceStylePreviewViewController.swift */,
 				D1CE10062F50000600D1CE00 /* DiceShaderBackgroundView.swift */,
 				D5CE10012F53000100D1CE00 /* DiceRollDistributionChartView.swift */,
+				AACE00022F58000200D1CE00 /* RollDistributionSheetViewController.swift */,
 				D1CE10032F50000300D1CE00 /* DiceMetalTextureRenderer.swift */,
 				D4CE10012F52000100D1CE00 /* DiceBackgroundShaders.metal */,
 				E0CE10022F54000200D1CE00 /* DiceSurfaceBaseShader.metal */,
@@ -765,6 +768,7 @@
 				D1CE11032F50000300D1CE00 /* DiceMetalTextureRenderer.swift in Sources */,
 				D4CE11012F52000100D1CE00 /* DiceBackgroundShaders.metal in Sources */,
 				D5CE11012F53000100D1CE00 /* DiceRollDistributionChartView.swift in Sources */,
+				AACE00012F58000100D1CE00 /* RollDistributionSheetViewController.swift in Sources */,
 				E0CE00012F54000100D1CE00 /* DiceShaderModifierSourceLoader.swift in Sources */,
 				F1CE00012F55000100D1CE00 /* DiceWidgetSnapshotStore.swift in Sources */,
 				F2CE00012F56010100D1CE00 /* DiceAppRoute.swift in Sources */,
