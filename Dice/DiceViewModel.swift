@@ -442,27 +442,6 @@ final class DiceViewModel {
 			locale: .current,
 			localizedModeLabel(for: appState.configuration)
 		))
-		lines.append(String(
-			format: NSLocalizedString("stats.notation", comment: "Current notation line"),
-			locale: .current,
-			appState.configuration.notation
-		))
-
-		if appState.configuration.diceCount > 1 {
-			let localCounts = formattedCounts(outcome.localTotals)
-			if !localCounts.isEmpty {
-				lines.append(String(
-					format: NSLocalizedString("stats.rollCounts", comment: "Per-roll counts line"),
-					locale: .current,
-					localCounts
-				))
-			}
-			lines.append(String(
-				format: NSLocalizedString("stats.rollSum", comment: "Per-roll sum line"),
-				locale: .current,
-				outcome.sum
-			))
-		}
 
 		let sessionCounts = formattedCounts(outcome.sessionTotals)
 		if !sessionCounts.isEmpty {

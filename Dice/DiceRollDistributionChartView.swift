@@ -41,6 +41,7 @@ struct DiceRollDistributionChartView: View {
 					.foregroundStyle(axisColor)
 				AxisValueLabel()
 					.foregroundStyle(axisColor)
+                    .font(.system(size: 9))
 			}
 		}
 		.chartYAxis {

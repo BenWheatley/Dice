@@ -1211,8 +1211,13 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			sheet.overrideUserInterfaceStyle = .unspecified
 		}
 		sheet.modalPresentationStyle = .pageSheet
+        let customDetent = UISheetPresentationController.Detent.custom(
+            identifier: .init("fixedHeight")
+        ) { context in
+            return 200
+        }
 		if let presentationController = sheet.sheetPresentationController {
-			presentationController.detents = [.medium(), .large()]
+			presentationController.detents = [customDetent]
 			presentationController.prefersGrabberVisible = true
 			presentationController.preferredCornerRadius = 20
 		}

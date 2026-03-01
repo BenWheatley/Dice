@@ -142,9 +142,6 @@
 "stats.mode.mixed" = "Mixed";
 "stats.graph.title" = "Roll Distribution";
 "stats.graph.yAxis" = "Count";
-"stats.notation" = "Notation: %@";
-"stats.rollCounts" = "Roll counts: %@";
-"stats.rollSum" = "Roll total: %d";
 "stats.sessionCounts" = "Session counts: %@";
 "stats.sessionTotalDice" = "Session dice rolled: %d";
 "stats.boardUnavailable" = "3D board preview is unavailable for d%d.";
