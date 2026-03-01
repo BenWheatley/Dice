@@ -142,10 +142,6 @@
 "stats.mode.mixed" = "Mixed";
 "stats.graph.title" = "Roll Distribution";
 "stats.graph.yAxis" = "Count";
-"stats.sessionCounts" = "Session counts: %@";
-"stats.sessionTotalDice" = "Session dice rolled: %d";
-"stats.boardUnavailable" = "3D board preview is unavailable for d%d.";
-"stats.boardUnavailableMixed" = "3D board preview is unavailable for mixed dice sides.";
 "error.input.empty" = "Enter a dice notation like 6d6, 3d6+2d4+d20, or 6d6i.";
 "error.input.invalidFormat" = "Use NdM groups like 3d6 or mixed groups like 3d6+2d4+d20, optionally with i.";
 "error.input.invalidSegment" = "Invalid segment \"%@\". %@";

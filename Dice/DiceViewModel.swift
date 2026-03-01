@@ -436,38 +436,11 @@ final class DiceViewModel {
 	}
 
 	func formattedTotalsText(outcome: RollOutcome, boardSupportedSides: Set<Int>) -> String {
-		var lines: [String] = []
-		lines.append(String(
+		return String(
 			format: NSLocalizedString("stats.mode", comment: "Current mode and notation"),
 			locale: .current,
 			localizedModeLabel(for: appState.configuration)
-		))
-
-		let sessionCounts = formattedCounts(outcome.sessionTotals)
-		if !sessionCounts.isEmpty {
-			lines.append(String(
-				format: NSLocalizedString("stats.sessionCounts", comment: "Session counts line"),
-				locale: .current,
-				sessionCounts
-			))
-		}
-		lines.append(String(
-			format: NSLocalizedString("stats.sessionTotalDice", comment: "Session total dice line"),
-			locale: .current,
-			outcome.totalRolls
-		))
-		let unsupportedSides = Set(appState.diceSideCounts.filter { !boardSupportedSides.contains($0) })
-		if unsupportedSides.count == 1, let sideCount = unsupportedSides.first {
-			lines.append(String(
-				format: NSLocalizedString("stats.boardUnavailable", comment: "3D board unsupported sides message"),
-				locale: .current,
-				sideCount
-			))
-		} else if unsupportedSides.count > 1 {
-			lines.append(NSLocalizedString("stats.boardUnavailableMixed", comment: "3D board unsupported mixed sides message"))
-		}
-
-		return "  " + lines.joined(separator: "\n  ")
+		)
 	}
 
 	private func performRoll(configuration: RollConfiguration? = nil) -> RollOutcome {
