@@ -2,7 +2,7 @@ import UIKit
 import SceneKit
 
 struct D6SceneKitRenderConfig {
-	private static let textureEdgeLength: CGFloat = 512
+	private static let textureEdgeLength: CGFloat = 256
 	private struct FaceTextureCacheKey: Hashable {
 		let value: Int
 		let pipStyle: DiceD6PipStyle

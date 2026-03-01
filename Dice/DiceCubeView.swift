@@ -11,7 +11,7 @@ import SceneKit
 import simd
 
 final class DiceCubeView: UIView {
-	private static let faceTextureEdgeLength: CGFloat = 512
+	private static let faceTextureEdgeLength: CGFloat = 256
 	private struct MeshCacheKey: Hashable {
 		let sideCount: Int
 		let roundedSideLength: Int
@@ -55,6 +55,11 @@ final class DiceCubeView: UIView {
 		let largeLabels: Bool
 	}
 
+	private static var sharedFaceTextureSetCache: [FaceTextureCacheKey: FaceTextureSet] = [:]
+	private static let sharedFaceTextureSetCacheLock = NSLock()
+	private static var sharedBadgeImageCache: [BadgeCacheKey: UIImage] = [:]
+	private static let sharedBadgeImageCacheLock = NSLock()
+
 	private let scnView = SCNView()
 	private let scene = SCNScene()
 	private let cameraNode = SCNNode()
@@ -63,8 +68,6 @@ final class DiceCubeView: UIView {
 	private var dieSideCounts: [Int] = []
 	private var orientationCache: [Int: [Int: SCNVector3]] = [:]
 	private var meshCache: [MeshCacheKey: BuiltMesh] = [:]
-	private var faceTextureSetCache: [FaceTextureCacheKey: FaceTextureSet] = [:]
-	private var badgeImageCache: [BadgeCacheKey: UIImage] = [:]
 	private var labelValueCache: [ObjectIdentifier: Int] = [:]
 	private var lifecycleObservers: [NSObjectProtocol] = []
 	private var activeDieFinish: DiceDieFinish = .matte
@@ -227,7 +230,7 @@ final class DiceCubeView: UIView {
 		guard activeDieColorPreferences != preferences else { return }
 		activeDieColorPreferences = preferences
 		meshCache.removeAll()
-		faceTextureSetCache.removeAll()
+		clearSharedTextureCaches(clearBadges: false)
 		needsMeshRefresh = true
 	}
 
@@ -235,7 +238,7 @@ final class DiceCubeView: UIView {
 		guard activeD6PipStyle != style else { return }
 		activeD6PipStyle = style
 		meshCache.removeAll()
-		faceTextureSetCache.removeAll()
+		clearSharedTextureCaches(clearBadges: false)
 		needsMeshRefresh = true
 	}
 
@@ -243,8 +246,7 @@ final class DiceCubeView: UIView {
 		guard activeFaceNumeralFont != font else { return }
 		activeFaceNumeralFont = font
 		meshCache.removeAll()
-		faceTextureSetCache.removeAll()
-		badgeImageCache.removeAll()
+		clearSharedTextureCaches(clearBadges: true)
 		needsMeshRefresh = true
 	}
 
@@ -252,9 +254,18 @@ final class DiceCubeView: UIView {
 		guard activeLargeFaceLabelsEnabled != enabled else { return }
 		activeLargeFaceLabelsEnabled = enabled
 		meshCache.removeAll()
-		faceTextureSetCache.removeAll()
-		badgeImageCache.removeAll()
+		clearSharedTextureCaches(clearBadges: true)
 		needsMeshRefresh = true
+	}
+
+	private func clearSharedTextureCaches(clearBadges: Bool) {
+		Self.sharedFaceTextureSetCacheLock.lock()
+		Self.sharedFaceTextureSetCache.removeAll()
+		Self.sharedFaceTextureSetCacheLock.unlock()
+		guard clearBadges else { return }
+		Self.sharedBadgeImageCacheLock.lock()
+		Self.sharedBadgeImageCache.removeAll()
+		Self.sharedBadgeImageCacheLock.unlock()
 	}
 
 	func setAnimationIntensity(_ intensity: DiceAnimationIntensity) {
@@ -788,11 +799,16 @@ final class DiceCubeView: UIView {
 			fontRawValue: numeralFont.rawValue,
 			largeLabels: activeLargeFaceLabelsEnabled
 		)
-		if let cached = faceTextureSetCache[key] {
+		Self.sharedFaceTextureSetCacheLock.lock()
+		if let cached = Self.sharedFaceTextureSetCache[key] {
+			Self.sharedFaceTextureSetCacheLock.unlock()
 			return cached
 		}
+		Self.sharedFaceTextureSetCacheLock.unlock()
 		let generated = build()
-		faceTextureSetCache[key] = generated
+		Self.sharedFaceTextureSetCacheLock.lock()
+		Self.sharedFaceTextureSetCache[key] = generated
+		Self.sharedFaceTextureSetCacheLock.unlock()
 		return generated
 	}
 
@@ -1123,9 +1139,12 @@ final class DiceCubeView: UIView {
 	private func valueBadgeImage(_ value: Int, sideLength: CGFloat, font: DiceFaceNumeralFont) -> UIImage {
 		let badgeSize = Int((sideLength * 0.45).rounded())
 		let key = BadgeCacheKey(value: value, roundedBadgeSize: badgeSize, font: font)
-		if let cached = badgeImageCache[key] {
+		Self.sharedBadgeImageCacheLock.lock()
+		if let cached = Self.sharedBadgeImageCache[key] {
+			Self.sharedBadgeImageCacheLock.unlock()
 			return cached
 		}
+		Self.sharedBadgeImageCacheLock.unlock()
 
 		let size = CGSize(width: badgeSize, height: badgeSize)
 		let renderer = UIGraphicsImageRenderer(size: size)
@@ -1145,7 +1164,9 @@ final class DiceCubeView: UIView {
 			let textRect = CGRect(x: (size.width - textSize.width) / 2, y: (size.height - textSize.height) / 2, width: textSize.width, height: textSize.height)
 			text.draw(in: textRect, withAttributes: attrs)
 		}
-		badgeImageCache[key] = image
+		Self.sharedBadgeImageCacheLock.lock()
+		Self.sharedBadgeImageCache[key] = image
+		Self.sharedBadgeImageCacheLock.unlock()
 		return image
 	}
 
