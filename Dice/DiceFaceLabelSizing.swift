@@ -2,9 +2,8 @@ import CoreGraphics
 
 struct DiceFaceLabelSizing {
 	static func textureNumeralPointSize(sideCount: Int, large: Bool) -> CGFloat {
-		let base: CGFloat = sideCount == 4 ? 54 : 73
-		// Requested UX tuning: double numeral size across die faces for stronger legibility.
-		return scaled(base * 2.0, large: large, multiplier: 1.18)
+		let base: CGFloat = sideCount == 4 ? 60 : 82
+		return scaled(base, large: large, multiplier: 1.18)
 	}
 
 	static func textureCaptionPointSize(large: Bool) -> CGFloat {
