@@ -18,13 +18,11 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private var hasPerformedInitialRoll = false
 
 	private let notationField = UITextField()
-	private let validationLabel = UILabel()
-	private let rollButton = UIButton(type: .system)
-	private let presetsButton = UIButton(type: .system)
 	private let showStatsButton = UIButton(type: .system)
-	private let menuButton = UIButton(type: .system)
+	private var rollBarButtonItem: UIBarButtonItem?
+	private var presetsBarButtonItem: UIBarButtonItem?
+	private var menuBarButtonItem: UIBarButtonItem?
 	private let diceBoardView = DiceCubeView()
-	private var controlsContainer: UIView?
 	private var currentPalette = DiceTheme.system.palette
 	private var currentTexture: DiceTableTexture = .neutral
 	private var currentDieFinish: DiceDieFinish = .matte
@@ -87,8 +85,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	override func viewDidLayoutSubviews() {
 		super.viewDidLayoutSubviews()
-		guard let controlsContainer else { return }
-		let insets = UIEdgeInsets(top: controlsContainer.bounds.height + 8, left: 0, bottom: 8, right: 0)
+		let insets = UIEdgeInsets(top: 8, left: 0, bottom: 8, right: 0)
 		if collectionView.contentInset != insets {
 			collectionView.contentInset = insets
 			collectionView.scrollIndicatorInsets = insets
@@ -146,13 +143,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	private func configureControls() {
-		let controlsContainer = UIView()
-		controlsContainer.translatesAutoresizingMaskIntoConstraints = false
-		controlsContainer.backgroundColor = currentPalette.panelBackgroundColor
-		controlsContainer.layer.cornerRadius = 10
-		view.addSubview(controlsContainer)
-		self.controlsContainer = controlsContainer
-
 		notationField.translatesAutoresizingMaskIntoConstraints = false
 		notationField.placeholder = NSLocalizedString("notation.placeholder", comment: "Dice notation input placeholder")
 		notationField.autocapitalizationType = .none
@@ -165,26 +155,43 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		notationField.accessibilityIdentifier = "notationField"
 		notationField.addTarget(self, action: #selector(notationEditingChanged), for: .editingChanged)
 		configureNotationInputAccessory()
+		notationField.widthAnchor.constraint(equalToConstant: 220).isActive = true
+		navigationItem.titleView = notationField
+		navigationItem.largeTitleDisplayMode = .never
 
-		rollButton.translatesAutoresizingMaskIntoConstraints = false
-		rollButton.setTitle(NSLocalizedString("button.roll", comment: "Roll button title"), for: .normal)
-		rollButton.addTarget(self, action: #selector(rollFromInput), for: .touchUpInside)
-		rollButton.accessibilityLabel = NSLocalizedString("a11y.roll.label", comment: "Roll button accessibility label")
-		rollButton.accessibilityIdentifier = "rollButton"
-		rollButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
-		rollButton.titleLabel?.adjustsFontForContentSizeCategory = true
+		let rollItem = UIBarButtonItem(
+			title: NSLocalizedString("button.roll", comment: "Roll button title"),
+			style: .plain,
+			target: self,
+			action: #selector(rollFromInput)
+		)
+		rollItem.accessibilityIdentifier = "rollButton"
 
-		presetsButton.translatesAutoresizingMaskIntoConstraints = false
-		presetsButton.setTitle(NSLocalizedString("button.presets", comment: "Presets button title"), for: .normal)
-		presetsButton.addTarget(self, action: #selector(showPresetPicker), for: .touchUpInside)
-		presetsButton.accessibilityLabel = NSLocalizedString("a11y.presets.label", comment: "Presets button accessibility label")
-		presetsButton.accessibilityIdentifier = "presetsButton"
-		presetsButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
-		presetsButton.titleLabel?.adjustsFontForContentSizeCategory = true
+		let presetsItem = UIBarButtonItem(
+			title: NSLocalizedString("button.presets", comment: "Presets button title"),
+			style: .plain,
+			target: self,
+			action: #selector(showPresetPicker)
+		)
+		presetsItem.accessibilityIdentifier = "presetsButton"
+
+		let menuItem = UIBarButtonItem(
+			image: UIImage(systemName: "line.3.horizontal"),
+			style: .plain,
+			target: self,
+			action: #selector(showControlSheet)
+		)
+		menuItem.accessibilityLabel = NSLocalizedString("a11y.menu.label", comment: "Main menu accessibility label")
+		menuItem.accessibilityIdentifier = "menuButton"
+
+		rollBarButtonItem = rollItem
+		presetsBarButtonItem = presetsItem
+		menuBarButtonItem = menuItem
+		navigationItem.rightBarButtonItems = [menuItem, presetsItem, rollItem]
 
 		showStatsButton.translatesAutoresizingMaskIntoConstraints = false
 		var showStatsButtonConfig = UIButton.Configuration.filled()
-		showStatsButtonConfig.title = NSLocalizedString("button.show-stats", comment: "Show statistics button title")
+		showStatsButtonConfig.title = NSLocalizedString("button.show-stats", comment: "Show button title")
 		showStatsButtonConfig.image = UIImage(systemName: "chart.bar.xaxis")
 		showStatsButtonConfig.imagePlacement = .leading
 		showStatsButtonConfig.imagePadding = 6
@@ -198,50 +205,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		showStatsButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
 		showStatsButton.titleLabel?.adjustsFontForContentSizeCategory = true
 		showStatsButton.semanticContentAttribute = .forceLeftToRight
-
-		menuButton.translatesAutoresizingMaskIntoConstraints = false
-		menuButton.setImage(UIImage(systemName: "line.3.horizontal"), for: .normal)
-		menuButton.accessibilityLabel = NSLocalizedString("a11y.menu.label", comment: "Main menu accessibility label")
-		menuButton.accessibilityIdentifier = "menuButton"
-		menuButton.showsMenuAsPrimaryAction = false
-		menuButton.addTarget(self, action: #selector(showControlSheet), for: .touchUpInside)
-
-		let row = UIStackView(arrangedSubviews: [notationField, rollButton, presetsButton, menuButton])
-		row.translatesAutoresizingMaskIntoConstraints = false
-		row.axis = .horizontal
-		row.spacing = 8
-		row.alignment = .fill
-
-		validationLabel.translatesAutoresizingMaskIntoConstraints = false
-		validationLabel.font = UIFont.preferredFont(forTextStyle: .footnote)
-		validationLabel.adjustsFontForContentSizeCategory = true
-		validationLabel.textColor = currentPalette.validationColor
-		validationLabel.numberOfLines = 2
-		validationLabel.isHidden = true
-		validationLabel.accessibilityTraits = .staticText
-		validationLabel.accessibilityLabel = NSLocalizedString("a11y.validation.label", comment: "Validation message accessibility label")
-
-		controlsContainer.addSubview(row)
-		controlsContainer.addSubview(validationLabel)
 		view.addSubview(showStatsButton)
 
 		NSLayoutConstraint.activate([
-			controlsContainer.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
-			controlsContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 8),
-			controlsContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -8),
-
-			row.topAnchor.constraint(equalTo: controlsContainer.topAnchor, constant: 8),
-			row.leadingAnchor.constraint(equalTo: controlsContainer.leadingAnchor, constant: 8),
-			row.trailingAnchor.constraint(equalTo: controlsContainer.trailingAnchor, constant: -8),
-			validationLabel.topAnchor.constraint(equalTo: row.bottomAnchor, constant: 6),
-			validationLabel.leadingAnchor.constraint(equalTo: controlsContainer.leadingAnchor, constant: 10),
-			validationLabel.trailingAnchor.constraint(equalTo: controlsContainer.trailingAnchor, constant: -10),
-			validationLabel.bottomAnchor.constraint(equalTo: controlsContainer.bottomAnchor, constant: -8),
-
-			rollButton.widthAnchor.constraint(equalToConstant: 52),
-			presetsButton.widthAnchor.constraint(equalToConstant: 72),
-			menuButton.widthAnchor.constraint(equalToConstant: 44),
-
 			showStatsButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
 			showStatsButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
 		])
@@ -298,7 +264,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		dieMenuAnchorButton.isHidden = true
 		view.addSubview(dieMenuAnchorButton)
 		view.bringSubviewToFront(showStatsButton)
-		view.bringSubviewToFront(controlsContainer ?? UIView())
 		NSLayoutConstraint.activate([
 			diceBoardView.leadingAnchor.constraint(equalTo: collectionView.leadingAnchor),
 			diceBoardView.trailingAnchor.constraint(equalTo: collectionView.trailingAnchor),
@@ -735,8 +700,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		}
 		navigationController.modalPresentationStyle = .formSheet
 		if let popover = navigationController.popoverPresentationController {
-			popover.sourceView = menuButton
-			popover.sourceRect = menuButton.bounds
+			popover.barButtonItem = menuBarButtonItem
 		}
 		present(navigationController, animated: true)
 	}
@@ -769,8 +733,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			try content.write(to: temporaryURL, atomically: true, encoding: .utf8)
 			let activity = UIActivityViewController(activityItems: [temporaryURL], applicationActivities: nil)
 			if let popover = activity.popoverPresentationController {
-				popover.sourceView = menuButton
-				popover.sourceRect = menuButton.bounds
+				popover.barButtonItem = menuBarButtonItem
 			}
 			present(activity, animated: true)
 		} catch {
@@ -807,8 +770,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let image = HistorySummaryCardRenderer().render(title: title, body: body, footer: footer)
 		let activity = UIActivityViewController(activityItems: [image, body], applicationActivities: nil)
 		if let popover = activity.popoverPresentationController {
-			popover.sourceView = menuButton
-			popover.sourceRect = menuButton.bounds
+			popover.barButtonItem = menuBarButtonItem
 		}
 		present(activity, animated: true)
 	}
@@ -840,8 +802,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	private func showValidationError(message: String) {
-		validationLabel.text = message
-		validationLabel.isHidden = false
+		navigationItem.prompt = message
 		notationField.layer.borderColor = currentPalette.fieldBorderErrorColor.cgColor
 		notationField.layer.borderWidth = 1
 		notationField.layer.cornerRadius = 6
@@ -853,8 +814,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	private func clearValidationFeedback() {
-		validationLabel.isHidden = true
-		validationLabel.text = nil
+		navigationItem.prompt = nil
 		notationField.layer.borderWidth = 0
 		notationField.layer.cornerRadius = 0
 		notationField.layer.borderColor = UIColor.clear.cgColor
@@ -926,9 +886,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	private func configurePointerInteractionsIfNeeded() {
 		guard traitCollection.userInterfaceIdiom == .mac else { return }
-		for control in [rollButton, presetsButton, showStatsButton, menuButton] {
-			control.isPointerInteractionEnabled = true
-		}
+		showStatsButton.isPointerInteractionEnabled = true
 	}
 
 	private var shouldAnimateBoard: Bool {
@@ -964,14 +922,13 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		}
 		navigationController.modalPresentationStyle = .formSheet
 		if let popover = navigationController.popoverPresentationController {
-			popover.sourceView = presetsButton
-			popover.sourceRect = presetsButton.bounds
+			popover.barButtonItem = presetsBarButtonItem
 		}
 		present(navigationController, animated: true)
 	}
 
 	private func updateControlMenu() {
-		menuButton.menu = nil
+		// Settings are presented via navigation bar menu button action.
 	}
 
 	@objc private func showControlSheet() {
@@ -1027,8 +984,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		}
 		navigationController.modalPresentationStyle = .formSheet
 		if let popover = navigationController.popoverPresentationController {
-			popover.sourceView = menuButton
-			popover.sourceRect = menuButton.bounds
+			popover.barButtonItem = menuBarButtonItem
 		}
 		present(navigationController, animated: true)
 	}
@@ -1257,21 +1213,25 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		currentDieFinish = viewModel.dieFinish
 		view.backgroundColor = palette.screenBackgroundColor
 		applyTexture()
-		controlsContainer?.backgroundColor = palette.panelBackgroundColor
 		updateTotalsGraph(with: currentTotalsGraphCounts)
-		validationLabel.textColor = palette.validationColor
 		notationField.textColor = palette.primaryTextColor
 		notationField.keyboardAppearance = keyboardAppearance(for: viewModel.theme)
 		let buttonColor = palette.primaryTextColor
-		rollButton.setTitleColor(buttonColor, for: .normal)
-		presetsButton.setTitleColor(buttonColor, for: .normal)
+		navigationController?.navigationBar.tintColor = buttonColor
+		let navAppearance = UINavigationBarAppearance()
+		navAppearance.configureWithOpaqueBackground()
+		navAppearance.backgroundColor = palette.panelBackgroundColor
+		navAppearance.titleTextAttributes = [.foregroundColor: buttonColor]
+		navAppearance.largeTitleTextAttributes = [.foregroundColor: buttonColor]
+		navigationController?.navigationBar.standardAppearance = navAppearance
+		navigationController?.navigationBar.scrollEdgeAppearance = navAppearance
+		navigationController?.navigationBar.compactAppearance = navAppearance
 		if var showStatsButtonConfig = showStatsButton.configuration {
 			showStatsButtonConfig.baseForegroundColor = buttonColor
 			showStatsButtonConfig.baseBackgroundColor = palette.panelBackgroundColor.withAlphaComponent(0.92)
 			showStatsButtonConfig.background.strokeColor = buttonColor.withAlphaComponent(0.25)
 			showStatsButton.configuration = showStatsButtonConfig
 		}
-		menuButton.tintColor = buttonColor
 		diceBoardView.setDieFinish(currentDieFinish)
 	}
 

@@ -2158,6 +2158,14 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(showStatsButton?.isHidden, true)
 	}
 
+	func testControllerPlacesPrimaryControlsInNavigationBar() {
+		let controller = DiceCollectionViewController(collectionViewLayout: UICollectionViewFlowLayout())
+		controller.loadViewIfNeeded()
+		let notationField = findView(in: controller.navigationItem.titleView ?? UIView(), accessibilityIdentifier: "notationField")
+		XCTAssertNotNil(notationField)
+		XCTAssertEqual(controller.navigationItem.rightBarButtonItems?.count, 3)
+	}
+
 	func testDieIndexFromAccessibilityIdentifierParsesExpectedFormat() {
 		XCTAssertEqual(DiceCollectionViewController.dieIndexFromAccessibilityIdentifier("dieButton_0"), 0)
 		XCTAssertEqual(DiceCollectionViewController.dieIndexFromAccessibilityIdentifier("dieButton_12"), 12)

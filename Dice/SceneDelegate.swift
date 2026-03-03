@@ -14,6 +14,12 @@ final class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 	func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
 		pendingRoute = initialRoute(from: connectionOptions)
+		if let window,
+		   let root = window.rootViewController,
+		   !(root is UINavigationController) {
+			let navigationController = UINavigationController(rootViewController: root)
+			window.rootViewController = navigationController
+		}
 	}
 
 	func sceneDidBecomeActive(_ scene: UIScene) {
