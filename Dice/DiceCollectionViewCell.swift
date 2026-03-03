@@ -1,10 +1,7 @@
 import UIKit
 
 class DiceCollectionViewCell: UICollectionViewCell {
-	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 	var onTapDie: ((CGPoint) -> Void)?
-	private var currentPalette = DiceTheme.system.palette
-	private var isLocked = false
 	private let lockIconView = UIImageView(image: UIImage(systemName: "lock.fill"))
 	private let menuHitPadding: CGFloat = 10
 	private var hasInstalledFullSizeButtonConstraints = false
@@ -37,9 +34,7 @@ class DiceCollectionViewCell: UICollectionViewCell {
 		Self.expandedHitBounds(for: bounds, padding: menuHitPadding).contains(point)
 	}
 
-	func configure(faceValue: Int, sideCount: Int, index: Int, palette: DiceThemePalette, isLocked: Bool, largeFaceLabelsEnabled: Bool) {
-		currentPalette = palette
-		self.isLocked = isLocked
+	func configure(faceValue: Int, sideCount: Int, index: Int, isLocked: Bool, largeFaceLabelsEnabled: Bool) {
 		diceButton.accessibilityIdentifier = "dieButton_\(index)"
 		diceButton.accessibilityLabel = String(
 			format: NSLocalizedString("a11y.die.label", comment: "Die button accessibility label format"),

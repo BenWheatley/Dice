@@ -595,16 +595,6 @@ final class DiceViewModel {
 		historyStore.savePersistedEntries(rollHistory.persistedRecentEntries)
 	}
 
-	private func formattedCounts(_ totals: [Int]) -> String {
-		if totals.isEmpty { return "" }
-		if totals.count > 40 {
-			let nonZero = totals.enumerated().filter { $0.element > 0 }
-			let top = nonZero.sorted { $0.element > $1.element }.prefix(10)
-			return top.map { "\($0.offset + 1)s:\($0.element)" }.joined(separator: " ")
-		}
-		return totals.enumerated().map { "\($0.offset + 1)s:\($0.element)" }.joined(separator: " ")
-	}
-
 	private func recoloredPools(from pools: [DicePool], dieIndex: Int, colorTag: String) -> [DicePool] {
 		var rebuilt: [DicePool] = []
 		rebuilt.reserveCapacity(pools.count + 2)

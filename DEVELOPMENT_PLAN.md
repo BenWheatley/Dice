@@ -214,8 +214,11 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 ## Code Review Findings (2026-03-03)
 
-- [ ] Fix stats-sheet presentation reliability: when `Show Stats` is enabled while another modal is already presented, queue the Roll Distribution sheet presentation and show it as soon as the blocking modal is dismissed.
-- [ ] Add UI regression tests for Roll Distribution sheet lifecycle: toggle `Show Stats` on/off, confirm sheet presentation, confirm swipe-to-dismiss persistence behavior, and confirm relaunch state restoration.
+- [x] Fix stats-sheet presentation reliability: when `Show Stats` is enabled while another modal is already presented, queue the Roll Distribution sheet presentation and show it as soon as the blocking modal is dismissed.
+- [x] Move stats resurfacing control to a dedicated main-screen `Stats` button and remove the Show Stats toggle from the settings sheet.
+- [x] Document product decision to keep Roll Distribution on a fixed-height custom detent (compact board-first layout) directly in sheet presentation code.
+- [x] Run dead-code/resource sweep for the stats/settings refactor and remove unreachable style-preview UI path plus unreferenced symbols.
+- [ ] Add UI regression tests for Roll Distribution sheet lifecycle: tap main-screen `Stats` button, confirm sheet presentation, confirm swipe-to-dismiss persistence behavior, and confirm relaunch state restoration.
 - [ ] Add a shared-scheme consistency pass: ensure all primary run schemes (iOS app, watch app, widgets extension) are present as shared schemes so scheme visibility does not depend on local auto-generated user state.
 
 ### Performance and Interaction Safety

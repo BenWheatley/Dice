@@ -2116,9 +2116,28 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(commandInputs.contains("f"))
 	}
 
+	func testControllerExposesMainScreenStatsButton() {
+		let controller = DiceCollectionViewController(collectionViewLayout: UICollectionViewFlowLayout())
+		controller.loadViewIfNeeded()
+		let statsButton = findView(in: controller.view, accessibilityIdentifier: "statsButton")
+		XCTAssertNotNil(statsButton)
+	}
+
 	func testDieIndexFromAccessibilityIdentifierParsesExpectedFormat() {
 		XCTAssertEqual(DiceCollectionViewController.dieIndexFromAccessibilityIdentifier("dieButton_0"), 0)
 		XCTAssertEqual(DiceCollectionViewController.dieIndexFromAccessibilityIdentifier("dieButton_12"), 12)
+	}
+
+	private func findView(in root: UIView, accessibilityIdentifier: String) -> UIView? {
+		if root.accessibilityIdentifier == accessibilityIdentifier {
+			return root
+		}
+		for subview in root.subviews {
+			if let match = findView(in: subview, accessibilityIdentifier: accessibilityIdentifier) {
+				return match
+			}
+		}
+		return nil
 	}
 
 	func testDieIndexFromAccessibilityIdentifierRejectsInvalidValues() {

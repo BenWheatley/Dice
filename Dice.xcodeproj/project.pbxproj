@@ -61,8 +61,6 @@
 		D1CE11062F50000600D1CE00 /* DiceShaderBackgroundView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10062F50000600D1CE00 /* DiceShaderBackgroundView.swift */; };
 		D1CE11072F50000700D1CE00 /* DiceSoundEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10072F50000700D1CE00 /* DiceSoundEngine.swift */; };
 		D1CE11082F50000800D1CE00 /* DiceAudioFormatResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10082F50000800D1CE00 /* DiceAudioFormatResolver.swift */; };
-		D1CE11092F50000900D1CE00 /* DiceStylePreviewState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10092F50000900D1CE00 /* DiceStylePreviewState.swift */; };
-		D1CE110A2F50000A00D1CE00 /* DiceStylePreviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE100A2F50000A00D1CE00 /* DiceStylePreviewViewController.swift */; };
 		D1CE110B2F50000B00D1CE00 /* HistoryRowFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE100B2F50000B00D1CE00 /* HistoryRowFormatter.swift */; };
 		D1CE110C2F50000C00D1CE00 /* HistorySummaryCardRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE100C2F50000C00D1CE00 /* HistorySummaryCardRenderer.swift */; };
 		D1CE110D2F50000D00D1CE00 /* PresetManagerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE100D2F50000D00D1CE00 /* PresetManagerViewController.swift */; };
@@ -250,8 +248,6 @@
 		D1CE10062F50000600D1CE00 /* DiceShaderBackgroundView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceShaderBackgroundView.swift; sourceTree = "<group>"; };
 		D1CE10072F50000700D1CE00 /* DiceSoundEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceSoundEngine.swift; sourceTree = "<group>"; };
 		D1CE10082F50000800D1CE00 /* DiceAudioFormatResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceAudioFormatResolver.swift; sourceTree = "<group>"; };
-		D1CE10092F50000900D1CE00 /* DiceStylePreviewState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceStylePreviewState.swift; sourceTree = "<group>"; };
-		D1CE100A2F50000A00D1CE00 /* DiceStylePreviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceStylePreviewViewController.swift; sourceTree = "<group>"; };
 		D1CE100B2F50000B00D1CE00 /* HistoryRowFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryRowFormatter.swift; sourceTree = "<group>"; };
 		D1CE100C2F50000C00D1CE00 /* HistorySummaryCardRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistorySummaryCardRenderer.swift; sourceTree = "<group>"; };
 		D1CE100D2F50000D00D1CE00 /* PresetManagerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetManagerViewController.swift; sourceTree = "<group>"; };
@@ -402,8 +398,6 @@
 				D1CE10022F50000200D1CE00 /* DiceHapticsEngine.swift */,
 				D1CE100E2F50000E00D1CE00 /* PresetPickerViewController.swift */,
 				D1CE100D2F50000D00D1CE00 /* PresetManagerViewController.swift */,
-				D1CE10092F50000900D1CE00 /* DiceStylePreviewState.swift */,
-				D1CE100A2F50000A00D1CE00 /* DiceStylePreviewViewController.swift */,
 				D1CE10062F50000600D1CE00 /* DiceShaderBackgroundView.swift */,
 				D5CE10012F53000100D1CE00 /* DiceRollDistributionChartView.swift */,
 				AACE00022F58000200D1CE00 /* RollDistributionSheetViewController.swift */,
@@ -762,8 +756,6 @@
 				D1CE11022F50000200D1CE00 /* DiceHapticsEngine.swift in Sources */,
 				D1CE110E2F50000E00D1CE00 /* PresetPickerViewController.swift in Sources */,
 				D1CE110D2F50000D00D1CE00 /* PresetManagerViewController.swift in Sources */,
-				D1CE11092F50000900D1CE00 /* DiceStylePreviewState.swift in Sources */,
-				D1CE110A2F50000A00D1CE00 /* DiceStylePreviewViewController.swift in Sources */,
 				D1CE11062F50000600D1CE00 /* DiceShaderBackgroundView.swift in Sources */,
 				D1CE11032F50000300D1CE00 /* DiceMetalTextureRenderer.swift in Sources */,
 				D4CE11012F52000100D1CE00 /* DiceBackgroundShaders.metal in Sources */,

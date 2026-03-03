@@ -4,7 +4,6 @@ final class DiceOptionsSheetViewController: UIViewController {
 	struct State {
 		let animationsEnabled: Bool
 		let animationIntensity: DiceAnimationIntensity
-		let showStats: Bool
 		let theme: DiceTheme
 		let texture: DiceTableTexture
 		let layout: DiceBoardLayoutPreset
@@ -19,7 +18,6 @@ final class DiceOptionsSheetViewController: UIViewController {
 
 	var onToggleAnimations: (() -> Void)?
 	var onSetAnimationIntensity: ((DiceAnimationIntensity) -> Void)?
-	var onToggleStats: (() -> Void)?
 	var onSetTheme: ((DiceTheme) -> Void)?
 	var onSetTexture: ((DiceTableTexture) -> Void)?
 	var onSetLayout: ((DiceBoardLayoutPreset) -> Void)?
@@ -112,7 +110,6 @@ final class DiceOptionsSheetViewController: UIViewController {
 				self?.onSetFinish?(DiceDieFinish.allCases[index])
 			}
 			section.addSwitchRow(title: NSLocalizedString("menu.control.largeFaceLabels", comment: "Large face labels toggle title"), isOn: state.largeFaceLabelsEnabled) { [weak self] _ in self?.onToggleLargeLabels?() }
-			section.addSwitchRow(title: NSLocalizedString("menu.control.showStats", comment: "Show stats toggle menu title"), isOn: state.showStats) { [weak self] _ in self?.onToggleStats?() }
 		}
 		addSection(title: NSLocalizedString("menu.control.soundPack", comment: "Sound section")) { section in
 			section.addSegmentRow(title: NSLocalizedString("menu.control.soundPack", comment: "Sound pack submenu title"), items: DiceSoundPack.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Sound pack option") }, selectedIndex: DiceSoundPack.allCases.firstIndex(of: state.soundPack) ?? 0) { [weak self] index in

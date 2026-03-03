@@ -21,6 +21,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let validationLabel = UILabel()
 	private let rollButton = UIButton(type: .system)
 	private let presetsButton = UIButton(type: .system)
+	private let statsButton = UIButton(type: .system)
 	private let menuButton = UIButton(type: .system)
 	private let diceBoardView = DiceCubeView()
 	private var controlsContainer: UIView?
@@ -33,6 +34,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private var rollDistributionSheetController: RollDistributionSheetViewController?
 	private var currentTotalsGraphCounts: [Int] = []
 	private var currentTotalsAccessibilityValue: String?
+	private var pendingStatsSheetPresentation = false
 	private var routeObserver: NSObjectProtocol?
 	private let dieMenuAnchorButton = UIButton(type: .system)
 
@@ -94,6 +96,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		}
 		applyTextureIfNeededForCurrentBounds()
 		updateDiceBoard(animated: false)
+		if pendingStatsSheetPresentation, statsVisible, presentedViewController == nil {
+			presentRollDistributionSheetIfNeeded()
+		}
 	}
 
 	override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -112,7 +117,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			faceValue: faceValue,
 			sideCount: sideCount,
 			index: indexPath.row,
-			palette: currentPalette,
 			isLocked: viewModel.isDieLocked(at: indexPath.row),
 			largeFaceLabelsEnabled: viewModel.largeFaceLabelsEnabled
 		)
@@ -178,6 +182,14 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		presetsButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
 		presetsButton.titleLabel?.adjustsFontForContentSizeCategory = true
 
+		statsButton.translatesAutoresizingMaskIntoConstraints = false
+		statsButton.setTitle(NSLocalizedString("button.stats", comment: "Stats button title"), for: .normal)
+		statsButton.addTarget(self, action: #selector(showRollDistributionSheet), for: .touchUpInside)
+		statsButton.accessibilityLabel = NSLocalizedString("button.stats", comment: "Stats button title")
+		statsButton.accessibilityIdentifier = "statsButton"
+		statsButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
+		statsButton.titleLabel?.adjustsFontForContentSizeCategory = true
+
 		menuButton.translatesAutoresizingMaskIntoConstraints = false
 		menuButton.setImage(UIImage(systemName: "line.3.horizontal"), for: .normal)
 		menuButton.accessibilityLabel = NSLocalizedString("a11y.menu.label", comment: "Main menu accessibility label")
@@ -185,7 +197,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		menuButton.showsMenuAsPrimaryAction = false
 		menuButton.addTarget(self, action: #selector(showControlSheet), for: .touchUpInside)
 
-		let row = UIStackView(arrangedSubviews: [notationField, rollButton, presetsButton, menuButton])
+		let row = UIStackView(arrangedSubviews: [notationField, rollButton, presetsButton, statsButton, menuButton])
 		row.translatesAutoresizingMaskIntoConstraints = false
 		row.axis = .horizontal
 		row.spacing = 8
@@ -218,6 +230,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 			rollButton.widthAnchor.constraint(equalToConstant: 52),
 			presetsButton.widthAnchor.constraint(equalToConstant: 72),
+			statsButton.widthAnchor.constraint(equalToConstant: 62),
 			menuButton.widthAnchor.constraint(equalToConstant: 44),
 		])
 	}
@@ -553,16 +566,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			centers.append(CGPoint(x: x, y: y))
 		}
 		return (centers, sideLength)
-	}
-
-	private func showInvalidNotationAlert(message: String) {
-		let alert = UIAlertController(
-			title: NSLocalizedString("alert.invalid.title", comment: "Invalid notation alert title"),
-			message: message,
-			preferredStyle: .alert
-		)
-		alert.addAction(UIAlertAction(title: NSLocalizedString("button.ok", comment: "Generic confirmation button"), style: .default))
-		present(alert, animated: true)
 	}
 
 	@objc private func notationEditingChanged() {
@@ -909,7 +912,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	private func configurePointerInteractionsIfNeeded() {
 		guard traitCollection.userInterfaceIdiom == .mac else { return }
-		for control in [rollButton, presetsButton, menuButton] {
+		for control in [rollButton, presetsButton, statsButton, menuButton] {
 			control.isPointerInteractionEnabled = true
 		}
 	}
@@ -953,21 +956,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		present(navigationController, animated: true)
 	}
 
-	private func applyPreset(diceCount: Int, intuitive: Bool) {
-		let outcome = viewModel.selectPreset(diceCount: diceCount, intuitive: intuitive)
-		updateNotationField()
-		clearValidationFeedback()
-		updateTotalsText(outcome: outcome)
-		collectionView.reloadData()
-		collectionView.layoutIfNeeded()
-		updateDiceBoard(animated: shouldAnimateBoard)
-		playRollSound()
-	}
-
-	@objc private func showControlMenu() {
-		updateControlMenu()
-	}
-
 	private func updateControlMenu() {
 		menuButton.menu = nil
 	}
@@ -977,7 +965,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			state: DiceOptionsSheetViewController.State(
 				animationsEnabled: viewModel.animationsEnabled,
 				animationIntensity: viewModel.animationIntensity,
-				showStats: statsVisible,
 				theme: viewModel.theme,
 				texture: viewModel.tableTexture,
 				layout: viewModel.boardLayoutPreset,
@@ -992,7 +979,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		)
 		sheet.onToggleAnimations = { [weak self] in self?.toggleAnimations() }
 		sheet.onSetAnimationIntensity = { [weak self] intensity in self?.selectAnimationIntensity(intensity) }
-		sheet.onToggleStats = { [weak self] in self?.toggleStatsVisibility() }
 		sheet.onSetTheme = { [weak self] theme in self?.selectTheme(theme) }
 		sheet.onSetTexture = { [weak self] texture in self?.selectTexture(texture) }
 		sheet.onSetLayout = { [weak self] preset in self?.selectBoardLayoutPreset(preset) }
@@ -1033,144 +1019,10 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		present(navigationController, animated: true)
 	}
 
-	private func updateLegacyControlMenu() {
-		let animationAction = UIAction(
-			title: NSLocalizedString("menu.control.animations", comment: "Animations toggle menu title"),
-			state: viewModel.animationsEnabled ? .on : .off
-		) { [weak self] _ in
-			self?.toggleAnimations()
-		}
-		let animationIntensityActions = DiceAnimationIntensity.allCases.map { intensity in
-			UIAction(
-				title: NSLocalizedString(intensity.menuTitleKey, comment: "Animation intensity option"),
-				state: viewModel.animationIntensity == intensity ? .on : .off
-			) { [weak self] _ in
-				self?.selectAnimationIntensity(intensity)
-			}
-		}
-		let animationIntensityMenu = UIMenu(
-			title: NSLocalizedString("menu.control.animationIntensity", comment: "Animation intensity submenu title"),
-			options: .displayInline,
-			children: animationIntensityActions
-		)
-		let statsAction = UIAction(
-			title: NSLocalizedString("menu.control.showStats", comment: "Show stats toggle menu title"),
-			state: statsVisible ? .on : .off
-		) { [weak self] _ in
-			self?.toggleStatsVisibility()
-		}
-		let historyAction = UIAction(title: NSLocalizedString("button.history", comment: "History button title")) { [weak self] _ in
-			self?.showHistory()
-		}
-		let repeatAction = UIAction(title: NSLocalizedString("menu.control.repeatLast", comment: "Repeat last roll menu title")) { [weak self] _ in
-			self?.repeatLastRoll()
-		}
-		let themeActions = DiceTheme.allCases.map { theme in
-			UIAction(
-				title: NSLocalizedString(theme.menuTitleKey, comment: "Theme option title"),
-				state: self.viewModel.theme == theme ? .on : .off
-			) { [weak self] _ in
-				self?.selectTheme(theme)
-			}
-		}
-		let themeMenu = UIMenu(
-			title: NSLocalizedString("menu.control.theme", comment: "Theme submenu title"),
-			options: .displayInline,
-			children: themeActions
-		)
-		let textureActions = DiceTableTexture.allCases.map { texture in
-			UIAction(
-				title: NSLocalizedString(texture.menuTitleKey, comment: "Table texture option"),
-				state: self.viewModel.tableTexture == texture ? .on : .off
-			) { [weak self] _ in
-				self?.selectTexture(texture)
-			}
-		}
-		let textureMenu = UIMenu(
-			title: NSLocalizedString("menu.control.texture", comment: "Texture submenu title"),
-			options: .displayInline,
-			children: textureActions
-		)
-		let layoutActions = DiceBoardLayoutPreset.allCases.map { preset in
-			UIAction(
-				title: NSLocalizedString(preset.menuTitleKey, comment: "Board layout preset option"),
-				state: viewModel.boardLayoutPreset == preset ? .on : .off
-			) { [weak self] _ in
-				self?.selectBoardLayoutPreset(preset)
-			}
-		}
-		let layoutMenu = UIMenu(
-			title: NSLocalizedString("menu.control.layout", comment: "Layout submenu title"),
-			options: .displayInline,
-			children: layoutActions
-		)
-		let finishActions = DiceDieFinish.allCases.map { finish in
-			UIAction(
-				title: NSLocalizedString(finish.menuTitleKey, comment: "Die finish option"),
-				state: self.viewModel.dieFinish == finish ? .on : .off
-			) { [weak self] _ in
-				self?.selectDieFinish(finish)
-			}
-		}
-		let finishMenu = UIMenu(
-			title: NSLocalizedString("menu.control.finish", comment: "Die finish submenu title"),
-			options: .displayInline,
-			children: finishActions
-		)
-		let motionBlurAction = UIAction(
-			title: NSLocalizedString("menu.control.motionBlur", comment: "Motion blur toggle menu title"),
-			state: viewModel.motionBlurEnabled ? .on : .off
-		) { [weak self] _ in
-			self?.toggleMotionBlur()
-		}
-		let largeLabelsAction = UIAction(
-			title: NSLocalizedString("menu.control.largeFaceLabels", comment: "Large face labels toggle title"),
-			state: viewModel.largeFaceLabelsEnabled ? .on : .off
-		) { [weak self] _ in
-			self?.toggleLargeFaceLabels()
-		}
-		let soundPackActions = DiceSoundPack.allCases.map { pack in
-			UIAction(
-				title: NSLocalizedString(pack.menuTitleKey, comment: "Sound pack option"),
-				state: self.viewModel.soundPack == pack ? .on : .off
-			) { [weak self] _ in
-				self?.selectSoundPack(pack)
-			}
-		}
-		let soundPackMenu = UIMenu(
-			title: NSLocalizedString("menu.control.soundPack", comment: "Sound pack submenu title"),
-			options: .displayInline,
-			children: soundPackActions
-		)
-		let soundEffectsAction = UIAction(
-			title: NSLocalizedString("menu.control.soundEffects", comment: "Sound effects toggle title"),
-			state: viewModel.soundEffectsEnabled ? .on : .off
-		) { [weak self] _ in
-			self?.toggleSoundEffects()
-		}
-		let hapticsAction = UIAction(
-			title: NSLocalizedString("menu.control.haptics", comment: "Haptics toggle title"),
-			state: viewModel.hapticsEnabled ? .on : .off
-		) { [weak self] _ in
-			self?.toggleHaptics()
-		}
-		let previewStyleAction = UIAction(title: NSLocalizedString("menu.control.previewStyle", comment: "Preview style action title")) { [weak self] _ in
-			self?.presentStylePreview()
-		}
-		let resetVisualsAction = UIAction(
-			title: NSLocalizedString("menu.control.resetVisuals", comment: "Reset visual settings menu title"),
-			attributes: .destructive
-		) { [weak self] _ in
-			self?.confirmVisualReset()
-		}
-		menuButton.menu = UIMenu(children: [historyAction, repeatAction, animationAction, animationIntensityMenu, motionBlurAction, soundPackMenu, soundEffectsAction, hapticsAction, themeMenu, textureMenu, layoutMenu, finishMenu, largeLabelsAction, statsAction, previewStyleAction, resetVisualsAction])
-	}
-
-	@objc private func toggleStatsVisibility() {
-		statsVisible.toggle()
-		UserDefaults.standard.set(statsVisible, forKey: statsVisibilityKey)
+	@objc private func showRollDistributionSheet() {
+		statsVisible = true
+		UserDefaults.standard.set(true, forKey: statsVisibilityKey)
 		updateStatsVisibility()
-		updateControlMenu()
 	}
 
 	private func restoreStatsVisibility() {
@@ -1184,13 +1036,18 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		if statsVisible {
 			presentRollDistributionSheetIfNeeded()
 		} else {
+			pendingStatsSheetPresentation = false
 			dismissRollDistributionSheetIfNeeded()
 		}
 	}
 
 	private func presentRollDistributionSheetIfNeeded() {
 		if rollDistributionSheetController != nil { return }
-		guard presentedViewController == nil else { return }
+		guard presentedViewController == nil else {
+			pendingStatsSheetPresentation = true
+			return
+		}
+		pendingStatsSheetPresentation = false
 
 		let sheet = RollDistributionSheetViewController()
 		sheet.onDismiss = { [weak self] in
@@ -1211,11 +1068,13 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			sheet.overrideUserInterfaceStyle = .unspecified
 		}
 		sheet.modalPresentationStyle = .pageSheet
-        let customDetent = UISheetPresentationController.Detent.custom(
-            identifier: .init("fixedHeight")
-        ) { context in
-            return 200
-        }
+		// Deliberate product decision: keep a compact fixed-height stats sheet.
+		// This is intentionally constrained to avoid covering the board UI.
+		let customDetent = UISheetPresentationController.Detent.custom(
+			identifier: .init("fixedHeight")
+		) { _ in
+			return 200
+		}
 		if let presentationController = sheet.sheetPresentationController {
 			presentationController.detents = [customDetent]
 			presentationController.prefersGrabberVisible = true
@@ -1362,27 +1221,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		updateControlMenu()
 	}
 
-	private func presentStylePreview() {
-		let previewState = DiceStylePreviewState(
-			theme: viewModel.theme,
-			texture: viewModel.tableTexture,
-			dieFinish: viewModel.dieFinish,
-			edgeOutlinesEnabled: viewModel.edgeOutlinesEnabled,
-			dieColors: viewModel.dieColorPreferences,
-			d6PipStyle: viewModel.d6PipStyle,
-			faceNumeralFont: viewModel.faceNumeralFont,
-			largeFaceLabelsEnabled: viewModel.largeFaceLabelsEnabled
-		)
-		let preview = DiceStylePreviewViewController(state: previewState)
-		let navigation = UINavigationController(rootViewController: preview)
-		navigation.modalPresentationStyle = .formSheet
-		if let popover = navigation.popoverPresentationController {
-			popover.sourceView = menuButton
-			popover.sourceRect = menuButton.bounds
-		}
-		present(navigation, animated: true)
-	}
-
 	private func applyTheme() {
 		switch viewModel.theme {
 		case .lightMode:
@@ -1406,6 +1244,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let buttonColor = palette.primaryTextColor
 		rollButton.setTitleColor(buttonColor, for: .normal)
 		presetsButton.setTitleColor(buttonColor, for: .normal)
+		statsButton.setTitleColor(buttonColor, for: .normal)
 		menuButton.tintColor = buttonColor
 		diceBoardView.setDieFinish(currentDieFinish)
 	}
