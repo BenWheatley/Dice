@@ -44,7 +44,7 @@
 "presets.manage.field.title" = "Preset name";
 "presets.manage.field.notation" = "Notation (e.g. 3d6+2d4)";
 "menu.control.animations" = "Animations";
-"button.stats" = "Stats";
+"button.show" = "Show";
 "menu.control.actions" = "Actions";
 "menu.control.repeatLast" = "Repeat Last Roll";
 "menu.control.animationIntensity" = "Animation Intensity";
@@ -165,6 +165,7 @@
 "a11y.totals.label" = "Roll statistics";
 "a11y.reset.label" = "Reset statistics";
 "a11y.menu.label" = "Menu";
+"a11y.stats.show" = "Show roll distribution";
 "a11y.die.label" = "Die %d, value %d";
 "a11y.die.hint" = "Show options for this die.";
 "a11y.die.lockedHint" = "Die locked. Long press to unlock.";

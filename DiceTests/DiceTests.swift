@@ -2116,11 +2116,46 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(commandInputs.contains("f"))
 	}
 
-	func testControllerExposesMainScreenStatsButton() {
+	func testControllerExposesFloatingShowStatsButtonWithChartIconAndText() {
+		let defaults = UserDefaults.standard
+		let key = "Dice.showStats"
+		let originalValue = defaults.object(forKey: key)
+		defer {
+			if let originalValue {
+				defaults.set(originalValue, forKey: key)
+			} else {
+				defaults.removeObject(forKey: key)
+			}
+		}
+
+		defaults.set(false, forKey: key)
 		let controller = DiceCollectionViewController(collectionViewLayout: UICollectionViewFlowLayout())
 		controller.loadViewIfNeeded()
-		let statsButton = findView(in: controller.view, accessibilityIdentifier: "statsButton")
-		XCTAssertNotNil(statsButton)
+		let showStatsButton = findView(in: controller.view, accessibilityIdentifier: "showStatsButton") as? UIButton
+		XCTAssertNotNil(showStatsButton)
+		XCTAssertEqual(showStatsButton?.configuration?.title, NSLocalizedString("button.show", comment: "Show button title"))
+		XCTAssertNotNil(showStatsButton?.configuration?.image)
+		XCTAssertEqual(showStatsButton?.isHidden, false)
+	}
+
+	func testControllerHidesFloatingShowStatsButtonWhenStatsAreVisible() {
+		let defaults = UserDefaults.standard
+		let key = "Dice.showStats"
+		let originalValue = defaults.object(forKey: key)
+		defer {
+			if let originalValue {
+				defaults.set(originalValue, forKey: key)
+			} else {
+				defaults.removeObject(forKey: key)
+			}
+		}
+
+		defaults.set(true, forKey: key)
+		let controller = DiceCollectionViewController(collectionViewLayout: UICollectionViewFlowLayout())
+		controller.loadViewIfNeeded()
+		let showStatsButton = findView(in: controller.view, accessibilityIdentifier: "showStatsButton") as? UIButton
+		XCTAssertNotNil(showStatsButton)
+		XCTAssertEqual(showStatsButton?.isHidden, true)
 	}
 
 	func testDieIndexFromAccessibilityIdentifierParsesExpectedFormat() {

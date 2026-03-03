@@ -21,7 +21,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let validationLabel = UILabel()
 	private let rollButton = UIButton(type: .system)
 	private let presetsButton = UIButton(type: .system)
-	private let statsButton = UIButton(type: .system)
+	private let showStatsButton = UIButton(type: .system)
 	private let menuButton = UIButton(type: .system)
 	private let diceBoardView = DiceCubeView()
 	private var controlsContainer: UIView?
@@ -182,13 +182,22 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		presetsButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
 		presetsButton.titleLabel?.adjustsFontForContentSizeCategory = true
 
-		statsButton.translatesAutoresizingMaskIntoConstraints = false
-		statsButton.setTitle(NSLocalizedString("button.stats", comment: "Stats button title"), for: .normal)
-		statsButton.addTarget(self, action: #selector(showRollDistributionSheet), for: .touchUpInside)
-		statsButton.accessibilityLabel = NSLocalizedString("button.stats", comment: "Stats button title")
-		statsButton.accessibilityIdentifier = "statsButton"
-		statsButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
-		statsButton.titleLabel?.adjustsFontForContentSizeCategory = true
+		showStatsButton.translatesAutoresizingMaskIntoConstraints = false
+		var showStatsButtonConfig = UIButton.Configuration.filled()
+		showStatsButtonConfig.title = NSLocalizedString("button.show", comment: "Show button title")
+		showStatsButtonConfig.image = UIImage(systemName: "chart.bar.xaxis")
+		showStatsButtonConfig.imagePlacement = .leading
+		showStatsButtonConfig.imagePadding = 6
+		showStatsButtonConfig.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12)
+		showStatsButtonConfig.background.cornerRadius = 18
+		showStatsButtonConfig.background.strokeWidth = 1
+		showStatsButton.configuration = showStatsButtonConfig
+		showStatsButton.addTarget(self, action: #selector(showRollDistributionSheet), for: .touchUpInside)
+		showStatsButton.accessibilityLabel = NSLocalizedString("a11y.stats.show", comment: "Show stats button accessibility label")
+		showStatsButton.accessibilityIdentifier = "showStatsButton"
+		showStatsButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
+		showStatsButton.titleLabel?.adjustsFontForContentSizeCategory = true
+		showStatsButton.semanticContentAttribute = .forceLeftToRight
 
 		menuButton.translatesAutoresizingMaskIntoConstraints = false
 		menuButton.setImage(UIImage(systemName: "line.3.horizontal"), for: .normal)
@@ -197,7 +206,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		menuButton.showsMenuAsPrimaryAction = false
 		menuButton.addTarget(self, action: #selector(showControlSheet), for: .touchUpInside)
 
-		let row = UIStackView(arrangedSubviews: [notationField, rollButton, presetsButton, statsButton, menuButton])
+		let row = UIStackView(arrangedSubviews: [notationField, rollButton, presetsButton, menuButton])
 		row.translatesAutoresizingMaskIntoConstraints = false
 		row.axis = .horizontal
 		row.spacing = 8
@@ -214,6 +223,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 		controlsContainer.addSubview(row)
 		controlsContainer.addSubview(validationLabel)
+		view.addSubview(showStatsButton)
 
 		NSLayoutConstraint.activate([
 			controlsContainer.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
@@ -230,9 +240,12 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 			rollButton.widthAnchor.constraint(equalToConstant: 52),
 			presetsButton.widthAnchor.constraint(equalToConstant: 72),
-			statsButton.widthAnchor.constraint(equalToConstant: 62),
 			menuButton.widthAnchor.constraint(equalToConstant: 44),
+
+			showStatsButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
+			showStatsButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
 		])
+		updateShowStatsButtonVisibility()
 	}
 
 	private func observeSceneRoutes() {
@@ -284,6 +297,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		dieMenuAnchorButton.showsMenuAsPrimaryAction = true
 		dieMenuAnchorButton.isHidden = true
 		view.addSubview(dieMenuAnchorButton)
+		view.bringSubviewToFront(showStatsButton)
 		view.bringSubviewToFront(controlsContainer ?? UIView())
 		NSLayoutConstraint.activate([
 			diceBoardView.leadingAnchor.constraint(equalTo: collectionView.leadingAnchor),
@@ -912,7 +926,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	private func configurePointerInteractionsIfNeeded() {
 		guard traitCollection.userInterfaceIdiom == .mac else { return }
-		for control in [rollButton, presetsButton, statsButton, menuButton] {
+		for control in [rollButton, presetsButton, showStatsButton, menuButton] {
 			control.isPointerInteractionEnabled = true
 		}
 	}
@@ -1032,7 +1046,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	private func updateStatsVisibility() {
-		guard isViewLoaded, view.window != nil else { return }
+		guard isViewLoaded else { return }
+		updateShowStatsButtonVisibility()
+		guard view.window != nil else { return }
 		if statsVisible {
 			presentRollDistributionSheetIfNeeded()
 		} else {
@@ -1056,6 +1072,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			if self.statsVisible {
 				self.statsVisible = false
 				UserDefaults.standard.set(false, forKey: self.statsVisibilityKey)
+				self.updateShowStatsButtonVisibility()
 				self.updateControlMenu()
 			}
 		}
@@ -1090,6 +1107,10 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		guard let sheet = rollDistributionSheetController else { return }
 		sheet.dismiss(animated: true)
 		rollDistributionSheetController = nil
+	}
+
+	private func updateShowStatsButtonVisibility() {
+		showStatsButton.isHidden = statsVisible
 	}
 
 	private func selectTheme(_ theme: DiceTheme) {
@@ -1244,7 +1265,12 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let buttonColor = palette.primaryTextColor
 		rollButton.setTitleColor(buttonColor, for: .normal)
 		presetsButton.setTitleColor(buttonColor, for: .normal)
-		statsButton.setTitleColor(buttonColor, for: .normal)
+		if var showStatsButtonConfig = showStatsButton.configuration {
+			showStatsButtonConfig.baseForegroundColor = buttonColor
+			showStatsButtonConfig.baseBackgroundColor = palette.panelBackgroundColor.withAlphaComponent(0.92)
+			showStatsButtonConfig.background.strokeColor = buttonColor.withAlphaComponent(0.25)
+			showStatsButton.configuration = showStatsButtonConfig
+		}
 		menuButton.tintColor = buttonColor
 		diceBoardView.setDieFinish(currentDieFinish)
 	}
