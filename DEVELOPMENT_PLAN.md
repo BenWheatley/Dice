@@ -212,7 +212,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Map roll result to D6 face orientation using shared orientation helper to keep iOS/watch parity.
 - [x] Add fallback path to static image mode if SceneKit view is unavailable or disabled by settings.
 
-## 13. Code Review Findings (2026-03-03)
+## Code Review Findings (2026-03-03)
 
 - [ ] Fix Roll Distribution sheet detents regression: replace fixed-height custom detent with `.medium()`/`.large()` detents and verify chart visibility at default and accessibility text sizes.
 - [ ] Fix stats-sheet presentation reliability: when `Show Stats` is enabled while another modal is already presented, queue the Roll Distribution sheet presentation and show it as soon as the blocking modal is dismissed.
