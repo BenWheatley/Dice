@@ -2133,7 +2133,7 @@ final class DiceTests: XCTestCase {
 		controller.loadViewIfNeeded()
 		let showStatsButton = findView(in: controller.view, accessibilityIdentifier: "showStatsButton") as? UIButton
 		XCTAssertNotNil(showStatsButton)
-		XCTAssertEqual(showStatsButton?.configuration?.title, NSLocalizedString("button.show", comment: "Show button title"))
+		XCTAssertEqual(showStatsButton?.configuration?.title, NSLocalizedString("button.show-stats", comment: "Show button title"))
 		XCTAssertNotNil(showStatsButton?.configuration?.image)
 		XCTAssertEqual(showStatsButton?.isHidden, false)
 	}

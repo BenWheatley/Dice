@@ -184,7 +184,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 		showStatsButton.translatesAutoresizingMaskIntoConstraints = false
 		var showStatsButtonConfig = UIButton.Configuration.filled()
-		showStatsButtonConfig.title = NSLocalizedString("button.show", comment: "Show button title")
+		showStatsButtonConfig.title = NSLocalizedString("button.show-stats", comment: "Show statistics button title")
 		showStatsButtonConfig.image = UIImage(systemName: "chart.bar.xaxis")
 		showStatsButtonConfig.imagePlacement = .leading
 		showStatsButtonConfig.imagePadding = 6

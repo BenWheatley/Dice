@@ -44,7 +44,7 @@
 "presets.manage.field.title" = "Preset name";
 "presets.manage.field.notation" = "Notation (e.g. 3d6+2d4)";
 "menu.control.animations" = "Animations";
-"button.show" = "Show";
+"button.show-stats" = "Stats";
 "menu.control.actions" = "Actions";
 "menu.control.repeatLast" = "Repeat Last Roll";
 "menu.control.animationIntensity" = "Animation Intensity";
