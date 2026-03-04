@@ -2163,7 +2163,43 @@ final class DiceTests: XCTestCase {
 		controller.loadViewIfNeeded()
 		let notationField = findView(in: controller.navigationItem.titleView ?? UIView(), accessibilityIdentifier: "notationField")
 		XCTAssertNotNil(notationField)
-		XCTAssertEqual(controller.navigationItem.rightBarButtonItems?.count, 3)
+		XCTAssertEqual(controller.navigationItem.rightBarButtonItems?.count, 2)
+		let presetsItem = controller.navigationItem.rightBarButtonItems?.first(where: { $0.accessibilityIdentifier == "presetsButton" })
+		XCTAssertNotNil(presetsItem?.image)
+		XCTAssertNil(presetsItem?.title)
+		XCTAssertEqual(presetsItem?.accessibilityLabel, NSLocalizedString("a11y.presets.label", comment: "Presets button accessibility label"))
+	}
+
+	func testControllerUsesBottomCenteredRollButtonAndMovesItAboveStatsSheet() {
+		let defaults = UserDefaults.standard
+		let key = "Dice.showStats"
+		let originalValue = defaults.object(forKey: key)
+		defer {
+			if let originalValue {
+				defaults.set(originalValue, forKey: key)
+			} else {
+				defaults.removeObject(forKey: key)
+			}
+		}
+
+		func rollButtonMinY(statsVisible: Bool) -> CGFloat {
+			defaults.set(statsVisible, forKey: key)
+			let controller = DiceCollectionViewController(collectionViewLayout: UICollectionViewFlowLayout())
+			controller.loadViewIfNeeded()
+			let rollButton = findView(in: controller.view, accessibilityIdentifier: "rollButton") as? UIButton
+			XCTAssertNotNil(rollButton)
+			XCTAssertEqual(rollButton?.configuration?.title, NSLocalizedString("button.roll", comment: "Roll button title"))
+			XCTAssertNotNil(rollButton?.configuration?.image)
+			let bottomConstraint = controller.view.constraints.first {
+				($0.firstItem as? UIButton) === rollButton && $0.firstAttribute == .bottom
+			}
+			XCTAssertNotNil(bottomConstraint)
+			return bottomConstraint?.constant ?? 0
+		}
+
+		let hiddenBottomConstant = rollButtonMinY(statsVisible: false)
+		let visibleBottomConstant = rollButtonMinY(statsVisible: true)
+		XCTAssertLessThan(visibleBottomConstant, hiddenBottomConstant)
 	}
 
 	func testDieIndexFromAccessibilityIdentifierParsesExpectedFormat() {

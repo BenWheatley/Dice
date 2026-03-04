@@ -18,10 +18,11 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private var hasPerformedInitialRoll = false
 
 	private let notationField = UITextField()
+	private let rollButton = UIButton(type: .system)
 	private let showStatsButton = UIButton(type: .system)
-	private var rollBarButtonItem: UIBarButtonItem?
 	private var presetsBarButtonItem: UIBarButtonItem?
 	private var menuBarButtonItem: UIBarButtonItem?
+	private var rollButtonBottomConstraint: NSLayoutConstraint?
 	private let diceBoardView = DiceCubeView()
 	private var currentPalette = DiceTheme.system.palette
 	private var currentTexture: DiceTableTexture = .neutral
@@ -33,6 +34,9 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private var currentTotalsGraphCounts: [Int] = []
 	private var currentTotalsAccessibilityValue: String?
 	private var pendingStatsSheetPresentation = false
+	private let statsSheetHeight: CGFloat = 200
+	private let floatingControlBottomMargin: CGFloat = 16
+	private let rollButtonSpacingAboveStatsSheet: CGFloat = 12
 	private var routeObserver: NSObjectProtocol?
 	private let dieMenuAnchorButton = UIButton(type: .system)
 
@@ -159,20 +163,13 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		navigationItem.titleView = notationField
 		navigationItem.largeTitleDisplayMode = .never
 
-		let rollItem = UIBarButtonItem(
-			title: NSLocalizedString("button.roll", comment: "Roll button title"),
-			style: .plain,
-			target: self,
-			action: #selector(rollFromInput)
-		)
-		rollItem.accessibilityIdentifier = "rollButton"
-
 		let presetsItem = UIBarButtonItem(
-			title: NSLocalizedString("button.presets", comment: "Presets button title"),
+			image: UIImage(systemName: "bookmark"),
 			style: .plain,
 			target: self,
 			action: #selector(showPresetPicker)
 		)
+		presetsItem.accessibilityLabel = NSLocalizedString("a11y.presets.label", comment: "Presets button accessibility label")
 		presetsItem.accessibilityIdentifier = "presetsButton"
 
 		let menuItem = UIBarButtonItem(
@@ -184,10 +181,26 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		menuItem.accessibilityLabel = NSLocalizedString("a11y.menu.label", comment: "Main menu accessibility label")
 		menuItem.accessibilityIdentifier = "menuButton"
 
-		rollBarButtonItem = rollItem
 		presetsBarButtonItem = presetsItem
 		menuBarButtonItem = menuItem
-		navigationItem.rightBarButtonItems = [menuItem, presetsItem, rollItem]
+		navigationItem.rightBarButtonItems = [menuItem, presetsItem]
+
+		rollButton.translatesAutoresizingMaskIntoConstraints = false
+		var rollButtonConfig = UIButton.Configuration.filled()
+		rollButtonConfig.title = NSLocalizedString("button.roll", comment: "Roll button title")
+		rollButtonConfig.image = UIImage(systemName: "die.face.5")
+		rollButtonConfig.imagePlacement = .leading
+		rollButtonConfig.imagePadding = 6
+		rollButtonConfig.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12)
+		rollButtonConfig.background.cornerRadius = 18
+		rollButtonConfig.background.strokeWidth = 1
+		rollButton.configuration = rollButtonConfig
+		rollButton.addTarget(self, action: #selector(rollFromInput), for: .touchUpInside)
+		rollButton.accessibilityLabel = NSLocalizedString("a11y.roll.label", comment: "Roll button accessibility label")
+		rollButton.accessibilityIdentifier = "rollButton"
+		rollButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
+		rollButton.titleLabel?.adjustsFontForContentSizeCategory = true
+		rollButton.semanticContentAttribute = .forceLeftToRight
 
 		showStatsButton.translatesAutoresizingMaskIntoConstraints = false
 		var showStatsButtonConfig = UIButton.Configuration.filled()
@@ -205,11 +218,15 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		showStatsButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .body)
 		showStatsButton.titleLabel?.adjustsFontForContentSizeCategory = true
 		showStatsButton.semanticContentAttribute = .forceLeftToRight
+		view.addSubview(rollButton)
 		view.addSubview(showStatsButton)
-
+		let rollBottomConstraint = rollButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -floatingControlBottomMargin)
+		rollButtonBottomConstraint = rollBottomConstraint
 		NSLayoutConstraint.activate([
-			showStatsButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
-			showStatsButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+			rollButton.centerXAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerXAnchor),
+			rollBottomConstraint,
+			showStatsButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -floatingControlBottomMargin),
+			showStatsButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -floatingControlBottomMargin),
 		])
 		updateShowStatsButtonVisibility()
 	}
@@ -263,6 +280,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		dieMenuAnchorButton.showsMenuAsPrimaryAction = true
 		dieMenuAnchorButton.isHidden = true
 		view.addSubview(dieMenuAnchorButton)
+		view.bringSubviewToFront(rollButton)
 		view.bringSubviewToFront(showStatsButton)
 		NSLayoutConstraint.activate([
 			diceBoardView.leadingAnchor.constraint(equalTo: collectionView.leadingAnchor),
@@ -886,6 +904,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	private func configurePointerInteractionsIfNeeded() {
 		guard traitCollection.userInterfaceIdiom == .mac else { return }
+		rollButton.isPointerInteractionEnabled = true
 		showStatsButton.isPointerInteractionEnabled = true
 	}
 
@@ -1046,7 +1065,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		let customDetent = UISheetPresentationController.Detent.custom(
 			identifier: .init("fixedHeight")
 		) { _ in
-			return 200
+			return self.statsSheetHeight
 		}
 		if let presentationController = sheet.sheetPresentationController {
 			presentationController.detents = [customDetent]
@@ -1067,6 +1086,23 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	private func updateShowStatsButtonVisibility() {
 		showStatsButton.isHidden = statsVisible
+		updateRollButtonPosition(animated: view.window != nil)
+	}
+
+	private func updateRollButtonPosition(animated: Bool) {
+		guard let rollButtonBottomConstraint else { return }
+		let targetConstant: CGFloat
+		if statsVisible {
+			targetConstant = -(floatingControlBottomMargin + statsSheetHeight + rollButtonSpacingAboveStatsSheet)
+		} else {
+			targetConstant = -floatingControlBottomMargin
+		}
+		guard abs(rollButtonBottomConstraint.constant - targetConstant) > .ulpOfOne else { return }
+		rollButtonBottomConstraint.constant = targetConstant
+		guard animated else { return }
+		UIView.animate(withDuration: 0.25) {
+			self.view.layoutIfNeeded()
+		}
 	}
 
 	private func selectTheme(_ theme: DiceTheme) {
@@ -1226,6 +1262,12 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		navigationController?.navigationBar.standardAppearance = navAppearance
 		navigationController?.navigationBar.scrollEdgeAppearance = navAppearance
 		navigationController?.navigationBar.compactAppearance = navAppearance
+		if var rollButtonConfig = rollButton.configuration {
+			rollButtonConfig.baseForegroundColor = buttonColor
+			rollButtonConfig.baseBackgroundColor = palette.panelBackgroundColor.withAlphaComponent(0.92)
+			rollButtonConfig.background.strokeColor = buttonColor.withAlphaComponent(0.25)
+			rollButton.configuration = rollButtonConfig
+		}
 		if var showStatsButtonConfig = showStatsButton.configuration {
 			showStatsButtonConfig.baseForegroundColor = buttonColor
 			showStatsButtonConfig.baseBackgroundColor = palette.panelBackgroundColor.withAlphaComponent(0.92)
