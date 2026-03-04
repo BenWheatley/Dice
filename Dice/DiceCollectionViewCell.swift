@@ -10,16 +10,19 @@ class DiceCollectionViewCell: UICollectionViewCell {
 
 	override init(frame: CGRect) {
 		super.init(frame: frame)
+		ensureDiceButton()
 		configureLockIcon()
 	}
 
 	required init?(coder: NSCoder) {
 		super.init(coder: coder)
+		ensureDiceButton()
 		configureLockIcon()
 	}
 
 	override func awakeFromNib() {
 		super.awakeFromNib()
+		ensureDiceButton()
 		configureLockIcon()
 		installFullSizeButtonConstraintsIfNeeded()
 	}
@@ -73,6 +76,22 @@ class DiceCollectionViewCell: UICollectionViewCell {
 		lockIconView.isHidden = true
 		contentView.addSubview(lockIconView)
 		contentView.bringSubviewToFront(lockIconView)
+	}
+
+	private func ensureDiceButton() {
+		guard diceButton == nil else { return }
+		let button = UIButton(type: .system)
+		button.translatesAutoresizingMaskIntoConstraints = false
+		button.backgroundColor = .clear
+		button.addTarget(self, action: #selector(reroll(_:)), for: .touchUpInside)
+		contentView.addSubview(button)
+		NSLayoutConstraint.activate([
+			button.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+			button.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+			button.topAnchor.constraint(equalTo: contentView.topAnchor),
+			button.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+		])
+		diceButton = button
 	}
 
 	private func installFullSizeButtonConstraintsIfNeeded() {

@@ -415,10 +415,16 @@ final class DiceCubeView: UIView {
 		tableNode.renderingOrder = -100
 		scene.rootNode.addChildNode(tableNode)
 		applyTableTexture()
+		applyTableTextureScale()
 	}
 
 	private func applyTableTexture() {
 		tableMaterial.setValue(tableTextureModeValue(for: activeTableTexture), forKey: "tableTextureMode")
+	}
+
+	private func applyTableTextureScale() {
+		let scale = max(1, min(bounds.width, bounds.height))
+		tableMaterial.setValue(scale as NSNumber, forKey: "tableTextureScale")
 	}
 
 	private func tableTextureModeValue(for texture: DiceTableTexture) -> NSNumber {
@@ -437,6 +443,7 @@ final class DiceCubeView: UIView {
 		// Oversize by ~8% so the table fully covers the viewport at all layout sizes.
 		plane.width = max(10, bounds.width * 1.08)
 		plane.height = max(10, bounds.height * 1.08)
+		applyTableTextureScale()
 	}
 
 	private func ensureNodeCount(_ count: Int) {
@@ -697,6 +704,12 @@ final class DiceCubeView: UIView {
 		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
 		view.setTableTexture(texture)
 		return (view.tableMaterial.value(forKey: "tableTextureMode") as? NSNumber)?.intValue ?? -1
+	}
+
+	static func debugTableTextureScale(for size: CGSize) -> CGFloat {
+		let view = DiceCubeView(frame: CGRect(origin: .zero, size: size))
+		view.layoutIfNeeded()
+		return CGFloat((view.tableMaterial.value(forKey: "tableTextureScale") as? NSNumber)?.doubleValue ?? 0)
 	}
 #endif
 

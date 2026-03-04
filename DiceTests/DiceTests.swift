@@ -2225,6 +2225,17 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(DiceCubeView.debugTableTextureMode(for: .neutral), 2)
 	}
 
+	func testDiceCubeViewKeepsTableTextureScaleStableAcrossRotation() {
+		let portrait = DiceCubeView.debugTableTextureScale(for: CGSize(width: 390, height: 844))
+		let landscape = DiceCubeView.debugTableTextureScale(for: CGSize(width: 844, height: 390))
+		XCTAssertEqual(portrait, landscape, accuracy: 0.001)
+	}
+
+	func testControllerIsNotUICollectionViewControllerSubclass() {
+		let controller = DiceCollectionViewController(collectionViewLayout: UICollectionViewFlowLayout())
+		XCTAssertFalse(controller is UICollectionViewController)
+	}
+
 	private func findView(in root: UIView, accessibilityIdentifier: String) -> UIView? {
 		if root.accessibilityIdentifier == accessibilityIdentifier {
 			return root

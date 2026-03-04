@@ -9,11 +9,14 @@
 import UIKit
 
 private let reuseIdentifier = "DiceCell"
+private let programmaticReuseIdentifier = "DiceCellProgrammatic"
 
-class DiceCollectionViewController: UICollectionViewController, UITextFieldDelegate, UIEditMenuInteractionDelegate {
+class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEditMenuInteractionDelegate, UICollectionViewDataSource, UICollectionViewDelegate {
+	@IBOutlet var collectionView: UICollectionView!
 	private let viewModel = DiceViewModel()
 	private let soundEngine = DiceSoundEngine()
 	private let hapticsEngine = DiceHapticsEngine()
+	private let initialCollectionViewLayout: UICollectionViewLayout?
 	private var hasPerformedInitialRoll = false
 
 	private let notationField = UITextField()
@@ -38,11 +41,48 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private var routeObserver: NSObjectProtocol?
 	private lazy var dieEditMenuInteraction = UIEditMenuInteraction(delegate: self)
 
+	init(collectionViewLayout layout: UICollectionViewLayout) {
+		initialCollectionViewLayout = layout
+		super.init(nibName: nil, bundle: nil)
+	}
+
+	required init?(coder: NSCoder) {
+		initialCollectionViewLayout = nil
+		super.init(coder: coder)
+	}
+
+	override func loadView() {
+		if let layout = initialCollectionViewLayout {
+			let rootView = UIView(frame: UIScreen.main.bounds)
+			rootView.backgroundColor = .systemBackground
+
+			let programmaticCollectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+			programmaticCollectionView.translatesAutoresizingMaskIntoConstraints = false
+			programmaticCollectionView.backgroundColor = .clear
+			rootView.addSubview(programmaticCollectionView)
+			NSLayoutConstraint.activate([
+				programmaticCollectionView.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
+				programmaticCollectionView.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
+				programmaticCollectionView.topAnchor.constraint(equalTo: rootView.topAnchor),
+				programmaticCollectionView.bottomAnchor.constraint(equalTo: rootView.bottomAnchor),
+			])
+			collectionView = programmaticCollectionView
+			view = rootView
+			return
+		}
+		super.loadView()
+	}
+
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		viewModel.restore()
 		syncSoundSettings()
 
+		collectionView.dataSource = self
+		collectionView.delegate = self
+		if initialCollectionViewLayout != nil {
+			collectionView.register(DiceCollectionViewCell.self, forCellWithReuseIdentifier: programmaticReuseIdentifier)
+		}
 		collectionView.allowsSelection = false
 		configureControls()
 		configureDiceBoard()
@@ -98,16 +138,17 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		}
 	}
 
-	override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+	func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
 		viewModel.diceValues.count
 	}
 
-	override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+	func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
 		// Per-die options are surfaced directly through button menus.
 	}
 
-	override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-		let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as! DiceCollectionViewCell
+	func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+		let identifier = initialCollectionViewLayout != nil ? programmaticReuseIdentifier : reuseIdentifier
+		let cell = collectionView.dequeueReusableCell(withReuseIdentifier: identifier, for: indexPath) as! DiceCollectionViewCell
 		let faceValue = viewModel.diceValues[indexPath.row]
 		let sideCount = viewModel.diceSideCounts[indexPath.row]
 		cell.configure(

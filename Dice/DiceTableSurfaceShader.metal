@@ -1,5 +1,6 @@
 #pragma arguments
 float tableTextureMode;
+float tableTextureScale;
 
 #pragma declaration
 float tableHash21(float2 p) {
@@ -20,10 +21,9 @@ float tableNoise2(float2 p) {
 }
 
 #pragma body
-// Sample in local plane coordinates so the texture is anchored to the SceneKit table surface.
-float4 worldPos = scn_frame.inverseViewTransform * float4(_surface.position.xyz, 1.0);
-float3 modelPos = (scn_node.inverseModelTransform * worldPos).xyz;
-float2 p = modelPos.xy;
+// Anchor to normalized plane UVs with a scale supplied by host code.
+// Using min(view width, view height) keeps perceived pattern scale stable on rotation.
+float2 p = (_surface.diffuseTexcoord - 0.5) * max(tableTextureScale, 1.0);
 
 float3 color;
 if (tableTextureMode < 0.5) {
