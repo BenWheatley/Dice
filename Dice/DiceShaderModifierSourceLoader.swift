@@ -9,6 +9,10 @@ enum DiceShaderModifierSourceLoader {
 		return loadResource(named: resourceName, extension: "metal")
 	}
 
+	static func tableSurfaceShaderModifier() -> String? {
+		loadResource(named: "DiceTableSurfaceShader", extension: "metal")
+	}
+
 	private static func loadResource(named resource: String, extension ext: String) -> String? {
 		let key = "\(resource).\(ext)"
 		cacheLock.lock()

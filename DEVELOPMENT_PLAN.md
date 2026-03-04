@@ -221,6 +221,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Remove obsolete `boardSupportedSides` plumbing from controller/view-model totals formatting path and update call sites/tests to eliminate dead parameters.
 - [x] Document product decision to keep Roll Distribution on a fixed-height custom detent (compact board-first layout) directly in sheet presentation code.
 - [x] Run dead-code/resource sweep for the stats/settings refactor and remove unreachable style-preview UI path plus unreferenced symbols.
+- [x] Move table background rendering from `collectionView.backgroundView` into a SceneKit table surface shader inside `DiceCubeView`, and remove obsolete MTK/CPU background renderer files.
 - [ ] Add UI regression tests for Roll Distribution sheet lifecycle: tap floating `Show` button, confirm sheet presentation, confirm swipe-to-dismiss persistence behavior, and confirm relaunch state restoration.
 - [ ] Add a shared-scheme consistency pass: ensure all primary run schemes (iOS app, watch app, widgets extension) are present as shared schemes so scheme visibility does not depend on local auto-generated user state.
 

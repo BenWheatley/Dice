@@ -2207,6 +2207,24 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(DiceCollectionViewController.debugUsesEditMenuInteractionForDieActions)
 	}
 
+	func testControllerKeepsCollectionBackgroundViewUnusedForTableTexture() {
+		let controller = DiceCollectionViewController(collectionViewLayout: UICollectionViewFlowLayout())
+		controller.loadViewIfNeeded()
+		XCTAssertNil(controller.collectionView.backgroundView)
+	}
+
+	func testTableSurfaceShaderModifierLoadsFromBundle() {
+		let source = DiceShaderModifierSourceLoader.tableSurfaceShaderModifier()
+		XCTAssertNotNil(source)
+		XCTAssertTrue(source?.contains("tableTextureMode") ?? false)
+	}
+
+	func testDiceCubeViewMapsTableTextureModesForShaderUniform() {
+		XCTAssertEqual(DiceCubeView.debugTableTextureMode(for: .felt), 0)
+		XCTAssertEqual(DiceCubeView.debugTableTextureMode(for: .wood), 1)
+		XCTAssertEqual(DiceCubeView.debugTableTextureMode(for: .neutral), 2)
+	}
+
 	private func findView(in root: UIView, accessibilityIdentifier: String) -> UIView? {
 		if root.accessibilityIdentifier == accessibilityIdentifier {
 			return root

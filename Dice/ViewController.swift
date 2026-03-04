@@ -26,7 +26,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private var currentPalette = DiceTheme.system.palette
 	private var currentTexture: DiceTableTexture = .neutral
 	private var currentDieFinish: DiceDieFinish = .matte
-	private var appliedTextureSize: CGSize = .zero
 	private let statsVisibilityKey = "Dice.showStats"
 	private var statsVisible = true
 	private var rollDistributionSheetController: RollDistributionSheetViewController?
@@ -44,7 +43,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		viewModel.restore()
 		syncSoundSettings()
 
-		collectionView.keyboardDismissMode = .onDrag
 		collectionView.allowsSelection = false
 		configureControls()
 		configureDiceBoard()
@@ -94,7 +92,6 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			collectionView.scrollIndicatorInsets = insets
 			collectionView.collectionViewLayout.invalidateLayout()
 		}
-		applyTextureIfNeededForCurrentBounds()
 		updateDiceBoard(animated: false)
 		if pendingStatsSheetPresentation, statsVisible, presentedViewController == nil {
 			presentRollDistributionSheetIfNeeded()
@@ -269,6 +266,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		diceBoardView.onDieTapped = { [weak self] index, location in
 			self?.presentDieMenu(for: index, at: location)
 		}
+		diceBoardView.setTableTexture(viewModel.tableTexture)
 		diceBoardView.setLargeFaceLabelsEnabled(viewModel.largeFaceLabelsEnabled)
 		view.addSubview(diceBoardView)
 		diceBoardView.addInteraction(dieEditMenuInteraction)
@@ -1277,29 +1275,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 
 	private func applyTexture() {
 		currentTexture = viewModel.tableTexture
-		appliedTextureSize = .zero
-		applyTextureIfNeededForCurrentBounds()
-	}
-
-	private func applyTextureIfNeededForCurrentBounds() {
-		let size = collectionView.bounds.size
-		guard size.width > 1, size.height > 1 else { return }
-		let shouldRefresh = size != appliedTextureSize || currentTexture != viewModel.tableTexture
-		guard shouldRefresh else { return }
-
-		currentTexture = viewModel.tableTexture
-		appliedTextureSize = size
-		let backgroundView: DiceShaderBackgroundView
-		if let existing = collectionView.backgroundView as? DiceShaderBackgroundView {
-			backgroundView = existing
-		} else {
-			backgroundView = DiceShaderBackgroundView(texture: currentTexture)
-			backgroundView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-			collectionView.backgroundView = backgroundView
-		}
-		backgroundView.frame = collectionView.bounds
-		backgroundView.setTexture(currentTexture)
-		backgroundView.refreshBackground(size: size)
+		diceBoardView.setTableTexture(currentTexture)
 	}
 
 	private func keyboardAppearance(for theme: DiceTheme) -> UIKeyboardAppearance {

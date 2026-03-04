@@ -63,6 +63,8 @@ final class DiceCubeView: UIView {
 	private let scnView = SCNView()
 	private let scene = SCNScene()
 	private let cameraNode = SCNNode()
+	private let tableNode = SCNNode()
+	private let tableMaterial = SCNMaterial()
 	private var dieNodes: [SCNNode] = []
 	private var currentSideLength: CGFloat = 0
 	private var dieSideCounts: [Int] = []
@@ -82,6 +84,7 @@ final class DiceCubeView: UIView {
 	private var activeLargeFaceLabelsEnabled = false
 	private var activeAnimationIntensity: DiceAnimationIntensity = .full
 	private var activeMotionBlurEnabled = false
+	private var activeTableTexture: DiceTableTexture = .neutral
 	private var reduceMotionEnabled = UIAccessibility.isReduceMotionEnabled
 	private var needsMeshRefresh = false
 	private var activeRollAnimationToken: Int = 0
@@ -295,6 +298,12 @@ final class DiceCubeView: UIView {
 		activeAnimationIntensity = intensity
 	}
 
+	func setTableTexture(_ texture: DiceTableTexture) {
+		guard activeTableTexture != texture else { return }
+		activeTableTexture = texture
+		applyTableTexture()
+	}
+
 	func setMotionBlurEnabled(_ enabled: Bool) {
 		activeMotionBlurEnabled = enabled
 		cameraNode.camera?.motionBlurIntensity = enabled ? 0.45 : 0.0
@@ -329,6 +338,7 @@ final class DiceCubeView: UIView {
 		cameraNode.position = SCNVector3(0, 0, 800)
 		cameraNode.eulerAngles = SCNVector3(0, 0, 0)
 		scene.rootNode.addChildNode(cameraNode)
+		configureTableSurface()
 
 		let keyLight = SCNNode()
 		keyLight.light = SCNLight()
@@ -373,6 +383,7 @@ final class DiceCubeView: UIView {
 
 	private func updateCamera(animated: Bool) {
 		cameraNode.camera?.orthographicScale = Double(bounds.height / 2)
+		updateTableSurfaceSize()
 		let target = (position: SCNVector3(0, 0, 800), euler: SCNVector3(0, 0, 0))
 		guard animated else {
 			cameraNode.position = target.position
@@ -384,6 +395,48 @@ final class DiceCubeView: UIView {
 		cameraNode.position = target.position
 		cameraNode.eulerAngles = target.euler
 		SCNTransaction.commit()
+	}
+
+	private func configureTableSurface() {
+		let plane = SCNPlane(width: 10, height: 10)
+		tableMaterial.lightingModel = .constant
+		tableMaterial.isDoubleSided = false
+		tableMaterial.diffuse.contents = UIColor(red: 0.88, green: 0.88, blue: 0.88, alpha: 1.0)
+		tableMaterial.diffuse.wrapS = .repeat
+		tableMaterial.diffuse.wrapT = .repeat
+		tableMaterial.writesToDepthBuffer = false
+		tableMaterial.readsFromDepthBuffer = false
+		if let tableShader = DiceShaderModifierSourceLoader.tableSurfaceShaderModifier() {
+			tableMaterial.shaderModifiers = [.surface: tableShader]
+		}
+		plane.materials = [tableMaterial]
+		tableNode.geometry = plane
+		tableNode.position = SCNVector3(0, 0, -150)
+		tableNode.renderingOrder = -100
+		scene.rootNode.addChildNode(tableNode)
+		applyTableTexture()
+	}
+
+	private func applyTableTexture() {
+		tableMaterial.setValue(tableTextureModeValue(for: activeTableTexture), forKey: "tableTextureMode")
+	}
+
+	private func tableTextureModeValue(for texture: DiceTableTexture) -> NSNumber {
+		switch texture {
+		case .felt:
+			return 0
+		case .wood:
+			return 1
+		case .neutral:
+			return 2
+		}
+	}
+
+	private func updateTableSurfaceSize() {
+		guard let plane = tableNode.geometry as? SCNPlane else { return }
+		// Oversize by ~8% so the table fully covers the viewport at all layout sizes.
+		plane.width = max(10, bounds.width * 1.08)
+		plane.height = max(10, bounds.height * 1.08)
 	}
 
 	private func ensureNodeCount(_ count: Int) {
@@ -638,6 +691,12 @@ final class DiceCubeView: UIView {
 			animated: false
 		)
 		return (firstPass: firstPass, secondPass: view.debugMaterialRefreshCount - firstPass)
+	}
+
+	static func debugTableTextureMode(for texture: DiceTableTexture) -> Int {
+		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
+		view.setTableTexture(texture)
+		return (view.tableMaterial.value(forKey: "tableTextureMode") as? NSNumber)?.intValue ?? -1
 	}
 #endif
 
