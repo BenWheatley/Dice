@@ -2208,10 +2208,12 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(DiceViewController.debugUsesEditMenuInteractionForDieActions)
 	}
 
-	func testControllerDoesNotEmbedLegacyCollectionView() {
+	func testControllerEmbedsDiceBoardSurfaceDirectly() {
 		let controller = makeController()
 		controller.loadViewIfNeeded()
-		XCTAssertNil(findCollectionView(in: controller.view))
+		let board = findView(in: controller.view, accessibilityIdentifier: "diceBoardView")
+		XCTAssertNotNil(board)
+		XCTAssertTrue(board is DiceCubeView)
 	}
 
 	func testTableSurfaceShaderModifierLoadsFromBundle() {
@@ -2232,11 +2234,6 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(portrait, landscape, accuracy: 0.001)
 	}
 
-	func testControllerIsNotUICollectionViewControllerSubclass() {
-		let controller = makeController()
-		XCTAssertFalse(controller is UICollectionViewController)
-	}
-
 	private func makeController() -> DiceViewController {
 		DiceViewController()
 	}
@@ -2247,18 +2244,6 @@ final class DiceTests: XCTestCase {
 		}
 		for subview in root.subviews {
 			if let match = findView(in: subview, accessibilityIdentifier: accessibilityIdentifier) {
-				return match
-			}
-		}
-		return nil
-	}
-
-	private func findCollectionView(in root: UIView) -> UICollectionView? {
-		if let collectionView = root as? UICollectionView {
-			return collectionView
-		}
-		for subview in root.subviews {
-			if let match = findCollectionView(in: subview) {
 				return match
 			}
 		}

@@ -231,6 +231,7 @@ class DiceViewController: UIViewController, UITextFieldDelegate, UIEditMenuInter
 	private func configureDiceBoard() {
 		diceBoardView.translatesAutoresizingMaskIntoConstraints = false
 		diceBoardView.backgroundColor = .clear
+		diceBoardView.accessibilityIdentifier = "diceBoardView"
 		diceBoardView.onRollSettled = { [weak self] in
 			self?.playSettleTickSound()
 		}
