@@ -1254,7 +1254,7 @@ final class DiceTests: XCTestCase {
 		guard case let .success(outcome) = viewModel.rollFromInput("1d20i+1d20") else {
 			return XCTFail("Expected mixed mode notation to roll")
 		}
-		let formatted = viewModel.formattedTotalsText(outcome: outcome, boardSupportedSides: Set([4, 6, 8, 10, 12, 20]))
+		let formatted = viewModel.formattedTotalsText(outcome: outcome)
 		XCTAssertTrue(formatted.contains("Mode: Mixed"))
 	}
 
@@ -1779,11 +1779,10 @@ final class DiceTests: XCTestCase {
 			historyStore: DiceRollHistoryStore(defaults: defaults),
 			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { $0.lowerBound }, randomDouble: { 0.5 }))
 		)
-		let supportedBoardSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 
 		_ = viewModel.rollFromInput("3d6+2d4+d20")
 		let outcome = viewModel.rollCurrent()
-		let text = viewModel.formattedTotalsText(outcome: outcome, boardSupportedSides: supportedBoardSides)
+		let text = viewModel.formattedTotalsText(outcome: outcome)
 
 		XCTAssertFalse(text.contains("3D board preview unavailable"))
 	}
@@ -1797,11 +1796,10 @@ final class DiceTests: XCTestCase {
 			historyStore: DiceRollHistoryStore(defaults: defaults),
 			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { $0.lowerBound }, randomDouble: { 0.1 }))
 		)
-		let supportedBoardSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 
 		_ = viewModel.rollFromInput("2d6i")
 		let outcome = viewModel.rollCurrent()
-		let text = viewModel.formattedTotalsText(outcome: outcome, boardSupportedSides: supportedBoardSides)
+		let text = viewModel.formattedTotalsText(outcome: outcome)
 
 		XCTAssertTrue(text.contains("Mode: Intuitive"))
 		XCTAssertTrue(text.contains("Notation: 2d6i"))
@@ -1816,11 +1814,10 @@ final class DiceTests: XCTestCase {
 			historyStore: DiceRollHistoryStore(defaults: defaults),
 			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { $0.lowerBound }, randomDouble: { 0.5 }))
 		)
-		let supportedBoardSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 
 		_ = viewModel.rollFromInput("1d6+1d100")
 		let outcome = viewModel.rollCurrent()
-		let text = viewModel.formattedTotalsText(outcome: outcome, boardSupportedSides: supportedBoardSides)
+		let text = viewModel.formattedTotalsText(outcome: outcome)
 
 		XCTAssertTrue(text.contains("d100"))
 	}
@@ -1834,11 +1831,10 @@ final class DiceTests: XCTestCase {
 			historyStore: DiceRollHistoryStore(defaults: defaults),
 			rollSession: DiceRollSession(intuitiveRoller: IntuitiveRoller(fallbackRoller: TrueRandomRoller { $0.lowerBound }, randomDouble: { 0.5 }))
 		)
-		let supportedBoardSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 
 		_ = viewModel.rollFromInput("1d30+1d100")
 		let outcome = viewModel.rollCurrent()
-		let text = viewModel.formattedTotalsText(outcome: outcome, boardSupportedSides: supportedBoardSides)
+		let text = viewModel.formattedTotalsText(outcome: outcome)
 
 		XCTAssertTrue(text.contains("mixed dice sides"))
 	}

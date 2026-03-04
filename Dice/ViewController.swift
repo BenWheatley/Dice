@@ -11,7 +11,6 @@ import UIKit
 private let reuseIdentifier = "DiceCell"
 
 class DiceCollectionViewController: UICollectionViewController, UITextFieldDelegate, UIEditMenuInteractionDelegate {
-	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 	private let viewModel = DiceViewModel()
 	private let soundEngine = DiceSoundEngine()
 	private let hapticsEngine = DiceHapticsEngine()
@@ -799,7 +798,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	private func updateTotalsText(outcome: RollOutcome) {
-		currentTotalsAccessibilityValue = viewModel.formattedTotalsText(outcome: outcome, boardSupportedSides: boardSupportedSides)
+		currentTotalsAccessibilityValue = viewModel.formattedTotalsText(outcome: outcome)
 		updateTotalsGraph(with: outcome.localTotals)
 	}
 

@@ -435,7 +435,7 @@ final class DiceViewModel {
 		persistPreferences()
 	}
 
-	func formattedTotalsText(outcome: RollOutcome, boardSupportedSides: Set<Int>) -> String {
+	func formattedTotalsText(outcome: RollOutcome) -> String {
 		return String(
 			format: NSLocalizedString("stats.mode", comment: "Current mode and notation"),
 			locale: .current,
