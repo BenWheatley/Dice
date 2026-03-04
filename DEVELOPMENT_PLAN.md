@@ -229,6 +229,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Add watch haptic/audio sync to final face settle event for clearer result confirmation.
 - [x] Add tests for mode switching and repeated rolls with SceneKit enabled to catch state desync regressions.
 - [x] Add watch-specific QA pass for crown interaction, wake/resume, and scene lifecycle handling.
+- [x] Reduce roll interaction latency by caching per-die appearance state in `DiceCubeView` so material/textures rebuild only when style/color/font inputs change, and add a regression test for repeated-roll material reuse.
 
 ## 13. Widgets and Home Screen Quick Actions
 

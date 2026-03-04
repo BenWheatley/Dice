@@ -2324,6 +2324,18 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(DiceCubeView.debugUsesUniqueGeometryPerDie(sideCount: 6))
 	}
 
+	func testDiceCubeViewSkipsMaterialRebuildWhenOnlyValuesChange() {
+		let counts = DiceCubeView.debugMaterialRefreshCountsForConsecutiveSetDice(
+			valuesFirst: [1, 2, 3],
+			valuesSecond: [4, 5, 6],
+			sideCounts: [6, 6, 6],
+			colorOverrides: [.amber, .sapphire, .crimson],
+			fontOverrides: [nil, nil, nil]
+		)
+		XCTAssertGreaterThan(counts.firstPass, 0)
+		XCTAssertEqual(counts.secondPass, 0)
+	}
+
 	func testD4MeshGeometryMatchesTetrahedronExpectations() {
 		let mesh = DiceCubeView.debugMeshData(sideCount: 4)
 		XCTAssertEqual(mesh.vertices.count, 4)

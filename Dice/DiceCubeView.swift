@@ -66,6 +66,10 @@ final class DiceCubeView: UIView {
 	private var dieNodes: [SCNNode] = []
 	private var currentSideLength: CGFloat = 0
 	private var dieSideCounts: [Int] = []
+	private var appliedColorOverrides: [DiceDieColorPreset?] = []
+	private var appliedFontOverrides: [DiceFaceNumeralFont?] = []
+	private var appliedAppearanceGeneration: [Int] = []
+	private var appearanceGeneration: Int = 0
 	private var orientationCache: [Int: [Int: SCNVector3]] = [:]
 	private var meshCache: [MeshCacheKey: BuiltMesh] = [:]
 	private var labelValueCache: [ObjectIdentifier: Int] = [:]
@@ -85,6 +89,9 @@ final class DiceCubeView: UIView {
 	private let supportedPolyhedralSideCounts: Set<Int> = [4, 6, 8, 10, 12, 20]
 	// D4 numbering is vertex-based and intentionally decoupled from raw mesh indices.
 	private let d4VertexValueByIndex: [Int] = [4, 3, 2, 1]
+#if DEBUG
+	private var debugMaterialRefreshCount = 0
+#endif
 	var onRollSettled: (() -> Void)?
 	var onDieTapped: ((Int, CGPoint) -> Void)?
 
@@ -163,15 +170,25 @@ final class DiceCubeView: UIView {
 			}
 			let colorPreset = index < dieColorPresets.count ? dieColorPresets[index] : nil
 			let numeralFont = index < faceNumeralFonts.count ? faceNumeralFonts[index] : nil
-			let body = container.childNode(withName: "body", recursively: false)
-			applyFaceMaterials(
-				to: body?.geometry,
-				sideCount: sideCount,
-				sideLength: sideLength,
-				colorPresetOverride: colorPreset,
-				faceNumeralFontOverride: numeralFont,
-				dieIndex: index
-			)
+			let needsAppearanceRefresh = didSideChange ||
+				styleChanged ||
+				appliedAppearanceGeneration[index] != appearanceGeneration ||
+				appliedColorOverrides[index] != colorPreset ||
+				appliedFontOverrides[index] != numeralFont
+			if needsAppearanceRefresh {
+				let body = container.childNode(withName: "body", recursively: false)
+				applyFaceMaterials(
+					to: body?.geometry,
+					sideCount: sideCount,
+					sideLength: sideLength,
+					colorPresetOverride: colorPreset,
+					faceNumeralFontOverride: numeralFont,
+					dieIndex: index
+				)
+				appliedColorOverrides[index] = colorPreset
+				appliedFontOverrides[index] = numeralFont
+				appliedAppearanceGeneration[index] = appearanceGeneration
+			}
 
 			let showLabel = sideCount != 6
 			let labelNode = container.childNode(withName: "label", recursively: false)
@@ -217,18 +234,21 @@ final class DiceCubeView: UIView {
 	func setDieFinish(_ finish: DiceDieFinish) {
 		guard activeDieFinish != finish else { return }
 		activeDieFinish = finish
+		appearanceGeneration += 1
 		needsMeshRefresh = true
 	}
 
 	func setEdgeOutlinesEnabled(_ enabled: Bool) {
 		guard activeEdgeOutlinesEnabled != enabled else { return }
 		activeEdgeOutlinesEnabled = enabled
+		appearanceGeneration += 1
 		needsMeshRefresh = true
 	}
 
 	func setDieColorPreferences(_ preferences: DiceDieColorPreferences) {
 		guard activeDieColorPreferences != preferences else { return }
 		activeDieColorPreferences = preferences
+		appearanceGeneration += 1
 		meshCache.removeAll()
 		clearSharedTextureCaches(clearBadges: false)
 		needsMeshRefresh = true
@@ -237,6 +257,7 @@ final class DiceCubeView: UIView {
 	func setD6PipStyle(_ style: DiceD6PipStyle) {
 		guard activeD6PipStyle != style else { return }
 		activeD6PipStyle = style
+		appearanceGeneration += 1
 		meshCache.removeAll()
 		clearSharedTextureCaches(clearBadges: false)
 		needsMeshRefresh = true
@@ -245,6 +266,7 @@ final class DiceCubeView: UIView {
 	func setFaceNumeralFont(_ font: DiceFaceNumeralFont) {
 		guard activeFaceNumeralFont != font else { return }
 		activeFaceNumeralFont = font
+		appearanceGeneration += 1
 		meshCache.removeAll()
 		clearSharedTextureCaches(clearBadges: true)
 		needsMeshRefresh = true
@@ -253,6 +275,7 @@ final class DiceCubeView: UIView {
 	func setLargeFaceLabelsEnabled(_ enabled: Bool) {
 		guard activeLargeFaceLabelsEnabled != enabled else { return }
 		activeLargeFaceLabelsEnabled = enabled
+		appearanceGeneration += 1
 		meshCache.removeAll()
 		clearSharedTextureCaches(clearBadges: true)
 		needsMeshRefresh = true
@@ -373,6 +396,9 @@ final class DiceCubeView: UIView {
 			}
 			dieNodes = Array(dieNodes.prefix(count))
 			dieSideCounts = Array(dieSideCounts.prefix(count))
+			appliedColorOverrides = Array(appliedColorOverrides.prefix(count))
+			appliedFontOverrides = Array(appliedFontOverrides.prefix(count))
+			appliedAppearanceGeneration = Array(appliedAppearanceGeneration.prefix(count))
 		}
 
 		while dieNodes.count < count {
@@ -403,6 +429,9 @@ final class DiceCubeView: UIView {
 			scene.rootNode.addChildNode(container)
 			dieNodes.append(container)
 			dieSideCounts.append(6)
+			appliedColorOverrides.append(nil)
+			appliedFontOverrides.append(nil)
+			appliedAppearanceGeneration.append(-1)
 		}
 	}
 
@@ -564,6 +593,51 @@ final class DiceCubeView: UIView {
 		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
 		let mesh = view.builtMesh(sideLength: 96, sideCount: sideCount)
 		return (typeName: String(describing: type(of: mesh.geometry)), materialCount: mesh.geometry.materials.count)
+	}
+
+	static func debugMaterialRefreshCountsForConsecutiveSetDice(
+		valuesFirst: [Int],
+		valuesSecond: [Int],
+		sideCounts: [Int],
+		colorOverrides: [DiceDieColorPreset?],
+		fontOverrides: [DiceFaceNumeralFont?]
+	) -> (firstPass: Int, secondPass: Int) {
+		let count = min(valuesFirst.count, valuesSecond.count, sideCounts.count)
+		guard count > 0 else { return (firstPass: 0, secondPass: 0) }
+		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 360, height: 240))
+		let centers: [CGPoint] = (0..<count).map { index in
+			CGPoint(x: 54 + (CGFloat(index) * 96), y: 120)
+		}
+
+		let firstValues = Array(valuesFirst.prefix(count))
+		let secondValues = Array(valuesSecond.prefix(count))
+		let trimmedSideCounts = Array(sideCounts.prefix(count))
+		let trimmedColors = Array(colorOverrides.prefix(count))
+		let trimmedFonts = Array(fontOverrides.prefix(count))
+
+		view.debugMaterialRefreshCount = 0
+		view.setDice(
+			values: firstValues,
+			centers: centers,
+			sideLength: 92,
+			sideCounts: trimmedSideCounts,
+			dieColorPresets: trimmedColors,
+			faceNumeralFonts: trimmedFonts,
+			lockedIndices: [],
+			animated: false
+		)
+		let firstPass = view.debugMaterialRefreshCount
+		view.setDice(
+			values: secondValues,
+			centers: centers,
+			sideLength: 92,
+			sideCounts: trimmedSideCounts,
+			dieColorPresets: trimmedColors,
+			faceNumeralFonts: trimmedFonts,
+			lockedIndices: [],
+			animated: false
+		)
+		return (firstPass: firstPass, secondPass: view.debugMaterialRefreshCount - firstPass)
 	}
 #endif
 
@@ -842,6 +916,9 @@ final class DiceCubeView: UIView {
 		dieIndex: Int
 	) {
 		guard let geometry else { return }
+#if DEBUG
+		debugMaterialRefreshCount += 1
+#endif
 		let fillColor = resolvedColorPreset(sideCount: sideCount, colorPresetOverride: colorPresetOverride).fillColor
 		let font = faceNumeralFontOverride ?? activeFaceNumeralFont
 		let faces = builtMesh(sideLength: sideLength, sideCount: sideCount).materialFaces
@@ -864,7 +941,6 @@ final class DiceCubeView: UIView {
 
 	private func symbolInkColor(for fillColor: UIColor) -> UIColor {
 		let style = DiceFaceContrast.style(for: fillColor)
-		let outlineInkColor = oppositeInkColor(for: style.primaryInkColor)
 		return style.primaryInkColor
 	}
 
