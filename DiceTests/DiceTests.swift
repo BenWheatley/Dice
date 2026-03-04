@@ -1735,7 +1735,7 @@ final class DiceTests: XCTestCase {
 
 	func testBoardRenderLayoutReturnsCenterForEveryDieWithinBounds() {
 		let bounds = CGRect(x: 0, y: 0, width: 720, height: 520)
-		let layout = DiceCollectionViewController.boardRenderLayout(
+		let layout = DiceViewController.boardRenderLayout(
 			itemCount: 8,
 			bounds: bounds,
 			layoutPreset: .spacious,
@@ -1753,7 +1753,7 @@ final class DiceTests: XCTestCase {
 
 	func testBoardRenderLayoutHandlesMixedDiceAtV1UpperBound() {
 		let bounds = CGRect(x: 0, y: 0, width: 1180, height: 760)
-		let layout = DiceCollectionViewController.boardRenderLayout(
+		let layout = DiceViewController.boardRenderLayout(
 			itemCount: 30,
 			bounds: bounds,
 			layoutPreset: .compact,
@@ -2104,7 +2104,7 @@ final class DiceTests: XCTestCase {
 	}
 
 	func testControllerExposesKeyboardCommandsForCatalystParity() {
-		let controller = DiceCollectionViewController(collectionViewLayout: UICollectionViewFlowLayout())
+		let controller = makeController()
 		let commands = controller.keyCommands ?? []
 		let commandInputs = Set(commands.compactMap(\.input))
 		XCTAssertTrue(commandInputs.contains("r"))
@@ -2125,7 +2125,7 @@ final class DiceTests: XCTestCase {
 		}
 
 		defaults.set(false, forKey: key)
-		let controller = DiceCollectionViewController(collectionViewLayout: UICollectionViewFlowLayout())
+		let controller = makeController()
 		controller.loadViewIfNeeded()
 		let showStatsButton = findView(in: controller.view, accessibilityIdentifier: "showStatsButton") as? UIButton
 		XCTAssertNotNil(showStatsButton)
@@ -2147,7 +2147,7 @@ final class DiceTests: XCTestCase {
 		}
 
 		defaults.set(true, forKey: key)
-		let controller = DiceCollectionViewController(collectionViewLayout: UICollectionViewFlowLayout())
+		let controller = makeController()
 		controller.loadViewIfNeeded()
 		let showStatsButton = findView(in: controller.view, accessibilityIdentifier: "showStatsButton") as? UIButton
 		XCTAssertNotNil(showStatsButton)
@@ -2155,7 +2155,7 @@ final class DiceTests: XCTestCase {
 	}
 
 	func testControllerPlacesPrimaryControlsInNavigationBar() {
-		let controller = DiceCollectionViewController(collectionViewLayout: UICollectionViewFlowLayout())
+		let controller = makeController()
 		controller.loadViewIfNeeded()
 		let notationField = findView(in: controller.navigationItem.titleView ?? UIView(), accessibilityIdentifier: "notationField")
 		XCTAssertNotNil(notationField)
@@ -2180,7 +2180,7 @@ final class DiceTests: XCTestCase {
 
 		func rollButtonMinY(statsVisible: Bool) -> CGFloat {
 			defaults.set(statsVisible, forKey: key)
-			let controller = DiceCollectionViewController(collectionViewLayout: UICollectionViewFlowLayout())
+			let controller = makeController()
 			controller.loadViewIfNeeded()
 			let rollButton = findView(in: controller.view, accessibilityIdentifier: "rollButton") as? UIButton
 			XCTAssertNotNil(rollButton)
@@ -2198,19 +2198,20 @@ final class DiceTests: XCTestCase {
 		XCTAssertLessThan(visibleBottomConstant, hiddenBottomConstant)
 	}
 
-	func testDieIndexFromAccessibilityIdentifierParsesExpectedFormat() {
-		XCTAssertEqual(DiceCollectionViewController.dieIndexFromAccessibilityIdentifier("dieButton_0"), 0)
-		XCTAssertEqual(DiceCollectionViewController.dieIndexFromAccessibilityIdentifier("dieButton_12"), 12)
+	func testDieAccessibilityIdentifierParsesExpectedFormat() {
+		XCTAssertEqual(DiceCubeView.dieIndex(fromAccessibilityIdentifier: "die_0"), 0)
+		XCTAssertEqual(DiceCubeView.dieIndex(fromAccessibilityIdentifier: "die_12"), 12)
+		XCTAssertEqual(DiceCubeView.dieAccessibilityIdentifier(for: 7), "die_7")
 	}
 
 	func testControllerUsesDirectEditMenuInteractionForDieActions() {
-		XCTAssertTrue(DiceCollectionViewController.debugUsesEditMenuInteractionForDieActions)
+		XCTAssertTrue(DiceViewController.debugUsesEditMenuInteractionForDieActions)
 	}
 
-	func testControllerKeepsCollectionBackgroundViewUnusedForTableTexture() {
-		let controller = DiceCollectionViewController(collectionViewLayout: UICollectionViewFlowLayout())
+	func testControllerDoesNotEmbedLegacyCollectionView() {
+		let controller = makeController()
 		controller.loadViewIfNeeded()
-		XCTAssertNil(controller.collectionView.backgroundView)
+		XCTAssertNil(findCollectionView(in: controller.view))
 	}
 
 	func testTableSurfaceShaderModifierLoadsFromBundle() {
@@ -2232,8 +2233,12 @@ final class DiceTests: XCTestCase {
 	}
 
 	func testControllerIsNotUICollectionViewControllerSubclass() {
-		let controller = DiceCollectionViewController(collectionViewLayout: UICollectionViewFlowLayout())
+		let controller = makeController()
 		XCTAssertFalse(controller is UICollectionViewController)
+	}
+
+	private func makeController() -> DiceViewController {
+		DiceViewController()
 	}
 
 	private func findView(in root: UIView, accessibilityIdentifier: String) -> UIView? {
@@ -2248,24 +2253,27 @@ final class DiceTests: XCTestCase {
 		return nil
 	}
 
-	func testDieIndexFromAccessibilityIdentifierRejectsInvalidValues() {
-		XCTAssertNil(DiceCollectionViewController.dieIndexFromAccessibilityIdentifier(nil))
-		XCTAssertNil(DiceCollectionViewController.dieIndexFromAccessibilityIdentifier("die_2"))
-		XCTAssertNil(DiceCollectionViewController.dieIndexFromAccessibilityIdentifier("dieButton_"))
-		XCTAssertNil(DiceCollectionViewController.dieIndexFromAccessibilityIdentifier("dieButton_x"))
+	private func findCollectionView(in root: UIView) -> UICollectionView? {
+		if let collectionView = root as? UICollectionView {
+			return collectionView
+		}
+		for subview in root.subviews {
+			if let match = findCollectionView(in: subview) {
+				return match
+			}
+		}
+		return nil
 	}
 
-	func testDiceCellExpandedHitBoundsGrowsByPadding() {
-		let bounds = CGRect(x: 0, y: 0, width: 100, height: 80)
-		let expanded = DiceCollectionViewCell.expandedHitBounds(for: bounds, padding: 10)
-		XCTAssertEqual(expanded.origin.x, -10, accuracy: 0.001)
-		XCTAssertEqual(expanded.origin.y, -10, accuracy: 0.001)
-		XCTAssertEqual(expanded.size.width, 120, accuracy: 0.001)
-		XCTAssertEqual(expanded.size.height, 100, accuracy: 0.001)
+	func testDieAccessibilityIdentifierRejectsInvalidValues() {
+		XCTAssertNil(DiceCubeView.dieIndex(fromAccessibilityIdentifier: nil))
+		XCTAssertNil(DiceCubeView.dieIndex(fromAccessibilityIdentifier: "dieButton_2"))
+		XCTAssertNil(DiceCubeView.dieIndex(fromAccessibilityIdentifier: "die_"))
+		XCTAssertNil(DiceCubeView.dieIndex(fromAccessibilityIdentifier: "die_x"))
 	}
 
 	func testBoardAnimationLockedIndicesUsesPersistentLocksWhenNoAnimationSubsetProvided() {
-		let locked = DiceCollectionViewController.boardAnimationLockedIndices(
+		let locked = DiceViewController.boardAnimationLockedIndices(
 			totalDice: 5,
 			persistentLocked: [1, 4],
 			animatingIndices: nil
@@ -2274,7 +2282,7 @@ final class DiceTests: XCTestCase {
 	}
 
 	func testBoardAnimationLockedIndicesFreezesNonTargetDiceForSingleDieAnimation() {
-		let locked = DiceCollectionViewController.boardAnimationLockedIndices(
+		let locked = DiceViewController.boardAnimationLockedIndices(
 			totalDice: 5,
 			persistentLocked: [1],
 			animatingIndices: [3]
@@ -2282,29 +2290,21 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(locked, Set([0, 1, 2, 4]))
 	}
 
-	func testDiceCellConstraintsInvolvingButtonFiltersOnlyRelatedConstraints() {
-		let button = UIButton(type: .system)
-		let container = UIView()
-		let other = UIView()
-		button.translatesAutoresizingMaskIntoConstraints = false
-		other.translatesAutoresizingMaskIntoConstraints = false
-		container.addSubview(button)
-		container.addSubview(other)
-
-		let buttonCenterX = button.centerXAnchor.constraint(equalTo: container.centerXAnchor)
-		let buttonCenterY = button.centerYAnchor.constraint(equalTo: container.centerYAnchor)
-		let unrelated = other.leadingAnchor.constraint(equalTo: container.leadingAnchor)
-
-		let filtered = DiceCollectionViewCell.constraintsInvolvingButton(
-			button,
-			cellConstraints: [buttonCenterX, unrelated],
-			contentConstraints: [buttonCenterY]
+	func testDiceCubeViewExposesPerDieAccessibilityElements() {
+		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 300, height: 300))
+		view.setDice(
+			values: [3, 5],
+			centers: [CGPoint(x: 100, y: 100), CGPoint(x: 200, y: 200)],
+			sideLength: 80,
+			sideCounts: [6, 20],
+			lockedIndices: [1],
+			animated: false
 		)
-
-		XCTAssertEqual(filtered.count, 2)
-		XCTAssertTrue(filtered.contains(buttonCenterX))
-		XCTAssertTrue(filtered.contains(buttonCenterY))
-		XCTAssertFalse(filtered.contains(unrelated))
+		let first = view.accessibilityElementForDie(at: 0)
+		let second = view.accessibilityElementForDie(at: 1)
+		XCTAssertEqual(first?.accessibilityIdentifier, "die_0")
+		XCTAssertEqual(second?.accessibilityIdentifier, "die_1")
+		XCTAssertEqual(second?.accessibilityHint, NSLocalizedString("a11y.die.lockedHint", comment: "Locked die accessibility hint"))
 	}
 
 	func testGraphPointsProvideAllFacesAndCounts() {

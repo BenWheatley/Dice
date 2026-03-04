@@ -8,15 +8,10 @@
 
 import UIKit
 
-private let reuseIdentifier = "DiceCell"
-private let programmaticReuseIdentifier = "DiceCellProgrammatic"
-
-class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEditMenuInteractionDelegate, UICollectionViewDataSource, UICollectionViewDelegate {
-	@IBOutlet var collectionView: UICollectionView!
+class DiceViewController: UIViewController, UITextFieldDelegate, UIEditMenuInteractionDelegate {
 	private let viewModel = DiceViewModel()
 	private let soundEngine = DiceSoundEngine()
 	private let hapticsEngine = DiceHapticsEngine()
-	private let initialCollectionViewLayout: UICollectionViewLayout?
 	private var hasPerformedInitialRoll = false
 
 	private let notationField = UITextField()
@@ -41,36 +36,12 @@ class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEdi
 	private var routeObserver: NSObjectProtocol?
 	private lazy var dieEditMenuInteraction = UIEditMenuInteraction(delegate: self)
 
-	init(collectionViewLayout layout: UICollectionViewLayout) {
-		initialCollectionViewLayout = layout
+	init() {
 		super.init(nibName: nil, bundle: nil)
 	}
 
 	required init?(coder: NSCoder) {
-		initialCollectionViewLayout = nil
 		super.init(coder: coder)
-	}
-
-	override func loadView() {
-		if let layout = initialCollectionViewLayout {
-			let rootView = UIView(frame: UIScreen.main.bounds)
-			rootView.backgroundColor = .systemBackground
-
-			let programmaticCollectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-			programmaticCollectionView.translatesAutoresizingMaskIntoConstraints = false
-			programmaticCollectionView.backgroundColor = .clear
-			rootView.addSubview(programmaticCollectionView)
-			NSLayoutConstraint.activate([
-				programmaticCollectionView.leadingAnchor.constraint(equalTo: rootView.leadingAnchor),
-				programmaticCollectionView.trailingAnchor.constraint(equalTo: rootView.trailingAnchor),
-				programmaticCollectionView.topAnchor.constraint(equalTo: rootView.topAnchor),
-				programmaticCollectionView.bottomAnchor.constraint(equalTo: rootView.bottomAnchor),
-			])
-			collectionView = programmaticCollectionView
-			view = rootView
-			return
-		}
-		super.loadView()
 	}
 
 	override func viewDidLoad() {
@@ -78,12 +49,6 @@ class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEdi
 		viewModel.restore()
 		syncSoundSettings()
 
-		collectionView.dataSource = self
-		collectionView.delegate = self
-		if initialCollectionViewLayout != nil {
-			collectionView.register(DiceCollectionViewCell.self, forCellWithReuseIdentifier: programmaticReuseIdentifier)
-		}
-		collectionView.allowsSelection = false
 		configureControls()
 		configureDiceBoard()
 		applyTheme()
@@ -126,42 +91,10 @@ class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEdi
 
 	override func viewDidLayoutSubviews() {
 		super.viewDidLayoutSubviews()
-		let insets = UIEdgeInsets(top: 8, left: 0, bottom: 8, right: 0)
-		if collectionView.contentInset != insets {
-			collectionView.contentInset = insets
-			collectionView.scrollIndicatorInsets = insets
-			collectionView.collectionViewLayout.invalidateLayout()
-		}
 		updateDiceBoard(animated: false)
 		if pendingStatsSheetPresentation, statsVisible, presentedViewController == nil {
 			presentRollDistributionSheetIfNeeded()
 		}
-	}
-
-	func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-		viewModel.diceValues.count
-	}
-
-	func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-		// Per-die options are surfaced directly through button menus.
-	}
-
-	func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-		let identifier = initialCollectionViewLayout != nil ? programmaticReuseIdentifier : reuseIdentifier
-		let cell = collectionView.dequeueReusableCell(withReuseIdentifier: identifier, for: indexPath) as! DiceCollectionViewCell
-		let faceValue = viewModel.diceValues[indexPath.row]
-		let sideCount = viewModel.diceSideCounts[indexPath.row]
-		cell.configure(
-			faceValue: faceValue,
-			sideCount: sideCount,
-			index: indexPath.row,
-			isLocked: viewModel.isDieLocked(at: indexPath.row),
-			largeFaceLabelsEnabled: viewModel.largeFaceLabelsEnabled
-		)
-		cell.diceButton.menu = nil
-		cell.diceButton.showsMenuAsPrimaryAction = false
-		cell.isUserInteractionEnabled = false
-		return cell
 	}
 
 	override func motionEnded(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
@@ -169,9 +102,6 @@ class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEdi
 			let outcome = viewModel.shakeToRoll()
 			updateNotationField()
 			updateTotalsText(outcome: outcome)
-			collectionView.collectionViewLayout.invalidateLayout()
-			collectionView.reloadData()
-			collectionView.layoutIfNeeded()
 			updateDiceBoard(animated: shouldAnimateBoard)
 			playRollSound()
 			refreshSystemSurfaces()
@@ -314,10 +244,10 @@ class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEdi
 		view.bringSubviewToFront(rollButton)
 		view.bringSubviewToFront(showStatsButton)
 		NSLayoutConstraint.activate([
-			diceBoardView.leadingAnchor.constraint(equalTo: collectionView.leadingAnchor),
-			diceBoardView.trailingAnchor.constraint(equalTo: collectionView.trailingAnchor),
-			diceBoardView.topAnchor.constraint(equalTo: collectionView.topAnchor),
-			diceBoardView.bottomAnchor.constraint(equalTo: collectionView.bottomAnchor),
+			diceBoardView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+			diceBoardView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+			diceBoardView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+			diceBoardView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
 		])
 	}
 
@@ -333,9 +263,6 @@ class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEdi
 			clearValidationFeedback()
 			updateNotationField()
 			updateTotalsText(outcome: outcome)
-			collectionView.collectionViewLayout.invalidateLayout()
-			collectionView.reloadData()
-			collectionView.layoutIfNeeded()
 			updateDiceBoard(animated: shouldAnimateBoard)
 			playRollSound()
 			refreshSystemSurfaces()
@@ -349,8 +276,6 @@ class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEdi
 		updateNotationField()
 		clearValidationFeedback()
 		updateTotalsText(outcome: outcome)
-		collectionView.reloadData()
-		collectionView.layoutIfNeeded()
 		updateDiceBoard(animated: shouldAnimateBoard)
 		playRollSound()
 		refreshSystemSurfaces()
@@ -384,9 +309,6 @@ class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEdi
 		let outcome = viewModel.rollCurrent()
 		updateNotationField()
 		updateTotalsText(outcome: outcome)
-		collectionView.collectionViewLayout.invalidateLayout()
-		collectionView.reloadData()
-		collectionView.layoutIfNeeded()
 		updateDiceBoard(animated: shouldAnimateBoard)
 		playRollSound()
 		refreshSystemSurfaces()
@@ -395,9 +317,6 @@ class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEdi
 	private func renderRestoredState() {
 		updateNotationField()
 		clearValidationFeedback()
-		collectionView.collectionViewLayout.invalidateLayout()
-		collectionView.reloadData()
-		collectionView.layoutIfNeeded()
 		updateDiceBoard(animated: false)
 	}
 
@@ -473,8 +392,6 @@ class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEdi
 	private func rerollDie(at index: Int) -> RollOutcome? {
 		guard let outcome = viewModel.rerollDie(at: index) else { return nil }
 		updateTotalsText(outcome: outcome)
-		collectionView.reloadItems(at: [IndexPath(row: index, section: 0)])
-		collectionView.layoutIfNeeded()
 		updateDiceBoard(animated: shouldAnimateBoard, animatingIndices: [index])
 		playRollSound()
 		refreshSystemSurfaces()
@@ -483,13 +400,14 @@ class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEdi
 
 	private func toggleDieLock(at index: Int) {
 		viewModel.toggleDieLock(at: index)
-		collectionView.reloadItems(at: [IndexPath(row: index, section: 0)])
+		updateDiceBoard(animated: false)
 	}
 
 	private func updateDiceBoard(animated: Bool, animatingIndices: Set<Int>? = nil) {
 		let sideCounts = viewModel.diceSideCounts
 		guard !sideCounts.isEmpty else {
 			diceBoardView.isHidden = true
+			diceBoardView.setDice(values: [], centers: [], sideLength: 0, sideCounts: [], animated: false)
 			return
 		}
 
@@ -504,7 +422,7 @@ class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEdi
 		diceBoardView.setMotionBlurEnabled(viewModel.motionBlurEnabled)
 
 		let mixed = Set(sideCounts).count > 1
-		let itemCount = collectionView.numberOfItems(inSection: 0)
+		let itemCount = min(viewModel.diceValues.count, sideCounts.count)
 		let layout = Self.boardRenderLayout(
 			itemCount: itemCount,
 			bounds: diceBoardView.bounds,
@@ -513,15 +431,8 @@ class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEdi
 		)
 		let centers = layout.centers
 		let sideLength = layout.sideLength
-		var values: [Int] = []
-		var boardSideCounts: [Int] = []
-		values.reserveCapacity(itemCount)
-		boardSideCounts.reserveCapacity(itemCount)
-
-		for row in 0..<itemCount {
-			values.append(viewModel.diceValues[row])
-			boardSideCounts.append(sideCounts[row])
-		}
+		let values = Array(viewModel.diceValues.prefix(itemCount))
+		let boardSideCounts = Array(sideCounts.prefix(itemCount))
 
 		let colorOverrides = (0..<values.count).map { viewModel.dieColorOverridesByIndex[$0] }
 		let fontOverrides = (0..<values.count).map { viewModel.dieFaceNumeralFontOverridesByIndex[$0] }
@@ -662,8 +573,8 @@ class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEdi
 					argument: NSLocalizedString("a11y.announcement.dieLocked", comment: "Announcement when attempting to reroll locked die")
 				)
 			}
-			guard let dieButton = dieButton(at: index) else { return nil }
-			return UIAccessibilityCustomRotorItemResult(targetElement: dieButton, targetRange: nil)
+			guard let dieElement = dieAccessibilityElement(at: index) else { return nil }
+			return UIAccessibilityCustomRotorItemResult(targetElement: dieElement, targetRange: nil)
 		}
 
 		let readSidesRotor = UIAccessibilityCustomRotor(
@@ -678,8 +589,8 @@ class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEdi
 				viewModel.diceSideCounts[index]
 			)
 			UIAccessibility.post(notification: .announcement, argument: message)
-			guard let dieButton = dieButton(at: index) else { return nil }
-			return UIAccessibilityCustomRotorItemResult(targetElement: dieButton, targetRange: nil)
+			guard let dieElement = dieAccessibilityElement(at: index) else { return nil }
+			return UIAccessibilityCustomRotorItemResult(targetElement: dieElement, targetRange: nil)
 		}
 
 		view.accessibilityCustomRotors = [rerollRotor, readSidesRotor]
@@ -688,23 +599,14 @@ class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEdi
 	private func selectedDieIndex(from predicate: UIAccessibilityCustomRotorSearchPredicate) -> Int? {
 		if let identifiable = predicate.currentItem.targetElement as? UIAccessibilityIdentification,
 		   let currentIdentifier = identifiable.accessibilityIdentifier,
-		   let index = Self.dieIndexFromAccessibilityIdentifier(currentIdentifier) {
+		   let index = DiceCubeView.dieIndex(fromAccessibilityIdentifier: currentIdentifier) {
 			return index
 		}
 		return viewModel.diceValues.isEmpty ? nil : 0
 	}
 
-	private func dieButton(at index: Int) -> UIButton? {
-		let indexPath = IndexPath(row: index, section: 0)
-		guard let cell = collectionView.cellForItem(at: indexPath) as? DiceCollectionViewCell else { return nil }
-		return cell.diceButton
-	}
-
-	static func dieIndexFromAccessibilityIdentifier(_ identifier: String?) -> Int? {
-		guard let identifier else { return nil }
-		guard identifier.hasPrefix("dieButton_") else { return nil }
-		let suffix = identifier.dropFirst("dieButton_".count)
-		return Int(suffix)
+	private func dieAccessibilityElement(at index: Int) -> UIAccessibilityElement? {
+		diceBoardView.accessibilityElementForDie(at: index)
 	}
 
 	private func selectAnimationIntensity(_ intensity: DiceAnimationIntensity) {
@@ -1145,7 +1047,6 @@ class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEdi
 	private func selectTheme(_ theme: DiceTheme) {
 		viewModel.setTheme(theme)
 		applyTheme()
-		collectionView.reloadData()
 		updateControlMenu()
 	}
 
@@ -1157,8 +1058,6 @@ class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEdi
 
 	private func selectBoardLayoutPreset(_ preset: DiceBoardLayoutPreset) {
 		viewModel.setBoardLayoutPreset(preset)
-		collectionView.collectionViewLayout.invalidateLayout()
-		collectionView.reloadData()
 		updateDiceBoard(animated: false)
 		updateControlMenu()
 	}
@@ -1210,7 +1109,6 @@ class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEdi
 	private func selectDieColorPreset(_ preset: DiceDieColorPreset, index: Int) {
 		viewModel.applyPerDieColorSelection(preset, at: index)
 		updateNotationField()
-		collectionView.reloadData()
 		diceBoardView.setDieColorPreferences(viewModel.dieColorPreferences)
 		updateDiceBoard(animated: false)
 		updateControlMenu()
@@ -1237,7 +1135,6 @@ class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEdi
 	private func toggleLargeFaceLabels() {
 		viewModel.setLargeFaceLabelsEnabled(!viewModel.largeFaceLabelsEnabled)
 		diceBoardView.setLargeFaceLabelsEnabled(viewModel.largeFaceLabelsEnabled)
-		collectionView.reloadData()
 		updateDiceBoard(animated: false)
 		updateControlMenu()
 	}
@@ -1327,56 +1224,6 @@ class DiceCollectionViewController: UIViewController, UITextFieldDelegate, UIEdi
 			return .dark
 		case .system:
 			return traitCollection.userInterfaceStyle == .dark ? .dark : .light
-		}
-	}
-}
-
-extension DiceCollectionViewController: UICollectionViewDelegateFlowLayout {
-	func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-		layoutSpacing(for: collectionView, mixed: Set(viewModel.diceSideCounts).count > 1)
-	}
-
-	func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
-		layoutSpacing(for: collectionView, mixed: Set(viewModel.diceSideCounts).count > 1)
-	}
-
-	func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-		let mixed = Set(viewModel.diceSideCounts).count > 1
-		let spacing = layoutSpacing(for: collectionView, mixed: mixed)
-		let inset = collectionView.adjustedContentInset.left + collectionView.adjustedContentInset.right
-		let availableWidth = max(0, collectionView.bounds.width - inset)
-		let columns = targetColumnCount(for: availableWidth, mixed: mixed)
-		let totalSpacing = CGFloat(columns - 1) * spacing
-		let sideLength = floor((availableWidth - totalSpacing) / CGFloat(columns))
-		let clamped = max(56, min(160, sideLength))
-		return CGSize(width: clamped, height: clamped)
-	}
-
-	private func layoutSpacing(for collectionView: UICollectionView, mixed: Bool) -> CGFloat {
-		switch viewModel.boardLayoutPreset {
-		case .compact:
-			return traitCollection.horizontalSizeClass == .regular ? 6 : 3
-		case .spacious:
-			let regular = mixed ? 14 : 12
-			let compact = mixed ? 8 : 6
-			return traitCollection.horizontalSizeClass == .regular ? CGFloat(regular) : CGFloat(compact)
-		}
-	}
-
-	private func targetColumnCount(for availableWidth: CGFloat, mixed: Bool) -> Int {
-		if traitCollection.horizontalSizeClass == .regular {
-			switch viewModel.boardLayoutPreset {
-			case .compact:
-				return max(4, min(9, Int(availableWidth / (mixed ? 118 : 110))))
-			case .spacious:
-				return max(3, min(7, Int(availableWidth / (mixed ? 150 : 138))))
-			}
-		}
-		switch viewModel.boardLayoutPreset {
-		case .compact:
-			return availableWidth > 460 ? 4 : 3
-		case .spacious:
-			return availableWidth > 460 ? 3 : 2
 		}
 	}
 }

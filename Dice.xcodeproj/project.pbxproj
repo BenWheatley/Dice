@@ -53,7 +53,6 @@
 		C0DE00482F440C4900D1CE00 /* DiceBoardLayoutPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00472F440C4900D1CE00 /* DiceBoardLayoutPreset.swift */; };
 		C0DE004B2F44A00100D1CE00 /* DiceFaceLabelSizing.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE004D2F44A00100D1CE00 /* DiceFaceLabelSizing.swift */; };
 		C0DE004E2F44A20100D1CE00 /* DiceMotionBehaviorProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE004F2F44A20100D1CE00 /* DiceMotionBehaviorProfile.swift */; };
-		D1CE11012F50000100D1CE00 /* DiceCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10012F50000100D1CE00 /* DiceCollectionViewCell.swift */; };
 		D1CE11022F50000200D1CE00 /* DiceHapticsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10022F50000200D1CE00 /* DiceHapticsEngine.swift */; };
 		D1CE11042F50000400D1CE00 /* DiceOptionsSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10042F50000400D1CE00 /* DiceOptionsSheetViewController.swift */; };
 		D1CE11052F50000500D1CE00 /* DiceOptionsSectionBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10052F50000500D1CE00 /* DiceOptionsSectionBuilder.swift */; };
@@ -237,7 +236,6 @@
 		C0DE00302F44033100D1CE00 /* Localizable.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = Localizable.strings; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		QA0100022F57000100D1CE00 /* InfoPlist.strings */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = InfoPlist.strings; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		C0DE00142F44016400D1CE00 /* WatchRollViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRollViewModel.swift; sourceTree = "<group>"; };
-		D1CE10012F50000100D1CE00 /* DiceCollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceCollectionViewCell.swift; sourceTree = "<group>"; };
 		D1CE10022F50000200D1CE00 /* DiceHapticsEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceHapticsEngine.swift; sourceTree = "<group>"; };
 		D1CE10042F50000400D1CE00 /* DiceOptionsSheetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceOptionsSheetViewController.swift; sourceTree = "<group>"; };
 		D1CE10052F50000500D1CE00 /* DiceOptionsSectionBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceOptionsSectionBuilder.swift; sourceTree = "<group>"; };
@@ -398,7 +396,6 @@
 				E0CE10032F54000300D1CE00 /* DiceSurfaceStoneShader.metal */,
 				E1CE10042F59000400D1CE00 /* DiceTableSurfaceShader.metal */,
 				D1CE100F2F50000F00D1CE00 /* RollHistoryViewController.swift */,
-				D1CE10012F50000100D1CE00 /* DiceCollectionViewCell.swift */,
 				D2CE10012F51000100D1CE00 /* D6FaceOrientation.swift */,
 				D2CE10022F51000200D1CE00 /* D6SceneKitRenderConfig.swift */,
 				D2CE10032F51000300D1CE00 /* DiceDieColorPreset.swift */,
@@ -756,7 +753,6 @@
 				QA0200012F57000100D1CE00 /* DiceQuickActionManager.swift in Sources */,
 				F3CE00012F56020100D1CE00 /* DiceWidgetTimelinePolicy.swift in Sources */,
 				D1CE110F2F50000F00D1CE00 /* RollHistoryViewController.swift in Sources */,
-				D1CE11012F50000100D1CE00 /* DiceCollectionViewCell.swift in Sources */,
 				D2CE11012F51000100D1CE00 /* D6FaceOrientation.swift in Sources */,
 				D2CE11022F51000200D1CE00 /* D6SceneKitRenderConfig.swift in Sources */,
 				D2CE11032F51000300D1CE00 /* DiceDieColorPreset.swift in Sources */,

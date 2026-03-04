@@ -59,7 +59,7 @@ final class DiceUITests: XCTestCase {
 		XCTAssertTrue(intuitivePreset.waitForExistence(timeout: 5))
 		intuitivePreset.tap()
 
-		let firstDie = app.buttons["dieButton_0"]
+		let firstDie = app.buttons["die_0"]
 		XCTAssertTrue(firstDie.waitForExistence(timeout: 5))
 		firstDie.tap()
 		XCTAssertTrue(app.buttons["Reroll This Die"].waitForExistence(timeout: 2))

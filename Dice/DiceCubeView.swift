@@ -86,6 +86,7 @@ final class DiceCubeView: UIView {
 	private var activeMotionBlurEnabled = false
 	private var activeTableTexture: DiceTableTexture = .neutral
 	private var reduceMotionEnabled = UIAccessibility.isReduceMotionEnabled
+	private var dieAccessibilityElements: [UIAccessibilityElement] = []
 	private var needsMeshRefresh = false
 	private var activeRollAnimationToken: Int = 0
 	private var pendingRollAnimationCompletions = 0
@@ -97,6 +98,16 @@ final class DiceCubeView: UIView {
 #endif
 	var onRollSettled: (() -> Void)?
 	var onDieTapped: ((Int, CGPoint) -> Void)?
+
+	static func dieAccessibilityIdentifier(for index: Int) -> String {
+		"die_\(index)"
+	}
+
+	static func dieIndex(fromAccessibilityIdentifier identifier: String?) -> Int? {
+		guard let identifier else { return nil }
+		guard identifier.hasPrefix("die_") else { return nil }
+		return Int(identifier.dropFirst("die_".count))
+	}
 
 	override init(frame: CGRect) {
 		super.init(frame: frame)
@@ -156,7 +167,7 @@ final class DiceCubeView: UIView {
 		let styleChanged = needsMeshRefresh
 		for index in values.indices {
 			let container = dieNodes[index]
-			container.name = "die_\(index)"
+			container.name = Self.dieAccessibilityIdentifier(for: index)
 			let sideCount = sideCounts[index]
 			let didSideChange = dieSideCounts[index] != sideCount
 			if didSideChange || sizeChanged || styleChanged {
@@ -231,6 +242,13 @@ final class DiceCubeView: UIView {
 				container.eulerAngles = orientation(for: targetFace, sideCount: sideCount)
 			}
 		}
+		updateAccessibilityElements(
+			values: values,
+			sideCounts: sideCounts,
+			centers: centers,
+			sideLength: sideLength,
+			lockedIndices: lockedIndices
+		)
 		needsMeshRefresh = false
 	}
 
@@ -506,7 +524,7 @@ final class DiceCubeView: UIView {
 		for hit in hits {
 			var current: SCNNode? = hit.node
 			while let node = current {
-				if let name = node.name, name.hasPrefix("die_"), let dieIndex = Int(name.dropFirst(4)) {
+				if let dieIndex = Self.dieIndex(fromAccessibilityIdentifier: node.name) {
 					return dieIndex
 				}
 				current = node.parent
@@ -535,6 +553,48 @@ final class DiceCubeView: UIView {
 			return nearest.index
 		}
 		return nil
+	}
+
+	func accessibilityElementForDie(at index: Int) -> UIAccessibilityElement? {
+		dieAccessibilityElements.first {
+			Self.dieIndex(fromAccessibilityIdentifier: $0.accessibilityIdentifier) == index
+		}
+	}
+
+	private func updateAccessibilityElements(
+		values: [Int],
+		sideCounts: [Int],
+		centers: [CGPoint],
+		sideLength: CGFloat,
+		lockedIndices: Set<Int>
+	) {
+		guard values.count == sideCounts.count, values.count == centers.count else { return }
+		isAccessibilityElement = false
+		let touchSide = max(sideLength, 44)
+		let elements = values.indices.map { index in
+			let element = UIAccessibilityElement(accessibilityContainer: self)
+			element.accessibilityIdentifier = Self.dieAccessibilityIdentifier(for: index)
+			element.accessibilityTraits = .button
+			element.accessibilityLabel = String(
+				format: NSLocalizedString("a11y.die.label", comment: "Die button accessibility label format"),
+				index + 1,
+				sideCounts[index]
+			)
+			element.accessibilityValue = String(values[index])
+			element.accessibilityHint = lockedIndices.contains(index)
+				? NSLocalizedString("a11y.die.lockedHint", comment: "Locked die accessibility hint")
+				: NSLocalizedString("a11y.die.hint", comment: "Die button accessibility hint")
+			let center = centers[index]
+			element.accessibilityFrameInContainerSpace = CGRect(
+				x: center.x - touchSide / 2,
+				y: center.y - touchSide / 2,
+				width: touchSide,
+				height: touchSide
+			)
+			return element
+		}
+		dieAccessibilityElements = elements
+		accessibilityElements = elements
 	}
 
 	private func meshData(for sideCount: Int) -> MeshData {
