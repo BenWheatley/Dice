@@ -12,6 +12,7 @@ final class RollDistributionSheetViewController: UIViewController {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		view.backgroundColor = .systemBackground
+		view.accessibilityIdentifier = "rollDistributionSheet"
 		configureLayout()
 	}
 
@@ -71,6 +72,7 @@ final class RollDistributionSheetViewController: UIViewController {
 		titleLabel.font = .preferredFont(forTextStyle: .headline)
 		titleLabel.adjustsFontForContentSizeCategory = true
 		titleLabel.numberOfLines = 1
+		titleLabel.accessibilityIdentifier = "rollDistributionTitle"
 
 		summaryLabel.translatesAutoresizingMaskIntoConstraints = false
 		summaryLabel.font = .preferredFont(forTextStyle: .subheadline)

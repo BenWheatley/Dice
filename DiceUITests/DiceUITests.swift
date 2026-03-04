@@ -78,6 +78,36 @@ final class DiceUITests: XCTestCase {
 		XCTAssertTrue(totalsLabel.exists)
 	}
 
+	func testRollDistributionSheetLifecyclePersistsDismissAndRestore() {
+		let sheet = app.otherElements["rollDistributionSheet"]
+		XCTAssertTrue(sheet.waitForExistence(timeout: 8))
+		sheet.swipeDown()
+		XCTAssertTrue(waitForNonExistence(of: sheet, timeout: 5))
+
+		let showStatsButton = app.buttons["showStatsButton"]
+		XCTAssertTrue(showStatsButton.waitForExistence(timeout: 5))
+
+		app.terminate()
+		app.launchArguments = ["-ui-testing"]
+		app.launch()
+
+		let relaunchedShowButton = app.buttons["showStatsButton"]
+		XCTAssertTrue(relaunchedShowButton.waitForExistence(timeout: 8))
+		relaunchedShowButton.tap()
+
+		let sheetAfterShow = app.otherElements["rollDistributionSheet"]
+		XCTAssertTrue(sheetAfterShow.waitForExistence(timeout: 8))
+		XCTAssertFalse(app.buttons["showStatsButton"].exists)
+
+		app.terminate()
+		app.launchArguments = ["-ui-testing"]
+		app.launch()
+
+		let restoredSheet = app.otherElements["rollDistributionSheet"]
+		XCTAssertTrue(restoredSheet.waitForExistence(timeout: 8))
+		XCTAssertFalse(app.buttons["showStatsButton"].exists)
+	}
+
 	private func replaceNotation(with notation: String) {
 		let notationField = app.textFields["notationField"]
 		notationField.tap()
@@ -91,6 +121,12 @@ final class DiceUITests: XCTestCase {
 			}
 		}
 		notationField.typeText(notation)
+	}
+
+	private func waitForNonExistence(of element: XCUIElement, timeout: TimeInterval) -> Bool {
+		let predicate = NSPredicate(format: "exists == false")
+		let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
+		return XCTWaiter().wait(for: [expectation], timeout: timeout) == .completed
 	}
 
 }
