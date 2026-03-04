@@ -10,8 +10,7 @@ import UIKit
 
 private let reuseIdentifier = "DiceCell"
 
-class DiceCollectionViewController: UICollectionViewController, UITextFieldDelegate {
-	private static let dieMenuTriggerEvent: UIControl.Event = .primaryActionTriggered
+class DiceCollectionViewController: UICollectionViewController, UITextFieldDelegate, UIEditMenuInteractionDelegate {
 	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 	private let viewModel = DiceViewModel()
 	private let soundEngine = DiceSoundEngine()
@@ -39,7 +38,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	private let floatingControlBottomMargin: CGFloat = 16
 	private let rollButtonSpacingAboveStatsSheet: CGFloat = 12
 	private var routeObserver: NSObjectProtocol?
-	private let dieMenuAnchorButton = UIButton(type: .system)
+	private lazy var dieEditMenuInteraction = UIEditMenuInteraction(delegate: self)
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -273,14 +272,7 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 		}
 		diceBoardView.setLargeFaceLabelsEnabled(viewModel.largeFaceLabelsEnabled)
 		view.addSubview(diceBoardView)
-		dieMenuAnchorButton.translatesAutoresizingMaskIntoConstraints = true
-		dieMenuAnchorButton.frame = .zero
-		dieMenuAnchorButton.backgroundColor = .clear
-		dieMenuAnchorButton.tintColor = .clear
-		dieMenuAnchorButton.setTitle("", for: .normal)
-		dieMenuAnchorButton.showsMenuAsPrimaryAction = true
-		dieMenuAnchorButton.isHidden = true
-		view.addSubview(dieMenuAnchorButton)
+		diceBoardView.addInteraction(dieEditMenuInteraction)
 		view.bringSubviewToFront(rollButton)
 		view.bringSubviewToFront(showStatsButton)
 		NSLayoutConstraint.activate([
@@ -327,27 +319,26 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 	}
 
 	private func presentDieMenu(for index: Int, at locationInBoard: CGPoint) {
-		guard let menu = dieContextMenu(for: index) else { return }
-		let pointInView = diceBoardView.convert(locationInBoard, to: view)
-		let anchorSize: CGFloat = 44
-		dieMenuAnchorButton.menu = menu
-		dieMenuAnchorButton.frame = CGRect(
-			x: pointInView.x - (anchorSize / 2),
-			y: pointInView.y - (anchorSize / 2),
-			width: anchorSize,
-			height: anchorSize
+		guard dieContextMenu(for: index) != nil else { return }
+		let config = UIEditMenuConfiguration(
+			identifier: NSNumber(value: index),
+			sourcePoint: locationInBoard
 		)
-		dieMenuAnchorButton.isHidden = false
-		// Menu presentation is wired to the control's primary action.
-		dieMenuAnchorButton.sendActions(for: Self.dieMenuTriggerEvent)
-		DispatchQueue.main.async { [weak self] in
-			self?.dieMenuAnchorButton.isHidden = true
-		}
+		dieEditMenuInteraction.presentEditMenu(with: config)
+	}
+
+	func editMenuInteraction(
+		_ interaction: UIEditMenuInteraction,
+		menuFor configuration: UIEditMenuConfiguration,
+		suggestedActions: [UIMenuElement]
+	) -> UIMenu? {
+		guard let identifier = configuration.identifier as? NSNumber else { return nil }
+		return dieContextMenu(for: identifier.intValue)
 	}
 
 #if DEBUG
-	static var debugDieMenuTriggerEvent: UIControl.Event {
-		dieMenuTriggerEvent
+	static var debugUsesEditMenuInteractionForDieActions: Bool {
+		true
 	}
 #endif
 
