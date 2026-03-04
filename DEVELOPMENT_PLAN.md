@@ -226,7 +226,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Remove remaining legacy `UICollectionView` board embedding/proxy path entirely (controller/storyboard/cell/tests) so `DiceCubeView` is the sole board render and interaction surface.
 - [x] Add UI regression tests for Roll Distribution sheet lifecycle: tap floating `Show` button, confirm sheet presentation, confirm swipe-to-dismiss persistence behavior, and confirm relaunch state restoration.
 - [x] Remove residual collection-view-oriented test scaffolding and assert direct `DiceCubeView` board surface presence via stable identifiers.
-- [ ] Add a shared-scheme consistency pass: ensure all primary run schemes (iOS app, watch app, widgets extension) are present as shared schemes so scheme visibility does not depend on local auto-generated user state.
+- [x] Add a shared-scheme consistency pass: ensure all primary run schemes (iOS app, watch app, widgets extension) are present as shared schemes so scheme visibility does not depend on local auto-generated user state.
 
 ### Performance and Interaction Safety
 
