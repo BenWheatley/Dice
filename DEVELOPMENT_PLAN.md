@@ -217,6 +217,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Fix stats-sheet presentation reliability: when `Show Stats` is enabled while another modal is already presented, queue the Roll Distribution sheet presentation and show it as soon as the blocking modal is dismissed.
 - [x] Move stats resurfacing control to a bottom-right floating `Show` button (chart icon + text) and remove the Show Stats toggle from the settings sheet.
 - [x] Move `Roll` out of the top bar into a bottom-centered floating action button (`die.face.5` + text) that tracks the stats sheet position, and switch `Presets` in the top bar to icon-only `bookmark` while preserving accessibility labels.
+- [x] Restore per-die tap menu presentation by triggering the menu anchor button with primary action events (`.primaryActionTriggered`) rather than touch-up events.
 - [x] Document product decision to keep Roll Distribution on a fixed-height custom detent (compact board-first layout) directly in sheet presentation code.
 - [x] Run dead-code/resource sweep for the stats/settings refactor and remove unreachable style-preview UI path plus unreferenced symbols.
 - [ ] Add UI regression tests for Roll Distribution sheet lifecycle: tap floating `Show` button, confirm sheet presentation, confirm swipe-to-dismiss persistence behavior, and confirm relaunch state restoration.

@@ -2207,6 +2207,10 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(DiceCollectionViewController.dieIndexFromAccessibilityIdentifier("dieButton_12"), 12)
 	}
 
+	func testControllerUsesPrimaryActionEventForDieMenuTrigger() {
+		XCTAssertEqual(DiceCollectionViewController.debugDieMenuTriggerEvent, .primaryActionTriggered)
+	}
+
 	private func findView(in root: UIView, accessibilityIdentifier: String) -> UIView? {
 		if root.accessibilityIdentifier == accessibilityIdentifier {
 			return root

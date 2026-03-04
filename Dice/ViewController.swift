@@ -11,6 +11,7 @@ import UIKit
 private let reuseIdentifier = "DiceCell"
 
 class DiceCollectionViewController: UICollectionViewController, UITextFieldDelegate {
+	private static let dieMenuTriggerEvent: UIControl.Event = .primaryActionTriggered
 	private let boardSupportedSides: Set<Int> = [4, 6, 8, 10, 12, 20]
 	private let viewModel = DiceViewModel()
 	private let soundEngine = DiceSoundEngine()
@@ -337,11 +338,18 @@ class DiceCollectionViewController: UICollectionViewController, UITextFieldDeleg
 			height: anchorSize
 		)
 		dieMenuAnchorButton.isHidden = false
-		dieMenuAnchorButton.sendActions(for: .touchUpInside)
+		// Menu presentation is wired to the control's primary action.
+		dieMenuAnchorButton.sendActions(for: Self.dieMenuTriggerEvent)
 		DispatchQueue.main.async { [weak self] in
 			self?.dieMenuAnchorButton.isHidden = true
 		}
 	}
+
+#if DEBUG
+	static var debugDieMenuTriggerEvent: UIControl.Event {
+		dieMenuTriggerEvent
+	}
+#endif
 
 	private func performRoll() {
 		let outcome = viewModel.rollCurrent()
