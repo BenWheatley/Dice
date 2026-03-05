@@ -31,7 +31,7 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 	private var currentTotalsAccessibilityValue: String?
 	private var pendingStatsSheetPresentation = false
 	private let statsSheetHeight: CGFloat = 200
-    private let dieInfoSheetHeight: CGFloat = 400
+    private let dieInfoSheetHeight: CGFloat = 475
 	private let floatingControlBottomMargin: CGFloat = 16
 	private let rollButtonSpacingAboveStatsSheet: CGFloat = 12
 	private var routeObserver: NSObjectProtocol?
