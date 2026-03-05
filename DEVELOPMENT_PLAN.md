@@ -224,6 +224,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Run dead-code/resource sweep for the stats/settings refactor and remove unreachable style-preview UI path plus unreferenced symbols.
 - [x] Move table background rendering from `collectionView.backgroundView` into a SceneKit table surface shader inside `DiceCubeView`, and remove obsolete MTK/CPU background renderer files.
 - [x] Remove `UICollectionViewController` inheritance from the main screen (use `UIViewController` + owned `UICollectionView`) and stabilize table shader scale so rotation does not change perceived texture size.
+- [x] Calibrate neutral table shader zoom to point-mapped sampling (`1 texture pixel == 1pt`) by passing explicit table point-scale uniforms (`tableTextureScaleX`/`tableTextureScaleY`) and locking with a `DiceCubeView` regression test.
 - [x] Remove remaining legacy `UICollectionView` board embedding/proxy path entirely (controller/storyboard/cell/tests) so `DiceCubeView` is the sole board render and interaction surface.
 - [x] Add UI regression tests for Roll Distribution sheet lifecycle: tap floating `Show` button, confirm sheet presentation, confirm swipe-to-dismiss persistence behavior, and confirm relaunch state restoration.
 - [x] Remove residual collection-view-oriented test scaffolding and assert direct `DiceCubeView` board surface presence via stable identifiers.

@@ -2243,6 +2243,15 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(portrait, landscape, accuracy: 0.001)
 	}
 
+	func testDiceCubeViewUsesPointMappedNeutralTextureScale() {
+		let size = CGSize(width: 390, height: 844)
+		let pointScale = DiceCubeView.debugTableTexturePointScale(for: size)
+		let planeSize = DiceCubeView.debugTablePlaneSize(for: size)
+
+		XCTAssertEqual(pointScale.width, planeSize.width, accuracy: 0.001)
+		XCTAssertEqual(pointScale.height, planeSize.height, accuracy: 0.001)
+	}
+
 	private func makeController() -> DiceViewController {
 		DiceViewController()
 	}

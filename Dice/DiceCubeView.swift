@@ -450,7 +450,17 @@ final class DiceCubeView: UIView {
 
 	private func applyTableTextureScale() {
 		let scale = max(1, min(bounds.width, bounds.height))
+		let pointScale = tableTexturePointScale()
 		tableMaterial.setValue(scale as NSNumber, forKey: "tableTextureScale")
+		tableMaterial.setValue(pointScale.width as NSNumber, forKey: "tableTextureScaleX")
+		tableMaterial.setValue(pointScale.height as NSNumber, forKey: "tableTextureScaleY")
+	}
+
+	private func tableTexturePointScale() -> CGSize {
+		if let plane = tableNode.geometry as? SCNPlane {
+			return CGSize(width: max(1, plane.width), height: max(1, plane.height))
+		}
+		return CGSize(width: max(1, bounds.width), height: max(1, bounds.height))
 	}
 
 	private func tableTextureModeValue(for texture: DiceTableTexture) -> NSNumber {
@@ -802,6 +812,21 @@ final class DiceCubeView: UIView {
 		let view = DiceCubeView(frame: CGRect(origin: .zero, size: size))
 		view.layoutIfNeeded()
 		return CGFloat((view.tableMaterial.value(forKey: "tableTextureScale") as? NSNumber)?.doubleValue ?? 0)
+	}
+
+	static func debugTableTexturePointScale(for size: CGSize) -> CGSize {
+		let view = DiceCubeView(frame: CGRect(origin: .zero, size: size))
+		view.layoutIfNeeded()
+		let x = CGFloat((view.tableMaterial.value(forKey: "tableTextureScaleX") as? NSNumber)?.doubleValue ?? 0)
+		let y = CGFloat((view.tableMaterial.value(forKey: "tableTextureScaleY") as? NSNumber)?.doubleValue ?? 0)
+		return CGSize(width: x, height: y)
+	}
+
+	static func debugTablePlaneSize(for size: CGSize) -> CGSize {
+		let view = DiceCubeView(frame: CGRect(origin: .zero, size: size))
+		view.layoutIfNeeded()
+		guard let plane = view.tableNode.geometry as? SCNPlane else { return .zero }
+		return CGSize(width: plane.width, height: plane.height)
 	}
 #endif
 

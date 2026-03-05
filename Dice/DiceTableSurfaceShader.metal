@@ -1,6 +1,8 @@
 #pragma arguments
 float tableTextureMode;
 float tableTextureScale;
+float tableTextureScaleX;
+float tableTextureScaleY;
 
 #pragma declaration
 float tableHash21(float2 p) {
@@ -21,9 +23,10 @@ float tableNoise2(float2 p) {
 }
 
 #pragma body
-// Anchor to normalized plane UVs with a scale supplied by host code.
-// Using min(view width, view height) keeps perceived pattern scale stable on rotation.
-float2 p = (_surface.diffuseTexcoord - 0.5) * max(tableTextureScale, 1.0);
+// Base UV center.
+float2 centeredUV = (_surface.diffuseTexcoord - 0.5);
+// Legacy scalar space used by felt/wood paths to preserve their tuned frequency.
+float2 p = centeredUV * max(tableTextureScale, 1.0);
 
 float3 color;
 if (tableTextureMode < 0.5) {
@@ -50,9 +53,10 @@ if (tableTextureMode < 0.5) {
 	color = base + float3(rings, rings * 0.72, rings * 0.42);
 	_surface.roughness = 0.92;
 } else {
-	// Neutral: subtle wide stripes with low-frequency micro variation.
-	float stripes = sin(p.y * 0.46) * 0.5 + 0.5;
-	float micro = tableNoise2(float2(p.x * 0.06, p.y * 0.10));
+	// Neutral: map one texture pixel to one screen point by sampling in table-point space.
+	float2 pNeutral = centeredUV * float2(max(tableTextureScaleX, 1.0), max(tableTextureScaleY, 1.0));
+	float stripes = sin(pNeutral.y * 0.46) * 0.5 + 0.5;
+	float micro = tableNoise2(float2(pNeutral.x * 0.06, pNeutral.y * 0.10));
 	float shade = 0.88 + (stripes - 0.5) * 0.10 + (micro - 0.5) * 0.02;
 	color = float3(shade);
 	_surface.roughness = 0.95;
