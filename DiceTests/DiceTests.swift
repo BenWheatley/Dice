@@ -2284,6 +2284,33 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(locked, Set([0, 1, 2, 4]))
 	}
 
+	func testBoardLayoutNeedsRefreshWhenNoPreviousBounds() {
+		let needsRefresh = DiceViewController.boardLayoutNeedsRefresh(
+			previousBounds: nil,
+			currentBounds: CGRect(x: 0, y: 0, width: 300, height: 500)
+		)
+		XCTAssertTrue(needsRefresh)
+	}
+
+	func testBoardLayoutNeedsRefreshOnlyWhenSizeChanges() {
+		let previous = CGRect(x: 0, y: 0, width: 300, height: 500)
+		let sameSizeDifferentOrigin = CGRect(x: 40, y: 80, width: 300, height: 500)
+		let changedWidth = CGRect(x: 0, y: 0, width: 320, height: 500)
+
+		XCTAssertFalse(
+			DiceViewController.boardLayoutNeedsRefresh(
+				previousBounds: previous,
+				currentBounds: sameSizeDifferentOrigin
+			)
+		)
+		XCTAssertTrue(
+			DiceViewController.boardLayoutNeedsRefresh(
+				previousBounds: previous,
+				currentBounds: changedWidth
+			)
+		)
+	}
+
 	func testDiceCubeViewExposesPerDieAccessibilityElements() {
 		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 300, height: 300))
 		view.setDice(

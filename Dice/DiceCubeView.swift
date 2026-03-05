@@ -147,9 +147,10 @@ final class DiceCubeView: UIView {
 		ensureNodeCount(values.count)
 		let motionProfile = DiceMotionBehaviorProfile.resolve(intensity: activeAnimationIntensity, reduceMotionEnabled: reduceMotionEnabled)
 		let shouldAnimateRoll = animated && activeAnimationIntensity != .off && motionProfile.duration > 0
+		let animatingIndices = shouldAnimateRoll ? values.indices.filter { !lockedIndices.contains($0) } : []
 		if shouldAnimateRoll {
 			activeRollAnimationToken += 1
-			pendingRollAnimationCompletions = values.count
+			pendingRollAnimationCompletions = animatingIndices.count
 		} else {
 			pendingRollAnimationCompletions = 0
 		}

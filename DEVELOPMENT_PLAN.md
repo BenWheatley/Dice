@@ -228,6 +228,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Add UI regression tests for Roll Distribution sheet lifecycle: tap floating `Show` button, confirm sheet presentation, confirm swipe-to-dismiss persistence behavior, and confirm relaunch state restoration.
 - [x] Remove residual collection-view-oriented test scaffolding and assert direct `DiceCubeView` board surface presence via stable identifiers.
 - [x] Add a shared-scheme consistency pass: ensure all primary run schemes (iOS app, watch app, widgets extension) are present as shared schemes so scheme visibility does not depend on local auto-generated user state.
+- [x] Prevent roll animations from being canceled by routine layout passes by refreshing board render state only when board bounds actually change, and ensure locked-die rolls still animate unlocked dice.
 
 ### Performance and Interaction Safety
 

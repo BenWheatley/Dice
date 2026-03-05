@@ -37,6 +37,7 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 	private var routeObserver: NSObjectProtocol?
 	private var selectedDieIndex: Int?
 	private weak var dieInspectorSheetController: DieInspectorSheetViewController?
+	private var previousBoardLayoutBounds: CGRect?
 
 	init() {
 		super.init(nibName: nil, bundle: nil)
@@ -93,7 +94,11 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 
 	override func viewDidLayoutSubviews() {
 		super.viewDidLayoutSubviews()
-		updateDiceBoard(animated: false)
+		let currentBounds = diceBoardView.bounds
+		if Self.boardLayoutNeedsRefresh(previousBounds: previousBoardLayoutBounds, currentBounds: currentBounds) {
+			updateDiceBoard(animated: false)
+			previousBoardLayoutBounds = currentBounds
+		}
 		if pendingStatsSheetPresentation, statsVisible, presentedViewController == nil {
 			presentRollDistributionSheetIfNeeded()
 		}
@@ -478,6 +483,13 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 			locked.insert(index)
 		}
 		return locked
+	}
+
+	static func boardLayoutNeedsRefresh(previousBounds: CGRect?, currentBounds: CGRect) -> Bool {
+		guard let previousBounds else { return true }
+		let widthDelta = abs(previousBounds.width - currentBounds.width)
+		let heightDelta = abs(previousBounds.height - currentBounds.height)
+		return widthDelta > 0.5 || heightDelta > 0.5
 	}
 
 	static func boardRenderLayout(
