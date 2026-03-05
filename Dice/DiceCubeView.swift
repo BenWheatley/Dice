@@ -115,6 +115,7 @@ final class DiceCubeView: UIView {
 	private let d4VertexValueByIndex: [Int] = [4, 3, 2, 1]
 #if DEBUG
 	private var debugMaterialRefreshCount = 0
+	private var debugMeshBuildCount = 0
 #endif
 	var onRollSettled: (() -> Void)?
 	var onDieTapped: ((Int, CGPoint) -> Void)?
@@ -311,18 +312,12 @@ final class DiceCubeView: UIView {
 		guard activeFaceNumeralFont != font else { return }
 		activeFaceNumeralFont = font
 		appearanceGeneration += 1
-		meshCache.removeAll()
-		clearSharedTextureCaches(clearBadges: true)
-		needsMeshRefresh = true
 	}
 
 	func setLargeFaceLabelsEnabled(_ enabled: Bool) {
 		guard activeLargeFaceLabelsEnabled != enabled else { return }
 		activeLargeFaceLabelsEnabled = enabled
 		appearanceGeneration += 1
-		meshCache.removeAll()
-		clearSharedTextureCaches(clearBadges: true)
-		needsMeshRefresh = true
 	}
 
 	private func clearSharedTextureCaches(clearBadges: Bool) {
@@ -892,6 +887,53 @@ final class DiceCubeView: UIView {
 		return (view.tableMaterial.value(forKey: "tableTextureMode") as? NSNumber)?.intValue ?? -1
 	}
 
+	static func debugMeshBuildCountsForGlobalFontChange(
+		values: [Int],
+		sideCounts: [Int],
+		colorOverrides: [DiceDieColorPreset?],
+		fontInitial: DiceFaceNumeralFont,
+		fontChanged: DiceFaceNumeralFont
+	) -> (firstPass: Int, secondPass: Int) {
+		let count = min(values.count, sideCounts.count)
+		guard count > 0 else { return (firstPass: 0, secondPass: 0) }
+		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 360, height: 240))
+		let centers: [CGPoint] = (0..<count).map { index in
+			CGPoint(x: 54 + (CGFloat(index) * 96), y: 120)
+		}
+		let trimmedValues = Array(values.prefix(count))
+		let trimmedSideCounts = Array(sideCounts.prefix(count))
+		let trimmedColors = Array(colorOverrides.prefix(count))
+		let emptyFonts = Array(repeating: Optional<DiceFaceNumeralFont>.none, count: count)
+
+		view.setFaceNumeralFont(fontInitial)
+		view.debugMeshBuildCount = 0
+		view.setDice(
+			values: trimmedValues,
+			centers: centers,
+			sideLength: 92,
+			sideCounts: trimmedSideCounts,
+			dieColorPresets: trimmedColors,
+			faceNumeralFonts: emptyFonts,
+			lockedIndices: [],
+			animated: false
+		)
+		let firstPass = view.debugMeshBuildCount
+
+		view.setFaceNumeralFont(fontChanged)
+		view.debugMeshBuildCount = 0
+		view.setDice(
+			values: trimmedValues,
+			centers: centers,
+			sideLength: 92,
+			sideCounts: trimmedSideCounts,
+			dieColorPresets: trimmedColors,
+			faceNumeralFonts: emptyFonts,
+			lockedIndices: [],
+			animated: false
+		)
+		return (firstPass: firstPass, secondPass: view.debugMeshBuildCount)
+	}
+
 	static func debugTableTextureScale(for size: CGSize) -> CGFloat {
 		let view = DiceCubeView(frame: CGRect(origin: .zero, size: size))
 		view.layoutIfNeeded()
@@ -927,6 +969,9 @@ final class DiceCubeView: UIView {
 #endif
 
 	private func buildGeometry(sideLength: CGFloat, sideCount: Int) -> BuiltMesh {
+#if DEBUG
+		debugMeshBuildCount += 1
+#endif
 		let mesh = meshData(for: sideCount)
 		let maxNorm = mesh.vertices.map { simd_length($0) }.max() ?? 1
 		let scale = Float(sideLength * 0.5) / maxNorm

@@ -241,6 +241,8 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Add tests for mode switching and repeated rolls with SceneKit enabled to catch state desync regressions.
 - [x] Add watch-specific QA pass for crown interaction, wake/resume, and scene lifecycle handling.
 - [x] Reduce roll interaction latency by caching per-die appearance state in `DiceCubeView` so material/textures rebuild only when style/color/font inputs change, and add a regression test for repeated-roll material reuse.
+- [x] Eliminate font-change UI stalls by avoiding mesh/cache invalidation on numeral-font and large-label toggles; refresh materials only and verify no mesh rebuild on font change in automated tests.
+- [x] Scope per-die font selection to override-only updates (do not mutate global board font on per-die edits) to prevent unnecessary board-wide rebuilds and gesture-gate timeout spikes.
 
 ## 13. Widgets and Home Screen Quick Actions
 

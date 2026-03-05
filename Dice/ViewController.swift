@@ -1157,8 +1157,8 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 			viewModel.setFaceNumeralFont(font, forDieAt: dieIndex)
 		} else {
 			viewModel.setFaceNumeralFont(font)
+			diceBoardView.setFaceNumeralFont(font)
 		}
-		diceBoardView.setFaceNumeralFont(font)
 		updateDiceBoard(animated: false)
 		updateControlMenu()
 		refreshDieInspectorIfVisible()

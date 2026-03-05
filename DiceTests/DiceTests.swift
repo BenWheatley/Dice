@@ -2420,6 +2420,18 @@ final class DiceTests: XCTestCase {
 		XCTAssertGreaterThan(counts.secondPass, 0)
 	}
 
+	func testDiceCubeViewFontChangeReusesCachedMeshes() {
+		let counts = DiceCubeView.debugMeshBuildCountsForGlobalFontChange(
+			values: [2, 7, 11],
+			sideCounts: [6, 8, 20],
+			colorOverrides: [.amber, .sapphire, .crimson],
+			fontInitial: .classic,
+			fontChanged: .serif
+		)
+		XCTAssertGreaterThan(counts.firstPass, 0)
+		XCTAssertEqual(counts.secondPass, 0)
+	}
+
 	func testD4MeshGeometryMatchesTetrahedronExpectations() {
 		let mesh = DiceCubeView.debugMeshData(sideCount: 4)
 		XCTAssertEqual(mesh.vertices.count, 4)
