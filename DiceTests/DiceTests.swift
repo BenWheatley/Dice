@@ -2252,6 +2252,18 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(pointScale.height, planeSize.height, accuracy: 0.001)
 	}
 
+	func testDiceCubeViewMapsNeutralTexturePixelsToPoints() {
+		let size = CGSize(width: 390, height: 844)
+		let texturePixels = DiceCubeView.debugNeutralTableTexturePixelSize()
+		let planeSize = DiceCubeView.debugTablePlaneSize(for: size)
+		let repeats = DiceCubeView.debugNeutralTableTextureRepeat(for: size)
+
+		XCTAssertGreaterThan(texturePixels.width, 0)
+		XCTAssertGreaterThan(texturePixels.height, 0)
+		XCTAssertEqual(repeats.width, planeSize.width / texturePixels.width, accuracy: 0.001)
+		XCTAssertEqual(repeats.height, planeSize.height / texturePixels.height, accuracy: 0.001)
+	}
+
 	private func makeController() -> DiceViewController {
 		DiceViewController()
 	}
@@ -2393,6 +2405,19 @@ final class DiceTests: XCTestCase {
 		)
 		XCTAssertGreaterThan(counts.firstPass, 0)
 		XCTAssertEqual(counts.secondPass, 0)
+	}
+
+	func testDiceCubeViewRebuildsMaterialsWhenSideLengthChanges() {
+		let counts = DiceCubeView.debugMaterialRefreshCountsForSideLengthChange(
+			values: [2, 7],
+			sideCounts: [6, 20],
+			colorOverrides: [.amber, .sapphire],
+			fontOverrides: [nil, nil],
+			sideLengthFirst: 88,
+			sideLengthSecond: 116
+		)
+		XCTAssertGreaterThan(counts.firstPass, 0)
+		XCTAssertGreaterThan(counts.secondPass, 0)
 	}
 
 	func testD4MeshGeometryMatchesTetrahedronExpectations() {

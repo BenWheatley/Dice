@@ -53,12 +53,9 @@ if (tableTextureMode < 0.5) {
 	color = base + float3(rings, rings * 0.72, rings * 0.42);
 	_surface.roughness = 0.92;
 } else {
-	// Neutral: map one texture pixel to one screen point by sampling in table-point space.
-	float2 pNeutral = centeredUV * float2(max(tableTextureScaleX, 1.0), max(tableTextureScaleY, 1.0));
-	float stripes = sin(pNeutral.y * 0.46) * 0.5 + 0.5;
-	float micro = tableNoise2(float2(pNeutral.x * 0.06, pNeutral.y * 0.10));
-	float shade = 0.88 + (stripes - 0.5) * 0.10 + (micro - 0.5) * 0.02;
-	color = float3(shade);
+	// Neutral: texture-backed stripes. Host code configures diffuse.contentsTransform so
+	// one source texture pixel maps to one screen point in neutral mode.
+	color = _surface.diffuse.rgb;
 	_surface.roughness = 0.95;
 }
 

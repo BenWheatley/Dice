@@ -12,6 +12,25 @@ import simd
 
 final class DiceCubeView: UIView {
 	private static let faceTextureEdgeLength: CGFloat = 256
+	private static let neutralTextureName = "stripes"
+
+	private static let neutralTableTextureImage: UIImage? = {
+		let bundles = [Bundle.main, Bundle(for: DiceCubeView.self)]
+		for bundle in bundles {
+			if let image = UIImage(named: neutralTextureName, in: bundle, compatibleWith: nil) {
+				return image
+			}
+		}
+		return UIImage(named: neutralTextureName)
+	}()
+
+	private static let neutralTableTexturePixelSize: CGSize = {
+		guard let image = neutralTableTextureImage else { return .zero }
+		if let cgImage = image.cgImage {
+			return CGSize(width: cgImage.width, height: cgImage.height)
+		}
+		return CGSize(width: image.size.width * image.scale, height: image.size.height * image.scale)
+	}()
 	private struct MeshCacheKey: Hashable {
 		let sideCount: Int
 		let roundedSideLength: Int
@@ -187,6 +206,7 @@ final class DiceCubeView: UIView {
 			let colorPreset = index < dieColorPresets.count ? dieColorPresets[index] : nil
 			let numeralFont = index < faceNumeralFonts.count ? faceNumeralFonts[index] : nil
 			let needsAppearanceRefresh = didSideChange ||
+				sizeChanged ||
 				styleChanged ||
 				appliedAppearanceGeneration[index] != appearanceGeneration ||
 				appliedColorOverrides[index] != colorPreset ||
@@ -427,7 +447,6 @@ final class DiceCubeView: UIView {
 		let plane = SCNPlane(width: 10, height: 10)
 		tableMaterial.lightingModel = .constant
 		tableMaterial.isDoubleSided = false
-		tableMaterial.diffuse.contents = UIColor(red: 0.88, green: 0.88, blue: 0.88, alpha: 1.0)
 		tableMaterial.diffuse.wrapS = .repeat
 		tableMaterial.diffuse.wrapT = .repeat
 		tableMaterial.writesToDepthBuffer = false
@@ -446,6 +465,18 @@ final class DiceCubeView: UIView {
 
 	private func applyTableTexture() {
 		tableMaterial.setValue(tableTextureModeValue(for: activeTableTexture), forKey: "tableTextureMode")
+		if activeTableTexture == .neutral, let neutralTexture = Self.neutralTableTextureImage {
+			tableMaterial.diffuse.contents = neutralTexture
+			tableMaterial.diffuse.minificationFilter = .nearest
+			tableMaterial.diffuse.magnificationFilter = .nearest
+			tableMaterial.diffuse.mipFilter = .none
+		} else {
+			tableMaterial.diffuse.contents = UIColor(red: 0.88, green: 0.88, blue: 0.88, alpha: 1.0)
+			tableMaterial.diffuse.minificationFilter = .linear
+			tableMaterial.diffuse.magnificationFilter = .linear
+			tableMaterial.diffuse.mipFilter = .none
+		}
+		applyTableTextureScale()
 	}
 
 	private func applyTableTextureScale() {
@@ -454,6 +485,15 @@ final class DiceCubeView: UIView {
 		tableMaterial.setValue(scale as NSNumber, forKey: "tableTextureScale")
 		tableMaterial.setValue(pointScale.width as NSNumber, forKey: "tableTextureScaleX")
 		tableMaterial.setValue(pointScale.height as NSNumber, forKey: "tableTextureScaleY")
+		if activeTableTexture == .neutral,
+			Self.neutralTableTexturePixelSize.width > 0,
+			Self.neutralTableTexturePixelSize.height > 0 {
+			let repeatX = Float(pointScale.width / Self.neutralTableTexturePixelSize.width)
+			let repeatY = Float(pointScale.height / Self.neutralTableTexturePixelSize.height)
+			tableMaterial.diffuse.contentsTransform = SCNMatrix4MakeScale(repeatX, repeatY, 1)
+		} else {
+			tableMaterial.diffuse.contentsTransform = SCNMatrix4Identity
+		}
 	}
 
 	private func tableTexturePointScale() -> CGSize {
@@ -802,6 +842,50 @@ final class DiceCubeView: UIView {
 		return (firstPass: firstPass, secondPass: view.debugMaterialRefreshCount - firstPass)
 	}
 
+	static func debugMaterialRefreshCountsForSideLengthChange(
+		values: [Int],
+		sideCounts: [Int],
+		colorOverrides: [DiceDieColorPreset?],
+		fontOverrides: [DiceFaceNumeralFont?],
+		sideLengthFirst: CGFloat,
+		sideLengthSecond: CGFloat
+	) -> (firstPass: Int, secondPass: Int) {
+		let count = min(values.count, sideCounts.count)
+		guard count > 0 else { return (firstPass: 0, secondPass: 0) }
+		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 360, height: 240))
+		let centers: [CGPoint] = (0..<count).map { index in
+			CGPoint(x: 54 + (CGFloat(index) * 96), y: 120)
+		}
+		let trimmedValues = Array(values.prefix(count))
+		let trimmedSideCounts = Array(sideCounts.prefix(count))
+		let trimmedColors = Array(colorOverrides.prefix(count))
+		let trimmedFonts = Array(fontOverrides.prefix(count))
+
+		view.debugMaterialRefreshCount = 0
+		view.setDice(
+			values: trimmedValues,
+			centers: centers,
+			sideLength: sideLengthFirst,
+			sideCounts: trimmedSideCounts,
+			dieColorPresets: trimmedColors,
+			faceNumeralFonts: trimmedFonts,
+			lockedIndices: [],
+			animated: false
+		)
+		let firstPass = view.debugMaterialRefreshCount
+		view.setDice(
+			values: trimmedValues,
+			centers: centers,
+			sideLength: sideLengthSecond,
+			sideCounts: trimmedSideCounts,
+			dieColorPresets: trimmedColors,
+			faceNumeralFonts: trimmedFonts,
+			lockedIndices: [],
+			animated: false
+		)
+		return (firstPass: firstPass, secondPass: view.debugMaterialRefreshCount - firstPass)
+	}
+
 	static func debugTableTextureMode(for texture: DiceTableTexture) -> Int {
 		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
 		view.setTableTexture(texture)
@@ -827,6 +911,18 @@ final class DiceCubeView: UIView {
 		view.layoutIfNeeded()
 		guard let plane = view.tableNode.geometry as? SCNPlane else { return .zero }
 		return CGSize(width: plane.width, height: plane.height)
+	}
+
+	static func debugNeutralTableTexturePixelSize() -> CGSize {
+		neutralTableTexturePixelSize
+	}
+
+	static func debugNeutralTableTextureRepeat(for size: CGSize) -> CGSize {
+		let view = DiceCubeView(frame: CGRect(origin: .zero, size: size))
+		view.setTableTexture(.neutral)
+		view.layoutIfNeeded()
+		let transform = view.tableMaterial.diffuse.contentsTransform
+		return CGSize(width: CGFloat(transform.m11), height: CGFloat(transform.m22))
 	}
 #endif
 
