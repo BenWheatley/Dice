@@ -31,6 +31,7 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 	private var currentTotalsAccessibilityValue: String?
 	private var pendingStatsSheetPresentation = false
 	private let statsSheetHeight: CGFloat = 200
+    private let dieInfoSheetHeight: CGFloat = 400
 	private let floatingControlBottomMargin: CGFloat = 16
 	private let rollButtonSpacingAboveStatsSheet: CGFloat = 12
 	private var routeObserver: NSObjectProtocol?
@@ -315,8 +316,15 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 			navigationController.overrideUserInterfaceStyle = .unspecified
 		}
 		navigationController.modalPresentationStyle = .pageSheet
+        // Deliberate product decision: keep a compact fixed-height stats sheet.
+        // This is intentionally constrained to avoid covering the board UI.
+        let customDetent = UISheetPresentationController.Detent.custom(
+            identifier: .init("fixedHeight")
+        ) { _ in
+            return self.dieInfoSheetHeight
+        }
 		if let presentationController = navigationController.sheetPresentationController {
-			presentationController.detents = [.medium(), .large()]
+			presentationController.detents = [customDetent]
 			presentationController.prefersGrabberVisible = true
 			presentationController.preferredCornerRadius = 20
 		}
