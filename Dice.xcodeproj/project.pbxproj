@@ -56,6 +56,7 @@
 		D1CE11022F50000200D1CE00 /* DiceHapticsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10022F50000200D1CE00 /* DiceHapticsEngine.swift */; };
 		D1CE11042F50000400D1CE00 /* DiceOptionsSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10042F50000400D1CE00 /* DiceOptionsSheetViewController.swift */; };
 		D1CE11052F50000500D1CE00 /* DiceOptionsSectionBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10052F50000500D1CE00 /* DiceOptionsSectionBuilder.swift */; };
+		D3CE11012F5A000100D1CE00 /* DieInspectorSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3CE10012F5A000100D1CE00 /* DieInspectorSheetViewController.swift */; };
 		D1CE11072F50000700D1CE00 /* DiceSoundEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10072F50000700D1CE00 /* DiceSoundEngine.swift */; };
 		D1CE11082F50000800D1CE00 /* DiceAudioFormatResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10082F50000800D1CE00 /* DiceAudioFormatResolver.swift */; };
 		D1CE110B2F50000B00D1CE00 /* HistoryRowFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE100B2F50000B00D1CE00 /* HistoryRowFormatter.swift */; };
@@ -239,6 +240,7 @@
 		D1CE10022F50000200D1CE00 /* DiceHapticsEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceHapticsEngine.swift; sourceTree = "<group>"; };
 		D1CE10042F50000400D1CE00 /* DiceOptionsSheetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceOptionsSheetViewController.swift; sourceTree = "<group>"; };
 		D1CE10052F50000500D1CE00 /* DiceOptionsSectionBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceOptionsSectionBuilder.swift; sourceTree = "<group>"; };
+		D3CE10012F5A000100D1CE00 /* DieInspectorSheetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DieInspectorSheetViewController.swift; sourceTree = "<group>"; };
 		D1CE10072F50000700D1CE00 /* DiceSoundEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceSoundEngine.swift; sourceTree = "<group>"; };
 		D1CE10082F50000800D1CE00 /* DiceAudioFormatResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceAudioFormatResolver.swift; sourceTree = "<group>"; };
 		D1CE100B2F50000B00D1CE00 /* HistoryRowFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryRowFormatter.swift; sourceTree = "<group>"; };
@@ -384,6 +386,7 @@
 				D1CE100B2F50000B00D1CE00 /* HistoryRowFormatter.swift */,
 				D1CE100C2F50000C00D1CE00 /* HistorySummaryCardRenderer.swift */,
 				D1CE10042F50000400D1CE00 /* DiceOptionsSheetViewController.swift */,
+				D3CE10012F5A000100D1CE00 /* DieInspectorSheetViewController.swift */,
 				D1CE10052F50000500D1CE00 /* DiceOptionsSectionBuilder.swift */,
 				D1CE10072F50000700D1CE00 /* DiceSoundEngine.swift */,
 				D1CE10082F50000800D1CE00 /* DiceAudioFormatResolver.swift */,
@@ -739,6 +742,7 @@
 				D1CE110B2F50000B00D1CE00 /* HistoryRowFormatter.swift in Sources */,
 				D1CE110C2F50000C00D1CE00 /* HistorySummaryCardRenderer.swift in Sources */,
 				D1CE11042F50000400D1CE00 /* DiceOptionsSheetViewController.swift in Sources */,
+				D3CE11012F5A000100D1CE00 /* DieInspectorSheetViewController.swift in Sources */,
 				D1CE11052F50000500D1CE00 /* DiceOptionsSectionBuilder.swift in Sources */,
 				D1CE11072F50000700D1CE00 /* DiceSoundEngine.swift in Sources */,
 				D1CE11082F50000800D1CE00 /* DiceAudioFormatResolver.swift in Sources */,

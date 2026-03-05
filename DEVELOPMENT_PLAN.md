@@ -218,6 +218,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Move stats resurfacing control to a bottom-right floating `Show` button (chart icon + text) and remove the Show Stats toggle from the settings sheet.
 - [x] Move `Roll` out of the top bar into a bottom-centered floating action button (`die.face.5` + text) that tracks the stats sheet position, and switch `Presets` in the top bar to icon-only `bookmark` while preserving accessibility labels.
 - [x] Restore per-die tap menu presentation using direct `UIEditMenuInteraction` anchored at the actual tapped 3D die location (remove proxy button trigger path).
+- [x] Replace per-die contextual edit menus with a tap-selected inspector sheet (reroll/lock/color/style controls) and highlight the selected die directly in `DiceCubeView`.
 - [x] Remove obsolete `boardSupportedSides` plumbing from controller/view-model totals formatting path and update call sites/tests to eliminate dead parameters.
 - [x] Document product decision to keep Roll Distribution on a fixed-height custom detent (compact board-first layout) directly in sheet presentation code.
 - [x] Run dead-code/resource sweep for the stats/settings refactor and remove unreachable style-preview UI path plus unreferenced symbols.

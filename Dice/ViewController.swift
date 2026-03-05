@@ -8,7 +8,7 @@
 
 import UIKit
 
-class DiceViewController: UIViewController, UITextFieldDelegate, UIEditMenuInteractionDelegate {
+class DiceViewController: UIViewController, UITextFieldDelegate {
 	private let viewModel = DiceViewModel()
 	private let soundEngine = DiceSoundEngine()
 	private let hapticsEngine = DiceHapticsEngine()
@@ -34,7 +34,8 @@ class DiceViewController: UIViewController, UITextFieldDelegate, UIEditMenuInter
 	private let floatingControlBottomMargin: CGFloat = 16
 	private let rollButtonSpacingAboveStatsSheet: CGFloat = 12
 	private var routeObserver: NSObjectProtocol?
-	private lazy var dieEditMenuInteraction = UIEditMenuInteraction(delegate: self)
+	private var selectedDieIndex: Int?
+	private weak var dieInspectorSheetController: DieInspectorSheetViewController?
 
 	init() {
 		super.init(nibName: nil, bundle: nil)
@@ -235,13 +236,12 @@ class DiceViewController: UIViewController, UITextFieldDelegate, UIEditMenuInter
 		diceBoardView.onRollSettled = { [weak self] in
 			self?.playSettleTickSound()
 		}
-		diceBoardView.onDieTapped = { [weak self] index, location in
-			self?.presentDieMenu(for: index, at: location)
+		diceBoardView.onDieTapped = { [weak self] index, _ in
+			self?.presentDieInspector(for: index)
 		}
 		diceBoardView.setTableTexture(viewModel.tableTexture)
 		diceBoardView.setLargeFaceLabelsEnabled(viewModel.largeFaceLabelsEnabled)
 		view.addSubview(diceBoardView)
-		diceBoardView.addInteraction(dieEditMenuInteraction)
 		view.bringSubviewToFront(rollButton)
 		view.bringSubviewToFront(showStatsButton)
 		NSLayoutConstraint.activate([
@@ -282,26 +282,95 @@ class DiceViewController: UIViewController, UITextFieldDelegate, UIEditMenuInter
 		refreshSystemSurfaces()
 	}
 
-	private func presentDieMenu(for index: Int, at locationInBoard: CGPoint) {
-		guard dieContextMenu(for: index) != nil else { return }
-		let config = UIEditMenuConfiguration(
-			identifier: NSNumber(value: index),
-			sourcePoint: locationInBoard
-		)
-		dieEditMenuInteraction.presentEditMenu(with: config)
+	private func presentDieInspector(for index: Int) {
+		guard viewModel.diceValues.indices.contains(index), viewModel.diceSideCounts.indices.contains(index) else { return }
+		selectedDieIndex = index
+		diceBoardView.setSelectedDieIndex(index)
+		let state = dieInspectorState(for: index)
+
+		if let inspector = dieInspectorSheetController, inspector.presentingViewController != nil {
+			bindDieInspectorCallbacks(inspector, dieIndex: index)
+			inspector.updateState(state)
+			return
+		}
+
+		let inspector = DieInspectorSheetViewController(state: state)
+		bindDieInspectorCallbacks(inspector, dieIndex: index)
+		inspector.onDismiss = { [weak self, weak inspector] in
+			guard let self else { return }
+			if self.dieInspectorSheetController === inspector {
+				self.dieInspectorSheetController = nil
+			}
+			self.selectedDieIndex = nil
+			self.diceBoardView.setSelectedDieIndex(nil)
+		}
+
+		let navigationController = UINavigationController(rootViewController: inspector)
+		switch viewModel.theme {
+		case .lightMode:
+			navigationController.overrideUserInterfaceStyle = .light
+		case .darkMode:
+			navigationController.overrideUserInterfaceStyle = .dark
+		case .system:
+			navigationController.overrideUserInterfaceStyle = .unspecified
+		}
+		navigationController.modalPresentationStyle = .pageSheet
+		if let presentationController = navigationController.sheetPresentationController {
+			presentationController.detents = [.medium(), .large()]
+			presentationController.prefersGrabberVisible = true
+			presentationController.preferredCornerRadius = 20
+		}
+		present(navigationController, animated: true)
+		dieInspectorSheetController = inspector
 	}
 
-	func editMenuInteraction(
-		_ interaction: UIEditMenuInteraction,
-		menuFor configuration: UIEditMenuConfiguration,
-		suggestedActions: [UIMenuElement]
-	) -> UIMenu? {
-		guard let identifier = configuration.identifier as? NSNumber else { return nil }
-		return dieContextMenu(for: identifier.intValue)
+	private func bindDieInspectorCallbacks(_ inspector: DieInspectorSheetViewController, dieIndex: Int) {
+		inspector.onReroll = { [weak self] in
+			guard let self else { return }
+			_ = self.rerollDie(at: dieIndex)
+		}
+		inspector.onToggleLock = { [weak self] in
+			guard let self else { return }
+			self.toggleDieLock(at: dieIndex)
+		}
+		inspector.onSetColor = { [weak self] preset in
+			guard let self else { return }
+			self.selectDieColorPreset(preset, index: dieIndex)
+		}
+		inspector.onSetD6PipStyle = { [weak self] style in
+			guard let self else { return }
+			self.selectD6PipStyle(style)
+		}
+		inspector.onSetFaceNumeralFont = { [weak self] font in
+			guard let self else { return }
+			self.selectFaceNumeralFont(font, dieIndex: dieIndex)
+		}
+	}
+
+	private func dieInspectorState(for index: Int) -> DieInspectorSheetViewController.State {
+		let sideCount = viewModel.diceSideCounts[index]
+		let selectedColor = viewModel.dieColorPreset(forDieAt: index) ?? viewModel.dieColorPreset(for: sideCount)
+		let selectedFont = viewModel.faceNumeralFont(forDieAt: index) ?? viewModel.faceNumeralFont
+		return DieInspectorSheetViewController.State(
+			dieIndex: index,
+			sideCount: sideCount,
+			isLocked: viewModel.isDieLocked(at: index),
+			selectedColor: selectedColor,
+			d6PipStyle: viewModel.d6PipStyle,
+			selectedFont: selectedFont
+		)
+	}
+
+	private func refreshDieInspectorIfVisible() {
+		guard let inspector = dieInspectorSheetController, inspector.presentingViewController != nil else { return }
+		guard let index = selectedDieIndex else { return }
+		guard viewModel.diceValues.indices.contains(index), viewModel.diceSideCounts.indices.contains(index) else { return }
+		bindDieInspectorCallbacks(inspector, dieIndex: index)
+		inspector.updateState(dieInspectorState(for: index))
 	}
 
 #if DEBUG
-	static var debugUsesEditMenuInteractionForDieActions: Bool {
+	static var debugUsesDieInspectorSheetForDieActions: Bool {
 		true
 	}
 #endif
@@ -321,74 +390,6 @@ class DiceViewController: UIViewController, UITextFieldDelegate, UIEditMenuInter
 		updateDiceBoard(animated: false)
 	}
 
-	private func dieContextMenu(for index: Int) -> UIMenu? {
-		guard viewModel.diceValues.indices.contains(index) else { return nil }
-		guard viewModel.diceSideCounts.indices.contains(index) else { return nil }
-		let sideCount = viewModel.diceSideCounts[index]
-		let lockTitleKey = viewModel.isDieLocked(at: index) ? "die.options.unlock" : "die.options.lock"
-
-		let rerollAttributes: UIMenuElement.Attributes = viewModel.isDieLocked(at: index) ? .disabled : []
-		let rerollAction = UIAction(
-			title: NSLocalizedString("die.options.reroll", comment: "Reroll one die action"),
-			attributes: rerollAttributes
-		) { [weak self] _ in
-			self?.rerollDie(at: index)
-		}
-		let lockAction = UIAction(title: NSLocalizedString(lockTitleKey, comment: "Toggle lock action")) { [weak self] _ in
-			self?.toggleDieLock(at: index)
-		}
-
-		let selectedColor = viewModel.dieColorPreset(forDieAt: index) ?? viewModel.dieColorPreset(for: sideCount)
-		let colorActions = DiceDieColorPreset.allCases.map { preset in
-			UIAction(
-				title: NSLocalizedString(preset.menuTitleKey, comment: "Die color option"),
-				state: preset == selectedColor ? .on : .off
-			) { [weak self] _ in
-				self?.selectDieColorPreset(preset, index: index)
-			}
-		}
-		let colorMenu = UIMenu(
-			title: NSLocalizedString("die.options.color", comment: "Change die color action"),
-			options: .displayInline,
-			children: colorActions
-		)
-
-		let styleMenu: UIMenu
-		if sideCount == 6 {
-			let pipActions = DiceD6PipStyle.allCases.map { style in
-				UIAction(
-					title: NSLocalizedString(style.menuTitleKey, comment: "D6 pip style option"),
-					state: viewModel.d6PipStyle == style ? .on : .off
-				) { [weak self] _ in
-					self?.selectD6PipStyle(style)
-				}
-			}
-			styleMenu = UIMenu(
-				title: NSLocalizedString("die.options.pips", comment: "Change d6 pip style action"),
-				options: .displayInline,
-				children: pipActions
-			)
-		} else {
-			let selectedFont = viewModel.faceNumeralFont(forDieAt: index) ?? viewModel.faceNumeralFont
-			let fontActions = DiceFaceNumeralFont.allCases.map { font in
-				UIAction(
-					title: NSLocalizedString(font.menuTitleKey, comment: "Numeral font option"),
-					state: selectedFont == font ? .on : .off
-				) { [weak self] _ in
-					self?.selectFaceNumeralFont(font, dieIndex: index)
-				}
-			}
-			styleMenu = UIMenu(
-				title: NSLocalizedString("die.options.font", comment: "Change numeral font action"),
-				options: .displayInline,
-				children: fontActions
-			)
-		}
-
-		let title = String(format: NSLocalizedString("die.options.title", comment: "Per-die options title"), index + 1, sideCount)
-		return UIMenu(title: title, children: [rerollAction, lockAction, colorMenu, styleMenu])
-	}
-
 	@discardableResult
 	private func rerollDie(at index: Int) -> RollOutcome? {
 		guard let outcome = viewModel.rerollDie(at: index) else { return nil }
@@ -402,6 +403,7 @@ class DiceViewController: UIViewController, UITextFieldDelegate, UIEditMenuInter
 	private func toggleDieLock(at index: Int) {
 		viewModel.toggleDieLock(at: index)
 		updateDiceBoard(animated: false)
+		refreshDieInspectorIfVisible()
 	}
 
 	private func updateDiceBoard(animated: Bool, animatingIndices: Set<Int>? = nil) {
@@ -409,6 +411,8 @@ class DiceViewController: UIViewController, UITextFieldDelegate, UIEditMenuInter
 		guard !sideCounts.isEmpty else {
 			diceBoardView.isHidden = true
 			diceBoardView.setDice(values: [], centers: [], sideLength: 0, sideCounts: [], animated: false)
+			selectedDieIndex = nil
+			diceBoardView.setSelectedDieIndex(nil)
 			return
 		}
 
@@ -452,6 +456,10 @@ class DiceViewController: UIViewController, UITextFieldDelegate, UIEditMenuInter
 			lockedIndices: boardLockedIndices,
 			animated: animated
 		)
+		if let selectedDieIndex, selectedDieIndex >= values.count {
+			self.selectedDieIndex = nil
+		}
+		diceBoardView.setSelectedDieIndex(selectedDieIndex)
 	}
 
 	static func boardAnimationLockedIndices(totalDice: Int, persistentLocked: Set<Int>, animatingIndices: Set<Int>?) -> Set<Int> {
@@ -1113,6 +1121,7 @@ class DiceViewController: UIViewController, UITextFieldDelegate, UIEditMenuInter
 		diceBoardView.setDieColorPreferences(viewModel.dieColorPreferences)
 		updateDiceBoard(animated: false)
 		updateControlMenu()
+		refreshDieInspectorIfVisible()
 	}
 
 	private func selectD6PipStyle(_ style: DiceD6PipStyle) {
@@ -1120,6 +1129,7 @@ class DiceViewController: UIViewController, UITextFieldDelegate, UIEditMenuInter
 		diceBoardView.setD6PipStyle(style)
 		updateDiceBoard(animated: false)
 		updateControlMenu()
+		refreshDieInspectorIfVisible()
 	}
 
 	private func selectFaceNumeralFont(_ font: DiceFaceNumeralFont, dieIndex: Int? = nil) {
@@ -1131,6 +1141,7 @@ class DiceViewController: UIViewController, UITextFieldDelegate, UIEditMenuInter
 		diceBoardView.setFaceNumeralFont(font)
 		updateDiceBoard(animated: false)
 		updateControlMenu()
+		refreshDieInspectorIfVisible()
 	}
 
 	private func toggleLargeFaceLabels() {

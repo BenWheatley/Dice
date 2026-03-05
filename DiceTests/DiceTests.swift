@@ -2204,8 +2204,17 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(DiceCubeView.dieAccessibilityIdentifier(for: 7), "die_7")
 	}
 
-	func testControllerUsesDirectEditMenuInteractionForDieActions() {
-		XCTAssertTrue(DiceViewController.debugUsesEditMenuInteractionForDieActions)
+	func testControllerUsesInspectorSheetForDieActions() {
+		XCTAssertTrue(DiceViewController.debugUsesDieInspectorSheetForDieActions)
+	}
+
+	func testDieInspectorUsesPipStyleForD6() {
+		XCTAssertEqual(DieInspectorSheetViewController.styleSectionKind(for: 6), .d6Pips)
+	}
+
+	func testDieInspectorUsesNumeralFontForNonD6Dice() {
+		XCTAssertEqual(DieInspectorSheetViewController.styleSectionKind(for: 20), .numeralFont)
+		XCTAssertEqual(DieInspectorSheetViewController.styleSectionKind(for: 4), .numeralFont)
 	}
 
 	func testControllerEmbedsDiceBoardSurfaceDirectly() {

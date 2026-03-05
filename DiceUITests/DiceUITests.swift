@@ -51,19 +51,16 @@ final class DiceUITests: XCTestCase {
 	}
 
 	func testPresetIntuitiveAndRerollSingleDie() {
-		let presetsButton = app.buttons["presetsButton"]
-		XCTAssertTrue(presetsButton.waitForExistence(timeout: 5))
-
-		presetsButton.tap()
-		let intuitivePreset = app.cells["preset_2d6i"].firstMatch
-		XCTAssertTrue(intuitivePreset.waitForExistence(timeout: 5))
-		intuitivePreset.tap()
+		let rollButton = app.buttons["rollButton"]
+		XCTAssertTrue(rollButton.waitForExistence(timeout: 5))
+		rollButton.tap()
 
 		let firstDie = app.buttons["die_0"]
 		XCTAssertTrue(firstDie.waitForExistence(timeout: 5))
 		firstDie.tap()
-		XCTAssertTrue(app.buttons["Reroll This Die"].waitForExistence(timeout: 2))
-		app.buttons["Cancel"].tap()
+		let inspectorSheet = app.otherElements["dieInspectorSheet"]
+		XCTAssertTrue(inspectorSheet.waitForExistence(timeout: 5))
+		XCTAssertTrue(app.buttons["dieInspectorRerollButton"].waitForExistence(timeout: 2))
 	}
 
 	func testToggleAnimationsFromMenu() {

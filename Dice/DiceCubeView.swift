@@ -85,6 +85,7 @@ final class DiceCubeView: UIView {
 	private var activeAnimationIntensity: DiceAnimationIntensity = .full
 	private var activeMotionBlurEnabled = false
 	private var activeTableTexture: DiceTableTexture = .neutral
+	private var selectedDieIndex: Int?
 	private var reduceMotionEnabled = UIAccessibility.isReduceMotionEnabled
 	private var dieAccessibilityElements: [UIAccessibilityElement] = []
 	private var needsMeshRefresh = false
@@ -249,6 +250,7 @@ final class DiceCubeView: UIView {
 			sideLength: sideLength,
 			lockedIndices: lockedIndices
 		)
+		applySelectionAppearance(animated: false)
 		needsMeshRefresh = false
 	}
 
@@ -325,6 +327,11 @@ final class DiceCubeView: UIView {
 	func setMotionBlurEnabled(_ enabled: Bool) {
 		activeMotionBlurEnabled = enabled
 		cameraNode.camera?.motionBlurIntensity = enabled ? 0.45 : 0.0
+	}
+
+	func setSelectedDieIndex(_ index: Int?) {
+		selectedDieIndex = index
+		applySelectionAppearance(animated: true)
 	}
 
 	private func configureScene() {
@@ -511,6 +518,30 @@ final class DiceCubeView: UIView {
 			appliedFontOverrides.append(nil)
 			appliedAppearanceGeneration.append(-1)
 		}
+		if let selectedDieIndex, selectedDieIndex >= dieNodes.count {
+			self.selectedDieIndex = nil
+		}
+	}
+
+	private func applySelectionAppearance(animated: Bool) {
+		let hasSelection = selectedDieIndex != nil
+		let applyBlock = {
+			for (index, node) in self.dieNodes.enumerated() {
+				let isSelected = self.selectedDieIndex == index
+				let scale: Float = isSelected ? 1.08 : 1.0
+				let alpha: CGFloat = hasSelection && !isSelected ? 0.92 : 1.0
+				node.scale = SCNVector3(scale, scale, scale)
+				node.opacity = alpha
+			}
+		}
+		guard animated else {
+			applyBlock()
+			return
+		}
+		SCNTransaction.begin()
+		SCNTransaction.animationDuration = 0.16
+		applyBlock()
+		SCNTransaction.commit()
 	}
 
 	@objc private func handleTap(_ recognizer: UITapGestureRecognizer) {
