@@ -64,6 +64,14 @@ final class DiceCubeView: UIView {
 		let roughness: UIImage
 	}
 
+	private struct FaceValueTextureLayout {
+		let numeralSize: CGFloat
+		let captionSize: CGFloat
+		let numeralYOffset: CGFloat
+		let subtitleY: CGFloat
+		let drawsBorder: Bool
+	}
+
 	private struct FaceTextureCacheKey: Hashable {
 		let sideCount: Int
 		let value: Int
@@ -1077,8 +1085,12 @@ final class DiceCubeView: UIView {
 	static func debugCoinCapTransformSummary(fillColor: UIColor) -> (
 		topM11: Float,
 		topM12: Float,
+		topM21: Float,
+		topM22: Float,
 		bottomM11: Float,
 		bottomM12: Float,
+		bottomM21: Float,
+		bottomM22: Float,
 		topM41: Float,
 		topM42: Float,
 		bottomM41: Float,
@@ -1087,18 +1099,26 @@ final class DiceCubeView: UIView {
 		let view = DiceCubeView(frame: .zero)
 		let materials = view.coinMaterials(fillColor: fillColor, numeralFont: .classic, dieIndex: 0)
 		guard materials.count == 3 else {
-			return (0, 0, 0, 0, 0, 0, 0, 0)
+			return (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 		}
 		let top = materials[1].diffuse.contentsTransform
 		let bottom = materials[2].diffuse.contentsTransform
-		return (top.m11, top.m12, bottom.m11, bottom.m12, top.m41, top.m42, bottom.m41, bottom.m42)
+		return (
+			top.m11, top.m12, top.m21, top.m22,
+			bottom.m11, bottom.m12, bottom.m21, bottom.m22,
+			top.m41, top.m42, bottom.m41, bottom.m42
+		)
 	}
 
 	static func debugTokenCapTransformSummary(sideCount: Int, value: Int, fillColor: UIColor) -> (
 		topM11: Float,
 		topM12: Float,
+		topM21: Float,
+		topM22: Float,
 		bottomM11: Float,
 		bottomM12: Float,
+		bottomM21: Float,
+		bottomM22: Float,
 		topM41: Float,
 		topM42: Float,
 		bottomM41: Float,
@@ -1113,11 +1133,29 @@ final class DiceCubeView: UIView {
 			dieIndex: 0
 		)
 		guard materials.count == 3 else {
-			return (0, 0, 0, 0, 0, 0, 0, 0)
+			return (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 		}
 		let top = materials[1].diffuse.contentsTransform
 		let bottom = materials[2].diffuse.contentsTransform
-		return (top.m11, top.m12, bottom.m11, bottom.m12, top.m41, top.m42, bottom.m41, bottom.m42)
+		return (
+			top.m11, top.m12, top.m21, top.m22,
+			bottom.m11, bottom.m12, bottom.m21, bottom.m22,
+			top.m41, top.m42, bottom.m41, bottom.m42
+		)
+	}
+
+	static func debugFaceValueTextureLayoutSummary(sideCount: Int) -> (
+		numeralSize: CGFloat,
+		captionSize: CGFloat,
+		drawsBorder: Bool
+	) {
+		let view = DiceCubeView(frame: .zero)
+		let layout = view.faceValueTextureLayout(sideCount: sideCount)
+		return (
+			numeralSize: layout.numeralSize,
+			captionSize: layout.captionSize,
+			drawsBorder: layout.drawsBorder
+		)
 	}
 
 	static func debugUsesPinnedRollPosition(sideCount: Int) -> Bool {
@@ -1517,9 +1555,9 @@ final class DiceCubeView: UIView {
 
 	private func applyCylindricalCapTextureOrientation(topCap: SCNMaterial, bottomCap: SCNMaterial) {
 		// SceneKit cylinder cap UVs are quarter-turned relative to the expected upright numeral orientation.
-		// Apply opposite quarter-turns so both visible faces read upright at settle.
-		let topTransform = centeredTextureTransform(rotation: -.pi / 2)
-		let bottomTransform = centeredTextureTransform(rotation: .pi / 2)
+		// Apply opposite quarter-turns plus horizontal flip compensation so symbols are not mirrored.
+		let topTransform = centeredTextureTransform(rotation: -.pi / 2, mirrorX: true, scale: 1.04)
+		let bottomTransform = centeredTextureTransform(rotation: .pi / 2, mirrorX: true, scale: 1.04)
 		applyTextureTransform(topTransform, to: topCap)
 		applyTextureTransform(bottomTransform, to: bottomCap)
 	}
@@ -1532,13 +1570,17 @@ final class DiceCubeView: UIView {
 		material.roughness.contentsTransform = transform
 	}
 
-	private func centeredTextureTransform(rotation: Float) -> SCNMatrix4 {
+	private func centeredTextureTransform(rotation: Float, mirrorX: Bool = false, scale: Float = 1) -> SCNMatrix4 {
 		let toCenter = SCNMatrix4MakeTranslation(0.5, 0.5, 0)
 		let rotate = SCNMatrix4MakeRotation(rotation, 0, 0, 1)
+		let mirror = SCNMatrix4MakeScale(mirrorX ? -1 : 1, 1, 1)
+		let scaleMatrix = SCNMatrix4MakeScale(scale, scale, 1)
 		let fromCenter = SCNMatrix4MakeTranslation(-0.5, -0.5, 0)
 		// SCNMatrix4 texture transforms compose so the rightmost matrix is applied first.
-		// Move UVs to origin, rotate, then move back to center.
-		return SCNMatrix4Mult(SCNMatrix4Mult(fromCenter, rotate), toCenter)
+		// Move UVs to origin, apply orientation/scale, then move back to center.
+		let oriented = SCNMatrix4Mult(rotate, mirror)
+		let transformed = SCNMatrix4Mult(oriented, scaleMatrix)
+		return SCNMatrix4Mult(SCNMatrix4Mult(fromCenter, transformed), toCenter)
 	}
 
 	private func solidDieMaterial(baseColor: UIColor, fillColor: UIColor, dieIndex: Int) -> SCNMaterial {
@@ -1753,11 +1795,12 @@ final class DiceCubeView: UIView {
 	private func faceValueTextureSet(value: Int, sideCount: Int, fillColor: UIColor, numeralFont: DiceFaceNumeralFont) -> FaceTextureSet {
 		let size = CGSize(width: Self.faceTextureEdgeLength, height: Self.faceTextureEdgeLength)
 		let rect = CGRect(origin: .zero, size: size)
+		let layout = faceValueTextureLayout(sideCount: sideCount)
 		let style = DiceFaceContrast.style(for: fillColor)
 		let numeralOutlineColor = oppositeInkColor(for: style.primaryInkColor)
 		let captionOutlineColor = oppositeInkColor(for: style.secondaryInkColor)
-		let numeralSize = DiceFaceLabelSizing.textureNumeralPointSize(sideCount: sideCount, large: activeLargeFaceLabelsEnabled)
-		let captionSize = DiceFaceLabelSizing.textureCaptionPointSize(large: activeLargeFaceLabelsEnabled)
+		let numeralSize = layout.numeralSize
+		let captionSize = layout.captionSize
 		let numeralOutlineWidth = max(1.4, numeralSize * 0.075)
 		let captionOutlineWidth = max(1.0, captionSize * 0.08)
 		let text = "\(value)" as NSString
@@ -1765,11 +1808,21 @@ final class DiceCubeView: UIView {
 
 		func drawText(attributes: [NSAttributedString.Key: Any], subtitleAttributes: [NSAttributedString.Key: Any]) {
 			let tSize = text.size(withAttributes: attributes)
-			let tRect = CGRect(x: (size.width - tSize.width) / 2, y: (size.height - tSize.height) / 2 - 4, width: tSize.width, height: tSize.height)
+			let tRect = CGRect(
+				x: (size.width - tSize.width) / 2,
+				y: (size.height - tSize.height) / 2 + layout.numeralYOffset,
+				width: tSize.width,
+				height: tSize.height
+			)
 			text.draw(in: tRect, withAttributes: attributes)
 
 			let sSize = subtitle.size(withAttributes: subtitleAttributes)
-			let sRect = CGRect(x: (size.width - sSize.width) / 2, y: size.height * 0.78, width: sSize.width, height: sSize.height)
+			let sRect = CGRect(
+				x: (size.width - sSize.width) / 2,
+				y: layout.subtitleY,
+				width: sSize.width,
+				height: sSize.height
+			)
 			subtitle.draw(in: sRect, withAttributes: subtitleAttributes)
 		}
 
@@ -1806,15 +1859,17 @@ final class DiceCubeView: UIView {
 			)
 		}
 
-		let diffuse = UIGraphicsImageRenderer(size: size).image { context in
-			context.cgContext.setFillColor(style.fillColor.cgColor)
-			context.cgContext.fill(rect)
-			context.cgContext.setStrokeColor(style.borderColor.cgColor)
-			context.cgContext.setLineWidth(8)
-			context.cgContext.stroke(rect.insetBy(dx: 6, dy: 6))
+			let diffuse = UIGraphicsImageRenderer(size: size).image { context in
+				context.cgContext.setFillColor(style.fillColor.cgColor)
+				context.cgContext.fill(rect)
+				if layout.drawsBorder {
+					context.cgContext.setStrokeColor(style.borderColor.cgColor)
+					context.cgContext.setLineWidth(8)
+					context.cgContext.stroke(rect.insetBy(dx: 6, dy: 6))
+				}
 
-			drawText(
-				attributes: [
+				drawText(
+					attributes: [
 					.font: numeralFont.numeralFont(ofSize: numeralSize),
 					.foregroundColor: style.primaryInkColor,
 					.strokeColor: numeralOutlineColor,
@@ -1834,6 +1889,29 @@ final class DiceCubeView: UIView {
 		let metalness = symbolOutlineMask
 		let roughness = symbolFillMask
 		return FaceTextureSet(diffuse: diffuse, normal: normal, metalness: metalness, roughness: roughness)
+	}
+
+	private func faceValueTextureLayout(sideCount: Int) -> FaceValueTextureLayout {
+		let isCylindricalFace = usesCoinGeometry(for: sideCount) || usesTokenGeometry(for: sideCount)
+		let baseNumeralSize = DiceFaceLabelSizing.textureNumeralPointSize(sideCount: sideCount, large: activeLargeFaceLabelsEnabled)
+		if isCylindricalFace {
+			let numeralSize = baseNumeralSize * 1.08
+			let textureEdge = Self.faceTextureEdgeLength
+			return FaceValueTextureLayout(
+				numeralSize: numeralSize,
+				captionSize: numeralSize * 0.5,
+				numeralYOffset: -textureEdge * 0.09,
+				subtitleY: textureEdge * 0.72,
+				drawsBorder: false
+			)
+		}
+		return FaceValueTextureLayout(
+			numeralSize: baseNumeralSize,
+			captionSize: DiceFaceLabelSizing.textureCaptionPointSize(large: activeLargeFaceLabelsEnabled),
+			numeralYOffset: -4,
+			subtitleY: Self.faceTextureEdgeLength * 0.78,
+			drawsBorder: true
+		)
 	}
 
 	private func makeLabelGeometry(sideLength: CGFloat) -> SCNGeometry {

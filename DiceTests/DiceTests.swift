@@ -2480,17 +2480,21 @@ final class DiceTests: XCTestCase {
 	func testCoinCapsApplyQuarterTurnTextureOrientationCompensation() {
 		let transform = DiceCubeView.debugCoinCapTransformSummary(fillColor: UIColor(red: 0.86, green: 0.62, blue: 0.22, alpha: 1))
 		XCTAssertEqual(transform.topM11, 0, accuracy: 0.0001)
-		XCTAssertEqual(abs(transform.topM12), 1, accuracy: 0.0001)
+		XCTAssertEqual(abs(transform.topM12), 1.04, accuracy: 0.0001)
 		XCTAssertEqual(transform.bottomM11, 0, accuracy: 0.0001)
-		XCTAssertEqual(abs(transform.bottomM12), 1, accuracy: 0.0001)
-		XCTAssertGreaterThanOrEqual(transform.topM41, -0.001)
-		XCTAssertGreaterThanOrEqual(transform.topM42, -0.001)
-		XCTAssertGreaterThanOrEqual(transform.bottomM41, -0.001)
-		XCTAssertGreaterThanOrEqual(transform.bottomM42, -0.001)
-		XCTAssertLessThanOrEqual(transform.topM41, 1.001)
-		XCTAssertLessThanOrEqual(transform.topM42, 1.001)
-		XCTAssertLessThanOrEqual(transform.bottomM41, 1.001)
-		XCTAssertLessThanOrEqual(transform.bottomM42, 1.001)
+		XCTAssertEqual(abs(transform.bottomM12), 1.04, accuracy: 0.0001)
+		let topDeterminant = transform.topM11 * transform.topM22 - transform.topM12 * transform.topM21
+		let bottomDeterminant = transform.bottomM11 * transform.bottomM22 - transform.bottomM12 * transform.bottomM21
+		XCTAssertLessThan(topDeterminant, 0)
+		XCTAssertLessThan(bottomDeterminant, 0)
+		XCTAssertGreaterThanOrEqual(transform.topM41, -0.03)
+		XCTAssertGreaterThanOrEqual(transform.topM42, -0.03)
+		XCTAssertGreaterThanOrEqual(transform.bottomM41, -0.03)
+		XCTAssertGreaterThanOrEqual(transform.bottomM42, -0.03)
+		XCTAssertLessThanOrEqual(transform.topM41, 1.03)
+		XCTAssertLessThanOrEqual(transform.topM42, 1.03)
+		XCTAssertLessThanOrEqual(transform.bottomM41, 1.03)
+		XCTAssertLessThanOrEqual(transform.bottomM42, 1.03)
 	}
 
 	func testTokenCapsApplyQuarterTurnTextureOrientationCompensation() {
@@ -2500,17 +2504,35 @@ final class DiceTests: XCTestCase {
 			fillColor: UIColor(red: 0.82, green: 0.82, blue: 0.88, alpha: 1)
 		)
 		XCTAssertEqual(transform.topM11, 0, accuracy: 0.0001)
-		XCTAssertEqual(abs(transform.topM12), 1, accuracy: 0.0001)
+		XCTAssertEqual(abs(transform.topM12), 1.04, accuracy: 0.0001)
 		XCTAssertEqual(transform.bottomM11, 0, accuracy: 0.0001)
-		XCTAssertEqual(abs(transform.bottomM12), 1, accuracy: 0.0001)
-		XCTAssertGreaterThanOrEqual(transform.topM41, -0.001)
-		XCTAssertGreaterThanOrEqual(transform.topM42, -0.001)
-		XCTAssertGreaterThanOrEqual(transform.bottomM41, -0.001)
-		XCTAssertGreaterThanOrEqual(transform.bottomM42, -0.001)
-		XCTAssertLessThanOrEqual(transform.topM41, 1.001)
-		XCTAssertLessThanOrEqual(transform.topM42, 1.001)
-		XCTAssertLessThanOrEqual(transform.bottomM41, 1.001)
-		XCTAssertLessThanOrEqual(transform.bottomM42, 1.001)
+		XCTAssertEqual(abs(transform.bottomM12), 1.04, accuracy: 0.0001)
+		let topDeterminant = transform.topM11 * transform.topM22 - transform.topM12 * transform.topM21
+		let bottomDeterminant = transform.bottomM11 * transform.bottomM22 - transform.bottomM12 * transform.bottomM21
+		XCTAssertLessThan(topDeterminant, 0)
+		XCTAssertLessThan(bottomDeterminant, 0)
+		XCTAssertGreaterThanOrEqual(transform.topM41, -0.03)
+		XCTAssertGreaterThanOrEqual(transform.topM42, -0.03)
+		XCTAssertGreaterThanOrEqual(transform.bottomM41, -0.03)
+		XCTAssertGreaterThanOrEqual(transform.bottomM42, -0.03)
+		XCTAssertLessThanOrEqual(transform.topM41, 1.03)
+		XCTAssertLessThanOrEqual(transform.topM42, 1.03)
+		XCTAssertLessThanOrEqual(transform.bottomM41, 1.03)
+		XCTAssertLessThanOrEqual(transform.bottomM42, 1.03)
+	}
+
+	func testCylindricalFaceTextureLayoutUsesReadableCaptionRatioAndNoRectBorder() {
+		let coinLayout = DiceCubeView.debugFaceValueTextureLayoutSummary(sideCount: 2)
+		XCTAssertEqual(coinLayout.captionSize / coinLayout.numeralSize, 0.5, accuracy: 0.01)
+		XCTAssertFalse(coinLayout.drawsBorder)
+
+		let tokenLayout = DiceCubeView.debugFaceValueTextureLayoutSummary(sideCount: 5)
+		XCTAssertEqual(tokenLayout.captionSize / tokenLayout.numeralSize, 0.5, accuracy: 0.01)
+		XCTAssertFalse(tokenLayout.drawsBorder)
+
+		let polyhedralLayout = DiceCubeView.debugFaceValueTextureLayoutSummary(sideCount: 20)
+		XCTAssertTrue(polyhedralLayout.drawsBorder)
+		XCTAssertLessThan(polyhedralLayout.captionSize / polyhedralLayout.numeralSize, 0.3)
 	}
 
 	func testDiceCubeViewUsesUniqueGeometryInstancesPerDie() {
