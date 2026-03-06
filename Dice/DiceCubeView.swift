@@ -92,6 +92,7 @@ final class DiceCubeView: UIView {
 	private var appliedColorOverrides: [DiceDieColorPreset?] = []
 	private var appliedFontOverrides: [DiceFaceNumeralFont?] = []
 	private var appliedAppearanceGeneration: [Int] = []
+	private var appliedSurfaceValues: [Int?] = []
 	private var appearanceGeneration: Int = 0
 	private var orientationCache: [Int: [Int: SCNVector3]] = [:]
 	private var meshCache: [MeshCacheKey: BuiltMesh] = [:]
@@ -206,28 +207,33 @@ final class DiceCubeView: UIView {
 				outline?.isHidden = !activeEdgeOutlinesEnabled
 				dieSideCounts[index] = sideCount
 			}
-			let colorPreset = index < dieColorPresets.count ? dieColorPresets[index] : nil
-			let numeralFont = index < faceNumeralFonts.count ? faceNumeralFonts[index] : nil
-			let needsAppearanceRefresh = didSideChange ||
-				sizeChanged ||
-				styleChanged ||
-				appliedAppearanceGeneration[index] != appearanceGeneration ||
-				appliedColorOverrides[index] != colorPreset ||
-				appliedFontOverrides[index] != numeralFont
-			if needsAppearanceRefresh {
-				let body = container.childNode(withName: "body", recursively: false)
-				applyFaceMaterials(
-					to: body?.geometry,
-					sideCount: sideCount,
-					sideLength: sideLength,
-					colorPresetOverride: colorPreset,
-					faceNumeralFontOverride: numeralFont,
-					dieIndex: index
-				)
-				appliedColorOverrides[index] = colorPreset
-				appliedFontOverrides[index] = numeralFont
-				appliedAppearanceGeneration[index] = appearanceGeneration
-			}
+				let colorPreset = index < dieColorPresets.count ? dieColorPresets[index] : nil
+				let numeralFont = index < faceNumeralFonts.count ? faceNumeralFonts[index] : nil
+				let valueAffectsSurface = usesTokenGeometry(for: sideCount)
+				let didSurfaceValueChange = appliedSurfaceValues[index] != values[index]
+				let needsAppearanceRefresh = didSideChange ||
+					sizeChanged ||
+					styleChanged ||
+					appliedAppearanceGeneration[index] != appearanceGeneration ||
+					appliedColorOverrides[index] != colorPreset ||
+					appliedFontOverrides[index] != numeralFont ||
+					(valueAffectsSurface && didSurfaceValueChange)
+				if needsAppearanceRefresh {
+					let body = container.childNode(withName: "body", recursively: false)
+					applyFaceMaterials(
+						to: body?.geometry,
+						sideCount: sideCount,
+						sideLength: sideLength,
+						currentValue: values[index],
+						colorPresetOverride: colorPreset,
+						faceNumeralFontOverride: numeralFont,
+						dieIndex: index
+					)
+					appliedColorOverrides[index] = colorPreset
+					appliedFontOverrides[index] = numeralFont
+					appliedAppearanceGeneration[index] = appearanceGeneration
+					appliedSurfaceValues[index] = values[index]
+				}
 
 			let showLabel = sideCount != 6
 			let labelNode = container.childNode(withName: "label", recursively: false)
@@ -541,10 +547,11 @@ final class DiceCubeView: UIView {
 				node.removeFromParentNode()
 			}
 			dieNodes = Array(dieNodes.prefix(count))
-			dieSideCounts = Array(dieSideCounts.prefix(count))
-			appliedColorOverrides = Array(appliedColorOverrides.prefix(count))
-			appliedFontOverrides = Array(appliedFontOverrides.prefix(count))
-			appliedAppearanceGeneration = Array(appliedAppearanceGeneration.prefix(count))
+				dieSideCounts = Array(dieSideCounts.prefix(count))
+				appliedColorOverrides = Array(appliedColorOverrides.prefix(count))
+				appliedFontOverrides = Array(appliedFontOverrides.prefix(count))
+				appliedAppearanceGeneration = Array(appliedAppearanceGeneration.prefix(count))
+				appliedSurfaceValues = Array(appliedSurfaceValues.prefix(count))
 		}
 
 		while dieNodes.count < count {
@@ -574,11 +581,12 @@ final class DiceCubeView: UIView {
 
 			scene.rootNode.addChildNode(container)
 			dieNodes.append(container)
-			dieSideCounts.append(6)
-			appliedColorOverrides.append(nil)
-			appliedFontOverrides.append(nil)
-			appliedAppearanceGeneration.append(-1)
-		}
+				dieSideCounts.append(6)
+				appliedColorOverrides.append(nil)
+				appliedFontOverrides.append(nil)
+				appliedAppearanceGeneration.append(-1)
+				appliedSurfaceValues.append(nil)
+			}
 		if let selectedDieIndex, selectedDieIndex >= dieNodes.count {
 			self.selectedDieIndex = nil
 		}
@@ -1043,6 +1051,45 @@ final class DiceCubeView: UIView {
 		)
 	}
 
+	static func debugTokenCapTextureSummary(sideCount: Int, value: Int, fillColor: UIColor) -> (
+		sideUsesImageTexture: Bool,
+		topUsesImageTexture: Bool,
+		bottomUsesImageTexture: Bool
+	) {
+		let view = DiceCubeView(frame: .zero)
+		let materials = view.tokenMaterials(
+			fillColor: fillColor,
+			numeralFont: .classic,
+			sideCount: sideCount,
+			currentValue: value,
+			dieIndex: 0
+		)
+		guard materials.count == 3 else {
+			return (false, false, false)
+		}
+		return (
+			sideUsesImageTexture: materials[0].diffuse.contents is UIImage,
+			topUsesImageTexture: materials[1].diffuse.contents is UIImage,
+			bottomUsesImageTexture: materials[2].diffuse.contents is UIImage
+		)
+	}
+
+	static func debugCoinCapTransformSummary(fillColor: UIColor) -> (
+		topM11: Float,
+		topM12: Float,
+		bottomM11: Float,
+		bottomM12: Float
+	) {
+		let view = DiceCubeView(frame: .zero)
+		let materials = view.coinMaterials(fillColor: fillColor, numeralFont: .classic, dieIndex: 0)
+		guard materials.count == 3 else {
+			return (0, 0, 0, 0)
+		}
+		let top = materials[1].diffuse.contentsTransform
+		let bottom = materials[2].diffuse.contentsTransform
+		return (top.m11, top.m12, bottom.m11, bottom.m12)
+	}
+
 	static func debugUsesPinnedRollPosition(sideCount: Int) -> Bool {
 		let view = DiceCubeView(frame: .zero)
 		return view.usesPinnedRollPosition(for: sideCount)
@@ -1330,6 +1377,7 @@ final class DiceCubeView: UIView {
 		to geometry: SCNGeometry?,
 		sideCount: Int,
 		sideLength: CGFloat,
+		currentValue: Int,
 		colorPresetOverride: DiceDieColorPreset?,
 		faceNumeralFontOverride: DiceFaceNumeralFont?,
 		dieIndex: Int
@@ -1345,7 +1393,13 @@ final class DiceCubeView: UIView {
 			return
 		}
 		if usesTokenGeometry(for: sideCount) {
-			geometry.materials = tokenMaterials(fillColor: fillColor, dieIndex: dieIndex)
+			geometry.materials = tokenMaterials(
+				fillColor: fillColor,
+				numeralFont: font,
+				sideCount: sideCount,
+				currentValue: currentValue,
+				dieIndex: dieIndex
+			)
 			return
 		}
 		let faces = builtMesh(sideLength: sideLength, sideCount: sideCount).materialFaces
@@ -1371,13 +1425,36 @@ final class DiceCubeView: UIView {
 		return style.primaryInkColor
 	}
 
-	private func tokenMaterials(fillColor: UIColor, dieIndex: Int) -> [SCNMaterial] {
+	private func tokenMaterials(
+		fillColor: UIColor,
+		numeralFont: DiceFaceNumeralFont,
+		sideCount: Int,
+		currentValue: Int,
+		dieIndex: Int
+	) -> [SCNMaterial] {
 		let sideColor = multipliedColor(fillColor, factor: 0.78)
-		let capColor = multipliedColor(fillColor, factor: 1.04)
+		let value = max(1, min(sideCount, currentValue))
+		let topCap = faceMaterial(
+			faceIndex: value - 1,
+			face: [0, 1, 2],
+			sideCount: sideCount,
+			fillColor: fillColor,
+			numeralFont: numeralFont,
+			dieIndex: dieIndex
+		)
+		let bottomCap = faceMaterial(
+			faceIndex: value - 1,
+			face: [0, 1, 2],
+			sideCount: sideCount,
+			fillColor: fillColor,
+			numeralFont: numeralFont,
+			dieIndex: dieIndex
+		)
+		applyCylindricalCapTextureOrientation(topCap: topCap, bottomCap: bottomCap)
 		return [
 			solidDieMaterial(baseColor: sideColor, fillColor: fillColor, dieIndex: dieIndex),
-			solidDieMaterial(baseColor: capColor, fillColor: fillColor, dieIndex: dieIndex),
-			solidDieMaterial(baseColor: capColor, fillColor: fillColor, dieIndex: dieIndex)
+			topCap,
+			bottomCap
 		]
 	}
 
@@ -1400,11 +1477,36 @@ final class DiceCubeView: UIView {
 			numeralFont: numeralFont,
 			dieIndex: dieIndex
 		)
+		applyCylindricalCapTextureOrientation(topCap: valueOneCap, bottomCap: valueTwoCap)
 		return [
 			sideMaterial,
 			valueOneCap,
 			valueTwoCap
 		]
+	}
+
+	private func applyCylindricalCapTextureOrientation(topCap: SCNMaterial, bottomCap: SCNMaterial) {
+		// SceneKit cylinder cap UVs are quarter-turned relative to the expected upright numeral orientation.
+		// Apply opposite quarter-turns so both visible faces read upright at settle.
+		let topTransform = centeredTextureTransform(rotation: -.pi / 2)
+		let bottomTransform = centeredTextureTransform(rotation: .pi / 2)
+		applyTextureTransform(topTransform, to: topCap)
+		applyTextureTransform(bottomTransform, to: bottomCap)
+	}
+
+	private func applyTextureTransform(_ transform: SCNMatrix4, to material: SCNMaterial) {
+		material.diffuse.contentsTransform = transform
+		material.normal.contentsTransform = transform
+		material.specular.contentsTransform = transform
+		material.metalness.contentsTransform = transform
+		material.roughness.contentsTransform = transform
+	}
+
+	private func centeredTextureTransform(rotation: Float) -> SCNMatrix4 {
+		let toCenter = SCNMatrix4MakeTranslation(0.5, 0.5, 0)
+		let rotate = SCNMatrix4MakeRotation(rotation, 0, 0, 1)
+		let fromCenter = SCNMatrix4MakeTranslation(-0.5, -0.5, 0)
+		return SCNMatrix4Mult(SCNMatrix4Mult(toCenter, rotate), fromCenter)
 	}
 
 	private func solidDieMaterial(baseColor: UIColor, fillColor: UIColor, dieIndex: Int) -> SCNMaterial {

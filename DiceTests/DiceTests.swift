@@ -2466,6 +2466,25 @@ final class DiceTests: XCTestCase {
 		XCTAssertFalse(summary.topAndBottomShareSameReference)
 	}
 
+	func testTokenCapsUseFaceTexturesForVisibleSymbols() {
+		let summary = DiceCubeView.debugTokenCapTextureSummary(
+			sideCount: 37,
+			value: 11,
+			fillColor: UIColor(red: 0.3, green: 0.5, blue: 0.8, alpha: 1)
+		)
+		XCTAssertFalse(summary.sideUsesImageTexture)
+		XCTAssertTrue(summary.topUsesImageTexture)
+		XCTAssertTrue(summary.bottomUsesImageTexture)
+	}
+
+	func testCoinCapsApplyQuarterTurnTextureOrientationCompensation() {
+		let transform = DiceCubeView.debugCoinCapTransformSummary(fillColor: UIColor(red: 0.86, green: 0.62, blue: 0.22, alpha: 1))
+		XCTAssertEqual(transform.topM11, 0, accuracy: 0.0001)
+		XCTAssertEqual(abs(transform.topM12), 1, accuracy: 0.0001)
+		XCTAssertEqual(transform.bottomM11, 0, accuracy: 0.0001)
+		XCTAssertEqual(abs(transform.bottomM12), 1, accuracy: 0.0001)
+	}
+
 	func testDiceCubeViewUsesUniqueGeometryInstancesPerDie() {
 		XCTAssertTrue(DiceCubeView.debugUsesUniqueGeometryPerDie(sideCount: 6))
 	}
