@@ -2483,6 +2483,34 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(abs(transform.topM12), 1, accuracy: 0.0001)
 		XCTAssertEqual(transform.bottomM11, 0, accuracy: 0.0001)
 		XCTAssertEqual(abs(transform.bottomM12), 1, accuracy: 0.0001)
+		XCTAssertGreaterThanOrEqual(transform.topM41, -0.001)
+		XCTAssertGreaterThanOrEqual(transform.topM42, -0.001)
+		XCTAssertGreaterThanOrEqual(transform.bottomM41, -0.001)
+		XCTAssertGreaterThanOrEqual(transform.bottomM42, -0.001)
+		XCTAssertLessThanOrEqual(transform.topM41, 1.001)
+		XCTAssertLessThanOrEqual(transform.topM42, 1.001)
+		XCTAssertLessThanOrEqual(transform.bottomM41, 1.001)
+		XCTAssertLessThanOrEqual(transform.bottomM42, 1.001)
+	}
+
+	func testTokenCapsApplyQuarterTurnTextureOrientationCompensation() {
+		let transform = DiceCubeView.debugTokenCapTransformSummary(
+			sideCount: 5,
+			value: 3,
+			fillColor: UIColor(red: 0.82, green: 0.82, blue: 0.88, alpha: 1)
+		)
+		XCTAssertEqual(transform.topM11, 0, accuracy: 0.0001)
+		XCTAssertEqual(abs(transform.topM12), 1, accuracy: 0.0001)
+		XCTAssertEqual(transform.bottomM11, 0, accuracy: 0.0001)
+		XCTAssertEqual(abs(transform.bottomM12), 1, accuracy: 0.0001)
+		XCTAssertGreaterThanOrEqual(transform.topM41, -0.001)
+		XCTAssertGreaterThanOrEqual(transform.topM42, -0.001)
+		XCTAssertGreaterThanOrEqual(transform.bottomM41, -0.001)
+		XCTAssertGreaterThanOrEqual(transform.bottomM42, -0.001)
+		XCTAssertLessThanOrEqual(transform.topM41, 1.001)
+		XCTAssertLessThanOrEqual(transform.topM42, 1.001)
+		XCTAssertLessThanOrEqual(transform.bottomM41, 1.001)
+		XCTAssertLessThanOrEqual(transform.bottomM42, 1.001)
 	}
 
 	func testDiceCubeViewUsesUniqueGeometryInstancesPerDie() {

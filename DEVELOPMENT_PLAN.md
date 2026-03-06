@@ -231,6 +231,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Refine cylindrical die UX (`d2` + token-style `dN`): animate from edge-on in-plane spin to face-on settle with synchronized deceleration, and render visible per-face symbols on coin caps.
 - [x] Pin cylindrical dice (`d2` + token-style `dN`) to final board position during roll animations and explicitly set edge-on start orientation before rotation begins.
 - [x] Fix cylindrical cap symbol rendering parity: update token cap materials to use live face textures per rolled value and apply quarter-turn UV compensation so `d2` settles upright and token-style dice always display symbols.
+- [x] Fix cylindrical cap UV transform composition (`SCNMatrix4` order) so quarter-turn compensation stays centered in 0..1 UV space, preventing blank/offset symbols on `d2` and token-style dice.
 - [x] Remove remaining legacy `UICollectionView` board embedding/proxy path entirely (controller/storyboard/cell/tests) so `DiceCubeView` is the sole board render and interaction surface.
 - [x] Add UI regression tests for Roll Distribution sheet lifecycle: tap floating `Show` button, confirm sheet presentation, confirm swipe-to-dismiss persistence behavior, and confirm relaunch state restoration.
 - [x] Remove residual collection-view-oriented test scaffolding and assert direct `DiceCubeView` board surface presence via stable identifiers.

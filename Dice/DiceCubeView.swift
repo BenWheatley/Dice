@@ -1078,16 +1078,46 @@ final class DiceCubeView: UIView {
 		topM11: Float,
 		topM12: Float,
 		bottomM11: Float,
-		bottomM12: Float
+		bottomM12: Float,
+		topM41: Float,
+		topM42: Float,
+		bottomM41: Float,
+		bottomM42: Float
 	) {
 		let view = DiceCubeView(frame: .zero)
 		let materials = view.coinMaterials(fillColor: fillColor, numeralFont: .classic, dieIndex: 0)
 		guard materials.count == 3 else {
-			return (0, 0, 0, 0)
+			return (0, 0, 0, 0, 0, 0, 0, 0)
 		}
 		let top = materials[1].diffuse.contentsTransform
 		let bottom = materials[2].diffuse.contentsTransform
-		return (top.m11, top.m12, bottom.m11, bottom.m12)
+		return (top.m11, top.m12, bottom.m11, bottom.m12, top.m41, top.m42, bottom.m41, bottom.m42)
+	}
+
+	static func debugTokenCapTransformSummary(sideCount: Int, value: Int, fillColor: UIColor) -> (
+		topM11: Float,
+		topM12: Float,
+		bottomM11: Float,
+		bottomM12: Float,
+		topM41: Float,
+		topM42: Float,
+		bottomM41: Float,
+		bottomM42: Float
+	) {
+		let view = DiceCubeView(frame: .zero)
+		let materials = view.tokenMaterials(
+			fillColor: fillColor,
+			numeralFont: .classic,
+			sideCount: sideCount,
+			currentValue: value,
+			dieIndex: 0
+		)
+		guard materials.count == 3 else {
+			return (0, 0, 0, 0, 0, 0, 0, 0)
+		}
+		let top = materials[1].diffuse.contentsTransform
+		let bottom = materials[2].diffuse.contentsTransform
+		return (top.m11, top.m12, bottom.m11, bottom.m12, top.m41, top.m42, bottom.m41, bottom.m42)
 	}
 
 	static func debugUsesPinnedRollPosition(sideCount: Int) -> Bool {
@@ -1506,7 +1536,9 @@ final class DiceCubeView: UIView {
 		let toCenter = SCNMatrix4MakeTranslation(0.5, 0.5, 0)
 		let rotate = SCNMatrix4MakeRotation(rotation, 0, 0, 1)
 		let fromCenter = SCNMatrix4MakeTranslation(-0.5, -0.5, 0)
-		return SCNMatrix4Mult(SCNMatrix4Mult(toCenter, rotate), fromCenter)
+		// SCNMatrix4 texture transforms compose so the rightmost matrix is applied first.
+		// Move UVs to origin, rotate, then move back to center.
+		return SCNMatrix4Mult(SCNMatrix4Mult(fromCenter, rotate), toCenter)
 	}
 
 	private func solidDieMaterial(baseColor: UIColor, fillColor: UIColor, dieIndex: Int) -> SCNMaterial {
