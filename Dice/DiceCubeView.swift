@@ -997,7 +997,8 @@ final class DiceCubeView: UIView {
 		return view.orientation(for: value, sideCount: sideCount)
 	}
 
-	static func debugCoinAnimationEulerAngles(
+	static func debugCylindricalAnimationEulerAngles(
+		sideCount: Int,
 		targetValue: Int,
 		progress: Float,
 		motionScale: Float,
@@ -1005,7 +1006,8 @@ final class DiceCubeView: UIView {
 	) -> SCNVector3 {
 		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
 		let direction: Float = spinDirection >= 0 ? 1 : -1
-		return view.coinAnimationEulerAngles(
+		return view.cylindricalAnimationEulerAngles(
+			sideCount: sideCount,
 			targetValue: targetValue,
 			progress: progress,
 			motionScale: motionScale,
@@ -1811,34 +1813,16 @@ final class DiceCubeView: UIView {
 
 	private func makeRotateAction(node: SCNNode, targetFace: Int, sideCount: Int, duration: TimeInterval, motionScale: Float) -> SCNAction {
 		let target = orientation(for: targetFace, sideCount: sideCount)
-		if usesCoinGeometry(for: sideCount) {
+		if usesCoinGeometry(for: sideCount) || usesTokenGeometry(for: sideCount) {
 			let spinDirection: Float = Bool.random() ? 1 : -1
 			return SCNAction.customAction(duration: duration) { n, elapsed in
 				let progress = Float(max(0, min(1, elapsed / CGFloat(duration))))
-				n.eulerAngles = self.coinAnimationEulerAngles(
+				n.eulerAngles = self.cylindricalAnimationEulerAngles(
+					sideCount: sideCount,
 					targetValue: targetFace,
 					progress: progress,
 					motionScale: motionScale,
 					spinDirection: spinDirection
-				)
-			}
-		}
-		if usesTokenGeometry(for: sideCount) {
-			let current = node.presentation.eulerAngles
-			let turns = max(1, Int(round(2.0 * Double(max(0.5, motionScale)))))
-			let sign: Float = Bool.random() ? 1 : -1
-			let spinTarget = SCNVector3(
-				target.x,
-				target.y,
-				target.z + (Float(turns) * sign * Float.pi * 2.0)
-			)
-			return SCNAction.customAction(duration: duration) { n, elapsed in
-				let progress = Float(max(0, min(1, elapsed / CGFloat(duration))))
-				let eased = 1 - pow(1 - progress, 3)
-				n.eulerAngles = SCNVector3(
-					current.x + (spinTarget.x - current.x) * eased,
-					current.y + (spinTarget.y - current.y) * eased,
-					current.z + (spinTarget.z - current.z) * eased
 				)
 			}
 		}
@@ -1887,14 +1871,15 @@ final class DiceCubeView: UIView {
 		}
 	}
 
-	private func coinAnimationEulerAngles(
+	private func cylindricalAnimationEulerAngles(
+		sideCount: Int,
 		targetValue: Int,
 		progress: Float,
 		motionScale: Float,
 		spinDirection: Float
 	) -> SCNVector3 {
 		let clamped = max(0, min(1, progress))
-		let target = coinTargetOrientation(for: targetValue)
+		let target = orientation(for: targetValue, sideCount: sideCount)
 		let turns = max(2, Int(round(3.0 * Double(max(0.5, motionScale)))))
 		let spinMagnitude = Float(turns) * spinDirection * Float.pi * 2.0
 		let tiltProgress = 1 - pow(1 - clamped, 3)

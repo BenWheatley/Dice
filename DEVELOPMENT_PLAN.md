@@ -228,7 +228,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Restore neutral table texture to source-image-backed point mapping so `stripes` asset pixels render at `1 pixel == 1pt` using `contentsTransform` repeat factors derived from table-plane point size.
 - [x] Fix rotation/resize material regression by forcing per-die face-material reapplication whenever side length changes so color overrides persist after orientation changes.
 - [x] Replace non-polyhedral slab fallback with first-class non-polyhedral render paths: `d2` coin geometry and generic `dN` token geometry, with automated geometry-profile tests.
-- [x] Refine `d2` coin UX: animate from edge-on spin to face-on settle with synchronized deceleration, and render visible per-face symbols on coin caps.
+- [x] Refine cylindrical die UX (`d2` + token-style `dN`): animate from edge-on in-plane spin to face-on settle with synchronized deceleration, and render visible per-face symbols on coin caps.
 - [x] Remove remaining legacy `UICollectionView` board embedding/proxy path entirely (controller/storyboard/cell/tests) so `DiceCubeView` is the sole board render and interaction surface.
 - [x] Add UI regression tests for Roll Distribution sheet lifecycle: tap floating `Show` button, confirm sheet presentation, confirm swipe-to-dismiss persistence behavior, and confirm relaunch state restoration.
 - [x] Remove residual collection-view-oriented test scaffolding and assert direct `DiceCubeView` board surface presence via stable identifiers.

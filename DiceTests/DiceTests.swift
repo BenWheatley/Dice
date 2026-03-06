@@ -2426,9 +2426,9 @@ final class DiceTests: XCTestCase {
 	}
 
 	func testCoinAnimationStartsEdgeOnAndSettlesFaceOn() {
-		let start = DiceCubeView.debugCoinAnimationEulerAngles(targetValue: 1, progress: 0.0, motionScale: 1.0, spinDirection: 1)
-		let middle = DiceCubeView.debugCoinAnimationEulerAngles(targetValue: 1, progress: 0.5, motionScale: 1.0, spinDirection: 1)
-		let end = DiceCubeView.debugCoinAnimationEulerAngles(targetValue: 1, progress: 1.0, motionScale: 1.0, spinDirection: 1)
+		let start = DiceCubeView.debugCylindricalAnimationEulerAngles(sideCount: 2, targetValue: 1, progress: 0.0, motionScale: 1.0, spinDirection: 1)
+		let middle = DiceCubeView.debugCylindricalAnimationEulerAngles(sideCount: 2, targetValue: 1, progress: 0.5, motionScale: 1.0, spinDirection: 1)
+		let end = DiceCubeView.debugCylindricalAnimationEulerAngles(sideCount: 2, targetValue: 1, progress: 1.0, motionScale: 1.0, spinDirection: 1)
 		XCTAssertEqual(start.x, 0, accuracy: 0.0001)
 		XCTAssertGreaterThan(middle.x, 0)
 		XCTAssertEqual(end.x, Float.pi * 0.5, accuracy: 0.0001)
@@ -2436,13 +2436,20 @@ final class DiceTests: XCTestCase {
 
 	func testCoinAnimationSpinDeceleratesToTargetOrientation() {
 		let target = DiceCubeView.debugOrientation(value: 1, sideCount: 2)
-		let start = DiceCubeView.debugCoinAnimationEulerAngles(targetValue: 1, progress: 0.0, motionScale: 1.0, spinDirection: 1)
-		let mid = DiceCubeView.debugCoinAnimationEulerAngles(targetValue: 1, progress: 0.5, motionScale: 1.0, spinDirection: 1)
-		let nearEnd = DiceCubeView.debugCoinAnimationEulerAngles(targetValue: 1, progress: 0.9, motionScale: 1.0, spinDirection: 1)
-		let end = DiceCubeView.debugCoinAnimationEulerAngles(targetValue: 1, progress: 1.0, motionScale: 1.0, spinDirection: 1)
+		let start = DiceCubeView.debugCylindricalAnimationEulerAngles(sideCount: 2, targetValue: 1, progress: 0.0, motionScale: 1.0, spinDirection: 1)
+		let mid = DiceCubeView.debugCylindricalAnimationEulerAngles(sideCount: 2, targetValue: 1, progress: 0.5, motionScale: 1.0, spinDirection: 1)
+		let nearEnd = DiceCubeView.debugCylindricalAnimationEulerAngles(sideCount: 2, targetValue: 1, progress: 0.9, motionScale: 1.0, spinDirection: 1)
+		let end = DiceCubeView.debugCylindricalAnimationEulerAngles(sideCount: 2, targetValue: 1, progress: 1.0, motionScale: 1.0, spinDirection: 1)
 		XCTAssertGreaterThan(abs(start.z - target.z), abs(mid.z - target.z))
 		XCTAssertGreaterThan(abs(mid.z - target.z), abs(nearEnd.z - target.z))
 		XCTAssertEqual(end.z, target.z, accuracy: 0.0001)
+	}
+
+	func testTokenAnimationUsesSameEdgeOnToFaceOnProfile() {
+		let start = DiceCubeView.debugCylindricalAnimationEulerAngles(sideCount: 37, targetValue: 11, progress: 0.0, motionScale: 1.0, spinDirection: 1)
+		let end = DiceCubeView.debugCylindricalAnimationEulerAngles(sideCount: 37, targetValue: 11, progress: 1.0, motionScale: 1.0, spinDirection: 1)
+		XCTAssertEqual(start.x, 0, accuracy: 0.0001)
+		XCTAssertEqual(end.x, Float.pi * 0.5, accuracy: 0.0001)
 	}
 
 	func testCoinCapsUseFaceTexturesForVisibleSymbols() {
