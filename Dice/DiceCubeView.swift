@@ -41,6 +41,8 @@ final class DiceCubeView: UIView {
 		let value: Int
 		let roundedBadgeSize: Int
 		let font: DiceFaceNumeralFont
+		let sideCount: Int
+		let showsSideCount: Bool
 	}
 
 	private struct MeshData {
@@ -237,6 +239,7 @@ final class DiceCubeView: UIView {
 					(labelNode.geometry as? SCNPlane)?.firstMaterial?.diffuse.contents = valueBadgeImage(
 						values[index],
 						sideLength: sideLength,
+						sideCount: sideCount,
 						font: numeralFont ?? activeFaceNumeralFont
 					)
 					labelValueCache[cacheKey] = values[index]
@@ -792,6 +795,20 @@ final class DiceCubeView: UIView {
 		return (typeName: String(describing: type(of: mesh.geometry)), materialCount: mesh.geometry.materials.count)
 	}
 
+	static func debugFallbackCylinderProfile(sideCount: Int, sideLength: CGFloat = 96) -> (typeName: String, radius: CGFloat, height: CGFloat, materialCount: Int) {
+		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
+		let mesh = view.builtMesh(sideLength: sideLength, sideCount: sideCount)
+		guard let cylinder = mesh.geometry as? SCNCylinder else {
+			return (typeName: String(describing: type(of: mesh.geometry)), radius: 0, height: 0, materialCount: mesh.geometry.materials.count)
+		}
+		return (
+			typeName: "SCNCylinder",
+			radius: cylinder.radius,
+			height: cylinder.height,
+			materialCount: cylinder.materials.count
+		)
+	}
+
 	static func debugMaterialRefreshCountsForConsecutiveSetDice(
 		valuesFirst: [Int],
 		valuesSecond: [Int],
@@ -972,6 +989,30 @@ final class DiceCubeView: UIView {
 #if DEBUG
 		debugMeshBuildCount += 1
 #endif
+		if sideCount == 2 {
+			let coin = SCNCylinder(radius: sideLength * 0.48, height: max(6, sideLength * 0.14))
+			coin.radialSegmentCount = 72
+			coin.materials = [SCNMaterial(), SCNMaterial(), SCNMaterial()]
+			return BuiltMesh(
+				geometry: coin,
+				faceNormals: [SIMD3<Float>(0, 0, 1)],
+				faceUps: [SIMD3<Float>(0, 1, 0)],
+				materialFaces: [[0]]
+			)
+		}
+
+		if !supportedPolyhedralSideCounts.contains(sideCount) {
+			let token = SCNCylinder(radius: sideLength * 0.48, height: max(10, sideLength * 0.30))
+			token.radialSegmentCount = 60
+			token.materials = [SCNMaterial(), SCNMaterial(), SCNMaterial()]
+			return BuiltMesh(
+				geometry: token,
+				faceNormals: [SIMD3<Float>(0, 0, 1)],
+				faceUps: [SIMD3<Float>(0, 1, 0)],
+				materialFaces: [[0]]
+			)
+		}
+
 		let mesh = meshData(for: sideCount)
 		let maxNorm = mesh.vertices.map { simd_length($0) }.max() ?? 1
 		let scale = Float(sideLength * 0.5) / maxNorm
@@ -1066,22 +1107,6 @@ final class DiceCubeView: UIView {
 			let box = D6SceneKitRenderConfig.beveledCube(sideLength: sideLength)
 			box.materials = materials
 			geometry = box
-		} else if !supportedPolyhedralSideCounts.contains(sideCount) {
-			// Non-standard dice are shown as rounded rectangular slabs for now.
-			let slab = SCNBox(
-				width: sideLength * 0.94,
-				height: sideLength * 0.94,
-				length: sideLength * 0.42,
-				chamferRadius: sideLength * 0.08
-			)
-			let fallbackMaterials: [SCNMaterial]
-			if let front = materials.first {
-				fallbackMaterials = (0..<6).map { _ in (front.copy() as? SCNMaterial) ?? front }
-			} else {
-				fallbackMaterials = (0..<6).map { _ in faceMaterial(faceIndex: 0, face: [], sideCount: sideCount) }
-			}
-			slab.materials = fallbackMaterials
-			geometry = slab
 		} else {
 			geometry = SCNGeometry(sources: [vSource, uvSource], elements: elements)
 			geometry.materials = materials
@@ -1250,6 +1275,14 @@ final class DiceCubeView: UIView {
 		debugMaterialRefreshCount += 1
 #endif
 		let fillColor = resolvedColorPreset(sideCount: sideCount, colorPresetOverride: colorPresetOverride).fillColor
+		if sideCount == 2 {
+			geometry.materials = coinMaterials(fillColor: fillColor, dieIndex: dieIndex)
+			return
+		}
+		if !supportedPolyhedralSideCounts.contains(sideCount) {
+			geometry.materials = tokenMaterials(fillColor: fillColor, dieIndex: dieIndex)
+			return
+		}
 		let font = faceNumeralFontOverride ?? activeFaceNumeralFont
 		let faces = builtMesh(sideLength: sideLength, sideCount: sideCount).materialFaces
 		geometry.materials = faces.enumerated().map { faceIndex, face in
@@ -1272,6 +1305,63 @@ final class DiceCubeView: UIView {
 	private func symbolInkColor(for fillColor: UIColor) -> UIColor {
 		let style = DiceFaceContrast.style(for: fillColor)
 		return style.primaryInkColor
+	}
+
+	private func tokenMaterials(fillColor: UIColor, dieIndex: Int) -> [SCNMaterial] {
+		let sideColor = multipliedColor(fillColor, factor: 0.78)
+		let capColor = multipliedColor(fillColor, factor: 1.04)
+		return [
+			solidDieMaterial(baseColor: sideColor, fillColor: fillColor, dieIndex: dieIndex),
+			solidDieMaterial(baseColor: capColor, fillColor: fillColor, dieIndex: dieIndex),
+			solidDieMaterial(baseColor: capColor, fillColor: fillColor, dieIndex: dieIndex)
+		]
+	}
+
+	private func coinMaterials(fillColor: UIColor, dieIndex: Int) -> [SCNMaterial] {
+		let sideColor = multipliedColor(fillColor, factor: 0.62)
+		let capColor = multipliedColor(fillColor, factor: 1.06)
+		return [
+			solidDieMaterial(baseColor: sideColor, fillColor: fillColor, dieIndex: dieIndex),
+			solidDieMaterial(baseColor: capColor, fillColor: fillColor, dieIndex: dieIndex),
+			solidDieMaterial(baseColor: capColor, fillColor: fillColor, dieIndex: dieIndex)
+		]
+	}
+
+	private func solidDieMaterial(baseColor: UIColor, fillColor: UIColor, dieIndex: Int) -> SCNMaterial {
+		let material = SCNMaterial()
+		material.diffuse.contents = baseColor
+		material.normal.contents = D6SceneKitRenderConfig.flatNormalMapImage()
+		material.normal.intensity = 0.35
+		material.specular.contents = UIColor.black
+		material.metalness.contents = UIColor.black
+		material.roughness.contents = UIColor.black
+		material.locksAmbientWithDiffuse = true
+		material.isDoubleSided = false
+		material.emission.contents = UIColor.black
+		material.emission.intensity = 0.0
+		activeDieFinish.apply(to: material, baseColor: fillColor, dieIndex: dieIndex)
+		return material
+	}
+
+	private func multipliedColor(_ color: UIColor, factor: CGFloat) -> UIColor {
+		var red: CGFloat = 0
+		var green: CGFloat = 0
+		var blue: CGFloat = 0
+		var alpha: CGFloat = 0
+		if color.getRed(&red, green: &green, blue: &blue, alpha: &alpha) {
+			return UIColor(
+				red: max(0, min(1, red * factor)),
+				green: max(0, min(1, green * factor)),
+				blue: max(0, min(1, blue * factor)),
+				alpha: alpha
+			)
+		}
+		var white: CGFloat = 0
+		if color.getWhite(&white, alpha: &alpha) {
+			let adjusted = max(0, min(1, white * factor))
+			return UIColor(white: adjusted, alpha: alpha)
+		}
+		return color
 	}
 
 
@@ -1542,9 +1632,16 @@ final class DiceCubeView: UIView {
 		return plane
 	}
 
-	private func valueBadgeImage(_ value: Int, sideLength: CGFloat, font: DiceFaceNumeralFont) -> UIImage {
+	private func valueBadgeImage(_ value: Int, sideLength: CGFloat, sideCount: Int, font: DiceFaceNumeralFont) -> UIImage {
 		let badgeSize = Int((sideLength * 0.45).rounded())
-		let key = BadgeCacheKey(value: value, roundedBadgeSize: badgeSize, font: font)
+		let showsSideCount = sideCount == 2 || !supportedPolyhedralSideCounts.contains(sideCount)
+		let key = BadgeCacheKey(
+			value: value,
+			roundedBadgeSize: badgeSize,
+			font: font,
+			sideCount: sideCount,
+			showsSideCount: showsSideCount
+		)
 		Self.sharedBadgeImageCacheLock.lock()
 		if let cached = Self.sharedBadgeImageCache[key] {
 			Self.sharedBadgeImageCacheLock.unlock()
@@ -1560,15 +1657,37 @@ final class DiceCubeView: UIView {
 			ctx.cgContext.fillEllipse(in: rect)
 
 			let text = "\(value)" as NSString
+			let numeratorScale = showsSideCount ? 0.44 : DiceFaceLabelSizing.badgeNumeralScale(large: activeLargeFaceLabelsEnabled)
 			let attrs: [NSAttributedString.Key: Any] = [
 				.font: font.numeralFont(
-					ofSize: size.height * DiceFaceLabelSizing.badgeNumeralScale(large: activeLargeFaceLabelsEnabled)
+					ofSize: size.height * numeratorScale
 				),
 				.foregroundColor: UIColor.black
 			]
 			let textSize = text.size(withAttributes: attrs)
-			let textRect = CGRect(x: (size.width - textSize.width) / 2, y: (size.height - textSize.height) / 2, width: textSize.width, height: textSize.height)
+			let numberYOffset = showsSideCount ? size.height * -0.08 : 0
+			let textRect = CGRect(
+				x: (size.width - textSize.width) / 2,
+				y: (size.height - textSize.height) / 2 + numberYOffset,
+				width: textSize.width,
+				height: textSize.height
+			)
 			text.draw(in: textRect, withAttributes: attrs)
+			if showsSideCount {
+				let subtitle = "d\(sideCount)" as NSString
+				let subtitleAttrs: [NSAttributedString.Key: Any] = [
+					.font: font.captionFont(ofSize: size.height * 0.17),
+					.foregroundColor: UIColor(white: 0.12, alpha: 1.0)
+				]
+				let subtitleSize = subtitle.size(withAttributes: subtitleAttrs)
+				let subtitleRect = CGRect(
+					x: (size.width - subtitleSize.width) / 2,
+					y: size.height * 0.66,
+					width: subtitleSize.width,
+					height: subtitleSize.height
+				)
+				subtitle.draw(in: subtitleRect, withAttributes: subtitleAttrs)
+			}
 		}
 		Self.sharedBadgeImageCacheLock.lock()
 		Self.sharedBadgeImageCache[key] = image
@@ -1722,6 +1841,9 @@ final class DiceCubeView: UIView {
 	}
 
 	private func orientation(for value: Int, sideCount: Int) -> SCNVector3 {
+		if sideCount == 2 || !supportedPolyhedralSideCounts.contains(sideCount) {
+			return SCNVector3(0, 0, 0)
+		}
 		if sideCount == 6 {
 			let angles = D6FaceOrientation.eulerAngles(for: value)
 			return SCNVector3(angles.x, angles.y, angles.z)

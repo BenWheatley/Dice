@@ -2391,6 +2391,21 @@ final class DiceTests: XCTestCase {
 		}
 	}
 
+	func testD2UsesCoinGeometryProfile() {
+		let d2 = DiceCubeView.debugFallbackCylinderProfile(sideCount: 2, sideLength: 100)
+		let d37 = DiceCubeView.debugFallbackCylinderProfile(sideCount: 37, sideLength: 100)
+		XCTAssertEqual(d2.typeName, "SCNCylinder")
+		XCTAssertEqual(d2.materialCount, 3)
+		XCTAssertLessThan(d2.height, d37.height)
+	}
+
+	func testNonPolyhedralDiceUseTokenGeometryProfile() {
+		let token = DiceCubeView.debugFallbackCylinderProfile(sideCount: 37, sideLength: 100)
+		XCTAssertEqual(token.typeName, "SCNCylinder")
+		XCTAssertEqual(token.materialCount, 3)
+		XCTAssertGreaterThan(token.height, 0)
+	}
+
 	func testDiceCubeViewUsesUniqueGeometryInstancesPerDie() {
 		XCTAssertTrue(DiceCubeView.debugUsesUniqueGeometryPerDie(sideCount: 6))
 	}

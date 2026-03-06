@@ -227,6 +227,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Calibrate neutral table shader zoom to point-mapped sampling (`1 texture pixel == 1pt`) by passing explicit table point-scale uniforms (`tableTextureScaleX`/`tableTextureScaleY`) and locking with a `DiceCubeView` regression test.
 - [x] Restore neutral table texture to source-image-backed point mapping so `stripes` asset pixels render at `1 pixel == 1pt` using `contentsTransform` repeat factors derived from table-plane point size.
 - [x] Fix rotation/resize material regression by forcing per-die face-material reapplication whenever side length changes so color overrides persist after orientation changes.
+- [x] Replace non-polyhedral slab fallback with first-class non-polyhedral render paths: `d2` coin geometry and generic `dN` token geometry, with automated geometry-profile tests.
 - [x] Remove remaining legacy `UICollectionView` board embedding/proxy path entirely (controller/storyboard/cell/tests) so `DiceCubeView` is the sole board render and interaction surface.
 - [x] Add UI regression tests for Roll Distribution sheet lifecycle: tap floating `Show` button, confirm sheet presentation, confirm swipe-to-dismiss persistence behavior, and confirm relaunch state restoration.
 - [x] Remove residual collection-view-oriented test scaffolding and assert direct `DiceCubeView` board surface presence via stable identifiers.
