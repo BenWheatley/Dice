@@ -528,6 +528,10 @@ final class DiceCubeView: UIView {
 		!usesCoinGeometry(for: sideCount) && !supportedPolyhedralSideCounts.contains(sideCount)
 	}
 
+	private func usesPinnedRollPosition(for sideCount: Int) -> Bool {
+		usesCoinGeometry(for: sideCount) || usesTokenGeometry(for: sideCount)
+	}
+
 	private func ensureNodeCount(_ count: Int) {
 		if dieNodes.count > count {
 			for node in dieNodes[count...] {
@@ -1037,6 +1041,11 @@ final class DiceCubeView: UIView {
 			bottomUsesImageTexture: bottom is UIImage,
 			topAndBottomShareSameReference: topObject === bottomObject
 		)
+	}
+
+	static func debugUsesPinnedRollPosition(sideCount: Int) -> Bool {
+		let view = DiceCubeView(frame: .zero)
+		return view.usesPinnedRollPosition(for: sideCount)
 	}
 #endif
 
@@ -1783,6 +1792,27 @@ final class DiceCubeView: UIView {
 			completion()
 			return
 		}
+		if usesPinnedRollPosition(for: sideCount) {
+			let spinDirection: Float = Bool.random() ? 1 : -1
+			node.position = target
+			node.eulerAngles = cylindricalAnimationEulerAngles(
+				sideCount: sideCount,
+				targetValue: faceValue,
+				progress: 0,
+				motionScale: motionProfile.motionScale,
+				spinDirection: spinDirection
+			)
+			let rotateAction = makeRotateAction(
+				node: node,
+				targetFace: faceValue,
+				sideCount: sideCount,
+				duration: motionProfile.duration,
+				motionScale: motionProfile.motionScale,
+				cylindricalSpinDirection: spinDirection
+			)
+			node.runAction(rotateAction, completionHandler: completion)
+			return
+		}
 		let moveAction = makeBounceMoveAction(
 			start: start,
 			target: target,
@@ -1811,10 +1841,17 @@ final class DiceCubeView: UIView {
 		}
 	}
 
-	private func makeRotateAction(node: SCNNode, targetFace: Int, sideCount: Int, duration: TimeInterval, motionScale: Float) -> SCNAction {
+	private func makeRotateAction(
+		node: SCNNode,
+		targetFace: Int,
+		sideCount: Int,
+		duration: TimeInterval,
+		motionScale: Float,
+		cylindricalSpinDirection: Float? = nil
+	) -> SCNAction {
 		let target = orientation(for: targetFace, sideCount: sideCount)
 		if usesCoinGeometry(for: sideCount) || usesTokenGeometry(for: sideCount) {
-			let spinDirection: Float = Bool.random() ? 1 : -1
+			let spinDirection: Float = cylindricalSpinDirection ?? (Bool.random() ? 1 : -1)
 			return SCNAction.customAction(duration: duration) { n, elapsed in
 				let progress = Float(max(0, min(1, elapsed / CGFloat(duration))))
 				n.eulerAngles = self.cylindricalAnimationEulerAngles(

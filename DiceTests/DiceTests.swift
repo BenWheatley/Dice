@@ -2452,6 +2452,12 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(end.x, Float.pi * 0.5, accuracy: 0.0001)
 	}
 
+	func testCylindricalDiceUsePinnedBoardPositionDuringRoll() {
+		XCTAssertTrue(DiceCubeView.debugUsesPinnedRollPosition(sideCount: 2))
+		XCTAssertTrue(DiceCubeView.debugUsesPinnedRollPosition(sideCount: 37))
+		XCTAssertFalse(DiceCubeView.debugUsesPinnedRollPosition(sideCount: 6))
+	}
+
 	func testCoinCapsUseFaceTexturesForVisibleSymbols() {
 		let summary = DiceCubeView.debugCoinCapTextureSummary(fillColor: UIColor(red: 0.86, green: 0.62, blue: 0.22, alpha: 1))
 		XCTAssertFalse(summary.sideUsesImageTexture)
