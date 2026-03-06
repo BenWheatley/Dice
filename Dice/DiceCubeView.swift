@@ -13,6 +13,7 @@ import simd
 final class DiceCubeView: UIView {
 	private static let faceTextureEdgeLength: CGFloat = 256
 	private static let neutralTextureName = "stripes"
+	private static let cameraDefaultZ: Float = 800
 
 	private static let neutralTableTextureImage: UIImage? = {
 		let bundles = [Bundle.main, Bundle(for: DiceCubeView.self)]
@@ -118,6 +119,10 @@ final class DiceCubeView: UIView {
 	private var selectedDieIndex: Int?
 	private var reduceMotionEnabled = UIAccessibility.isReduceMotionEnabled
 	private var dieAccessibilityElements: [UIAccessibilityElement] = []
+	private var cameraPanOffsetY: CGFloat = 0
+	private var cameraPanStartOffsetY: CGFloat = 0
+	private var cameraPanRangeY: ClosedRange<CGFloat> = 0...0
+	private var cameraContentRangeY: ClosedRange<CGFloat>?
 	private var needsMeshRefresh = false
 	private var activeRollAnimationToken: Int = 0
 	private var pendingRollAnimationCompletions = 0
@@ -176,6 +181,7 @@ final class DiceCubeView: UIView {
 	) {
 		guard values.count == centers.count, values.count == sideCounts.count else { return }
 		ensureNodeCount(values.count)
+		updateCameraContentRange(centers: centers, sideLength: sideLength)
 		let motionProfile = DiceMotionBehaviorProfile.resolve(intensity: activeAnimationIntensity, reduceMotionEnabled: reduceMotionEnabled)
 		let shouldAnimateRoll = animated && activeAnimationIntensity != .off && motionProfile.duration > 0
 		let animatingIndices = shouldAnimateRoll ? values.indices.filter { !lockedIndices.contains($0) } : []
@@ -289,6 +295,7 @@ final class DiceCubeView: UIView {
 			sideLength: sideLength,
 			lockedIndices: lockedIndices
 		)
+		updateCamera(animated: false)
 		applySelectionAppearance(animated: false)
 		needsMeshRefresh = false
 	}
@@ -387,13 +394,16 @@ final class DiceCubeView: UIView {
 		])
 		let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
 		scnView.addGestureRecognizer(tapRecognizer)
+		let panRecognizer = UIPanGestureRecognizer(target: self, action: #selector(handleCameraPan(_:)))
+		panRecognizer.maximumNumberOfTouches = 1
+		scnView.addGestureRecognizer(panRecognizer)
 
 		cameraNode.camera = SCNCamera()
 		cameraNode.camera?.usesOrthographicProjection = true
 		cameraNode.camera?.zNear = 1
 		cameraNode.camera?.zFar = 10_000
 		cameraNode.camera?.motionBlurIntensity = activeMotionBlurEnabled ? 0.45 : 0.0
-		cameraNode.position = SCNVector3(0, 0, 800)
+		cameraNode.position = SCNVector3(0, 0, Self.cameraDefaultZ)
 		cameraNode.eulerAngles = SCNVector3(0, 0, 0)
 		scene.rootNode.addChildNode(cameraNode)
 		configureTableSurface()
@@ -442,7 +452,11 @@ final class DiceCubeView: UIView {
 	private func updateCamera(animated: Bool) {
 		cameraNode.camera?.orthographicScale = Double(bounds.height / 2)
 		updateTableSurfaceSize()
-		let target = (position: SCNVector3(0, 0, 800), euler: SCNVector3(0, 0, 0))
+		updateCameraPanRange()
+		let target = (
+			position: SCNVector3(0, Float(cameraPanOffsetY), Self.cameraDefaultZ),
+			euler: SCNVector3(0, 0, 0)
+		)
 		guard animated else {
 			cameraNode.position = target.position
 			cameraNode.eulerAngles = target.euler
@@ -453,6 +467,56 @@ final class DiceCubeView: UIView {
 		cameraNode.position = target.position
 		cameraNode.eulerAngles = target.euler
 		SCNTransaction.commit()
+	}
+
+	private func updateCameraContentRange(centers: [CGPoint], sideLength: CGFloat) {
+		guard !centers.isEmpty else {
+			cameraContentRangeY = nil
+			cameraPanRangeY = 0...0
+			cameraPanOffsetY = 0
+			return
+		}
+		let projectedCenters = centers.map { scenePosition(for: $0).y }
+		guard let minCenterY = projectedCenters.min(), let maxCenterY = projectedCenters.max() else {
+			cameraContentRangeY = nil
+			cameraPanRangeY = 0...0
+			cameraPanOffsetY = 0
+			return
+		}
+		let radius = cameraPanDieRadius(for: sideLength)
+		cameraContentRangeY = CGFloat(minCenterY - radius)...CGFloat(maxCenterY + radius)
+	}
+
+	private func updateCameraPanRange() {
+		cameraPanRangeY = Self.cameraPanRange(contentRangeY: cameraContentRangeY, viewportHeight: bounds.height)
+		cameraPanOffsetY = Self.clampedCameraOffset(cameraPanOffsetY, in: cameraPanRangeY)
+	}
+
+	private func cameraPanDieRadius(for sideLength: CGFloat) -> Float {
+		Float(max(24, sideLength * 0.62))
+	}
+
+	private static func cameraPanRange(contentRangeY: ClosedRange<CGFloat>?, viewportHeight: CGFloat) -> ClosedRange<CGFloat> {
+		guard
+			let contentRangeY,
+			viewportHeight > 0
+		else {
+			return 0...0
+		}
+		let halfHeight = viewportHeight / 2
+		let minOffset = contentRangeY.lowerBound + halfHeight
+		let maxOffset = contentRangeY.upperBound - halfHeight
+		// If everything fits, lock to default center; otherwise allow panning across full overflow span.
+		guard maxOffset > minOffset else { return 0...0 }
+		return minOffset...maxOffset
+	}
+
+	private static func clampedCameraOffset(_ offset: CGFloat, in range: ClosedRange<CGFloat>) -> CGFloat {
+		max(range.lowerBound, min(range.upperBound, offset))
+	}
+
+	private static func cameraPanOffset(startOffsetY: CGFloat, translationY: CGFloat, range: ClosedRange<CGFloat>) -> CGFloat {
+		clampedCameraOffset(startOffsetY + translationY, in: range)
 	}
 
 	private func configureTableSurface() {
@@ -625,6 +689,24 @@ final class DiceCubeView: UIView {
 		let point = recognizer.location(in: scnView)
 		guard let index = dieIndex(at: point) else { return }
 		onDieTapped?(index, recognizer.location(in: self))
+	}
+
+	@objc private func handleCameraPan(_ recognizer: UIPanGestureRecognizer) {
+		switch recognizer.state {
+		case .began:
+			cameraPanStartOffsetY = cameraPanOffsetY
+		case .changed, .ended:
+			guard cameraPanRangeY.upperBound > cameraPanRangeY.lowerBound else { return }
+			let translation = recognizer.translation(in: scnView)
+			cameraPanOffsetY = Self.cameraPanOffset(
+				startOffsetY: cameraPanStartOffsetY,
+				translationY: translation.y,
+				range: cameraPanRangeY
+			)
+			cameraNode.position = SCNVector3(0, Float(cameraPanOffsetY), Self.cameraDefaultZ)
+		default:
+			break
+		}
 	}
 
 	private func dieIndex(at point: CGPoint) -> Int? {
@@ -1010,6 +1092,14 @@ final class DiceCubeView: UIView {
 		view.layoutIfNeeded()
 		let transform = view.tableMaterial.diffuse.contentsTransform
 		return CGSize(width: CGFloat(transform.m11), height: CGFloat(transform.m22))
+	}
+
+	static func debugCameraPanRange(contentMinY: CGFloat, contentMaxY: CGFloat, viewportHeight: CGFloat) -> ClosedRange<CGFloat> {
+		cameraPanRange(contentRangeY: contentMinY...contentMaxY, viewportHeight: viewportHeight)
+	}
+
+	static func debugCameraPanOffset(startOffsetY: CGFloat, translation: CGPoint, range: ClosedRange<CGFloat>) -> CGFloat {
+		cameraPanOffset(startOffsetY: startOffsetY, translationY: translation.y, range: range)
 	}
 
 	static func debugOrientation(value: Int, sideCount: Int) -> SCNVector3 {

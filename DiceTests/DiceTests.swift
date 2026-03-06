@@ -2270,6 +2270,35 @@ final class DiceTests: XCTestCase {
 		XCTAssertGreaterThanOrEqual(planeSize.height, size.height)
 	}
 
+	func testDiceCubeViewCameraPanRangeExpandsWhenDiceOverflowViewport() {
+		let range = DiceCubeView.debugCameraPanRange(
+			contentMinY: -420,
+			contentMaxY: 420,
+			viewportHeight: 640
+		)
+		XCTAssertEqual(range.lowerBound, -100, accuracy: 0.001)
+		XCTAssertEqual(range.upperBound, 100, accuracy: 0.001)
+	}
+
+	func testDiceCubeViewCameraPanRangeCollapsesWhenDiceFitViewport() {
+		let range = DiceCubeView.debugCameraPanRange(
+			contentMinY: -120,
+			contentMaxY: 120,
+			viewportHeight: 640
+		)
+		XCTAssertEqual(range.lowerBound, 0, accuracy: 0.001)
+		XCTAssertEqual(range.upperBound, 0, accuracy: 0.001)
+	}
+
+	func testDiceCubeViewCameraPanIgnoresHorizontalDragAndClampsVertically() {
+		let offset = DiceCubeView.debugCameraPanOffset(
+			startOffsetY: 20,
+			translation: CGPoint(x: 480, y: -260),
+			range: -180...180
+		)
+		XCTAssertEqual(offset, -180, accuracy: 0.001)
+	}
+
 	private func makeController() -> DiceViewController {
 		DiceViewController()
 	}

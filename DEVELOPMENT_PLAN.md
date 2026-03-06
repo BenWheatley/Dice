@@ -239,6 +239,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Add a shared-scheme consistency pass: ensure all primary run schemes (iOS app, watch app, widgets extension) are present as shared schemes so scheme visibility does not depend on local auto-generated user state.
 - [x] Prevent roll animations from being canceled by routine layout passes by refreshing board render state only when board bounds actually change, and ensure locked-die rolls still animate unlocked dice.
 - [x] Fix `d2`/token settle orientation so coin faces camera (not edge-on), and ensure the table surface plus board constraints provide full-screen background coverage with no exposed edges.
+- [x] Add vertical board-camera pan gesture (screen-Y only) so overflowing dice grids remain reachable without changing die layout scale.
 
 ### Performance and Interaction Safety
 
