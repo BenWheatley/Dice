@@ -2246,22 +2246,28 @@ final class DiceTests: XCTestCase {
 	func testDiceCubeViewUsesPointMappedNeutralTextureScale() {
 		let size = CGSize(width: 390, height: 844)
 		let pointScale = DiceCubeView.debugTableTexturePointScale(for: size)
-		let planeSize = DiceCubeView.debugTablePlaneSize(for: size)
 
-		XCTAssertEqual(pointScale.width, planeSize.width, accuracy: 0.001)
-		XCTAssertEqual(pointScale.height, planeSize.height, accuracy: 0.001)
+		XCTAssertEqual(pointScale.width, size.width, accuracy: 0.001)
+		XCTAssertEqual(pointScale.height, size.height, accuracy: 0.001)
 	}
 
 	func testDiceCubeViewMapsNeutralTexturePixelsToPoints() {
 		let size = CGSize(width: 390, height: 844)
 		let texturePixels = DiceCubeView.debugNeutralTableTexturePixelSize()
-		let planeSize = DiceCubeView.debugTablePlaneSize(for: size)
 		let repeats = DiceCubeView.debugNeutralTableTextureRepeat(for: size)
 
 		XCTAssertGreaterThan(texturePixels.width, 0)
 		XCTAssertGreaterThan(texturePixels.height, 0)
-		XCTAssertEqual(repeats.width, planeSize.width / texturePixels.width, accuracy: 0.001)
-		XCTAssertEqual(repeats.height, planeSize.height / texturePixels.height, accuracy: 0.001)
+		XCTAssertEqual(repeats.width, size.width / texturePixels.width, accuracy: 0.001)
+		XCTAssertEqual(repeats.height, size.height / texturePixels.height, accuracy: 0.001)
+	}
+
+	func testDiceCubeViewOversizesTablePlaneForCoverage() {
+		let size = CGSize(width: 390, height: 844)
+		let planeSize = DiceCubeView.debugTablePlaneSize(for: size)
+
+		XCTAssertGreaterThanOrEqual(planeSize.width, size.width)
+		XCTAssertGreaterThanOrEqual(planeSize.height, size.height)
 	}
 
 	private func makeController() -> DiceViewController {
@@ -2404,6 +2410,13 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(token.typeName, "SCNCylinder")
 		XCTAssertEqual(token.materialCount, 3)
 		XCTAssertGreaterThan(token.height, 0)
+	}
+
+	func testTokenGeometryFacesCameraByDefault() {
+		let d2Orientation = DiceCubeView.debugOrientation(value: 1, sideCount: 2)
+		let d37Orientation = DiceCubeView.debugOrientation(value: 11, sideCount: 37)
+		XCTAssertEqual(d2Orientation.x, Float.pi * 0.5, accuracy: 0.0001)
+		XCTAssertEqual(d37Orientation.x, Float.pi * 0.5, accuracy: 0.0001)
 	}
 
 	func testDiceCubeViewUsesUniqueGeometryInstancesPerDie() {

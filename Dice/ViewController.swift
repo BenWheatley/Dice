@@ -251,10 +251,10 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 		view.bringSubviewToFront(rollButton)
 		view.bringSubviewToFront(showStatsButton)
 		NSLayoutConstraint.activate([
-			diceBoardView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
-			diceBoardView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
-			diceBoardView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-			diceBoardView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+			diceBoardView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+			diceBoardView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+			diceBoardView.topAnchor.constraint(equalTo: view.topAnchor),
+			diceBoardView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 		])
 	}
 

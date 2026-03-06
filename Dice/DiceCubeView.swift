@@ -495,9 +495,7 @@ final class DiceCubeView: UIView {
 	}
 
 	private func tableTexturePointScale() -> CGSize {
-		if let plane = tableNode.geometry as? SCNPlane {
-			return CGSize(width: max(1, plane.width), height: max(1, plane.height))
-		}
+		// Point mapping should track visible view points, not oversized background geometry.
 		return CGSize(width: max(1, bounds.width), height: max(1, bounds.height))
 	}
 
@@ -514,10 +512,16 @@ final class DiceCubeView: UIView {
 
 	private func updateTableSurfaceSize() {
 		guard let plane = tableNode.geometry as? SCNPlane else { return }
-		// Oversize by ~8% so the table fully covers the viewport at all layout sizes.
-		plane.width = max(10, bounds.width * 1.08)
-		plane.height = max(10, bounds.height * 1.08)
+		// Use a diagonal-sized surface to avoid exposed edges during layout/camera transitions.
+		let diagonal = hypot(bounds.width, bounds.height)
+		let span = max(10, diagonal * 1.12)
+		plane.width = span
+		plane.height = span
 		applyTableTextureScale()
+	}
+
+	private func usesTokenGeometry(for sideCount: Int) -> Bool {
+		sideCount == 2 || !supportedPolyhedralSideCounts.contains(sideCount)
 	}
 
 	private func ensureNodeCount(_ count: Int) {
@@ -983,6 +987,11 @@ final class DiceCubeView: UIView {
 		let transform = view.tableMaterial.diffuse.contentsTransform
 		return CGSize(width: CGFloat(transform.m11), height: CGFloat(transform.m22))
 	}
+
+	static func debugOrientation(value: Int, sideCount: Int) -> SCNVector3 {
+		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
+		return view.orientation(for: value, sideCount: sideCount)
+	}
 #endif
 
 	private func buildGeometry(sideLength: CGFloat, sideCount: Int) -> BuiltMesh {
@@ -1279,7 +1288,7 @@ final class DiceCubeView: UIView {
 			geometry.materials = coinMaterials(fillColor: fillColor, dieIndex: dieIndex)
 			return
 		}
-		if !supportedPolyhedralSideCounts.contains(sideCount) {
+		if usesTokenGeometry(for: sideCount) {
 			geometry.materials = tokenMaterials(fillColor: fillColor, dieIndex: dieIndex)
 			return
 		}
@@ -1634,7 +1643,7 @@ final class DiceCubeView: UIView {
 
 	private func valueBadgeImage(_ value: Int, sideLength: CGFloat, sideCount: Int, font: DiceFaceNumeralFont) -> UIImage {
 		let badgeSize = Int((sideLength * 0.45).rounded())
-		let showsSideCount = sideCount == 2 || !supportedPolyhedralSideCounts.contains(sideCount)
+		let showsSideCount = usesTokenGeometry(for: sideCount)
 		let key = BadgeCacheKey(
 			value: value,
 			roundedBadgeSize: badgeSize,
@@ -1742,6 +1751,25 @@ final class DiceCubeView: UIView {
 
 	private func makeRotateAction(node: SCNNode, targetFace: Int, sideCount: Int, duration: TimeInterval, motionScale: Float) -> SCNAction {
 		let target = orientation(for: targetFace, sideCount: sideCount)
+		if usesTokenGeometry(for: sideCount) {
+			let current = node.presentation.eulerAngles
+			let turns = max(1, Int(round(2.0 * Double(max(0.5, motionScale)))))
+			let sign: Float = Bool.random() ? 1 : -1
+			let spinTarget = SCNVector3(
+				target.x,
+				target.y,
+				target.z + (Float(turns) * sign * Float.pi * 2.0)
+			)
+			return SCNAction.customAction(duration: duration) { n, elapsed in
+				let progress = Float(max(0, min(1, elapsed / CGFloat(duration))))
+				let eased = 1 - pow(1 - progress, 3)
+				n.eulerAngles = SCNVector3(
+					current.x + (spinTarget.x - current.x) * eased,
+					current.y + (spinTarget.y - current.y) * eased,
+					current.z + (spinTarget.z - current.z) * eased
+				)
+			}
+		}
 		let current = node.presentation.eulerAngles
 		let peakTime = duration * 0.16
 		let decayWindow = max(0.001, duration - peakTime)
@@ -1841,8 +1869,9 @@ final class DiceCubeView: UIView {
 	}
 
 	private func orientation(for value: Int, sideCount: Int) -> SCNVector3 {
-		if sideCount == 2 || !supportedPolyhedralSideCounts.contains(sideCount) {
-			return SCNVector3(0, 0, 0)
+		if usesTokenGeometry(for: sideCount) {
+			// SCNCylinder primary axis is Y; rotate so coin/token faces point toward camera (Z).
+			return SCNVector3(Float.pi * 0.5, 0, 0)
 		}
 		if sideCount == 6 {
 			let angles = D6FaceOrientation.eulerAngles(for: value)
