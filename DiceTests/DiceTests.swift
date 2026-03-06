@@ -2419,6 +2419,40 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(d37Orientation.x, Float.pi * 0.5, accuracy: 0.0001)
 	}
 
+	func testD2UsesOpposingFaceOrientationsForValues() {
+		let value1 = DiceCubeView.debugOrientation(value: 1, sideCount: 2)
+		let value2 = DiceCubeView.debugOrientation(value: 2, sideCount: 2)
+		XCTAssertEqual(value1.x, -value2.x, accuracy: 0.0001)
+	}
+
+	func testCoinAnimationStartsEdgeOnAndSettlesFaceOn() {
+		let start = DiceCubeView.debugCoinAnimationEulerAngles(targetValue: 1, progress: 0.0, motionScale: 1.0, spinDirection: 1)
+		let middle = DiceCubeView.debugCoinAnimationEulerAngles(targetValue: 1, progress: 0.5, motionScale: 1.0, spinDirection: 1)
+		let end = DiceCubeView.debugCoinAnimationEulerAngles(targetValue: 1, progress: 1.0, motionScale: 1.0, spinDirection: 1)
+		XCTAssertEqual(start.x, 0, accuracy: 0.0001)
+		XCTAssertGreaterThan(middle.x, 0)
+		XCTAssertEqual(end.x, Float.pi * 0.5, accuracy: 0.0001)
+	}
+
+	func testCoinAnimationSpinDeceleratesToTargetOrientation() {
+		let target = DiceCubeView.debugOrientation(value: 1, sideCount: 2)
+		let start = DiceCubeView.debugCoinAnimationEulerAngles(targetValue: 1, progress: 0.0, motionScale: 1.0, spinDirection: 1)
+		let mid = DiceCubeView.debugCoinAnimationEulerAngles(targetValue: 1, progress: 0.5, motionScale: 1.0, spinDirection: 1)
+		let nearEnd = DiceCubeView.debugCoinAnimationEulerAngles(targetValue: 1, progress: 0.9, motionScale: 1.0, spinDirection: 1)
+		let end = DiceCubeView.debugCoinAnimationEulerAngles(targetValue: 1, progress: 1.0, motionScale: 1.0, spinDirection: 1)
+		XCTAssertGreaterThan(abs(start.z - target.z), abs(mid.z - target.z))
+		XCTAssertGreaterThan(abs(mid.z - target.z), abs(nearEnd.z - target.z))
+		XCTAssertEqual(end.z, target.z, accuracy: 0.0001)
+	}
+
+	func testCoinCapsUseFaceTexturesForVisibleSymbols() {
+		let summary = DiceCubeView.debugCoinCapTextureSummary(fillColor: UIColor(red: 0.86, green: 0.62, blue: 0.22, alpha: 1))
+		XCTAssertFalse(summary.sideUsesImageTexture)
+		XCTAssertTrue(summary.topUsesImageTexture)
+		XCTAssertTrue(summary.bottomUsesImageTexture)
+		XCTAssertFalse(summary.topAndBottomShareSameReference)
+	}
+
 	func testDiceCubeViewUsesUniqueGeometryInstancesPerDie() {
 		XCTAssertTrue(DiceCubeView.debugUsesUniqueGeometryPerDie(sideCount: 6))
 	}

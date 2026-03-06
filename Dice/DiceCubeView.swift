@@ -520,8 +520,12 @@ final class DiceCubeView: UIView {
 		applyTableTextureScale()
 	}
 
+	private func usesCoinGeometry(for sideCount: Int) -> Bool {
+		sideCount == 2
+	}
+
 	private func usesTokenGeometry(for sideCount: Int) -> Bool {
-		sideCount == 2 || !supportedPolyhedralSideCounts.contains(sideCount)
+		!usesCoinGeometry(for: sideCount) && !supportedPolyhedralSideCounts.contains(sideCount)
 	}
 
 	private func ensureNodeCount(_ count: Int) {
@@ -992,6 +996,46 @@ final class DiceCubeView: UIView {
 		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
 		return view.orientation(for: value, sideCount: sideCount)
 	}
+
+	static func debugCoinAnimationEulerAngles(
+		targetValue: Int,
+		progress: Float,
+		motionScale: Float,
+		spinDirection: Int
+	) -> SCNVector3 {
+		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
+		let direction: Float = spinDirection >= 0 ? 1 : -1
+		return view.coinAnimationEulerAngles(
+			targetValue: targetValue,
+			progress: progress,
+			motionScale: motionScale,
+			spinDirection: direction
+		)
+	}
+
+	static func debugCoinCapTextureSummary(fillColor: UIColor) -> (
+		sideUsesImageTexture: Bool,
+		topUsesImageTexture: Bool,
+		bottomUsesImageTexture: Bool,
+		topAndBottomShareSameReference: Bool
+	) {
+		let view = DiceCubeView(frame: .zero)
+		let materials = view.coinMaterials(fillColor: fillColor, numeralFont: .classic, dieIndex: 0)
+		guard materials.count == 3 else {
+			return (false, false, false, false)
+		}
+		let side = materials[0].diffuse.contents
+		let top = materials[1].diffuse.contents
+		let bottom = materials[2].diffuse.contents
+		let topObject = top as AnyObject?
+		let bottomObject = bottom as AnyObject?
+		return (
+			sideUsesImageTexture: side is UIImage,
+			topUsesImageTexture: top is UIImage,
+			bottomUsesImageTexture: bottom is UIImage,
+			topAndBottomShareSameReference: topObject === bottomObject
+		)
+	}
 #endif
 
 	private func buildGeometry(sideLength: CGFloat, sideCount: Int) -> BuiltMesh {
@@ -1284,15 +1328,15 @@ final class DiceCubeView: UIView {
 		debugMaterialRefreshCount += 1
 #endif
 		let fillColor = resolvedColorPreset(sideCount: sideCount, colorPresetOverride: colorPresetOverride).fillColor
+		let font = faceNumeralFontOverride ?? activeFaceNumeralFont
 		if sideCount == 2 {
-			geometry.materials = coinMaterials(fillColor: fillColor, dieIndex: dieIndex)
+			geometry.materials = coinMaterials(fillColor: fillColor, numeralFont: font, dieIndex: dieIndex)
 			return
 		}
 		if usesTokenGeometry(for: sideCount) {
 			geometry.materials = tokenMaterials(fillColor: fillColor, dieIndex: dieIndex)
 			return
 		}
-		let font = faceNumeralFontOverride ?? activeFaceNumeralFont
 		let faces = builtMesh(sideLength: sideLength, sideCount: sideCount).materialFaces
 		geometry.materials = faces.enumerated().map { faceIndex, face in
 			faceMaterial(
@@ -1326,13 +1370,29 @@ final class DiceCubeView: UIView {
 		]
 	}
 
-	private func coinMaterials(fillColor: UIColor, dieIndex: Int) -> [SCNMaterial] {
+	private func coinMaterials(fillColor: UIColor, numeralFont: DiceFaceNumeralFont, dieIndex: Int) -> [SCNMaterial] {
 		let sideColor = multipliedColor(fillColor, factor: 0.62)
-		let capColor = multipliedColor(fillColor, factor: 1.06)
+		let sideMaterial = solidDieMaterial(baseColor: sideColor, fillColor: fillColor, dieIndex: dieIndex)
+		let valueOneCap = faceMaterial(
+			faceIndex: 0,
+			face: [0, 1, 2],
+			sideCount: 2,
+			fillColor: fillColor,
+			numeralFont: numeralFont,
+			dieIndex: dieIndex
+		)
+		let valueTwoCap = faceMaterial(
+			faceIndex: 1,
+			face: [0, 1, 2],
+			sideCount: 2,
+			fillColor: fillColor,
+			numeralFont: numeralFont,
+			dieIndex: dieIndex
+		)
 		return [
-			solidDieMaterial(baseColor: sideColor, fillColor: fillColor, dieIndex: dieIndex),
-			solidDieMaterial(baseColor: capColor, fillColor: fillColor, dieIndex: dieIndex),
-			solidDieMaterial(baseColor: capColor, fillColor: fillColor, dieIndex: dieIndex)
+			sideMaterial,
+			valueOneCap,
+			valueTwoCap
 		]
 	}
 
@@ -1643,7 +1703,7 @@ final class DiceCubeView: UIView {
 
 	private func valueBadgeImage(_ value: Int, sideLength: CGFloat, sideCount: Int, font: DiceFaceNumeralFont) -> UIImage {
 		let badgeSize = Int((sideLength * 0.45).rounded())
-		let showsSideCount = usesTokenGeometry(for: sideCount)
+		let showsSideCount = usesCoinGeometry(for: sideCount) || usesTokenGeometry(for: sideCount)
 		let key = BadgeCacheKey(
 			value: value,
 			roundedBadgeSize: badgeSize,
@@ -1751,6 +1811,18 @@ final class DiceCubeView: UIView {
 
 	private func makeRotateAction(node: SCNNode, targetFace: Int, sideCount: Int, duration: TimeInterval, motionScale: Float) -> SCNAction {
 		let target = orientation(for: targetFace, sideCount: sideCount)
+		if usesCoinGeometry(for: sideCount) {
+			let spinDirection: Float = Bool.random() ? 1 : -1
+			return SCNAction.customAction(duration: duration) { n, elapsed in
+				let progress = Float(max(0, min(1, elapsed / CGFloat(duration))))
+				n.eulerAngles = self.coinAnimationEulerAngles(
+					targetValue: targetFace,
+					progress: progress,
+					motionScale: motionScale,
+					spinDirection: spinDirection
+				)
+			}
+		}
 		if usesTokenGeometry(for: sideCount) {
 			let current = node.presentation.eulerAngles
 			let turns = max(1, Int(round(2.0 * Double(max(0.5, motionScale)))))
@@ -1815,6 +1887,25 @@ final class DiceCubeView: UIView {
 		}
 	}
 
+	private func coinAnimationEulerAngles(
+		targetValue: Int,
+		progress: Float,
+		motionScale: Float,
+		spinDirection: Float
+	) -> SCNVector3 {
+		let clamped = max(0, min(1, progress))
+		let target = coinTargetOrientation(for: targetValue)
+		let turns = max(2, Int(round(3.0 * Double(max(0.5, motionScale)))))
+		let spinMagnitude = Float(turns) * spinDirection * Float.pi * 2.0
+		let tiltProgress = 1 - pow(1 - clamped, 3)
+		let residualSpin = pow(1 - clamped, 3)
+		return SCNVector3(
+			target.x * tiltProgress,
+			target.y * tiltProgress,
+			target.z + (spinMagnitude * residualSpin)
+		)
+	}
+
 	private func makeBounceMoveAction(
 		start: SCNVector3,
 		target: SCNVector3,
@@ -1869,6 +1960,9 @@ final class DiceCubeView: UIView {
 	}
 
 	private func orientation(for value: Int, sideCount: Int) -> SCNVector3 {
+		if usesCoinGeometry(for: sideCount) {
+			return coinTargetOrientation(for: value)
+		}
 		if usesTokenGeometry(for: sideCount) {
 			// SCNCylinder primary axis is Y; rotate so coin/token faces point toward camera (Z).
 			return SCNVector3(Float.pi * 0.5, 0, 0)
@@ -1911,6 +2005,11 @@ final class DiceCubeView: UIView {
 
 		orientationCache[sideCount] = map
 		return map[value] ?? SCNVector3(0, 0, 0)
+	}
+
+	private func coinTargetOrientation(for value: Int) -> SCNVector3 {
+		let sign: Float = value.isMultiple(of: 2) ? -1 : 1
+		return SCNVector3(sign * Float.pi * 0.5, 0, 0)
 	}
 
 	private func d4Orientation(for value: Int) -> SCNVector3 {
