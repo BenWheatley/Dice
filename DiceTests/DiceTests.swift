@@ -1752,7 +1752,7 @@ final class DiceTests: XCTestCase {
 	}
 
 	func testBoardRenderLayoutHandlesMixedDiceAtV1UpperBound() {
-		let bounds = CGRect(x: 0, y: 0, width: 1180, height: 760)
+		let bounds = CGRect(x: 0, y: 0, width: 390, height: 844)
 		let layout = DiceViewController.boardRenderLayout(
 			itemCount: 30,
 			bounds: bounds,
@@ -1761,13 +1761,26 @@ final class DiceTests: XCTestCase {
 		)
 
 		XCTAssertEqual(layout.centers.count, 30)
-		XCTAssertGreaterThan(layout.sideLength, 0)
+		let readableFloor = DiceViewController.readableBoardSideLengthFloor(layoutPreset: .compact, mixed: true)
+		XCTAssertGreaterThanOrEqual(layout.sideLength + 0.001, readableFloor)
 		for center in layout.centers {
 			XCTAssertGreaterThanOrEqual(center.x, bounds.minX)
 			XCTAssertLessThanOrEqual(center.x, bounds.maxX)
-			XCTAssertGreaterThanOrEqual(center.y, bounds.minY)
-			XCTAssertLessThanOrEqual(center.y, bounds.maxY)
 		}
+		let maxY = layout.centers.map(\.y).max() ?? bounds.minY
+		XCTAssertGreaterThan(maxY, bounds.maxY, "High dice counts should overflow vertically instead of shrinking below readable size")
+	}
+
+	func testBoardRenderLayoutUsesThreeColumnReadableFloorOnReferencePhoneWidth() {
+		let bounds = CGRect(x: 0, y: 0, width: 390, height: 844)
+		let layout = DiceViewController.boardRenderLayout(
+			itemCount: 24,
+			bounds: bounds,
+			layoutPreset: .compact,
+			mixed: true
+		)
+		let floor = DiceViewController.readableBoardSideLengthFloor(layoutPreset: .compact, mixed: true)
+		XCTAssertGreaterThanOrEqual(layout.sideLength + 0.001, floor)
 	}
 
 	func testViewModelFormattedTotalsOmitsBoardWarningForSupportedMixedDice() {

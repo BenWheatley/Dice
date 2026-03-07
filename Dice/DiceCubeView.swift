@@ -123,6 +123,7 @@ final class DiceCubeView: UIView {
 	private var cameraPanStartOffsetY: CGFloat = 0
 	private var cameraPanRangeY: ClosedRange<CGFloat> = 0...0
 	private var cameraContentRangeY: ClosedRange<CGFloat>?
+	private var cameraViewportInsets: UIEdgeInsets = .zero
 	private var needsMeshRefresh = false
 	private var activeRollAnimationToken: Int = 0
 	private var pendingRollAnimationCompletions = 0
@@ -364,6 +365,18 @@ final class DiceCubeView: UIView {
 		applyTableTexture()
 	}
 
+	func setCameraViewportInsets(_ insets: UIEdgeInsets) {
+		let sanitized = UIEdgeInsets(
+			top: max(0, insets.top),
+			left: 0,
+			bottom: max(0, insets.bottom),
+			right: 0
+		)
+		guard cameraViewportInsets.top != sanitized.top || cameraViewportInsets.bottom != sanitized.bottom else { return }
+		cameraViewportInsets = sanitized
+		updateCamera(animated: false)
+	}
+
 	func setMotionBlurEnabled(_ enabled: Bool) {
 		activeMotionBlurEnabled = enabled
 		cameraNode.camera?.motionBlurIntensity = enabled ? 0.45 : 0.0
@@ -488,7 +501,10 @@ final class DiceCubeView: UIView {
 	}
 
 	private func updateCameraPanRange() {
-		cameraPanRangeY = Self.cameraPanRange(contentRangeY: cameraContentRangeY, viewportHeight: bounds.height)
+		cameraPanRangeY = Self.cameraPanRange(
+			contentRangeY: cameraContentRangeY,
+			visibleRangeAtOffsetZero: visibleWorldRangeAtZeroCameraOffset()
+		)
 		cameraPanOffsetY = Self.clampedCameraOffset(cameraPanOffsetY, in: cameraPanRangeY)
 	}
 
@@ -496,16 +512,28 @@ final class DiceCubeView: UIView {
 		Float(max(24, sideLength * 0.62))
 	}
 
-	private static func cameraPanRange(contentRangeY: ClosedRange<CGFloat>?, viewportHeight: CGFloat) -> ClosedRange<CGFloat> {
+	private func visibleWorldRangeAtZeroCameraOffset() -> ClosedRange<CGFloat>? {
+		guard bounds.height > 0 else { return nil }
+		let topY = max(bounds.minY, min(bounds.maxY, bounds.minY + cameraViewportInsets.top))
+		let bottomY = max(topY, min(bounds.maxY, bounds.maxY - cameraViewportInsets.bottom))
+		guard bottomY > topY else { return nil }
+		let upper = bounds.midY - topY
+		let lower = bounds.midY - bottomY
+		return lower...upper
+	}
+
+	private static func cameraPanRange(
+		contentRangeY: ClosedRange<CGFloat>?,
+		visibleRangeAtOffsetZero: ClosedRange<CGFloat>?
+	) -> ClosedRange<CGFloat> {
 		guard
 			let contentRangeY,
-			viewportHeight > 0
+			let visibleRangeAtOffsetZero
 		else {
 			return 0...0
 		}
-		let halfHeight = viewportHeight / 2
-		let minOffset = contentRangeY.lowerBound + halfHeight
-		let maxOffset = contentRangeY.upperBound - halfHeight
+		let minOffset = contentRangeY.lowerBound - visibleRangeAtOffsetZero.lowerBound
+		let maxOffset = contentRangeY.upperBound - visibleRangeAtOffsetZero.upperBound
 		// If everything fits, lock to default center; otherwise allow panning across full overflow span.
 		guard maxOffset > minOffset else { return 0...0 }
 		return minOffset...maxOffset
@@ -1095,7 +1123,12 @@ final class DiceCubeView: UIView {
 	}
 
 	static func debugCameraPanRange(contentMinY: CGFloat, contentMaxY: CGFloat, viewportHeight: CGFloat) -> ClosedRange<CGFloat> {
-		cameraPanRange(contentRangeY: contentMinY...contentMaxY, viewportHeight: viewportHeight)
+		guard viewportHeight > 0 else { return 0...0 }
+		let halfHeight = viewportHeight / 2
+		return cameraPanRange(
+			contentRangeY: contentMinY...contentMaxY,
+			visibleRangeAtOffsetZero: (-halfHeight)...halfHeight
+		)
 	}
 
 	static func debugCameraPanOffset(startOffsetY: CGFloat, translation: CGPoint, range: ClosedRange<CGFloat>) -> CGFloat {

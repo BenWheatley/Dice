@@ -9,6 +9,8 @@
 import UIKit
 
 class DiceViewController: UIViewController, UITextFieldDelegate {
+	private static let readableReferenceWidth: CGFloat = 390
+	private static let readableReferenceColumns: CGFloat = 3
 	private let viewModel = DiceViewModel()
 	private let soundEngine = DiceSoundEngine()
 	private let hapticsEngine = DiceHapticsEngine()
@@ -34,6 +36,7 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
     private let dieInfoSheetHeight: CGFloat = 475
 	private let floatingControlBottomMargin: CGFloat = 16
 	private let rollButtonSpacingAboveStatsSheet: CGFloat = 12
+	private let boardViewportPadding: CGFloat = 8
 	private var routeObserver: NSObjectProtocol?
 	private var selectedDieIndex: Int?
 	private weak var dieInspectorSheetController: DieInspectorSheetViewController?
@@ -441,9 +444,11 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 
 		let mixed = Set(sideCounts).count > 1
 		let itemCount = min(viewModel.diceValues.count, sideCounts.count)
+		let viewport = boardViewport()
+		diceBoardView.setCameraViewportInsets(viewport.cameraInsets)
 		let layout = Self.boardRenderLayout(
 			itemCount: itemCount,
-			bounds: diceBoardView.bounds,
+			bounds: viewport.layoutBounds,
 			layoutPreset: viewModel.boardLayoutPreset,
 			mixed: mixed
 		)
@@ -492,6 +497,55 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 		return widthDelta > 0.5 || heightDelta > 0.5
 	}
 
+	private func boardViewport() -> (layoutBounds: CGRect, cameraInsets: UIEdgeInsets) {
+		let boardBounds = diceBoardView.bounds
+		guard boardBounds.width > 1, boardBounds.height > 1 else {
+			return (boardBounds, .zero)
+		}
+
+		var layoutBounds = view.convert(view.safeAreaLayoutGuide.layoutFrame, to: diceBoardView).intersection(boardBounds)
+		if layoutBounds.isNull || layoutBounds.isEmpty {
+			layoutBounds = boardBounds
+		}
+
+		var occlusionTop = layoutBounds.maxY
+		let controls: [UIView] = [rollButton, showStatsButton].filter { !$0.isHidden && $0.alpha > 0.01 }
+		for control in controls {
+			let frame = control.superview?.convert(control.frame, to: diceBoardView) ?? control.convert(control.bounds, to: diceBoardView)
+			occlusionTop = min(occlusionTop, frame.minY - boardViewportPadding)
+		}
+		if statsVisible {
+			let sheetTop = boardBounds.maxY - statsSheetHeight
+			occlusionTop = min(occlusionTop, sheetTop - boardViewportPadding)
+		}
+		let clampedBottom = min(layoutBounds.maxY, occlusionTop)
+		if clampedBottom > layoutBounds.minY {
+			layoutBounds.size.height = max(1, clampedBottom - layoutBounds.minY)
+		}
+
+		let cameraInsets = UIEdgeInsets(
+			top: max(0, layoutBounds.minY - boardBounds.minY),
+			left: 0,
+			bottom: max(0, boardBounds.maxY - layoutBounds.maxY),
+			right: 0
+		)
+		return (layoutBounds, cameraInsets)
+	}
+
+	static func readableBoardSideLengthFloor(layoutPreset: DiceBoardLayoutPreset, mixed: Bool) -> CGFloat {
+		let spacingFactor = boardSpacingFactor(layoutPreset: layoutPreset, mixed: mixed)
+		return readableReferenceWidth / (readableReferenceColumns + (readableReferenceColumns + 1) * spacingFactor)
+	}
+
+	private static func boardSpacingFactor(layoutPreset: DiceBoardLayoutPreset, mixed: Bool) -> CGFloat {
+		switch layoutPreset {
+		case .compact:
+			return mixed ? 0.16 : 0.13
+		case .spacious:
+			return mixed ? 0.26 : 0.22
+		}
+	}
+
 	static func boardRenderLayout(
 		itemCount: Int,
 		bounds: CGRect,
@@ -499,42 +553,39 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 		mixed: Bool
 	) -> (centers: [CGPoint], sideLength: CGFloat) {
 		guard itemCount > 0, bounds.width > 1, bounds.height > 1 else { return ([], 0) }
-		let spacingFactor: CGFloat
-		switch layoutPreset {
-		case .compact:
-			spacingFactor = mixed ? 0.16 : 0.13
-		case .spacious:
-			spacingFactor = mixed ? 0.26 : 0.22
-		}
-
-		var bestColumns = 1
-		var bestRows = itemCount
-		var bestSideLength: CGFloat = 0
-		for columns in 1...itemCount {
-			let rows = Int(ceil(Double(itemCount) / Double(columns)))
-			let sideByWidth = bounds.width / (CGFloat(columns) + CGFloat(columns + 1) * spacingFactor)
-			let sideByHeight = bounds.height / (CGFloat(rows) + CGFloat(rows + 1) * spacingFactor)
-			let candidate = min(sideByWidth, sideByHeight)
-			if candidate > bestSideLength {
-				bestSideLength = candidate
-				bestColumns = columns
-				bestRows = rows
-			}
-		}
-
-		let sideLength = max(44, min(bestSideLength, min(bounds.width, bounds.height) * 0.34))
+		let spacingFactor = boardSpacingFactor(layoutPreset: layoutPreset, mixed: mixed)
+		let readableFloor = readableBoardSideLengthFloor(layoutPreset: layoutPreset, mixed: mixed)
+		let maxColumnsAtReadableFloor = max(
+			1,
+			Int(
+				floor(
+					((bounds.width / readableFloor) - spacingFactor) / (1 + spacingFactor)
+				)
+			)
+		)
+		let columns = min(itemCount, maxColumnsAtReadableFloor)
+		let rows = Int(ceil(Double(itemCount) / Double(columns)))
+		let sideByWidth = bounds.width / (CGFloat(columns) + CGFloat(columns + 1) * spacingFactor)
+		let maxSideLength = min(bounds.width, bounds.height) * 0.34
+		let readableOrWidthBoundFloor = min(readableFloor, sideByWidth)
+		let sideLength = max(readableOrWidthBoundFloor, min(sideByWidth, maxSideLength))
 		let gap = sideLength * spacingFactor
-		let rowCapacity = min(bestColumns, itemCount)
+		let rowCapacity = min(columns, itemCount)
 		let totalGridWidth = CGFloat(rowCapacity) * sideLength + CGFloat(max(0, rowCapacity - 1)) * gap
-		let totalGridHeight = CGFloat(bestRows) * sideLength + CGFloat(max(0, bestRows - 1)) * gap
+		let totalGridHeight = CGFloat(rows) * sideLength + CGFloat(max(0, rows - 1)) * gap
 		let startX = bounds.midX - totalGridWidth / 2 + sideLength / 2
-		let startY = bounds.midY - totalGridHeight / 2 + sideLength / 2
+		let startY: CGFloat
+		if totalGridHeight <= bounds.height {
+			startY = bounds.midY - totalGridHeight / 2 + sideLength / 2
+		} else {
+			startY = bounds.minY + gap + sideLength / 2
+		}
 
 		var centers: [CGPoint] = []
 		centers.reserveCapacity(itemCount)
 		for index in 0..<itemCount {
-			let row = index / bestColumns
-			let column = index % bestColumns
+			let row = index / columns
+			let column = index % columns
 			let x = startX + CGFloat(column) * (sideLength + gap)
 			let y = startY + CGFloat(row) * (sideLength + gap)
 			centers.append(CGPoint(x: x, y: y))
@@ -1067,10 +1118,16 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 		}
 		guard abs(rollButtonBottomConstraint.constant - targetConstant) > .ulpOfOne else { return }
 		rollButtonBottomConstraint.constant = targetConstant
-		guard animated else { return }
-		UIView.animate(withDuration: 0.25) {
-			self.view.layoutIfNeeded()
+		guard animated else {
+			view.layoutIfNeeded()
+			updateDiceBoard(animated: false)
+			return
 		}
+		UIView.animate(withDuration: 0.25, animations: {
+			self.view.layoutIfNeeded()
+		}, completion: { _ in
+			self.updateDiceBoard(animated: false)
+		})
 	}
 
 	private func selectTheme(_ theme: DiceTheme) {
