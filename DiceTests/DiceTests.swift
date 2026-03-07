@@ -2283,6 +2283,29 @@ final class DiceTests: XCTestCase {
 		XCTAssertGreaterThanOrEqual(planeSize.height, size.height)
 	}
 
+	func testDiceCubeViewTablePlaneHasMarginAtZeroDice() {
+		let size = CGSize(width: 390, height: 844)
+		let planeSize = DiceCubeView.debugTablePlaneSize(for: size)
+		XCTAssertGreaterThan(planeSize.width, size.width + 40)
+		XCTAssertGreaterThan(planeSize.height, size.height + 40)
+	}
+
+	func testDiceCubeViewTablePlaneExpandsForOverflowingContent() {
+		let base = DiceCubeView.debugRequiredTablePlaneSize(
+			bounds: CGRect(x: 0, y: 0, width: 390, height: 844),
+			cameraPanRangeY: 0...0,
+			contentBounds: nil
+		)
+		let expanded = DiceCubeView.debugRequiredTablePlaneSize(
+			bounds: CGRect(x: 0, y: 0, width: 390, height: 844),
+			cameraPanRangeY: -420...420,
+			contentBounds: CGRect(x: -180, y: -320, width: 360, height: 1680)
+		)
+
+		XCTAssertGreaterThan(expanded.height, base.height + 300)
+		XCTAssertGreaterThanOrEqual(expanded.width, base.width)
+	}
+
 	func testDiceCubeViewCameraPanRangeExpandsWhenDiceOverflowViewport() {
 		let range = DiceCubeView.debugCameraPanRange(
 			contentMinY: -420,

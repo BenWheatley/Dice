@@ -14,6 +14,8 @@ final class DiceCubeView: UIView {
 	private static let faceTextureEdgeLength: CGFloat = 256
 	private static let neutralTextureName = "stripes"
 	private static let cameraDefaultZ: Float = 800
+	private static let tablePlaneMargin: CGFloat = 96
+	private static let tablePlaneMinimumSpan: CGFloat = 900
 
 	private static let neutralTableTextureImage: UIImage? = {
 		let bundles = [Bundle.main, Bundle(for: DiceCubeView.self)]
@@ -122,7 +124,7 @@ final class DiceCubeView: UIView {
 	private var cameraPanOffsetY: CGFloat = 0
 	private var cameraPanStartOffsetY: CGFloat = 0
 	private var cameraPanRangeY: ClosedRange<CGFloat> = 0...0
-	private var cameraContentRangeY: ClosedRange<CGFloat>?
+	private var cameraContentBounds: CGRect?
 	private var cameraViewportInsets: UIEdgeInsets = .zero
 	private var needsMeshRefresh = false
 	private var activeRollAnimationToken: Int = 0
@@ -182,7 +184,7 @@ final class DiceCubeView: UIView {
 	) {
 		guard values.count == centers.count, values.count == sideCounts.count else { return }
 		ensureNodeCount(values.count)
-		updateCameraContentRange(centers: centers, sideLength: sideLength)
+		updateCameraContentBounds(centers: centers, sideLength: sideLength)
 		let motionProfile = DiceMotionBehaviorProfile.resolve(intensity: activeAnimationIntensity, reduceMotionEnabled: reduceMotionEnabled)
 		let shouldAnimateRoll = animated && activeAnimationIntensity != .off && motionProfile.duration > 0
 		let animatingIndices = shouldAnimateRoll ? values.indices.filter { !lockedIndices.contains($0) } : []
@@ -464,8 +466,8 @@ final class DiceCubeView: UIView {
 
 	private func updateCamera(animated: Bool) {
 		cameraNode.camera?.orthographicScale = Double(bounds.height / 2)
-		updateTableSurfaceSize()
 		updateCameraPanRange()
+		updateTableSurfaceSize()
 		let target = (
 			position: SCNVector3(0, Float(cameraPanOffsetY), Self.cameraDefaultZ),
 			euler: SCNVector3(0, 0, 0)
@@ -482,27 +484,43 @@ final class DiceCubeView: UIView {
 		SCNTransaction.commit()
 	}
 
-	private func updateCameraContentRange(centers: [CGPoint], sideLength: CGFloat) {
+	private func updateCameraContentBounds(centers: [CGPoint], sideLength: CGFloat) {
 		guard !centers.isEmpty else {
-			cameraContentRangeY = nil
+			cameraContentBounds = nil
 			cameraPanRangeY = 0...0
 			cameraPanOffsetY = 0
 			return
 		}
-		let projectedCenters = centers.map { scenePosition(for: $0).y }
-		guard let minCenterY = projectedCenters.min(), let maxCenterY = projectedCenters.max() else {
-			cameraContentRangeY = nil
+		let projectedCenters = centers.map(scenePosition(for:))
+		guard
+			let minCenterX = projectedCenters.map(\.x).min(),
+			let maxCenterX = projectedCenters.map(\.x).max(),
+			let minCenterY = projectedCenters.map(\.y).min(),
+			let maxCenterY = projectedCenters.map(\.y).max()
+		else {
+			cameraContentBounds = nil
 			cameraPanRangeY = 0...0
 			cameraPanOffsetY = 0
 			return
 		}
-		let radius = cameraPanDieRadius(for: sideLength)
-		cameraContentRangeY = CGFloat(minCenterY - radius)...CGFloat(maxCenterY + radius)
+		let radius = CGFloat(cameraPanDieRadius(for: sideLength))
+		cameraContentBounds = CGRect(
+			x: CGFloat(minCenterX) - radius,
+			y: CGFloat(minCenterY) - radius,
+			width: CGFloat(maxCenterX - minCenterX) + radius * 2,
+			height: CGFloat(maxCenterY - minCenterY) + radius * 2
+		)
 	}
 
 	private func updateCameraPanRange() {
+		let contentRangeY: ClosedRange<CGFloat>?
+		if let cameraContentBounds {
+			contentRangeY = cameraContentBounds.minY...cameraContentBounds.maxY
+		} else {
+			contentRangeY = nil
+		}
 		cameraPanRangeY = Self.cameraPanRange(
-			contentRangeY: cameraContentRangeY,
+			contentRangeY: contentRangeY,
 			visibleRangeAtOffsetZero: visibleWorldRangeAtZeroCameraOffset()
 		)
 		cameraPanOffsetY = Self.clampedCameraOffset(cameraPanOffsetY, in: cameraPanRangeY)
@@ -618,12 +636,43 @@ final class DiceCubeView: UIView {
 
 	private func updateTableSurfaceSize() {
 		guard let plane = tableNode.geometry as? SCNPlane else { return }
-		// Use a diagonal-sized surface to avoid exposed edges during layout/camera transitions.
-		let diagonal = hypot(bounds.width, bounds.height)
-		let span = max(10, diagonal * 1.12)
-		plane.width = span
-		plane.height = span
+		let size = Self.requiredTablePlaneSize(
+			bounds: bounds,
+			cameraPanRangeY: cameraPanRangeY,
+			contentBounds: cameraContentBounds
+		)
+		plane.width = size.width
+		plane.height = size.height
 		applyTableTextureScale()
+	}
+
+	private static func requiredTablePlaneSize(
+		bounds: CGRect,
+		cameraPanRangeY: ClosedRange<CGFloat>,
+		contentBounds: CGRect?
+	) -> CGSize {
+		guard bounds.width > 1, bounds.height > 1 else {
+			return CGSize(width: tablePlaneMinimumSpan, height: tablePlaneMinimumSpan)
+		}
+
+		let halfWidth = bounds.width / 2
+		let halfHeight = bounds.height / 2
+		let visibleMinX = -halfWidth
+		let visibleMaxX = halfWidth
+		let visibleMinY = cameraPanRangeY.lowerBound - halfHeight
+		let visibleMaxY = cameraPanRangeY.upperBound + halfHeight
+
+		let contentMinX = contentBounds?.minX ?? 0
+		let contentMaxX = contentBounds?.maxX ?? 0
+		let contentMinY = contentBounds?.minY ?? 0
+		let contentMaxY = contentBounds?.maxY ?? 0
+
+		let requiredHalfX = max(abs(min(visibleMinX, contentMinX)), abs(max(visibleMaxX, contentMaxX)))
+		let requiredHalfY = max(abs(min(visibleMinY, contentMinY)), abs(max(visibleMaxY, contentMaxY)))
+
+		let width = max(tablePlaneMinimumSpan, requiredHalfX * 2 + tablePlaneMargin * 2)
+		let height = max(tablePlaneMinimumSpan, requiredHalfY * 2 + tablePlaneMargin * 2)
+		return CGSize(width: width, height: height)
 	}
 
 	private func usesCoinGeometry(for sideCount: Int) -> Bool {
@@ -1108,6 +1157,14 @@ final class DiceCubeView: UIView {
 		view.layoutIfNeeded()
 		guard let plane = view.tableNode.geometry as? SCNPlane else { return .zero }
 		return CGSize(width: plane.width, height: plane.height)
+	}
+
+	static func debugRequiredTablePlaneSize(
+		bounds: CGRect,
+		cameraPanRangeY: ClosedRange<CGFloat>,
+		contentBounds: CGRect?
+	) -> CGSize {
+		requiredTablePlaneSize(bounds: bounds, cameraPanRangeY: cameraPanRangeY, contentBounds: contentBounds)
 	}
 
 	static func debugNeutralTableTexturePixelSize() -> CGSize {
