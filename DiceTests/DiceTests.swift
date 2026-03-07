@@ -2242,6 +2242,10 @@ final class DiceTests: XCTestCase {
 		let source = DiceShaderModifierSourceLoader.tableSurfaceShaderModifier()
 		XCTAssertNotNil(source)
 		XCTAssertTrue(source?.contains("tableTextureMode") ?? false)
+		XCTAssertTrue(
+			source?.contains("float2 p = centeredUV * float2(max(tableTextureScaleX, 1.0), max(tableTextureScaleY, 1.0));") ??
+				false
+		)
 	}
 
 	func testDiceCubeViewMapsTableTextureModesForShaderUniform() {

@@ -226,6 +226,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Remove `UICollectionViewController` inheritance from the main screen (use `UIViewController` + owned `UICollectionView`) and stabilize table shader scale so rotation does not change perceived texture size.
 - [x] Calibrate neutral table shader zoom to point-mapped sampling (`1 texture pixel == 1pt`) by passing explicit table point-scale uniforms (`tableTextureScaleX`/`tableTextureScaleY`) and locking with a `DiceCubeView` regression test.
 - [x] Restore neutral table texture to source-image-backed point mapping so `stripes` asset pixels render at `1 pixel == 1pt` using `contentsTransform` repeat factors derived from table-plane point size.
+- [x] Recalibrate felt/wood procedural table shaders to point-mapped per-axis sampling (`tableTextureScaleX/Y`) with tuned frequencies so texture detail remains visually rich and scale-consistent under device rotation.
 - [x] Fix rotation/resize material regression by forcing per-die face-material reapplication whenever side length changes so color overrides persist after orientation changes.
 - [x] Replace non-polyhedral slab fallback with first-class non-polyhedral render paths: `d2` coin geometry and generic `dN` token geometry, with automated geometry-profile tests.
 - [x] Refine cylindrical die UX (`d2` + token-style `dN`): animate from edge-on in-plane spin to face-on settle with synchronized deceleration, and render visible per-face symbols on coin caps.
