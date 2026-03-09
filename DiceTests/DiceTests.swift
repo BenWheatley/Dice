@@ -2246,6 +2246,9 @@ final class DiceTests: XCTestCase {
 			source?.contains("float2 p = centeredUV * float2(max(tableTextureScaleX, 1.0), max(tableTextureScaleY, 1.0));") ??
 				false
 		)
+		XCTAssertTrue(source?.contains("float tableFbm2(") ?? false)
+		XCTAssertTrue(source?.contains("float2 feltWarped =") ?? false)
+		XCTAssertTrue(source?.contains("float microfiberA = tableFbm2(") ?? false)
 	}
 
 	func testDiceCubeViewMapsTableTextureModesForShaderUniform() {

@@ -243,6 +243,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Add vertical board-camera pan gesture (screen-Y only) so overflowing dice grids remain reachable without changing die layout scale.
 - [x] Enforce readable board scale floor (3-column reference size on iPhone-class width), allow vertical overflow instead of die downscaling, and compute board viewport/camera insets from occluding UI so pan remains usable when top/bottom controls are present.
 - [x] Make SceneKit table background coverage content-aware: scale the background plane from dice content bounds plus camera-pan extent, with fixed margins and a non-zero minimum span so blank regions cannot appear even with zero dice.
+- [x] Rework felt table shader using domain-warped fBm microfiber layers so felt reads as fabric (not flat color) while preserving per-axis point-mapped scale under rotation.
 
 ### Performance and Interaction Safety
 
