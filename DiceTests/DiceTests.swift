@@ -2248,7 +2248,7 @@ final class DiceTests: XCTestCase {
 		)
 		XCTAssertTrue(
 			source?.contains(
-				"float2 feltPoints = centeredUV * float2(max(tablePlaneSizeX, 1.0), max(tablePlaneSizeY, 1.0));"
+				"float2 feltBase = _surface.position.xy * 0.24;"
 			) ?? false
 		)
 		XCTAssertTrue(source?.contains("float tableFbm2(") ?? false)
@@ -2301,15 +2301,6 @@ final class DiceTests: XCTestCase {
 		let planeSize = DiceCubeView.debugTablePlaneSize(for: size)
 		XCTAssertGreaterThan(planeSize.width, size.width + 40)
 		XCTAssertGreaterThan(planeSize.height, size.height + 40)
-	}
-
-	func testDiceCubeViewPublishesTablePlaneSizeUniforms() {
-		let size = CGSize(width: 390, height: 844)
-		let planeSize = DiceCubeView.debugTablePlaneSize(for: size)
-		let uniformSize = DiceCubeView.debugTablePlaneUniformSize(for: size)
-
-		XCTAssertEqual(uniformSize.width, planeSize.width, accuracy: 0.001)
-		XCTAssertEqual(uniformSize.height, planeSize.height, accuracy: 0.001)
 	}
 
 	func testDiceCubeViewTablePlaneExpandsForOverflowingContent() {

@@ -3,8 +3,6 @@ float tableTextureMode;
 float tableTextureScale;
 float tableTextureScaleX;
 float tableTextureScaleY;
-float tablePlaneSizeX;
-float tablePlaneSizeY;
 
 #pragma declaration
 float tableHash21(float2 p) {
@@ -47,27 +45,27 @@ float2 p = centeredUV * float2(max(tableTextureScaleX, 1.0), max(tableTextureSca
 
 float3 color;
 if (tableTextureMode < 0.5) {
-	// Felt uses plane-space points (not viewport UV scale) so rotation keeps pattern scale stable.
-	float2 feltPoints = centeredUV * float2(max(tablePlaneSizeX, 1.0), max(tablePlaneSizeY, 1.0));
-	float2 feltBase = feltPoints * 0.022;
+	// Felt uses screen-space coordinates for isotropic pixel-scale grain.
+	// In this scene's orthographic camera, view-space XY maps 1:1 to screen points.
+	float2 feltBase = _surface.position.xy * 0.24;
 	float2 warp = float2(
-		tableFbm2(feltBase * 1.71 + float2(31.2, 11.7)) - 0.5,
-		tableFbm2(feltBase * 1.93 + float2(7.4, 47.3)) - 0.5
+		tableFbm2(feltBase * 0.63 + float2(31.2, 11.7)) - 0.5,
+		tableFbm2(feltBase * 0.67 + float2(7.4, 47.3)) - 0.5
 	);
-	float2 feltWarped = feltBase + warp * 1.10;
+	float2 feltWarped = feltBase + warp * 0.85;
 
-	// Layer broad tone + medium nap + fine fibers for a cloth-like felt read.
-	float macro = tableFbm2(feltWarped * 1.35 + float2(3.0, 9.0));
-	float meso = tableFbm2(feltWarped * 4.8 + float2(17.0, 5.0));
-	float fiberA = tableNoise2(feltWarped * 26.0 + float2(13.0, 21.0));
-	float fiberB = tableNoise2(feltWarped.yx * 29.0 + float2(4.0, 9.0));
+	// Blend broad mottling, nap, and high-frequency fibers.
+	float macro = tableFbm2(feltWarped * 0.17 + float2(3.0, 9.0));
+	float meso = tableFbm2(feltWarped * 0.58 + float2(17.0, 5.0));
+	float fiberA = tableNoise2(feltWarped * 1.95 + float2(13.0, 21.0));
+	float fiberB = tableNoise2(feltWarped.yx * 2.10 + float2(4.0, 9.0));
 	float fibers = (fiberA + fiberB) * 0.5;
-	float lint = smoothstep(0.72, 0.97, tableNoise2(feltWarped * 17.0 + float2(29.0, 2.0)));
+	float lint = smoothstep(0.83, 0.98, tableNoise2(feltWarped * 3.4 + float2(29.0, 2.0)));
 
-	float tonal = (macro - 0.5) * 0.17 + (meso - 0.5) * 0.10 + (fibers - 0.5) * 0.08;
-	float3 base = float3(0.12, 0.42, 0.30);
+	float tonal = (macro - 0.5) * 0.15 + (meso - 0.5) * 0.13 + (fibers - 0.5) * 0.12;
+	float3 base = float3(0.13, 0.43, 0.31);
 	color = base
-		+ float3(0.34, 0.58, 0.44) * tonal
+		+ float3(0.40, 0.64, 0.49) * tonal
 		+ float3(0.05, 0.09, 0.07) * lint;
 	_surface.roughness = 0.98;
 } else if (tableTextureMode < 1.5) {
