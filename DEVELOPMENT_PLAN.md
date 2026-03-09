@@ -248,6 +248,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Rework felt table shader using domain-warped fBm microfiber layers so felt reads as fabric (not flat color) while preserving per-axis point-mapped scale under rotation.
 - [x] Fix felt background rotation regression by sampling felt in table-plane point space (not viewport-scaled UVs) and retune felt grain layers to avoid stripe artifacts.
 - [x] Add cast shadows on the table surface with configurable lighting angle modes (`Natural` default using local time/date sun-or-moon direction with hemisphere-aware “equator-up” orientation, and `Fixed` using a stable 3pm light direction), exposed in Options and persisted in preferences.
+- [x] Fix tabletop cast-shadow visibility by moving to forward shadow mode and rebalancing key/fill/shadow parameters so shadows remain clearly visible on patterned table shaders.
 
 ### Performance and Interaction Safety
 

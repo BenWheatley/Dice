@@ -440,12 +440,14 @@ final class DiceCubeView: UIView {
 	private func configureLighting() {
 		let keyLight = SCNLight()
 		keyLight.type = .directional
-		keyLight.intensity = 1_000
+		keyLight.intensity = 1_250
 		keyLight.castsShadow = true
-		keyLight.shadowMode = .deferred
-		keyLight.shadowSampleCount = 24
-		keyLight.shadowRadius = 3
-		keyLight.shadowColor = UIColor.black.withAlphaComponent(0.35)
+		// Forward shadowing provides stable, visible tabletop shadows with SceneKit shader modifiers.
+		keyLight.shadowMode = .forward
+		keyLight.shadowSampleCount = 48
+		keyLight.shadowRadius = 1.5
+		keyLight.shadowBias = 1.0
+		keyLight.shadowColor = UIColor.black.withAlphaComponent(0.62)
 		keyLight.orthographicScale = 1_500
 		keyLight.zNear = 10
 		keyLight.zFar = 4_000
@@ -454,7 +456,7 @@ final class DiceCubeView: UIView {
 
 		let fillLight = SCNLight()
 		fillLight.type = .ambient
-		fillLight.intensity = 260
+		fillLight.intensity = 140
 		fillLightNode.light = fillLight
 		scene.rootNode.addChildNode(fillLightNode)
 
@@ -475,9 +477,9 @@ final class DiceCubeView: UIView {
 
 		switch activeLightingAngle {
 		case .fixed:
-			keyLightNode.light?.intensity = 1_000
+			keyLightNode.light?.intensity = 1_250
 		case .natural:
-			keyLightNode.light?.intensity = DiceLightingDirectionResolver.isDaytime(date: date, timeZone: timeZone) ? 1_050 : 720
+			keyLightNode.light?.intensity = DiceLightingDirectionResolver.isDaytime(date: date, timeZone: timeZone) ? 1_300 : 900
 		}
 	}
 
@@ -1152,6 +1154,10 @@ final class DiceCubeView: UIView {
 		let autoenablesDefaultLighting: Bool
 		let keyLightType: SCNLight.LightType
 		let keyLightCastsShadow: Bool
+		let keyLightShadowMode: SCNShadowMode
+		let keyLightShadowAlpha: CGFloat
+		let keyLightIntensity: CGFloat
+		let fillLightIntensity: CGFloat
 		let tableLightingModel: SCNMaterial.LightingModel
 		let tableReadsDepth: Bool
 		let tableWritesDepth: Bool
@@ -1159,10 +1165,20 @@ final class DiceCubeView: UIView {
 
 	static func debugLightingConfiguration() -> DebugLightingConfiguration {
 		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
+		let shadowAlpha: CGFloat
+		if let shadowColor = view.keyLightNode.light?.shadowColor as? UIColor {
+			shadowAlpha = shadowColor.cgColor.alpha
+		} else {
+			shadowAlpha = 0
+		}
 		return DebugLightingConfiguration(
 			autoenablesDefaultLighting: view.scnView.autoenablesDefaultLighting,
 			keyLightType: view.keyLightNode.light?.type ?? .ambient,
 			keyLightCastsShadow: view.keyLightNode.light?.castsShadow ?? false,
+			keyLightShadowMode: view.keyLightNode.light?.shadowMode ?? SCNShadowMode.deferred,
+			keyLightShadowAlpha: shadowAlpha,
+			keyLightIntensity: view.keyLightNode.light?.intensity ?? 0,
+			fillLightIntensity: view.fillLightNode.light?.intensity ?? 0,
 			tableLightingModel: view.tableMaterial.lightingModel,
 			tableReadsDepth: view.tableMaterial.readsFromDepthBuffer,
 			tableWritesDepth: view.tableMaterial.writesToDepthBuffer
