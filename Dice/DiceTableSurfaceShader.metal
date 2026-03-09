@@ -3,6 +3,8 @@ float tableTextureMode;
 float tableTextureScale;
 float tableTextureScaleX;
 float tableTextureScaleY;
+float tablePlaneSizeX;
+float tablePlaneSizeY;
 
 #pragma declaration
 float tableHash21(float2 p) {
@@ -45,36 +47,28 @@ float2 p = centeredUV * float2(max(tableTextureScaleX, 1.0), max(tableTextureSca
 
 float3 color;
 if (tableTextureMode < 0.5) {
-	// Felt: domain-warped fBm + anisotropic microfibers so the surface reads as fabric, not flat paint.
-	float2 feltBase = p * 0.092;
-	float warpX = tableNoise2(feltBase * 1.27 + float2(13.1, 5.7)) - 0.5;
-	float warpY = tableNoise2(feltBase * 1.91 + float2(4.3, 21.9)) - 0.5;
-	float2 feltWarped = feltBase + float2(warpX * 1.35, warpY * 1.10);
+	// Felt uses plane-space points (not viewport UV scale) so rotation keeps pattern scale stable.
+	float2 feltPoints = centeredUV * float2(max(tablePlaneSizeX, 1.0), max(tablePlaneSizeY, 1.0));
+	float2 feltBase = feltPoints * 0.022;
+	float2 warp = float2(
+		tableFbm2(feltBase * 1.71 + float2(31.2, 11.7)) - 0.5,
+		tableFbm2(feltBase * 1.93 + float2(7.4, 47.3)) - 0.5
+	);
+	float2 feltWarped = feltBase + warp * 1.10;
 
-	float2 fiberAxisA = normalize(float2(0.94, 0.34));
-	float2 fiberAxisB = normalize(float2(-0.29, 0.96));
-	float microfiberA = tableFbm2(float2(
-		dot(feltWarped, fiberAxisA) * 5.8,
-		dot(feltWarped, fiberAxisB) * 1.7 + 7.0
-	));
-	float microfiberB = tableFbm2(float2(
-		dot(feltWarped, fiberAxisB) * 6.6 + 11.0,
-		dot(feltWarped, fiberAxisA) * 1.4 - 3.0
-	));
-	float nap = tableNoise2(feltWarped * 14.5 + float2(3.0, 17.0));
-	float lintMask = smoothstep(0.82, 0.98, tableNoise2(feltWarped * 20.0 + float2(29.0, 2.0)));
-	float clouding = tableFbm2(feltWarped * 2.2 + float2(19.0, 31.0));
+	// Layer broad tone + medium nap + fine fibers for a cloth-like felt read.
+	float macro = tableFbm2(feltWarped * 1.35 + float2(3.0, 9.0));
+	float meso = tableFbm2(feltWarped * 4.8 + float2(17.0, 5.0));
+	float fiberA = tableNoise2(feltWarped * 26.0 + float2(13.0, 21.0));
+	float fiberB = tableNoise2(feltWarped.yx * 29.0 + float2(4.0, 9.0));
+	float fibers = (fiberA + fiberB) * 0.5;
+	float lint = smoothstep(0.72, 0.97, tableNoise2(feltWarped * 17.0 + float2(29.0, 2.0)));
 
-	float fiberContrast = (microfiberA - 0.5) * 0.18 + (microfiberB - 0.5) * 0.14;
-	float napContrast = (nap - 0.5) * 0.10;
-	float cloudContrast = (clouding - 0.5) * 0.16;
-
-	float3 base = float3(0.11, 0.32, 0.20);
+	float tonal = (macro - 0.5) * 0.17 + (meso - 0.5) * 0.10 + (fibers - 0.5) * 0.08;
+	float3 base = float3(0.12, 0.42, 0.30);
 	color = base
-		+ float3(0.60, 1.00, 0.72) * fiberContrast
-		+ float3(0.45, 0.70, 0.50) * napContrast
-		+ float3(0.40, 0.62, 0.45) * cloudContrast
-		+ float3(0.09, 0.14, 0.10) * lintMask;
+		+ float3(0.34, 0.58, 0.44) * tonal
+		+ float3(0.05, 0.09, 0.07) * lint;
 	_surface.roughness = 0.98;
 } else if (tableTextureMode < 1.5) {
 	// Wood: broad curved grain with medium-detail pores; tuned for visible texture at v1 zoom.

@@ -604,9 +604,12 @@ final class DiceCubeView: UIView {
 	private func applyTableTextureScale() {
 		let scale = max(1, min(bounds.width, bounds.height))
 		let pointScale = tableTexturePointScale()
+		let planeSize = currentTablePlaneSize()
 		tableMaterial.setValue(scale as NSNumber, forKey: "tableTextureScale")
 		tableMaterial.setValue(pointScale.width as NSNumber, forKey: "tableTextureScaleX")
 		tableMaterial.setValue(pointScale.height as NSNumber, forKey: "tableTextureScaleY")
+		tableMaterial.setValue(planeSize.width as NSNumber, forKey: "tablePlaneSizeX")
+		tableMaterial.setValue(planeSize.height as NSNumber, forKey: "tablePlaneSizeY")
 		if activeTableTexture == .neutral,
 			Self.neutralTableTexturePixelSize.width > 0,
 			Self.neutralTableTexturePixelSize.height > 0 {
@@ -621,6 +624,13 @@ final class DiceCubeView: UIView {
 	private func tableTexturePointScale() -> CGSize {
 		// Point mapping should track visible view points, not oversized background geometry.
 		return CGSize(width: max(1, bounds.width), height: max(1, bounds.height))
+	}
+
+	private func currentTablePlaneSize() -> CGSize {
+		guard let plane = tableNode.geometry as? SCNPlane else {
+			return CGSize(width: max(1, bounds.width), height: max(1, bounds.height))
+		}
+		return CGSize(width: max(1, CGFloat(plane.width)), height: max(1, CGFloat(plane.height)))
 	}
 
 	private func tableTextureModeValue(for texture: DiceTableTexture) -> NSNumber {
@@ -1150,6 +1160,14 @@ final class DiceCubeView: UIView {
 		let x = CGFloat((view.tableMaterial.value(forKey: "tableTextureScaleX") as? NSNumber)?.doubleValue ?? 0)
 		let y = CGFloat((view.tableMaterial.value(forKey: "tableTextureScaleY") as? NSNumber)?.doubleValue ?? 0)
 		return CGSize(width: x, height: y)
+	}
+
+	static func debugTablePlaneUniformSize(for size: CGSize) -> CGSize {
+		let view = DiceCubeView(frame: CGRect(origin: .zero, size: size))
+		view.layoutIfNeeded()
+		let width = CGFloat((view.tableMaterial.value(forKey: "tablePlaneSizeX") as? NSNumber)?.doubleValue ?? 0)
+		let height = CGFloat((view.tableMaterial.value(forKey: "tablePlaneSizeY") as? NSNumber)?.doubleValue ?? 0)
+		return CGSize(width: width, height: height)
 	}
 
 	static func debugTablePlaneSize(for size: CGSize) -> CGSize {
