@@ -37,12 +37,6 @@ float tableFbm2(float2 p) {
 }
 
 #pragma body
-// Base UV center.
-float2 centeredUV = (_surface.diffuseTexcoord - 0.5);
-// Procedural felt/wood patterns use per-axis point mapping so texture scale stays stable
-// when the view rotates between portrait and landscape.
-float2 p = centeredUV * float2(max(tableTextureScaleX, 1.0), max(tableTextureScaleY, 1.0));
-
 float3 color;
 if (tableTextureMode < 0.5) {
 	// Felt uses screen-space coordinates for isotropic pixel-scale grain.
@@ -69,18 +63,72 @@ if (tableTextureMode < 0.5) {
 		+ float3(0.05, 0.09, 0.07) * lint;
 	_surface.roughness = 0.98;
 } else if (tableTextureMode < 1.5) {
-	// Wood: broad curved grain with medium-detail pores; tuned for visible texture at v1 zoom.
-	float boundaryWarp = (tableNoise2(float2(p.x * 0.020, p.y * 0.042)) - 0.5) * 11.0;
-	boundaryWarp += (tableNoise2(float2(p.x * 0.067 + 13.0, p.y * 0.102 + 3.0)) - 0.5) * 5.2;
-	float warped = p.y * 0.145 + boundaryWarp;
-	float grainA = sin(warped * 0.46 + tableNoise2(float2(warped * 0.045, 0.0)) * 5.4);
-	float grainB = sin(warped * 1.38 + tableNoise2(float2(warped * 0.13, 1.0)) * 4.6);
-	float fine = tableNoise2(float2(p.x * 0.34, p.y * 1.28));
-	float pore = smoothstep(0.80, 0.97, tableNoise2(float2(p.x * 1.12, p.y * 3.10)));
-	float rings = grainA * 0.062 + grainB * 0.026 + (fine - 0.5) * 0.017 - pore * 0.046;
-	float3 base = float3(0.49, 0.31, 0.18);
-	color = base + float3(rings, rings * 0.72, rings * 0.42);
-	_surface.roughness = 0.92;
+	// Wood uses view-space position as stable coordinates so rotation does not remap UVs.
+	// Pattern model: rings + ring/axial noise + explicit knots (same controls used in DCC tools).
+	float2 woodPos = _surface.position.xy * 0.11;
+	float2 lowWarp = float2(
+		tableFbm2(woodPos * 0.19 + float2(17.3, 8.4)) - 0.5,
+		tableFbm2(woodPos * 0.23 + float2(3.1, 29.7)) - 0.5
+	);
+	float2 woodWarped = woodPos + lowWarp * float2(2.0, 0.7);
+
+	float axial = woodWarped.y;
+	float across = woodWarped.x;
+	float ringNoise = (tableFbm2(float2(axial * 0.42, across * 0.11) + float2(11.0, 5.0)) - 0.5) * 2.1;
+	float axialNoise = (tableFbm2(float2(axial * 0.18, across * 0.35) + float2(29.0, 17.0)) - 0.5) * 1.7;
+
+	float knotField = 0.0;
+	float knotWarp = 0.0;
+	float knotSpacing = 26.0;
+	float2 knotCell = floor(woodWarped / knotSpacing);
+	for (int oy = -1; oy <= 1; ++oy) {
+		for (int ox = -1; ox <= 1; ++ox) {
+			float2 cell = knotCell + float2(float(ox), float(oy));
+			float2 jitter = float2(
+				tableHash21(cell + float2(19.1, 7.7)),
+				tableHash21(cell + float2(3.5, 41.3))
+			) - 0.5;
+			float2 center = (cell + 0.5 + jitter * 0.75) * knotSpacing;
+			float2 d = woodWarped - center;
+			d.x *= 0.55;
+			float dist2 = dot(d, d);
+			float knot = exp(-dist2 * 0.085);
+			knotField = max(knotField, knot);
+			float angle = atan2(d.y, d.x);
+			knotWarp += knot * angle * 1.1;
+		}
+	}
+
+	float ringPhase = axial * 2.3 + ringNoise + axialNoise + knotWarp * 1.4;
+	float ringSignal = sin(ringPhase);
+	float ringBands = 0.5 + 0.5 * ringSignal;
+	ringBands = clamp(
+		ringBands + (tableFbm2(float2(across * 0.55, axial * 0.09) + float2(7.0, 3.0)) - 0.5) * 0.28,
+		0.0,
+		1.0
+	);
+
+	float latewood = smoothstep(0.60, 0.98, ringBands);
+	float colorBleed = smoothstep(0.18, 0.82, ringBands);
+	float grainFine = tableNoise2(float2(across * 4.2, axial * 0.33) + float2(37.0, 15.0));
+	float grainCoarse = tableFbm2(float2(across * 0.95, axial * 0.22) + float2(2.0, 9.0));
+	float pores = smoothstep(0.80, 0.99, tableNoise2(float2(across * 2.7, axial * 2.9) + float2(23.0, 31.0)));
+
+	float knotCore = smoothstep(0.52, 0.90, knotField);
+	float knotBorder = smoothstep(0.22, 0.62, knotField) - knotCore;
+
+	float3 sapwood = float3(0.72, 0.56, 0.38);
+	float3 heartwood = float3(0.46, 0.30, 0.18);
+	float3 woodColor = mix(sapwood, heartwood, colorBleed);
+	woodColor -= latewood * float3(0.12, 0.09, 0.06);
+	woodColor += (grainFine - 0.5) * float3(0.08, 0.06, 0.04);
+	woodColor += (grainCoarse - 0.5) * float3(0.05, 0.03, 0.02);
+	woodColor -= pores * float3(0.06, 0.04, 0.03);
+	woodColor = mix(woodColor, woodColor * float3(0.56, 0.44, 0.33), knotCore);
+	woodColor -= knotBorder * float3(0.10, 0.07, 0.05);
+
+	color = woodColor;
+	_surface.roughness = 0.94;
 } else {
 	// Neutral: texture-backed stripes. Host code configures diffuse.contentsTransform so
 	// one source texture pixel maps to one screen point in neutral mode.

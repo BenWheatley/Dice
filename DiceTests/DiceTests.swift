@@ -2243,18 +2243,24 @@ final class DiceTests: XCTestCase {
 		XCTAssertNotNil(source)
 		XCTAssertTrue(source?.contains("tableTextureMode") ?? false)
 		XCTAssertTrue(
-			source?.contains("float2 p = centeredUV * float2(max(tableTextureScaleX, 1.0), max(tableTextureScaleY, 1.0));") ??
+			source?.contains(
+				"float2 feltBase = _surface.position.xy * 0.24;"
+			) ?? false
+		)
+		XCTAssertTrue(
+			source?.contains("float2 woodPos = _surface.position.xy * 0.11;") ??
 				false
 		)
 		XCTAssertTrue(
 			source?.contains(
-				"float2 feltBase = _surface.position.xy * 0.24;"
+				"float knotSpacing = 26.0;"
 			) ?? false
 		)
 		XCTAssertTrue(source?.contains("float tableFbm2(") ?? false)
 		XCTAssertTrue(source?.contains("float2 feltWarped =") ?? false)
 		XCTAssertTrue(source?.contains("float macro = tableFbm2(") ?? false)
 		XCTAssertTrue(source?.contains("float fibers = (fiberA + fiberB) * 0.5;") ?? false)
+		XCTAssertTrue(source?.contains("float knotCore = smoothstep(0.52, 0.90, knotField);") ?? false)
 	}
 
 	func testDiceCubeViewMapsTableTextureModesForShaderUniform() {

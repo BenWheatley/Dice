@@ -194,6 +194,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Replace dual-column presets/manage flow with a single themed presets table that seeds editable defaults, includes custom entries, supports deletion of any row, and uses an inline add button.
 - [x] Optimize startup render hot path by caching generated face texture sets (including normal/metalness maps) for repeated dice/material inputs, with regression tests proving cache reuse and key separation.
 - [x] Stabilize felt table rendering by switching to screen-space isotropic noise at pixel-scale frequency so texture detail remains visible and consistent across rotation.
+- [x] Rebuild wood table shader on view-space coordinates with warped growth rings, pores, and knot fields so grain complexity remains stable across device rotation.
 
 ## 12. watchOS Small-Screen Interface Plan
 
