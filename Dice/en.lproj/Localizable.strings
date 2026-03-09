@@ -49,6 +49,7 @@
 "menu.control.repeatLast" = "Repeat Last Roll";
 "menu.control.animationIntensity" = "Animation Intensity";
 "menu.control.theme" = "Theme";
+"menu.control.lightingAngle" = "Light Angle";
 "menu.control.texture" = "Table Texture";
 "menu.control.layout" = "Board Layout";
 "menu.control.finish" = "Die Finish";
@@ -63,6 +64,8 @@
 "theme.lightMode" = "Light Mode";
 "theme.darkMode" = "Dark Mode";
 "theme.system" = "System";
+"lighting.natural" = "Natural";
+"lighting.fixed" = "Fixed (3pm)";
 "texture.felt" = "Felt";
 "texture.wood" = "Wood";
 "texture.neutral" = "Neutral";

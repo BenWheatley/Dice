@@ -6,6 +6,7 @@ struct DiceUserPreferences: Equatable {
 	var animationsEnabled: Bool
 	var animationIntensity: DiceAnimationIntensity
 	var theme: DiceTheme
+	var lightingAngle: DiceLightingAngle
 	var tableTexture: DiceTableTexture
 	var dieFinish: DiceDieFinish
 	var edgeOutlinesEnabled: Bool
@@ -20,12 +21,13 @@ struct DiceUserPreferences: Equatable {
 	var soundEffectsEnabled: Bool
 	var hapticsEnabled: Bool
 
-	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, animationIntensity: DiceAnimationIntensity = .full, theme: DiceTheme = .system, tableTexture: DiceTableTexture = .neutral, dieFinish: DiceDieFinish = .matte, edgeOutlinesEnabled: Bool = false, dieColorPreferences: DiceDieColorPreferences = .default, d6PipStyle: DiceD6PipStyle = .round, faceNumeralFont: DiceFaceNumeralFont = .classic, largeFaceLabelsEnabled: Bool = false, customPresets: [DiceSavedPreset] = [], motionBlurEnabled: Bool = false, boardLayoutPreset: DiceBoardLayoutPreset = .compact, soundPack: DiceSoundPack = .off, soundEffectsEnabled: Bool = true, hapticsEnabled: Bool = true) {
+	init(lastNotation: String, recentPresets: [String], animationsEnabled: Bool = true, animationIntensity: DiceAnimationIntensity = .full, theme: DiceTheme = .system, lightingAngle: DiceLightingAngle = .natural, tableTexture: DiceTableTexture = .neutral, dieFinish: DiceDieFinish = .matte, edgeOutlinesEnabled: Bool = false, dieColorPreferences: DiceDieColorPreferences = .default, d6PipStyle: DiceD6PipStyle = .round, faceNumeralFont: DiceFaceNumeralFont = .classic, largeFaceLabelsEnabled: Bool = false, customPresets: [DiceSavedPreset] = [], motionBlurEnabled: Bool = false, boardLayoutPreset: DiceBoardLayoutPreset = .compact, soundPack: DiceSoundPack = .off, soundEffectsEnabled: Bool = true, hapticsEnabled: Bool = true) {
 		self.lastNotation = lastNotation
 		self.recentPresets = recentPresets
 		self.animationsEnabled = animationsEnabled
 		self.animationIntensity = animationIntensity
 		self.theme = theme
+		self.lightingAngle = lightingAngle
 		self.tableTexture = tableTexture
 		self.dieFinish = dieFinish
 		self.edgeOutlinesEnabled = edgeOutlinesEnabled
@@ -42,6 +44,6 @@ struct DiceUserPreferences: Equatable {
 	}
 
 	static var `default`: DiceUserPreferences {
-		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, animationIntensity: .full, theme: .system, tableTexture: .neutral, dieFinish: .matte, edgeOutlinesEnabled: false, dieColorPreferences: .default, d6PipStyle: .round, faceNumeralFont: .classic, largeFaceLabelsEnabled: false, customPresets: [], motionBlurEnabled: false, boardLayoutPreset: .compact, soundPack: .off, soundEffectsEnabled: true, hapticsEnabled: true)
+		DiceUserPreferences(lastNotation: "6d6", recentPresets: [], animationsEnabled: true, animationIntensity: .full, theme: .system, lightingAngle: .natural, tableTexture: .neutral, dieFinish: .matte, edgeOutlinesEnabled: false, dieColorPreferences: .default, d6PipStyle: .round, faceNumeralFont: .classic, largeFaceLabelsEnabled: false, customPresets: [], motionBlurEnabled: false, boardLayoutPreset: .compact, soundPack: .off, soundEffectsEnabled: true, hapticsEnabled: true)
 	}
 }

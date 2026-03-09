@@ -97,6 +97,8 @@ final class DiceCubeView: UIView {
 	private let cameraNode = SCNNode()
 	private let tableNode = SCNNode()
 	private let tableMaterial = SCNMaterial()
+	private let keyLightNode = SCNNode()
+	private let fillLightNode = SCNNode()
 	private var dieNodes: [SCNNode] = []
 	private var currentSideLength: CGFloat = 0
 	private var dieSideCounts: [Int] = []
@@ -118,6 +120,7 @@ final class DiceCubeView: UIView {
 	private var activeAnimationIntensity: DiceAnimationIntensity = .full
 	private var activeMotionBlurEnabled = false
 	private var activeTableTexture: DiceTableTexture = .neutral
+	private var activeLightingAngle: DiceLightingAngle = .natural
 	private var selectedDieIndex: Int?
 	private var reduceMotionEnabled = UIAccessibility.isReduceMotionEnabled
 	private var dieAccessibilityElements: [UIAccessibilityElement] = []
@@ -183,6 +186,9 @@ final class DiceCubeView: UIView {
 		animated: Bool
 	) {
 		guard values.count == centers.count, values.count == sideCounts.count else { return }
+		if activeLightingAngle == .natural {
+			applyLightingForCurrentDate()
+		}
 		ensureNodeCount(values.count)
 		updateCameraContentBounds(centers: centers, sideLength: sideLength)
 		let motionProfile = DiceMotionBehaviorProfile.resolve(intensity: activeAnimationIntensity, reduceMotionEnabled: reduceMotionEnabled)
@@ -367,6 +373,12 @@ final class DiceCubeView: UIView {
 		applyTableTexture()
 	}
 
+	func setLightingAngle(_ lightingAngle: DiceLightingAngle) {
+		guard activeLightingAngle != lightingAngle else { return }
+		activeLightingAngle = lightingAngle
+		applyLightingForCurrentDate()
+	}
+
 	func setCameraViewportInsets(_ insets: UIEdgeInsets) {
 		let sanitized = UIEdgeInsets(
 			top: max(0, insets.top),
@@ -397,7 +409,7 @@ final class DiceCubeView: UIView {
 		scnView.backgroundColor = .clear
 		scnView.isUserInteractionEnabled = true
 		scnView.antialiasingMode = .multisampling4X
-		scnView.autoenablesDefaultLighting = true
+		scnView.autoenablesDefaultLighting = false
 		scnView.scene = scene
 		addSubview(scnView)
 
@@ -422,19 +434,57 @@ final class DiceCubeView: UIView {
 		cameraNode.eulerAngles = SCNVector3(0, 0, 0)
 		scene.rootNode.addChildNode(cameraNode)
 		configureTableSurface()
+		configureLighting()
+	}
 
-		let keyLight = SCNNode()
-		keyLight.light = SCNLight()
-		keyLight.light?.type = .omni
-		keyLight.light?.intensity = 900
-		keyLight.position = SCNVector3(160, 220, 280)
-		scene.rootNode.addChildNode(keyLight)
+	private func configureLighting() {
+		let keyLight = SCNLight()
+		keyLight.type = .directional
+		keyLight.intensity = 1_000
+		keyLight.castsShadow = true
+		keyLight.shadowMode = .deferred
+		keyLight.shadowSampleCount = 24
+		keyLight.shadowRadius = 3
+		keyLight.shadowColor = UIColor.black.withAlphaComponent(0.35)
+		keyLight.orthographicScale = 1_500
+		keyLight.zNear = 10
+		keyLight.zFar = 4_000
+		keyLightNode.light = keyLight
+		scene.rootNode.addChildNode(keyLightNode)
 
-		let fillLight = SCNNode()
-		fillLight.light = SCNLight()
-		fillLight.light?.type = .ambient
-		fillLight.light?.intensity = 350
-		scene.rootNode.addChildNode(fillLight)
+		let fillLight = SCNLight()
+		fillLight.type = .ambient
+		fillLight.intensity = 260
+		fillLightNode.light = fillLight
+		scene.rootNode.addChildNode(fillLightNode)
+
+		applyLightingForCurrentDate()
+	}
+
+	private func applyLightingForCurrentDate() {
+		let timeZone = TimeZone.current
+		let isNorthernHemisphere = DiceLightingDirectionResolver.isNorthernHemisphere()
+		let date = Date()
+		let direction = DiceLightingDirectionResolver.direction(
+			mode: activeLightingAngle,
+			date: date,
+			timeZone: timeZone,
+			isNorthernHemisphere: isNorthernHemisphere
+		)
+		applyDirectionalLightVector(direction)
+
+		switch activeLightingAngle {
+		case .fixed:
+			keyLightNode.light?.intensity = 1_000
+		case .natural:
+			keyLightNode.light?.intensity = DiceLightingDirectionResolver.isDaytime(date: date, timeZone: timeZone) ? 1_050 : 720
+		}
+	}
+
+	private func applyDirectionalLightVector(_ direction: SIMD3<Float>) {
+		let distance: Float = 1_200
+		keyLightNode.position = SCNVector3(direction.x * distance, direction.y * distance, direction.z * distance)
+		keyLightNode.look(at: SCNVector3(0, 0, 0))
 	}
 
 	private func configureLifecycleObservers() {
@@ -452,6 +502,9 @@ final class DiceCubeView: UIView {
 			queue: .main
 		) { [weak self] _ in
 			self?.scnView.isPlaying = true
+			if self?.activeLightingAngle == .natural {
+				self?.applyLightingForCurrentDate()
+			}
 		}
 		let reduceMotionObserver = center.addObserver(
 			forName: UIAccessibility.reduceMotionStatusDidChangeNotification,
@@ -567,12 +620,12 @@ final class DiceCubeView: UIView {
 
 	private func configureTableSurface() {
 		let plane = SCNPlane(width: 10, height: 10)
-		tableMaterial.lightingModel = .constant
+		tableMaterial.lightingModel = .lambert
 		tableMaterial.isDoubleSided = false
 		tableMaterial.diffuse.wrapS = .repeat
 		tableMaterial.diffuse.wrapT = .repeat
-		tableMaterial.writesToDepthBuffer = false
-		tableMaterial.readsFromDepthBuffer = false
+		tableMaterial.writesToDepthBuffer = true
+		tableMaterial.readsFromDepthBuffer = true
 		if let tableShader = DiceShaderModifierSourceLoader.tableSurfaceShaderModifier() {
 			tableMaterial.shaderModifiers = [.surface: tableShader]
 		}
@@ -580,6 +633,7 @@ final class DiceCubeView: UIView {
 		tableNode.geometry = plane
 		tableNode.position = SCNVector3(0, 0, -150)
 		tableNode.renderingOrder = -100
+		tableNode.castsShadow = false
 		scene.rootNode.addChildNode(tableNode)
 		applyTableTexture()
 		applyTableTextureScale()
@@ -710,12 +764,14 @@ final class DiceCubeView: UIView {
 			let body = SCNNode()
 			body.name = "body"
 			body.geometry = builtMesh(sideLength: max(currentSideLength, 60), sideCount: 6).geometry
+			body.castsShadow = true
 			container.addChildNode(body)
 
 			let outline = SCNNode()
 			outline.name = "outline"
 			outline.geometry = makeOutlineGeometry(from: body.geometry!)
 			outline.isHidden = !activeEdgeOutlinesEnabled
+			outline.castsShadow = false
 			container.addChildNode(outline)
 
 			let label = SCNNode()
@@ -725,6 +781,7 @@ final class DiceCubeView: UIView {
 			let bb = SCNBillboardConstraint()
 			bb.freeAxes = .all
 			label.constraints = [bb]
+			label.castsShadow = false
 			container.addChildNode(label)
 			labelValueCache[ObjectIdentifier(label)] = nil
 
@@ -1089,6 +1146,41 @@ final class DiceCubeView: UIView {
 		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
 		view.setTableTexture(texture)
 		return (view.tableMaterial.value(forKey: "tableTextureMode") as? NSNumber)?.intValue ?? -1
+	}
+
+	struct DebugLightingConfiguration {
+		let autoenablesDefaultLighting: Bool
+		let keyLightType: SCNLight.LightType
+		let keyLightCastsShadow: Bool
+		let tableLightingModel: SCNMaterial.LightingModel
+		let tableReadsDepth: Bool
+		let tableWritesDepth: Bool
+	}
+
+	static func debugLightingConfiguration() -> DebugLightingConfiguration {
+		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
+		return DebugLightingConfiguration(
+			autoenablesDefaultLighting: view.scnView.autoenablesDefaultLighting,
+			keyLightType: view.keyLightNode.light?.type ?? .ambient,
+			keyLightCastsShadow: view.keyLightNode.light?.castsShadow ?? false,
+			tableLightingModel: view.tableMaterial.lightingModel,
+			tableReadsDepth: view.tableMaterial.readsFromDepthBuffer,
+			tableWritesDepth: view.tableMaterial.writesToDepthBuffer
+		)
+	}
+
+	static func debugLightDirection(
+		mode: DiceLightingAngle,
+		date: Date,
+		timeZone: TimeZone,
+		isNorthernHemisphere: Bool
+	) -> SIMD3<Float> {
+		DiceLightingDirectionResolver.direction(
+			mode: mode,
+			date: date,
+			timeZone: timeZone,
+			isNorthernHemisphere: isNorthernHemisphere
+		)
 	}
 
 	static func debugMeshBuildCountsForGlobalFontChange(

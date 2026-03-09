@@ -5,6 +5,7 @@ final class DiceOptionsSheetViewController: UIViewController {
 		let animationsEnabled: Bool
 		let animationIntensity: DiceAnimationIntensity
 		let theme: DiceTheme
+		let lightingAngle: DiceLightingAngle
 		let texture: DiceTableTexture
 		let layout: DiceBoardLayoutPreset
 		let finish: DiceDieFinish
@@ -19,6 +20,7 @@ final class DiceOptionsSheetViewController: UIViewController {
 	var onToggleAnimations: (() -> Void)?
 	var onSetAnimationIntensity: ((DiceAnimationIntensity) -> Void)?
 	var onSetTheme: ((DiceTheme) -> Void)?
+	var onSetLightingAngle: ((DiceLightingAngle) -> Void)?
 	var onSetTexture: ((DiceTableTexture) -> Void)?
 	var onSetLayout: ((DiceBoardLayoutPreset) -> Void)?
 	var onSetFinish: ((DiceDieFinish) -> Void)?
@@ -96,6 +98,10 @@ final class DiceOptionsSheetViewController: UIViewController {
 			section.addSegmentRow(title: NSLocalizedString("menu.control.theme", comment: "Theme submenu title"), items: DiceTheme.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Theme option title") }, selectedIndex: DiceTheme.allCases.firstIndex(of: state.theme) ?? 0) { [weak self] index in
 				guard DiceTheme.allCases.indices.contains(index) else { return }
 				self?.onSetTheme?(DiceTheme.allCases[index])
+			}
+			section.addSegmentRow(title: NSLocalizedString("menu.control.lightingAngle", comment: "Lighting angle submenu title"), items: DiceLightingAngle.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Lighting angle option title") }, selectedIndex: DiceLightingAngle.allCases.firstIndex(of: state.lightingAngle) ?? 0) { [weak self] index in
+				guard DiceLightingAngle.allCases.indices.contains(index) else { return }
+				self?.onSetLightingAngle?(DiceLightingAngle.allCases[index])
 			}
 			section.addSegmentRow(title: NSLocalizedString("menu.control.texture", comment: "Texture submenu title"), items: DiceTableTexture.allCases.map { NSLocalizedString($0.menuTitleKey, comment: "Table texture option") }, selectedIndex: DiceTableTexture.allCases.firstIndex(of: state.texture) ?? 0) { [weak self] index in
 				guard DiceTableTexture.allCases.indices.contains(index) else { return }

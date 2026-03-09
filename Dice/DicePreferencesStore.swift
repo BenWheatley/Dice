@@ -15,6 +15,7 @@ final class DicePreferencesStore {
 		static let animationsEnabled = "Dice.animationsEnabled"
 		static let animationIntensity = "Dice.animationIntensity"
 		static let theme = "Dice.theme"
+		static let lightingAngle = "Dice.lightingAngle"
 		static let tableTexture = "Dice.tableTexture"
 		static let dieFinish = "Dice.dieFinish"
 		static let edgeOutlinesEnabled = "Dice.edgeOutlinesEnabled"
@@ -49,6 +50,8 @@ final class DicePreferencesStore {
 			?? (animationsEnabled ? .full : .off)
 		let rawTheme = defaults.string(forKey: Keys.theme)
 		let theme = mappedTheme(rawTheme) ?? DiceUserPreferences.default.theme
+		let rawLightingAngle = defaults.string(forKey: Keys.lightingAngle)
+		let lightingAngle = rawLightingAngle.flatMap(DiceLightingAngle.init(rawValue:)) ?? DiceUserPreferences.default.lightingAngle
 		let rawTexture = defaults.string(forKey: Keys.tableTexture)
 		let tableTexture = rawTexture.flatMap(DiceTableTexture.init(rawValue:)) ?? DiceUserPreferences.default.tableTexture
 		let rawFinish = defaults.string(forKey: Keys.dieFinish)
@@ -80,6 +83,7 @@ final class DicePreferencesStore {
 			animationsEnabled: animationsEnabled,
 			animationIntensity: animationIntensity,
 			theme: theme,
+			lightingAngle: lightingAngle,
 			tableTexture: tableTexture,
 			dieFinish: dieFinish,
 			edgeOutlinesEnabled: edgeOutlinesEnabled,
@@ -102,6 +106,7 @@ final class DicePreferencesStore {
 		defaults.set(preferences.animationsEnabled, forKey: Keys.animationsEnabled)
 		defaults.set(preferences.animationIntensity.rawValue, forKey: Keys.animationIntensity)
 		defaults.set(preferences.theme.rawValue, forKey: Keys.theme)
+		defaults.set(preferences.lightingAngle.rawValue, forKey: Keys.lightingAngle)
 		defaults.set(preferences.tableTexture.rawValue, forKey: Keys.tableTexture)
 		defaults.set(preferences.dieFinish.rawValue, forKey: Keys.dieFinish)
 		defaults.set(preferences.edgeOutlinesEnabled, forKey: Keys.edgeOutlinesEnabled)

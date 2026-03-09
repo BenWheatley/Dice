@@ -74,6 +74,10 @@ final class DiceViewModel {
 		appState.theme
 	}
 
+	var lightingAngle: DiceLightingAngle {
+		appState.lightingAngle
+	}
+
 	var tableTexture: DiceTableTexture {
 		appState.tableTexture
 	}
@@ -149,6 +153,7 @@ final class DiceViewModel {
 		appState.animationsEnabled = preferences.animationsEnabled
 		appState.animationIntensity = preferences.animationIntensity
 		appState.theme = preferences.theme
+		appState.lightingAngle = preferences.lightingAngle
 		appState.tableTexture = preferences.tableTexture
 		appState.dieFinish = preferences.dieFinish
 		appState.edgeOutlinesEnabled = preferences.edgeOutlinesEnabled
@@ -315,6 +320,11 @@ final class DiceViewModel {
 		persistPreferences()
 	}
 
+	func setLightingAngle(_ lightingAngle: DiceLightingAngle) {
+		appState.lightingAngle = lightingAngle
+		persistPreferences()
+	}
+
 	func setTableTexture(_ tableTexture: DiceTableTexture) {
 		appState.tableTexture = tableTexture
 		persistPreferences()
@@ -424,6 +434,7 @@ final class DiceViewModel {
 
 	func resetVisualPreferences() {
 		appState.theme = .system
+		appState.lightingAngle = .natural
 		appState.tableTexture = .neutral
 		appState.dieFinish = .matte
 		appState.edgeOutlinesEnabled = false
@@ -555,6 +566,7 @@ final class DiceViewModel {
 			animationsEnabled: appState.animationsEnabled,
 			animationIntensity: appState.animationIntensity,
 			theme: appState.theme,
+			lightingAngle: appState.lightingAngle,
 			tableTexture: appState.tableTexture,
 			dieFinish: appState.dieFinish,
 			edgeOutlinesEnabled: appState.edgeOutlinesEnabled,

@@ -15,6 +15,7 @@ final class DiceAppState {
 	var animationsEnabled: Bool
 	var animationIntensity: DiceAnimationIntensity
 	var theme: DiceTheme
+	var lightingAngle: DiceLightingAngle
 	var tableTexture: DiceTableTexture
 	var dieFinish: DiceDieFinish
 	var edgeOutlinesEnabled: Bool
@@ -40,6 +41,7 @@ final class DiceAppState {
 		self.animationsEnabled = true
 		self.animationIntensity = .full
 		self.theme = .system
+		self.lightingAngle = .natural
 		self.tableTexture = .neutral
 		self.dieFinish = .matte
 		self.edgeOutlinesEnabled = false

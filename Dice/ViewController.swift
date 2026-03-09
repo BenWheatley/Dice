@@ -248,6 +248,7 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 		diceBoardView.onDieTapped = { [weak self] index, _ in
 			self?.presentDieInspector(for: index)
 		}
+		diceBoardView.setLightingAngle(viewModel.lightingAngle)
 		diceBoardView.setTableTexture(viewModel.tableTexture)
 		diceBoardView.setLargeFaceLabelsEnabled(viewModel.largeFaceLabelsEnabled)
 		view.addSubview(diceBoardView)
@@ -439,6 +440,7 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 		diceBoardView.setD6PipStyle(viewModel.d6PipStyle)
 		diceBoardView.setFaceNumeralFont(viewModel.faceNumeralFont)
 		diceBoardView.setLargeFaceLabelsEnabled(viewModel.largeFaceLabelsEnabled)
+		diceBoardView.setLightingAngle(viewModel.lightingAngle)
 		diceBoardView.setAnimationIntensity(viewModel.animationIntensity)
 		diceBoardView.setMotionBlurEnabled(viewModel.motionBlurEnabled)
 
@@ -975,6 +977,7 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 				animationsEnabled: viewModel.animationsEnabled,
 				animationIntensity: viewModel.animationIntensity,
 				theme: viewModel.theme,
+				lightingAngle: viewModel.lightingAngle,
 				texture: viewModel.tableTexture,
 				layout: viewModel.boardLayoutPreset,
 				finish: viewModel.dieFinish,
@@ -989,6 +992,7 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 		sheet.onToggleAnimations = { [weak self] in self?.toggleAnimations() }
 		sheet.onSetAnimationIntensity = { [weak self] intensity in self?.selectAnimationIntensity(intensity) }
 		sheet.onSetTheme = { [weak self] theme in self?.selectTheme(theme) }
+		sheet.onSetLightingAngle = { [weak self] lightingAngle in self?.selectLightingAngle(lightingAngle) }
 		sheet.onSetTexture = { [weak self] texture in self?.selectTexture(texture) }
 		sheet.onSetLayout = { [weak self] preset in self?.selectBoardLayoutPreset(preset) }
 		sheet.onSetFinish = { [weak self] finish in self?.selectDieFinish(finish) }
@@ -1136,6 +1140,12 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 		updateControlMenu()
 	}
 
+	private func selectLightingAngle(_ lightingAngle: DiceLightingAngle) {
+		viewModel.setLightingAngle(lightingAngle)
+		diceBoardView.setLightingAngle(lightingAngle)
+		updateControlMenu()
+	}
+
 	private func selectTexture(_ texture: DiceTableTexture) {
 		viewModel.setTableTexture(texture)
 		applyTexture()
@@ -1251,6 +1261,7 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 		diceBoardView.setD6PipStyle(viewModel.d6PipStyle)
 		diceBoardView.setFaceNumeralFont(viewModel.faceNumeralFont)
 		diceBoardView.setLargeFaceLabelsEnabled(viewModel.largeFaceLabelsEnabled)
+		diceBoardView.setLightingAngle(viewModel.lightingAngle)
 		diceBoardView.setAnimationIntensity(viewModel.animationIntensity)
 		diceBoardView.setMotionBlurEnabled(viewModel.motionBlurEnabled)
 		updateDiceBoard(animated: false)

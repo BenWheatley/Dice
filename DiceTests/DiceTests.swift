@@ -638,6 +638,16 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(loaded, .default)
 	}
 
+	func testPreferencesStoreDefaultsLightingAngleToNaturalWhenUnset() {
+		let suiteName = "DiceTests.defaults.lighting.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let store = DicePreferencesStore(defaults: defaults)
+
+		let loaded = store.load()
+		XCTAssertEqual(loaded.lightingAngle, .natural)
+	}
+
 	func testPreferencesStoreRoundTripSaveLoad() {
 		let suiteName = "DiceTests.roundtrip.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!
@@ -648,6 +658,7 @@ final class DiceTests: XCTestCase {
 			recentPresets: ["12d10i", "6d6"],
 			animationsEnabled: false,
 			theme: .darkMode,
+			lightingAngle: .fixed,
 			tableTexture: .wood,
 			dieFinish: .stone,
 			edgeOutlinesEnabled: true,
@@ -1321,6 +1332,22 @@ final class DiceTests: XCTestCase {
 		viewModel.setTableTexture(.felt)
 		XCTAssertEqual(viewModel.tableTexture, .felt)
 		XCTAssertEqual(preferencesStore.load().tableTexture, .felt)
+	}
+
+	func testViewModelLightingAngleSelectionPersistsToPreferences() {
+		let suiteName = "DiceTests.viewmodel.lighting.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		XCTAssertEqual(viewModel.lightingAngle, .natural)
+		viewModel.setLightingAngle(.fixed)
+		XCTAssertEqual(viewModel.lightingAngle, .fixed)
+		XCTAssertEqual(preferencesStore.load().lightingAngle, .fixed)
 	}
 
 	func testViewModelDieFinishSelectionPersistsToPreferences() {
@@ -2267,6 +2294,68 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(DiceCubeView.debugTableTextureMode(for: .felt), 0)
 		XCTAssertEqual(DiceCubeView.debugTableTextureMode(for: .wood), 1)
 		XCTAssertEqual(DiceCubeView.debugTableTextureMode(for: .neutral), 2)
+	}
+
+	func testDiceCubeViewUsesDirectionalShadowLightAndTableReceivesShadows() {
+		let configuration = DiceCubeView.debugLightingConfiguration()
+		XCTAssertFalse(configuration.autoenablesDefaultLighting)
+		XCTAssertEqual(configuration.keyLightType, .directional)
+		XCTAssertTrue(configuration.keyLightCastsShadow)
+		XCTAssertNotEqual(configuration.tableLightingModel, .constant)
+		XCTAssertTrue(configuration.tableReadsDepth)
+		XCTAssertTrue(configuration.tableWritesDepth)
+	}
+
+	func testDiceCubeViewLightingDirectionRespondsToNaturalTimeAndFixedMode() {
+		let tz = TimeZone(secondsFromGMT: 0)!
+		let calendar = Calendar(identifier: .gregorian)
+		let dateAtNoon = calendar.date(from: DateComponents(
+			calendar: calendar,
+			timeZone: tz,
+			year: 2026,
+			month: 6,
+			day: 21,
+			hour: 12
+		))!
+		let dateAtMidnight = calendar.date(from: DateComponents(
+			calendar: calendar,
+			timeZone: tz,
+			year: 2026,
+			month: 6,
+			day: 21,
+			hour: 0
+		))!
+
+		let naturalNoon = DiceCubeView.debugLightDirection(
+			mode: .natural,
+			date: dateAtNoon,
+			timeZone: tz,
+			isNorthernHemisphere: true
+		)
+		let naturalMidnight = DiceCubeView.debugLightDirection(
+			mode: .natural,
+			date: dateAtMidnight,
+			timeZone: tz,
+			isNorthernHemisphere: true
+		)
+		let fixed = DiceCubeView.debugLightDirection(
+			mode: .fixed,
+			date: dateAtNoon,
+			timeZone: tz,
+			isNorthernHemisphere: true
+		)
+
+		XCTAssertGreaterThan(naturalNoon.z, naturalMidnight.z)
+		XCTAssertNotEqual(naturalNoon.x, naturalMidnight.x, accuracy: 0.001)
+		XCTAssertEqual(
+			fixed,
+			DiceCubeView.debugLightDirection(
+				mode: .fixed,
+				date: dateAtMidnight,
+				timeZone: tz,
+				isNorthernHemisphere: true
+			)
+		)
 	}
 
 	func testDiceCubeViewKeepsTableTextureScaleStableAcrossRotation() {
