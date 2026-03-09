@@ -2296,19 +2296,23 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(DiceCubeView.debugTableTextureMode(for: .neutral), 2)
 	}
 
+	@MainActor
 	func testDiceCubeViewUsesDirectionalShadowLightAndTableReceivesShadows() {
 		let configuration = DiceCubeView.debugLightingConfiguration()
 		XCTAssertFalse(configuration.autoenablesDefaultLighting)
 		XCTAssertEqual(configuration.keyLightType, .directional)
 		XCTAssertTrue(configuration.keyLightCastsShadow)
 		XCTAssertEqual(configuration.keyLightShadowMode, .forward)
-		XCTAssertGreaterThanOrEqual(configuration.keyLightShadowAlpha, 0.5)
+		XCTAssertGreaterThan(configuration.keyLightShadowRadius, 0)
 		XCTAssertLessThan(configuration.fillLightIntensity, configuration.keyLightIntensity)
+		XCTAssertGreaterThan(configuration.tableWidthSegmentCount, 1)
+		XCTAssertGreaterThan(configuration.tableHeightSegmentCount, 1)
 		XCTAssertNotEqual(configuration.tableLightingModel, .constant)
 		XCTAssertTrue(configuration.tableReadsDepth)
 		XCTAssertTrue(configuration.tableWritesDepth)
 	}
 
+	@MainActor
 	func testDiceCubeViewLightingDirectionRespondsToNaturalTimeAndFixedMode() {
 		let tz = TimeZone(secondsFromGMT: 0)!
 		let calendar = Calendar(identifier: .gregorian)

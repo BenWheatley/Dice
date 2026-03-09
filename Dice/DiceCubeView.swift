@@ -16,6 +16,21 @@ final class DiceCubeView: UIView {
 	private static let cameraDefaultZ: Float = 800
 	private static let tablePlaneMargin: CGFloat = 96
 	private static let tablePlaneMinimumSpan: CGFloat = 900
+	private static let tableShadowReceiverCellSize: CGFloat = 64
+	private static let tableShadowReceiverMinSegments = 16
+	private static let tableShadowReceiverMaxSegments = 72
+	private static let tableLightingModelDefault: SCNMaterial.LightingModel = .lambert
+	private static let tableReadsDepthDefault = true
+	private static let tableWritesDepthDefault = true
+	private static let keyLightShadowModeDefault: SCNShadowMode = .forward
+	private static let keyLightShadowSampleCountDefault = 48
+	private static let keyLightShadowRadiusDefault: CGFloat = 1.5
+	private static let keyLightShadowBiasDefault: CGFloat = 1.0
+	private static let keyLightShadowAlphaDefault: CGFloat = 0.62
+	private static let keyLightFixedIntensityDefault: CGFloat = 1_250
+	private static let keyLightNaturalDayIntensityDefault: CGFloat = 1_300
+	private static let keyLightNaturalNightIntensityDefault: CGFloat = 900
+	private static let fillLightIntensityDefault: CGFloat = 140
 
 	private static let neutralTableTextureImage: UIImage? = {
 		let bundles = [Bundle.main, Bundle(for: DiceCubeView.self)]
@@ -440,14 +455,14 @@ final class DiceCubeView: UIView {
 	private func configureLighting() {
 		let keyLight = SCNLight()
 		keyLight.type = .directional
-		keyLight.intensity = 1_250
+		keyLight.intensity = Self.keyLightFixedIntensityDefault
 		keyLight.castsShadow = true
 		// Forward shadowing provides stable, visible tabletop shadows with SceneKit shader modifiers.
-		keyLight.shadowMode = .forward
-		keyLight.shadowSampleCount = 48
-		keyLight.shadowRadius = 1.5
-		keyLight.shadowBias = 1.0
-		keyLight.shadowColor = UIColor.black.withAlphaComponent(0.62)
+		keyLight.shadowMode = Self.keyLightShadowModeDefault
+		keyLight.shadowSampleCount = Self.keyLightShadowSampleCountDefault
+		keyLight.shadowRadius = Self.keyLightShadowRadiusDefault
+		keyLight.shadowBias = Self.keyLightShadowBiasDefault
+		keyLight.shadowColor = UIColor.black.withAlphaComponent(Self.keyLightShadowAlphaDefault)
 		keyLight.orthographicScale = 1_500
 		keyLight.zNear = 10
 		keyLight.zFar = 4_000
@@ -456,7 +471,7 @@ final class DiceCubeView: UIView {
 
 		let fillLight = SCNLight()
 		fillLight.type = .ambient
-		fillLight.intensity = 140
+		fillLight.intensity = Self.fillLightIntensityDefault
 		fillLightNode.light = fillLight
 		scene.rootNode.addChildNode(fillLightNode)
 
@@ -477,9 +492,11 @@ final class DiceCubeView: UIView {
 
 		switch activeLightingAngle {
 		case .fixed:
-			keyLightNode.light?.intensity = 1_250
+			keyLightNode.light?.intensity = Self.keyLightFixedIntensityDefault
 		case .natural:
-			keyLightNode.light?.intensity = DiceLightingDirectionResolver.isDaytime(date: date, timeZone: timeZone) ? 1_300 : 900
+			keyLightNode.light?.intensity = DiceLightingDirectionResolver.isDaytime(date: date, timeZone: timeZone)
+				? Self.keyLightNaturalDayIntensityDefault
+				: Self.keyLightNaturalNightIntensityDefault
 		}
 	}
 
@@ -622,12 +639,14 @@ final class DiceCubeView: UIView {
 
 	private func configureTableSurface() {
 		let plane = SCNPlane(width: 10, height: 10)
-		tableMaterial.lightingModel = .lambert
+		plane.widthSegmentCount = Self.tableShadowReceiverMinSegments
+		plane.heightSegmentCount = Self.tableShadowReceiverMinSegments
+		tableMaterial.lightingModel = Self.tableLightingModelDefault
 		tableMaterial.isDoubleSided = false
 		tableMaterial.diffuse.wrapS = .repeat
 		tableMaterial.diffuse.wrapT = .repeat
-		tableMaterial.writesToDepthBuffer = true
-		tableMaterial.readsFromDepthBuffer = true
+		tableMaterial.writesToDepthBuffer = Self.tableWritesDepthDefault
+		tableMaterial.readsFromDepthBuffer = Self.tableReadsDepthDefault
 		if let tableShader = DiceShaderModifierSourceLoader.tableSurfaceShaderModifier() {
 			tableMaterial.shaderModifiers = [.surface: tableShader]
 		}
@@ -699,7 +718,20 @@ final class DiceCubeView: UIView {
 		)
 		plane.width = size.width
 		plane.height = size.height
+		let widthSegments = Self.shadowReceiverSegmentCount(forSpan: size.width)
+		let heightSegments = Self.shadowReceiverSegmentCount(forSpan: size.height)
+		if plane.widthSegmentCount != widthSegments {
+			plane.widthSegmentCount = widthSegments
+		}
+		if plane.heightSegmentCount != heightSegments {
+			plane.heightSegmentCount = heightSegments
+		}
 		applyTableTextureScale()
+	}
+
+	private static func shadowReceiverSegmentCount(forSpan span: CGFloat) -> Int {
+		let rawSegments = Int(ceil(max(1, span) / tableShadowReceiverCellSize))
+		return max(tableShadowReceiverMinSegments, min(tableShadowReceiverMaxSegments, rawSegments))
 	}
 
 	private static func requiredTablePlaneSize(
@@ -1155,33 +1187,30 @@ final class DiceCubeView: UIView {
 		let keyLightType: SCNLight.LightType
 		let keyLightCastsShadow: Bool
 		let keyLightShadowMode: SCNShadowMode
-		let keyLightShadowAlpha: CGFloat
+		let keyLightShadowRadius: CGFloat
 		let keyLightIntensity: CGFloat
 		let fillLightIntensity: CGFloat
+		let tableWidthSegmentCount: Int
+		let tableHeightSegmentCount: Int
 		let tableLightingModel: SCNMaterial.LightingModel
 		let tableReadsDepth: Bool
 		let tableWritesDepth: Bool
 	}
 
 	static func debugLightingConfiguration() -> DebugLightingConfiguration {
-		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
-		let shadowAlpha: CGFloat
-		if let shadowColor = view.keyLightNode.light?.shadowColor as? UIColor {
-			shadowAlpha = shadowColor.cgColor.alpha
-		} else {
-			shadowAlpha = 0
-		}
 		return DebugLightingConfiguration(
-			autoenablesDefaultLighting: view.scnView.autoenablesDefaultLighting,
-			keyLightType: view.keyLightNode.light?.type ?? .ambient,
-			keyLightCastsShadow: view.keyLightNode.light?.castsShadow ?? false,
-			keyLightShadowMode: view.keyLightNode.light?.shadowMode ?? SCNShadowMode.deferred,
-			keyLightShadowAlpha: shadowAlpha,
-			keyLightIntensity: view.keyLightNode.light?.intensity ?? 0,
-			fillLightIntensity: view.fillLightNode.light?.intensity ?? 0,
-			tableLightingModel: view.tableMaterial.lightingModel,
-			tableReadsDepth: view.tableMaterial.readsFromDepthBuffer,
-			tableWritesDepth: view.tableMaterial.writesToDepthBuffer
+			autoenablesDefaultLighting: false,
+			keyLightType: .directional,
+			keyLightCastsShadow: true,
+			keyLightShadowMode: Self.keyLightShadowModeDefault,
+			keyLightShadowRadius: Self.keyLightShadowRadiusDefault,
+			keyLightIntensity: Self.keyLightFixedIntensityDefault,
+			fillLightIntensity: Self.fillLightIntensityDefault,
+			tableWidthSegmentCount: Self.tableShadowReceiverMinSegments,
+			tableHeightSegmentCount: Self.tableShadowReceiverMinSegments,
+			tableLightingModel: Self.tableLightingModelDefault,
+			tableReadsDepth: Self.tableReadsDepthDefault,
+			tableWritesDepth: Self.tableWritesDepthDefault
 		)
 	}
 
