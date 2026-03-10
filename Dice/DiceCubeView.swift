@@ -20,6 +20,7 @@ final class DiceCubeView: UIView {
 	private static let tableShadowReceiverCellSize: CGFloat = 64
 	private static let tableShadowReceiverMinSegments = 48
 	private static let tableShadowReceiverMaxSegments = 160
+	private static let dieTableContactClearance: Float = 0.15
 	private static let tableLightingModelDefault: SCNMaterial.LightingModel = .lambert
 	private static let tableReadsDepthDefault = true
 	private static let tableWritesDepthDefault = true
@@ -105,6 +106,12 @@ final class DiceCubeView: UIView {
 		let largeLabels: Bool
 	}
 
+	private struct ContactDepthCacheKey: Hashable {
+		let sideCount: Int
+		let roundedSideLength: Int
+		let faceValue: Int
+	}
+
 	private static var sharedFaceTextureSetCache: [FaceTextureCacheKey: FaceTextureSet] = [:]
 	private static let sharedFaceTextureSetCacheLock = NSLock()
 	private static var sharedBadgeImageCache: [BadgeCacheKey: UIImage] = [:]
@@ -127,6 +134,8 @@ final class DiceCubeView: UIView {
 	private var appearanceGeneration: Int = 0
 	private var orientationCache: [Int: [Int: SCNVector3]] = [:]
 	private var meshCache: [MeshCacheKey: BuiltMesh] = [:]
+	private var meshVertexCache: [MeshCacheKey: [SIMD3<Float>]] = [:]
+	private var contactDepthCache: [ContactDepthCacheKey: Float] = [:]
 	private var labelValueCache: [ObjectIdentifier: Int] = [:]
 	private var lifecycleObservers: [NSObjectProtocol] = []
 	private var activeDieFinish: DiceDieFinish = .matte
@@ -294,9 +303,18 @@ final class DiceCubeView: UIView {
 				}
 			}
 
-			let targetPosition = scenePosition(for: centers[index])
+			let targetPosition = diePosition(
+				for: centers[index],
+				sideLength: sideLength,
+				sideCount: sideCount,
+				faceValue: values[index]
+			)
 			let targetFace = values[index]
-			let startPosition = SCNVector3(container.presentation.position.x, container.presentation.position.y, 0)
+			let startPosition = SCNVector3(
+				container.presentation.position.x,
+				container.presentation.position.y,
+				container.presentation.position.z
+			)
 
 			if shouldAnimateRoll && !lockedIndices.contains(index) {
 				animateRoll(
@@ -332,6 +350,7 @@ final class DiceCubeView: UIView {
 		guard activeDieFinish != finish else { return }
 		activeDieFinish = finish
 		appearanceGeneration += 1
+		contactDepthCache.removeAll()
 		needsMeshRefresh = true
 	}
 
@@ -347,6 +366,8 @@ final class DiceCubeView: UIView {
 		activeDieColorPreferences = preferences
 		appearanceGeneration += 1
 		meshCache.removeAll()
+		meshVertexCache.removeAll()
+		contactDepthCache.removeAll()
 		clearSharedTextureCaches(clearBadges: false)
 		needsMeshRefresh = true
 	}
@@ -356,6 +377,8 @@ final class DiceCubeView: UIView {
 		activeD6PipStyle = style
 		appearanceGeneration += 1
 		meshCache.removeAll()
+		meshVertexCache.removeAll()
+		contactDepthCache.removeAll()
 		clearSharedTextureCaches(clearBadges: false)
 		needsMeshRefresh = true
 	}
@@ -1188,6 +1211,17 @@ final class DiceCubeView: UIView {
 		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
 		view.setTableTexture(texture)
 		return (view.tableMaterial.value(forKey: "tableTextureMode") as? NSNumber)?.intValue ?? -1
+	}
+
+	static func debugShadowCasterGapToTable(sideLength: CGFloat, sideCount: Int, value: Int) -> CGFloat {
+		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
+		let centerZ = view.contactCenterZ(sideLength: sideLength, sideCount: sideCount, faceValue: value)
+		let minLocalZ = view.minimumLocalZAfterOrientation(
+			sideLength: sideLength,
+			sideCount: sideCount,
+			faceValue: value
+		)
+		return CGFloat((centerZ + minLocalZ) - Self.tablePlaneZ)
 	}
 
 	struct DebugLightingConfiguration {
@@ -2403,6 +2437,103 @@ final class DiceCubeView: UIView {
 		SCNVector3(center.x - bounds.midX, bounds.midY - center.y, 0)
 	}
 
+	private func diePosition(for center: CGPoint, sideLength: CGFloat, sideCount: Int, faceValue: Int) -> SCNVector3 {
+		let base = scenePosition(for: center)
+		let z = contactCenterZ(sideLength: sideLength, sideCount: sideCount, faceValue: faceValue)
+		return SCNVector3(base.x, base.y, z)
+	}
+
+	private func contactCenterZ(sideLength: CGFloat, sideCount: Int, faceValue: Int) -> Float {
+		let roundedSideLength = Int(sideLength.rounded())
+		let key = ContactDepthCacheKey(
+			sideCount: sideCount,
+			roundedSideLength: roundedSideLength,
+			faceValue: faceValue
+		)
+		if let cached = contactDepthCache[key] {
+			return cached
+		}
+		let minLocalZ = minimumLocalZAfterOrientation(
+			sideLength: CGFloat(roundedSideLength),
+			sideCount: sideCount,
+			faceValue: faceValue
+		)
+		guard minLocalZ.isFinite else {
+			return Self.tablePlaneZ + Self.dieTableContactClearance
+		}
+		let centerZ = Self.tablePlaneZ - minLocalZ + Self.dieTableContactClearance
+		contactDepthCache[key] = centerZ
+		return centerZ
+	}
+
+	private func minimumLocalZAfterOrientation(sideLength: CGFloat, sideCount: Int, faceValue: Int) -> Float {
+		let vertices = meshVertices(sideLength: sideLength, sideCount: sideCount)
+		guard !vertices.isEmpty else { return 0 }
+		let node = SCNNode()
+		node.eulerAngles = orientation(for: faceValue, sideCount: sideCount)
+		var minZ = Float.greatestFiniteMagnitude
+		for vertex in vertices {
+			let transformed = node.simdConvertPosition(vertex, to: nil)
+			minZ = min(minZ, transformed.z)
+		}
+		return minZ
+	}
+
+	private func meshVertices(sideLength: CGFloat, sideCount: Int) -> [SIMD3<Float>] {
+		let roundedSideLength = Int(sideLength.rounded())
+		let meshKey = MeshCacheKey(
+			sideCount: sideCount,
+			roundedSideLength: roundedSideLength,
+			dieFinish: activeDieFinish
+		)
+		if let cached = meshVertexCache[meshKey] {
+			return cached
+		}
+		let mesh = builtMesh(sideLength: CGFloat(roundedSideLength), sideCount: sideCount)
+		let vertices = geometryVertices(from: mesh.geometry)
+		meshVertexCache[meshKey] = vertices
+		return vertices
+	}
+
+	private func geometryVertices(from geometry: SCNGeometry) -> [SIMD3<Float>] {
+		guard let source = geometry.sources(for: .vertex).first else { return [] }
+		let vectorCount = source.vectorCount
+		guard vectorCount > 0 else { return [] }
+
+		let data = source.data as NSData
+		let stride = source.dataStride
+		let offset = source.dataOffset
+		let components = source.componentsPerVector
+		let bytesPerComponent = source.bytesPerComponent
+		guard source.usesFloatComponents, components >= 3 else { return [] }
+
+		func component(at byteOffset: Int) -> Float {
+			switch bytesPerComponent {
+			case 4:
+				var value: Float = 0
+				data.getBytes(&value, range: NSRange(location: byteOffset, length: 4))
+				return value
+			case 8:
+				var value: Double = 0
+				data.getBytes(&value, range: NSRange(location: byteOffset, length: 8))
+				return Float(value)
+			default:
+				return 0
+			}
+		}
+
+		var vertices: [SIMD3<Float>] = []
+		vertices.reserveCapacity(vectorCount)
+		for index in 0..<vectorCount {
+			let base = offset + (index * stride)
+			let x = component(at: base)
+			let y = component(at: base + bytesPerComponent)
+			let z = component(at: base + bytesPerComponent * 2)
+			vertices.append(SIMD3<Float>(x, y, z))
+		}
+		return vertices
+	}
+
 	private func animateRoll(node: SCNNode, from start: SCNVector3, to target: SCNVector3, faceValue: Int, sideLength: CGFloat, sideCount: Int, motionProfile: DiceMotionBehaviorProfile, completion: @escaping () -> Void) {
 		node.removeAllActions()
 		if activeAnimationIntensity == .off {
@@ -2596,7 +2727,8 @@ final class DiceCubeView: UIView {
 			let oscillation = oscillationAmplitude * expf(-6.0 * progress) * abs(sinf(oscillationFrequency * progress))
 			let x = target.x + (pos.x - target.x) * settle
 			let y = target.y + (pos.y - target.y) * settle + lift + oscillation
-			node.position = SCNVector3(x, y, 0)
+			let z = target.z + (start.z - target.z) * settle
+			node.position = SCNVector3(x, y, z)
 		}
 	}
 

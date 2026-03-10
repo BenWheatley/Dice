@@ -2339,6 +2339,29 @@ final class DiceTests: XCTestCase {
 		}
 	}
 
+	func testDiceCubeViewPlacesShadowCastersAtTableContactDepth() {
+		let cases: [(sideCount: Int, value: Int)] = [
+			(2, 1),
+			(3, 2),
+			(4, 4),
+			(6, 5),
+			(8, 7),
+			(10, 6),
+			(12, 9),
+			(20, 17),
+			(21, 11)
+		]
+		for entry in cases {
+			let gap = DiceCubeView.debugShadowCasterGapToTable(
+				sideLength: 96,
+				sideCount: entry.sideCount,
+				value: entry.value
+			)
+			XCTAssertGreaterThanOrEqual(gap, 0, "Gap should not be negative for d\(entry.sideCount)")
+			XCTAssertLessThanOrEqual(gap, 0.35, "Gap should remain near-contact for d\(entry.sideCount)")
+		}
+	}
+
 	@MainActor
 	func testDiceCubeViewLightingDirectionRespondsToNaturalTimeAndFixedMode() {
 		let tz = TimeZone(secondsFromGMT: 0)!
