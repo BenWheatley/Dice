@@ -250,6 +250,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Add cast shadows on the table surface with configurable lighting angle modes (`Natural` default using local time/date sun-or-moon direction with hemisphere-aware “equator-up” orientation, and `Fixed` using a stable 3pm light direction), exposed in Options and persisted in preferences.
 - [x] Fix tabletop cast-shadow visibility by moving to forward shadow mode and rebalancing key/fill/shadow parameters so shadows remain clearly visible on patterned table shaders.
 - [x] Fix missing tabletop shadows on felt/wood/neutral by tessellating the shadow receiver plane (dynamic segment counts) so SceneKit shadowing is evaluated across the full board surface instead of a single 2-triangle receiver.
+- [x] Remove projected/drop-in shadow fallback geometry and enforce true SceneKit geometry-cast shadows only, with regression checks that detect real frame-level darkening when shadow casting is enabled.
 
 ### Performance and Interaction Safety
 

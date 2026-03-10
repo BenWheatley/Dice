@@ -2302,7 +2302,7 @@ final class DiceTests: XCTestCase {
 		XCTAssertFalse(configuration.autoenablesDefaultLighting)
 		XCTAssertEqual(configuration.keyLightType, .directional)
 		XCTAssertTrue(configuration.keyLightCastsShadow)
-		XCTAssertEqual(configuration.keyLightShadowMode, .modulated)
+		XCTAssertEqual(configuration.keyLightShadowMode, .forward)
 		XCTAssertGreaterThan(configuration.keyLightShadowRadius, 0)
 		XCTAssertLessThan(configuration.fillLightIntensity, configuration.keyLightIntensity)
 		XCTAssertGreaterThan(configuration.tableWidthSegmentCount, 1)
@@ -2322,35 +2322,19 @@ final class DiceTests: XCTestCase {
 				snapshots.withoutShadow.pngData(),
 				"Expected rendered output to differ when shadow casting is toggled for \(texture.rawValue)"
 			)
-			guard let withShadowImage = snapshots.withShadow.cgImage else {
-				XCTFail("Expected CGImage for shadow-on snapshot")
+			guard let delta = shadowDeltaStats(withShadow: snapshots.withShadow, withoutShadow: snapshots.withoutShadow) else {
+				XCTFail("Expected readable shadow delta stats for \(texture.rawValue)")
 				return
 			}
-			let fullImageRect = CGRect(
-				x: 0,
-				y: 0,
-				width: withShadowImage.width,
-				height: withShadowImage.height
-			)
-			guard
-				let withShadowStats = pixelStats(in: snapshots.withShadow, sampleRect: fullImageRect),
-				let withoutShadowStats = pixelStats(in: snapshots.withoutShadow, sampleRect: fullImageRect)
-			else {
-				XCTFail("Expected readable shadow sample region for \(texture.rawValue)")
-				return
-			}
-			let withShadowLuminance =
-				(0.2126 * withShadowStats.meanR) +
-				(0.7152 * withShadowStats.meanG) +
-				(0.0722 * withShadowStats.meanB)
-			let withoutShadowLuminance =
-				(0.2126 * withoutShadowStats.meanR) +
-				(0.7152 * withoutShadowStats.meanG) +
-				(0.0722 * withoutShadowStats.meanB)
 			XCTAssertLessThan(
-				withShadowLuminance,
-				withoutShadowLuminance - 0.002,
+				delta.meanDelta,
+				-0.003,
 				"Expected visible shadow darkening for \(texture.rawValue)"
+			)
+			XCTAssertGreaterThan(
+				delta.darkenedPixelRatio,
+				0.006,
+				"Expected a measurable darkened area for \(texture.rawValue)"
 			)
 		}
 	}
@@ -3082,6 +3066,84 @@ final class DiceTests: XCTestCase {
 		let meanG: Double
 		let meanB: Double
 		let luminanceStdDev: Double
+	}
+
+	private struct ShadowDeltaStats {
+		let meanDelta: Double
+		let darkenedPixelRatio: Double
+	}
+
+	private func shadowDeltaStats(withShadow: UIImage, withoutShadow: UIImage) -> ShadowDeltaStats? {
+		guard
+			let withShadowImage = withShadow.cgImage,
+			let withoutShadowImage = withoutShadow.cgImage,
+			withShadowImage.width == withoutShadowImage.width,
+			withShadowImage.height == withoutShadowImage.height
+		else {
+			return nil
+		}
+
+		let width = withShadowImage.width
+		let height = withShadowImage.height
+		guard width > 0, height > 0 else { return nil }
+
+		let bytesPerPixel = 4
+		let bytesPerRow = bytesPerPixel * width
+		let pixelCount = width * height
+		var withPixels = Array(repeating: UInt8(0), count: bytesPerRow * height)
+		var withoutPixels = Array(repeating: UInt8(0), count: bytesPerRow * height)
+
+		guard
+			let withContext = CGContext(
+				data: &withPixels,
+				width: width,
+				height: height,
+				bitsPerComponent: 8,
+				bytesPerRow: bytesPerRow,
+				space: CGColorSpaceCreateDeviceRGB(),
+				bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+			),
+			let withoutContext = CGContext(
+				data: &withoutPixels,
+				width: width,
+				height: height,
+				bitsPerComponent: 8,
+				bytesPerRow: bytesPerRow,
+				space: CGColorSpaceCreateDeviceRGB(),
+				bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+			)
+		else {
+			return nil
+		}
+		withContext.draw(withShadowImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+		withoutContext.draw(withoutShadowImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+		var totalDelta = 0.0
+		var darkenedCount = 0
+		let darkenedThreshold = 0.015
+		for pixelIndex in 0..<pixelCount {
+			let offset = pixelIndex * bytesPerPixel
+			let withR = Double(withPixels[offset]) / 255.0
+			let withG = Double(withPixels[offset + 1]) / 255.0
+			let withB = Double(withPixels[offset + 2]) / 255.0
+			let withoutR = Double(withoutPixels[offset]) / 255.0
+			let withoutG = Double(withoutPixels[offset + 1]) / 255.0
+			let withoutB = Double(withoutPixels[offset + 2]) / 255.0
+			let withL = (0.2126 * withR) + (0.7152 * withG) + (0.0722 * withB)
+			let withoutL = (0.2126 * withoutR) + (0.7152 * withoutG) + (0.0722 * withoutB)
+			let delta = withL - withoutL
+			totalDelta += delta
+			if delta <= -darkenedThreshold {
+				darkenedCount += 1
+			}
+		}
+
+		let count = Double(pixelCount)
+		guard count > 0 else { return nil }
+		return ShadowDeltaStats(
+			meanDelta: totalDelta / count,
+			darkenedPixelRatio: Double(darkenedCount) / count
+		)
 	}
 
 	private func pixelStats(in image: UIImage, sampleRect: CGRect) -> PixelStats? {

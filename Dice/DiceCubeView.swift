@@ -20,17 +20,16 @@ final class DiceCubeView: UIView {
 	private static let tableShadowReceiverCellSize: CGFloat = 64
 	private static let tableShadowReceiverMinSegments = 48
 	private static let tableShadowReceiverMaxSegments = 160
-	private static let projectedShadowZOffset: Float = 0.4
-	private static let projectedShadowMinimumDepth: CGFloat = 12
 	private static let tableLightingModelDefault: SCNMaterial.LightingModel = .lambert
 	private static let tableReadsDepthDefault = true
 	private static let tableWritesDepthDefault = true
 	private static let tableLitPerPixelDefault = true
-	private static let keyLightShadowModeDefault: SCNShadowMode = .modulated
+	private static let keyLightShadowModeDefault: SCNShadowMode = .forward
 	private static let keyLightShadowSampleCountDefault = 32
 	private static let keyLightShadowRadiusDefault: CGFloat = 2.0
 	private static let keyLightShadowBiasDefault: CGFloat = 0.02
 	private static let keyLightShadowAlphaDefault: CGFloat = 0.72
+	private static let keyLightMaximumShadowDistanceDefault: CGFloat = 5_000
 	private static let keyLightFixedIntensityDefault: CGFloat = 1_250
 	private static let keyLightNaturalDayIntensityDefault: CGFloat = 1_300
 	private static let keyLightNaturalNightIntensityDefault: CGFloat = 900
@@ -116,7 +115,6 @@ final class DiceCubeView: UIView {
 	private let cameraNode = SCNNode()
 	private let tableNode = SCNNode()
 	private let tableMaterial = SCNMaterial()
-	private var shadowNodes: [SCNNode] = []
 	private let keyLightNode = SCNNode()
 	private let fillLightNode = SCNNode()
 	private var dieNodes: [SCNNode] = []
@@ -299,17 +297,6 @@ final class DiceCubeView: UIView {
 			let targetPosition = scenePosition(for: centers[index])
 			let targetFace = values[index]
 			let startPosition = SCNVector3(container.presentation.position.x, container.presentation.position.y, 0)
-			let shadowNode = shadowNodes[index]
-			configureProjectedShadow(shadowNode, sideCount: sideCount, sideLength: sideLength)
-			let shadowTargetPosition = projectedShadowPosition(
-				for: targetPosition,
-				sideLength: sideLength
-			)
-			let shadowStartPosition = SCNVector3(
-				shadowNode.presentation.position.x,
-				shadowNode.presentation.position.y,
-				shadowTargetPosition.z
-			)
 
 			if shouldAnimateRoll && !lockedIndices.contains(index) {
 				animateRoll(
@@ -323,18 +310,10 @@ final class DiceCubeView: UIView {
 				) { [weak self] in
 					self?.handleRollAnimationCompletion(for: rollToken)
 				}
-				animateProjectedShadow(
-					shadowNode,
-					from: shadowStartPosition,
-					to: shadowTargetPosition,
-					motionProfile: motionProfile
-				)
 			} else {
 				container.removeAllActions()
 				container.position = targetPosition
 				container.eulerAngles = orientation(for: targetFace, sideCount: sideCount)
-				shadowNode.removeAllActions()
-				shadowNode.position = shadowTargetPosition
 			}
 		}
 		updateAccessibilityElements(
@@ -489,6 +468,8 @@ final class DiceCubeView: UIView {
 		keyLight.shadowBias = Self.keyLightShadowBiasDefault
 		keyLight.shadowMapSize = CGSize(width: 2048, height: 2048)
 		keyLight.shadowColor = UIColor.black.withAlphaComponent(Self.keyLightShadowAlphaDefault)
+		keyLight.maximumShadowDistance = Self.keyLightMaximumShadowDistanceDefault
+		keyLight.automaticallyAdjustsShadowProjection = true
 		keyLight.orthographicScale = 1_500
 		keyLight.zNear = 10
 		keyLight.zFar = 4_000
@@ -531,7 +512,6 @@ final class DiceCubeView: UIView {
 		let distance: Float = 1_200
 		keyLightNode.position = SCNVector3(direction.x * distance, direction.y * distance, direction.z * distance)
 		keyLightNode.look(at: SCNVector3(0, 0, 0))
-		updateProjectedShadowsFromCurrentPresentation()
 	}
 
 	private func configureLifecycleObservers() {
@@ -671,7 +651,7 @@ final class DiceCubeView: UIView {
 		plane.heightSegmentCount = Self.tableShadowReceiverMinSegments
 		tableMaterial.lightingModel = Self.tableLightingModelDefault
 		tableMaterial.isLitPerPixel = Self.tableLitPerPixelDefault
-		tableMaterial.isDoubleSided = false
+		tableMaterial.isDoubleSided = true
 		tableMaterial.diffuse.wrapS = .repeat
 		tableMaterial.diffuse.wrapT = .repeat
 		tableMaterial.writesToDepthBuffer = Self.tableWritesDepthDefault
@@ -803,109 +783,6 @@ final class DiceCubeView: UIView {
 		usesCoinGeometry(for: sideCount) || usesTokenGeometry(for: sideCount)
 	}
 
-	private struct ProjectedShadowStyle {
-		let majorDiameter: CGFloat
-		let minorDiameter: CGFloat
-		let opacity: CGFloat
-		let rotation: CGFloat
-	}
-
-	private func makeProjectedShadowNode() -> SCNNode {
-		let geometry = SCNPlane(width: 1, height: 1)
-		geometry.cornerRadius = 0.5
-		let material = SCNMaterial()
-		material.lightingModel = .constant
-		material.diffuse.contents = UIColor.black
-		material.blendMode = .multiply
-		material.writesToDepthBuffer = false
-		material.readsFromDepthBuffer = true
-		material.isDoubleSided = true
-		geometry.materials = [material]
-
-		let node = SCNNode(geometry: geometry)
-		node.castsShadow = false
-		node.renderingOrder = 10
-		node.position = SCNVector3(0, 0, Self.tablePlaneZ + Self.projectedShadowZOffset)
-		return node
-	}
-
-	private func projectedShadowStyle(for sideLength: CGFloat, sideCount: Int) -> ProjectedShadowStyle {
-		let zComponent = max(0.26, CGFloat(activeLightDirection.z))
-		let elongation = max(1.05, min(1.95, 1.0 / zComponent))
-		var baseDiameter = max(18, sideLength * 0.78)
-		if usesCoinGeometry(for: sideCount) || usesTokenGeometry(for: sideCount) {
-			baseDiameter = max(18, sideLength * 0.88)
-		}
-		let majorDiameter = baseDiameter * elongation
-		let minorDiameter = max(14, baseDiameter * 0.72)
-		let opacity = max(0.16, min(0.36, 0.14 + (1 - zComponent) * 0.23))
-		let rotation = atan2(
-			CGFloat(-activeLightDirection.y),
-			CGFloat(-activeLightDirection.x)
-		)
-		return ProjectedShadowStyle(
-			majorDiameter: majorDiameter,
-			minorDiameter: minorDiameter,
-			opacity: opacity,
-			rotation: rotation
-		)
-	}
-
-	private func configureProjectedShadow(_ node: SCNNode, sideCount: Int, sideLength: CGFloat) {
-		let style = projectedShadowStyle(for: sideLength, sideCount: sideCount)
-		if let plane = node.geometry as? SCNPlane {
-			plane.width = style.majorDiameter
-			plane.height = style.minorDiameter
-			plane.cornerRadius = style.minorDiameter * 0.5
-		}
-		node.eulerAngles = SCNVector3(0, 0, Float(style.rotation))
-		node.opacity = style.opacity
-	}
-
-	private func projectedShadowPosition(for diePosition: SCNVector3, sideLength: CGFloat) -> SCNVector3 {
-		let zComponent = max(0.26, CGFloat(activeLightDirection.z))
-		let casterDepth = max(
-			Self.projectedShadowMinimumDepth,
-			abs(CGFloat(Self.tablePlaneZ)) - (sideLength * 0.30)
-		)
-		let offsetX = -CGFloat(activeLightDirection.x) * casterDepth / zComponent
-		let offsetY = -CGFloat(activeLightDirection.y) * casterDepth / zComponent
-		return SCNVector3(
-			diePosition.x + Float(offsetX),
-			diePosition.y + Float(offsetY),
-			Self.tablePlaneZ + Self.projectedShadowZOffset
-		)
-	}
-
-	private func animateProjectedShadow(
-		_ node: SCNNode,
-		from start: SCNVector3,
-		to target: SCNVector3,
-		motionProfile: DiceMotionBehaviorProfile
-	) {
-		node.removeAllActions()
-		guard activeAnimationIntensity != .off, motionProfile.duration > 0 else {
-			node.position = target
-			return
-		}
-		node.position = start
-		let move = SCNAction.move(to: target, duration: TimeInterval(motionProfile.duration))
-		move.timingMode = .easeInEaseOut
-		node.runAction(move)
-	}
-
-	private func updateProjectedShadowsFromCurrentPresentation() {
-		guard shadowNodes.count == dieNodes.count else { return }
-		let effectiveSideLength = currentSideLength > 0 ? currentSideLength : 72
-		for index in dieNodes.indices {
-			let sideCount = dieSideCounts[index]
-			let shadowNode = shadowNodes[index]
-			configureProjectedShadow(shadowNode, sideCount: sideCount, sideLength: effectiveSideLength)
-			let diePosition = dieNodes[index].presentation.position
-			shadowNode.position = projectedShadowPosition(for: diePosition, sideLength: effectiveSideLength)
-		}
-	}
-
 	private func ensureNodeCount(_ count: Int) {
 		if dieNodes.count > count {
 			for node in dieNodes[count...] {
@@ -914,16 +791,12 @@ final class DiceCubeView: UIView {
 				}
 				node.removeFromParentNode()
 			}
-			for shadowNode in shadowNodes[count...] {
-				shadowNode.removeFromParentNode()
-			}
 			dieNodes = Array(dieNodes.prefix(count))
-				shadowNodes = Array(shadowNodes.prefix(count))
-				dieSideCounts = Array(dieSideCounts.prefix(count))
-				appliedColorOverrides = Array(appliedColorOverrides.prefix(count))
-				appliedFontOverrides = Array(appliedFontOverrides.prefix(count))
-				appliedAppearanceGeneration = Array(appliedAppearanceGeneration.prefix(count))
-				appliedSurfaceValues = Array(appliedSurfaceValues.prefix(count))
+			dieSideCounts = Array(dieSideCounts.prefix(count))
+			appliedColorOverrides = Array(appliedColorOverrides.prefix(count))
+			appliedFontOverrides = Array(appliedFontOverrides.prefix(count))
+			appliedAppearanceGeneration = Array(appliedAppearanceGeneration.prefix(count))
+			appliedSurfaceValues = Array(appliedSurfaceValues.prefix(count))
 		}
 
 		while dieNodes.count < count {
@@ -955,16 +828,13 @@ final class DiceCubeView: UIView {
 			labelValueCache[ObjectIdentifier(label)] = nil
 
 			scene.rootNode.addChildNode(container)
-			let shadowNode = makeProjectedShadowNode()
-			scene.rootNode.addChildNode(shadowNode)
-			shadowNodes.append(shadowNode)
 			dieNodes.append(container)
-				dieSideCounts.append(6)
-				appliedColorOverrides.append(nil)
-				appliedFontOverrides.append(nil)
-				appliedAppearanceGeneration.append(-1)
-				appliedSurfaceValues.append(nil)
-			}
+			dieSideCounts.append(6)
+			appliedColorOverrides.append(nil)
+			appliedFontOverrides.append(nil)
+			appliedAppearanceGeneration.append(-1)
+			appliedSurfaceValues.append(nil)
+		}
 		if let selectedDieIndex, selectedDieIndex >= dieNodes.count {
 			self.selectedDieIndex = nil
 		}
@@ -1375,7 +1245,6 @@ final class DiceCubeView: UIView {
 				lockedIndices: [],
 				animated: false
 			)
-			view.shadowNodes.forEach { $0.isHidden = !castsShadow }
 			view.layoutIfNeeded()
 			CATransaction.flush()
 			RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.02))
