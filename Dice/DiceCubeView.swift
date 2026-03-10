@@ -1224,6 +1224,22 @@ final class DiceCubeView: UIView {
 		return CGFloat((centerZ + minLocalZ) - Self.tablePlaneZ)
 	}
 
+	static func debugPinnedRollDepthGaps(sideLength: CGFloat, sideCount: Int, value: Int, progress: Float) -> (
+		start: CGFloat,
+		current: CGFloat,
+		end: CGFloat
+	) {
+		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
+		let startZ = view.pinnedRollStartCenterZ(sideLength: sideLength, sideCount: sideCount)
+		let endZ = view.contactCenterZ(sideLength: sideLength, sideCount: sideCount, faceValue: value)
+		let currentZ = view.pinnedRollInterpolatedCenterZ(startZ: startZ, targetZ: endZ, progress: progress)
+		return (
+			start: CGFloat(startZ - Self.tablePlaneZ),
+			current: CGFloat(currentZ - Self.tablePlaneZ),
+			end: CGFloat(endZ - Self.tablePlaneZ)
+		)
+	}
+
 	struct DebugLightingConfiguration {
 		let autoenablesDefaultLighting: Bool
 		let keyLightType: SCNLight.LightType
@@ -2534,6 +2550,28 @@ final class DiceCubeView: UIView {
 		return vertices
 	}
 
+	private func pinnedRollStartCenterZ(sideLength: CGFloat, sideCount: Int) -> Float {
+		let radius = cylindricalRollRadius(sideLength: sideLength, sideCount: sideCount)
+		return Self.tablePlaneZ + radius + Self.dieTableContactClearance
+	}
+
+	private func cylindricalRollRadius(sideLength: CGFloat, sideCount: Int) -> Float {
+		if usesCoinGeometry(for: sideCount) || usesTokenGeometry(for: sideCount) {
+			return Float(sideLength * 0.48)
+		}
+		return Float(sideLength * 0.5)
+	}
+
+	private func pinnedRollSettleProgress(_ progress: Float) -> Float {
+		let clamped = max(0, min(1, progress))
+		return 1 - powf(1 - clamped, 3)
+	}
+
+	private func pinnedRollInterpolatedCenterZ(startZ: Float, targetZ: Float, progress: Float) -> Float {
+		let settle = pinnedRollSettleProgress(progress)
+		return startZ + ((targetZ - startZ) * settle)
+	}
+
 	private func animateRoll(node: SCNNode, from start: SCNVector3, to target: SCNVector3, faceValue: Int, sideLength: CGFloat, sideCount: Int, motionProfile: DiceMotionBehaviorProfile, completion: @escaping () -> Void) {
 		node.removeAllActions()
 		if activeAnimationIntensity == .off {
@@ -2544,7 +2582,8 @@ final class DiceCubeView: UIView {
 		}
 		if usesPinnedRollPosition(for: sideCount) {
 			let spinDirection: Float = Bool.random() ? 1 : -1
-			node.position = target
+			let startZ = pinnedRollStartCenterZ(sideLength: sideLength, sideCount: sideCount)
+			node.position = SCNVector3(target.x, target.y, startZ)
 			node.eulerAngles = cylindricalAnimationEulerAngles(
 				sideCount: sideCount,
 				targetValue: faceValue,
@@ -2560,7 +2599,12 @@ final class DiceCubeView: UIView {
 				motionScale: motionProfile.motionScale,
 				cylindricalSpinDirection: spinDirection
 			)
-			node.runAction(rotateAction, completionHandler: completion)
+			let depthAction = makePinnedDepthSettleAction(
+				from: startZ,
+				to: target.z,
+				duration: motionProfile.duration
+			)
+			node.runAction(.group([rotateAction, depthAction]), completionHandler: completion)
 			return
 		}
 		let moveAction = makeBounceMoveAction(
@@ -2658,6 +2702,14 @@ final class DiceCubeView: UIView {
 		}
 	}
 
+	private func makePinnedDepthSettleAction(from startZ: Float, to targetZ: Float, duration: TimeInterval) -> SCNAction {
+		SCNAction.customAction(duration: duration) { node, elapsed in
+			let progress = Float(max(0, min(1, elapsed / CGFloat(duration))))
+			let z = self.pinnedRollInterpolatedCenterZ(startZ: startZ, targetZ: targetZ, progress: progress)
+			node.position = SCNVector3(node.position.x, node.position.y, z)
+		}
+	}
+
 	private func cylindricalAnimationEulerAngles(
 		sideCount: Int,
 		targetValue: Int,
@@ -2669,7 +2721,7 @@ final class DiceCubeView: UIView {
 		let target = orientation(for: targetValue, sideCount: sideCount)
 		let turns = max(2, Int(round(3.0 * Double(max(0.5, motionScale)))))
 		let spinMagnitude = Float(turns) * spinDirection * Float.pi * 2.0
-		let tiltProgress = 1 - pow(1 - clamped, 3)
+		let tiltProgress = pinnedRollSettleProgress(clamped)
 		let residualSpin = pow(1 - clamped, 3)
 		return SCNVector3(
 			target.x * tiltProgress,

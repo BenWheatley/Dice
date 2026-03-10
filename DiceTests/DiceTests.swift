@@ -2688,6 +2688,46 @@ final class DiceTests: XCTestCase {
 		XCTAssertFalse(DiceCubeView.debugUsesPinnedRollPosition(sideCount: 6))
 	}
 
+	func testCylindricalPinnedDepthStartsAtRadiusAndSettlesToCurrentTargetDepth() {
+		let sideLength: CGFloat = 100
+		let expectedStartGap = sideLength * 0.48 + 0.15
+
+		let d2Start = DiceCubeView.debugPinnedRollDepthGaps(
+			sideLength: sideLength,
+			sideCount: 2,
+			value: 1,
+			progress: 0
+		)
+		XCTAssertEqual(d2Start.start, expectedStartGap, accuracy: 0.25)
+		XCTAssertEqual(d2Start.current, d2Start.start, accuracy: 0.0001)
+
+		let d2Mid = DiceCubeView.debugPinnedRollDepthGaps(
+			sideLength: sideLength,
+			sideCount: 2,
+			value: 1,
+			progress: 0.5
+		)
+		XCTAssertLessThan(d2Mid.current, d2Mid.start)
+		XCTAssertGreaterThan(d2Mid.current, d2Mid.end)
+
+		let d2End = DiceCubeView.debugPinnedRollDepthGaps(
+			sideLength: sideLength,
+			sideCount: 2,
+			value: 1,
+			progress: 1
+		)
+		XCTAssertEqual(d2End.current, d2End.end, accuracy: 0.0001)
+
+		let d21Start = DiceCubeView.debugPinnedRollDepthGaps(
+			sideLength: sideLength,
+			sideCount: 21,
+			value: 7,
+			progress: 0
+		)
+		XCTAssertEqual(d21Start.start, expectedStartGap, accuracy: 0.25)
+		XCTAssertGreaterThan(d21Start.start, d21Start.end + 25)
+	}
+
 	func testCoinCapsUseFaceTexturesForVisibleSymbols() {
 		let summary = DiceCubeView.debugCoinCapTextureSummary(fillColor: UIColor(red: 0.86, green: 0.62, blue: 0.22, alpha: 1))
 		XCTAssertFalse(summary.sideUsesImageTexture)
