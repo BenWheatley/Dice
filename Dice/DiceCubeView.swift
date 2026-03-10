@@ -14,23 +14,27 @@ final class DiceCubeView: UIView {
 	private static let faceTextureEdgeLength: CGFloat = 256
 	private static let neutralTextureName = "stripes"
 	private static let cameraDefaultZ: Float = 800
+	private static let tablePlaneZ: Float = -60
 	private static let tablePlaneMargin: CGFloat = 96
 	private static let tablePlaneMinimumSpan: CGFloat = 900
 	private static let tableShadowReceiverCellSize: CGFloat = 64
-	private static let tableShadowReceiverMinSegments = 16
-	private static let tableShadowReceiverMaxSegments = 72
+	private static let tableShadowReceiverMinSegments = 48
+	private static let tableShadowReceiverMaxSegments = 160
+	private static let projectedShadowZOffset: Float = 0.4
+	private static let projectedShadowMinimumDepth: CGFloat = 12
 	private static let tableLightingModelDefault: SCNMaterial.LightingModel = .lambert
 	private static let tableReadsDepthDefault = true
 	private static let tableWritesDepthDefault = true
-	private static let keyLightShadowModeDefault: SCNShadowMode = .forward
-	private static let keyLightShadowSampleCountDefault = 48
-	private static let keyLightShadowRadiusDefault: CGFloat = 1.5
-	private static let keyLightShadowBiasDefault: CGFloat = 1.0
-	private static let keyLightShadowAlphaDefault: CGFloat = 0.62
+	private static let tableLitPerPixelDefault = true
+	private static let keyLightShadowModeDefault: SCNShadowMode = .modulated
+	private static let keyLightShadowSampleCountDefault = 32
+	private static let keyLightShadowRadiusDefault: CGFloat = 2.0
+	private static let keyLightShadowBiasDefault: CGFloat = 0.02
+	private static let keyLightShadowAlphaDefault: CGFloat = 0.72
 	private static let keyLightFixedIntensityDefault: CGFloat = 1_250
 	private static let keyLightNaturalDayIntensityDefault: CGFloat = 1_300
 	private static let keyLightNaturalNightIntensityDefault: CGFloat = 900
-	private static let fillLightIntensityDefault: CGFloat = 140
+	private static let fillLightIntensityDefault: CGFloat = 90
 
 	private static let neutralTableTextureImage: UIImage? = {
 		let bundles = [Bundle.main, Bundle(for: DiceCubeView.self)]
@@ -112,6 +116,7 @@ final class DiceCubeView: UIView {
 	private let cameraNode = SCNNode()
 	private let tableNode = SCNNode()
 	private let tableMaterial = SCNMaterial()
+	private var shadowNodes: [SCNNode] = []
 	private let keyLightNode = SCNNode()
 	private let fillLightNode = SCNNode()
 	private var dieNodes: [SCNNode] = []
@@ -136,6 +141,7 @@ final class DiceCubeView: UIView {
 	private var activeMotionBlurEnabled = false
 	private var activeTableTexture: DiceTableTexture = .neutral
 	private var activeLightingAngle: DiceLightingAngle = .natural
+	private var activeLightDirection = SIMD3<Float>(0.70, 0.70, 0.78)
 	private var selectedDieIndex: Int?
 	private var reduceMotionEnabled = UIAccessibility.isReduceMotionEnabled
 	private var dieAccessibilityElements: [UIAccessibilityElement] = []
@@ -293,6 +299,17 @@ final class DiceCubeView: UIView {
 			let targetPosition = scenePosition(for: centers[index])
 			let targetFace = values[index]
 			let startPosition = SCNVector3(container.presentation.position.x, container.presentation.position.y, 0)
+			let shadowNode = shadowNodes[index]
+			configureProjectedShadow(shadowNode, sideCount: sideCount, sideLength: sideLength)
+			let shadowTargetPosition = projectedShadowPosition(
+				for: targetPosition,
+				sideLength: sideLength
+			)
+			let shadowStartPosition = SCNVector3(
+				shadowNode.presentation.position.x,
+				shadowNode.presentation.position.y,
+				shadowTargetPosition.z
+			)
 
 			if shouldAnimateRoll && !lockedIndices.contains(index) {
 				animateRoll(
@@ -306,10 +323,18 @@ final class DiceCubeView: UIView {
 				) { [weak self] in
 					self?.handleRollAnimationCompletion(for: rollToken)
 				}
+				animateProjectedShadow(
+					shadowNode,
+					from: shadowStartPosition,
+					to: shadowTargetPosition,
+					motionProfile: motionProfile
+				)
 			} else {
 				container.removeAllActions()
 				container.position = targetPosition
 				container.eulerAngles = orientation(for: targetFace, sideCount: sideCount)
+				shadowNode.removeAllActions()
+				shadowNode.position = shadowTargetPosition
 			}
 		}
 		updateAccessibilityElements(
@@ -448,6 +473,7 @@ final class DiceCubeView: UIView {
 		cameraNode.position = SCNVector3(0, 0, Self.cameraDefaultZ)
 		cameraNode.eulerAngles = SCNVector3(0, 0, 0)
 		scene.rootNode.addChildNode(cameraNode)
+		scnView.pointOfView = cameraNode
 		configureTableSurface()
 		configureLighting()
 	}
@@ -457,11 +483,11 @@ final class DiceCubeView: UIView {
 		keyLight.type = .directional
 		keyLight.intensity = Self.keyLightFixedIntensityDefault
 		keyLight.castsShadow = true
-		// Forward shadowing provides stable, visible tabletop shadows with SceneKit shader modifiers.
 		keyLight.shadowMode = Self.keyLightShadowModeDefault
 		keyLight.shadowSampleCount = Self.keyLightShadowSampleCountDefault
 		keyLight.shadowRadius = Self.keyLightShadowRadiusDefault
 		keyLight.shadowBias = Self.keyLightShadowBiasDefault
+		keyLight.shadowMapSize = CGSize(width: 2048, height: 2048)
 		keyLight.shadowColor = UIColor.black.withAlphaComponent(Self.keyLightShadowAlphaDefault)
 		keyLight.orthographicScale = 1_500
 		keyLight.zNear = 10
@@ -501,9 +527,11 @@ final class DiceCubeView: UIView {
 	}
 
 	private func applyDirectionalLightVector(_ direction: SIMD3<Float>) {
+		activeLightDirection = direction
 		let distance: Float = 1_200
 		keyLightNode.position = SCNVector3(direction.x * distance, direction.y * distance, direction.z * distance)
 		keyLightNode.look(at: SCNVector3(0, 0, 0))
+		updateProjectedShadowsFromCurrentPresentation()
 	}
 
 	private func configureLifecycleObservers() {
@@ -642,6 +670,7 @@ final class DiceCubeView: UIView {
 		plane.widthSegmentCount = Self.tableShadowReceiverMinSegments
 		plane.heightSegmentCount = Self.tableShadowReceiverMinSegments
 		tableMaterial.lightingModel = Self.tableLightingModelDefault
+		tableMaterial.isLitPerPixel = Self.tableLitPerPixelDefault
 		tableMaterial.isDoubleSided = false
 		tableMaterial.diffuse.wrapS = .repeat
 		tableMaterial.diffuse.wrapT = .repeat
@@ -652,8 +681,7 @@ final class DiceCubeView: UIView {
 		}
 		plane.materials = [tableMaterial]
 		tableNode.geometry = plane
-		tableNode.position = SCNVector3(0, 0, -150)
-		tableNode.renderingOrder = -100
+		tableNode.position = SCNVector3(0, 0, Self.tablePlaneZ)
 		tableNode.castsShadow = false
 		scene.rootNode.addChildNode(tableNode)
 		applyTableTexture()
@@ -775,6 +803,109 @@ final class DiceCubeView: UIView {
 		usesCoinGeometry(for: sideCount) || usesTokenGeometry(for: sideCount)
 	}
 
+	private struct ProjectedShadowStyle {
+		let majorDiameter: CGFloat
+		let minorDiameter: CGFloat
+		let opacity: CGFloat
+		let rotation: CGFloat
+	}
+
+	private func makeProjectedShadowNode() -> SCNNode {
+		let geometry = SCNPlane(width: 1, height: 1)
+		geometry.cornerRadius = 0.5
+		let material = SCNMaterial()
+		material.lightingModel = .constant
+		material.diffuse.contents = UIColor.black
+		material.blendMode = .multiply
+		material.writesToDepthBuffer = false
+		material.readsFromDepthBuffer = true
+		material.isDoubleSided = true
+		geometry.materials = [material]
+
+		let node = SCNNode(geometry: geometry)
+		node.castsShadow = false
+		node.renderingOrder = 10
+		node.position = SCNVector3(0, 0, Self.tablePlaneZ + Self.projectedShadowZOffset)
+		return node
+	}
+
+	private func projectedShadowStyle(for sideLength: CGFloat, sideCount: Int) -> ProjectedShadowStyle {
+		let zComponent = max(0.26, CGFloat(activeLightDirection.z))
+		let elongation = max(1.05, min(1.95, 1.0 / zComponent))
+		var baseDiameter = max(18, sideLength * 0.78)
+		if usesCoinGeometry(for: sideCount) || usesTokenGeometry(for: sideCount) {
+			baseDiameter = max(18, sideLength * 0.88)
+		}
+		let majorDiameter = baseDiameter * elongation
+		let minorDiameter = max(14, baseDiameter * 0.72)
+		let opacity = max(0.16, min(0.36, 0.14 + (1 - zComponent) * 0.23))
+		let rotation = atan2(
+			CGFloat(-activeLightDirection.y),
+			CGFloat(-activeLightDirection.x)
+		)
+		return ProjectedShadowStyle(
+			majorDiameter: majorDiameter,
+			minorDiameter: minorDiameter,
+			opacity: opacity,
+			rotation: rotation
+		)
+	}
+
+	private func configureProjectedShadow(_ node: SCNNode, sideCount: Int, sideLength: CGFloat) {
+		let style = projectedShadowStyle(for: sideLength, sideCount: sideCount)
+		if let plane = node.geometry as? SCNPlane {
+			plane.width = style.majorDiameter
+			plane.height = style.minorDiameter
+			plane.cornerRadius = style.minorDiameter * 0.5
+		}
+		node.eulerAngles = SCNVector3(0, 0, Float(style.rotation))
+		node.opacity = style.opacity
+	}
+
+	private func projectedShadowPosition(for diePosition: SCNVector3, sideLength: CGFloat) -> SCNVector3 {
+		let zComponent = max(0.26, CGFloat(activeLightDirection.z))
+		let casterDepth = max(
+			Self.projectedShadowMinimumDepth,
+			abs(CGFloat(Self.tablePlaneZ)) - (sideLength * 0.30)
+		)
+		let offsetX = -CGFloat(activeLightDirection.x) * casterDepth / zComponent
+		let offsetY = -CGFloat(activeLightDirection.y) * casterDepth / zComponent
+		return SCNVector3(
+			diePosition.x + Float(offsetX),
+			diePosition.y + Float(offsetY),
+			Self.tablePlaneZ + Self.projectedShadowZOffset
+		)
+	}
+
+	private func animateProjectedShadow(
+		_ node: SCNNode,
+		from start: SCNVector3,
+		to target: SCNVector3,
+		motionProfile: DiceMotionBehaviorProfile
+	) {
+		node.removeAllActions()
+		guard activeAnimationIntensity != .off, motionProfile.duration > 0 else {
+			node.position = target
+			return
+		}
+		node.position = start
+		let move = SCNAction.move(to: target, duration: TimeInterval(motionProfile.duration))
+		move.timingMode = .easeInEaseOut
+		node.runAction(move)
+	}
+
+	private func updateProjectedShadowsFromCurrentPresentation() {
+		guard shadowNodes.count == dieNodes.count else { return }
+		let effectiveSideLength = currentSideLength > 0 ? currentSideLength : 72
+		for index in dieNodes.indices {
+			let sideCount = dieSideCounts[index]
+			let shadowNode = shadowNodes[index]
+			configureProjectedShadow(shadowNode, sideCount: sideCount, sideLength: effectiveSideLength)
+			let diePosition = dieNodes[index].presentation.position
+			shadowNode.position = projectedShadowPosition(for: diePosition, sideLength: effectiveSideLength)
+		}
+	}
+
 	private func ensureNodeCount(_ count: Int) {
 		if dieNodes.count > count {
 			for node in dieNodes[count...] {
@@ -783,7 +914,11 @@ final class DiceCubeView: UIView {
 				}
 				node.removeFromParentNode()
 			}
+			for shadowNode in shadowNodes[count...] {
+				shadowNode.removeFromParentNode()
+			}
 			dieNodes = Array(dieNodes.prefix(count))
+				shadowNodes = Array(shadowNodes.prefix(count))
 				dieSideCounts = Array(dieSideCounts.prefix(count))
 				appliedColorOverrides = Array(appliedColorOverrides.prefix(count))
 				appliedFontOverrides = Array(appliedFontOverrides.prefix(count))
@@ -820,6 +955,9 @@ final class DiceCubeView: UIView {
 			labelValueCache[ObjectIdentifier(label)] = nil
 
 			scene.rootNode.addChildNode(container)
+			let shadowNode = makeProjectedShadowNode()
+			scene.rootNode.addChildNode(shadowNode)
+			shadowNodes.append(shadowNode)
 			dieNodes.append(container)
 				dieSideCounts.append(6)
 				appliedColorOverrides.append(nil)
@@ -1192,9 +1330,91 @@ final class DiceCubeView: UIView {
 		let fillLightIntensity: CGFloat
 		let tableWidthSegmentCount: Int
 		let tableHeightSegmentCount: Int
+		let tableLitPerPixel: Bool
 		let tableLightingModel: SCNMaterial.LightingModel
 		let tableReadsDepth: Bool
 		let tableWritesDepth: Bool
+	}
+
+	struct DebugShadowSnapshots {
+		let withShadow: UIImage
+		let withoutShadow: UIImage
+		let sampleRect: CGRect
+	}
+
+	static func debugShadowSnapshots(tableTexture: DiceTableTexture) -> DebugShadowSnapshots {
+		let canvasSize = CGSize(width: 420, height: 420)
+		let dieCenter = CGPoint(x: canvasSize.width / 2, y: canvasSize.height / 2)
+		let sideLength: CGFloat = 120
+		let direction = DiceLightingDirectionResolver.direction(
+			mode: .fixed,
+			date: Date(timeIntervalSinceReferenceDate: 0),
+			timeZone: TimeZone(secondsFromGMT: 0)!,
+			isNorthernHemisphere: true
+		)
+		let sampleRect = debugShadowSampleRect(
+			canvasSize: canvasSize,
+			dieCenter: dieCenter,
+			sideLength: sideLength,
+			lightDirection: direction
+		)
+
+		func snapshot(castsShadow: Bool) -> UIImage {
+			let view = DiceCubeView(frame: CGRect(origin: .zero, size: canvasSize))
+			view.layoutIfNeeded()
+			view.setLightingAngle(.fixed)
+			view.setTableTexture(tableTexture)
+			view.keyLightNode.light?.castsShadow = castsShadow
+			view.setDice(
+				values: [4],
+				centers: [dieCenter],
+				sideLength: sideLength,
+				sideCounts: [6],
+				dieColorPresets: [nil],
+				faceNumeralFonts: [nil],
+				lockedIndices: [],
+				animated: false
+			)
+			view.shadowNodes.forEach { $0.isHidden = !castsShadow }
+			view.layoutIfNeeded()
+			CATransaction.flush()
+			RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.02))
+			return view.scnView.snapshot()
+		}
+
+		return DebugShadowSnapshots(
+			withShadow: snapshot(castsShadow: true),
+			withoutShadow: snapshot(castsShadow: false),
+			sampleRect: sampleRect
+		)
+	}
+
+	private static func debugShadowSampleRect(
+		canvasSize: CGSize,
+		dieCenter: CGPoint,
+		sideLength: CGFloat,
+		lightDirection: SIMD3<Float>
+	) -> CGRect {
+		let planeDepth = abs(CGFloat(Self.tablePlaneZ))
+		let casterCenterZ = CGFloat(-sideLength * 0.35)
+		let rayZ = max(0.25, CGFloat(lightDirection.z))
+		let projectionDepth = max(24, planeDepth + casterCenterZ)
+		let sceneOffsetX = -CGFloat(lightDirection.x) * projectionDepth / rayZ
+		let sceneOffsetY = -CGFloat(lightDirection.y) * projectionDepth / rayZ
+		let sampleCenter = CGPoint(
+			x: dieCenter.x + sceneOffsetX,
+			y: dieCenter.y - sceneOffsetY
+		)
+		let clampedCenter = CGPoint(
+			x: max(22, min(canvasSize.width - 22, sampleCenter.x)),
+			y: max(22, min(canvasSize.height - 22, sampleCenter.y))
+		)
+		return CGRect(
+			x: clampedCenter.x - 18,
+			y: clampedCenter.y - 18,
+			width: 36,
+			height: 36
+		)
 	}
 
 	static func debugLightingConfiguration() -> DebugLightingConfiguration {
@@ -1208,6 +1428,7 @@ final class DiceCubeView: UIView {
 			fillLightIntensity: Self.fillLightIntensityDefault,
 			tableWidthSegmentCount: Self.tableShadowReceiverMinSegments,
 			tableHeightSegmentCount: Self.tableShadowReceiverMinSegments,
+			tableLitPerPixel: Self.tableLitPerPixelDefault,
 			tableLightingModel: Self.tableLightingModelDefault,
 			tableReadsDepth: Self.tableReadsDepthDefault,
 			tableWritesDepth: Self.tableWritesDepthDefault

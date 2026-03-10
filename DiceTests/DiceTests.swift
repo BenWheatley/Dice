@@ -2302,14 +2302,57 @@ final class DiceTests: XCTestCase {
 		XCTAssertFalse(configuration.autoenablesDefaultLighting)
 		XCTAssertEqual(configuration.keyLightType, .directional)
 		XCTAssertTrue(configuration.keyLightCastsShadow)
-		XCTAssertEqual(configuration.keyLightShadowMode, .forward)
+		XCTAssertEqual(configuration.keyLightShadowMode, .modulated)
 		XCTAssertGreaterThan(configuration.keyLightShadowRadius, 0)
 		XCTAssertLessThan(configuration.fillLightIntensity, configuration.keyLightIntensity)
 		XCTAssertGreaterThan(configuration.tableWidthSegmentCount, 1)
 		XCTAssertGreaterThan(configuration.tableHeightSegmentCount, 1)
+		XCTAssertTrue(configuration.tableLitPerPixel)
 		XCTAssertNotEqual(configuration.tableLightingModel, .constant)
 		XCTAssertTrue(configuration.tableReadsDepth)
 		XCTAssertTrue(configuration.tableWritesDepth)
+	}
+
+	@MainActor
+	func testDiceCubeViewCastsMeasurableTableShadowForAllTableTextures() {
+		for texture in DiceTableTexture.allCases {
+			let snapshots = DiceCubeView.debugShadowSnapshots(tableTexture: texture)
+			XCTAssertNotEqual(
+				snapshots.withShadow.pngData(),
+				snapshots.withoutShadow.pngData(),
+				"Expected rendered output to differ when shadow casting is toggled for \(texture.rawValue)"
+			)
+			guard let withShadowImage = snapshots.withShadow.cgImage else {
+				XCTFail("Expected CGImage for shadow-on snapshot")
+				return
+			}
+			let fullImageRect = CGRect(
+				x: 0,
+				y: 0,
+				width: withShadowImage.width,
+				height: withShadowImage.height
+			)
+			guard
+				let withShadowStats = pixelStats(in: snapshots.withShadow, sampleRect: fullImageRect),
+				let withoutShadowStats = pixelStats(in: snapshots.withoutShadow, sampleRect: fullImageRect)
+			else {
+				XCTFail("Expected readable shadow sample region for \(texture.rawValue)")
+				return
+			}
+			let withShadowLuminance =
+				(0.2126 * withShadowStats.meanR) +
+				(0.7152 * withShadowStats.meanG) +
+				(0.0722 * withShadowStats.meanB)
+			let withoutShadowLuminance =
+				(0.2126 * withoutShadowStats.meanR) +
+				(0.7152 * withoutShadowStats.meanG) +
+				(0.0722 * withoutShadowStats.meanB)
+			XCTAssertLessThan(
+				withShadowLuminance,
+				withoutShadowLuminance - 0.002,
+				"Expected visible shadow darkening for \(texture.rawValue)"
+			)
+		}
 	}
 
 	@MainActor
