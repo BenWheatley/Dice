@@ -12,7 +12,7 @@ class ExtensionDelegate: NSObject, WKExtensionDelegate {
 
     func applicationDidFinishLaunching() {
         let sync = WatchSingleDieConfigurationSyncBridge.shared
-        sync.seedLocalIfMissing(WatchSingleDieConfiguration())
+        sync.seedLocalIfMissing(.watchDefault)
         sync.start()
     }
 

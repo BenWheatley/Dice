@@ -1958,6 +1958,11 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(store.load(), expected)
 	}
 
+	func testWatchSingleDieConfigurationUsesBlackForWatchSeedWithoutChangingGeneralDefault() {
+		XCTAssertEqual(WatchSingleDieConfiguration.watchDefault.backgroundTexture, "black")
+		XCTAssertEqual(WatchSingleDieConfiguration().backgroundTexture, "neutral")
+	}
+
 	func testWatchSingleDieConfigurationConflictResolverPrefersNewerTimestamp() {
 		let local = WatchSingleDieConfiguration(
 			sideCount: 6,

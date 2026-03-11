@@ -13,6 +13,9 @@ import WatchConnectivity
 struct WatchSingleDieConfiguration: Codable, Equatable {
 	static let minimumSideCount = 2
 	static let maximumSideCount = 100
+	// Watch defaults to black to align with OLED-friendly glance UI while keeping the
+	// app-wide preferences default (used by phone/tablet/desktop) unchanged.
+	static let watchDefault = WatchSingleDieConfiguration(backgroundTexture: "black")
 
 	var sideCount: Int
 	var colorTag: String
