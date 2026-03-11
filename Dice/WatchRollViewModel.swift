@@ -36,6 +36,10 @@ final class WatchRollViewModel {
 		isIntuitiveMode.toggle()
 	}
 
+	func setIntuitiveMode(_ enabled: Bool) {
+		isIntuitiveMode = enabled
+	}
+
 	func roll() -> RollOutcome {
 		let configuration = RollConfiguration(diceCount: 1, sideCount: 6, intuitive: isIntuitiveMode)
 		lastRollConfiguration = configuration

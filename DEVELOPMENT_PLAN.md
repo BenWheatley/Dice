@@ -296,7 +296,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Define watch v2 scope: one visible die at a time, user-selectable side count, SceneKit 3D rendering parity, and compact customization UX constrained for watch screen sizes.
 - [x] Finalize watch customization IA for small screens: top-level roll view + single "Customize" sheet with side-count picker, color preset picker, and mode toggle; limit to one interaction depth from main screen.
 - [x] Define watch-side interaction model for side count selection (Digital Crown stepped values + quick chips for common sides: d2/d4/d6/d8/d10/d12/d20) and document truncation/legibility rules.
-- [ ] Define watch persistence model for per-watch last selected single-die configuration (side count, color preset, roll mode, background) and conflict policy with phone defaults.
+- [x] Define watch persistence model for per-watch last selected single-die configuration (side count, color preset, roll mode, background) and conflict policy with phone defaults.
 
 ### Cross-Platform Rendering and Background
 

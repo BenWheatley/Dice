@@ -29,6 +29,10 @@ Target baseline: watchOS 10.2+.
 - Watch-specific (intentional):
   - face texture generation path uses SpriteKit label scenes per face in `InterfaceController`.
   - iOS `D6SceneKitRenderConfig` remains UIKit-renderer based (`UIGraphicsImageRenderer`), which is unavailable on watchOS.
+  - cross-device watch customization sync uses `WatchConnectivity` application-context payloads carrying a timestamped `WatchSingleDieConfiguration`.
+- Sync policy:
+  - conflict resolution is timestamped last-write-wins with remote-preferred tie-break.
+  - this is acceptable because settings are single-user preferences across multiple owned devices, not collaborative shared edits.
 - Rationale:
   - keeps domain/geometry logic shared while using a watch-compatible material path.
   - avoids parallel domain implementations and reduces drift between watch and iOS behavior.

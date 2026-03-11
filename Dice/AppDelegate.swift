@@ -10,10 +10,15 @@ import UIKit
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
+	private let watchConfigurationSync = WatchSingleDieConfigurationSyncBridge.shared
+	private let watchConfigurationParser = DiceNotationParser()
+	private let watchConfigurationPreferencesStore = DicePreferencesStore()
 
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 		configureUITestLaunchModeIfNeeded()
 		DiceQuickActionManager.shared.refresh()
+		syncWatchConfigurationFromPhonePreferences()
+		watchConfigurationSync.start()
 		return true
 	}
 
@@ -39,6 +44,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 	func applicationDidBecomeActive(_ application: UIApplication) {
 		// Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+		syncWatchConfigurationFromPhonePreferences()
 	}
 
 	func applicationWillTerminate(_ application: UIApplication) {
@@ -53,6 +59,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		if arguments.contains("-reset-state"), let bundleID = Bundle.main.bundleIdentifier {
 			UserDefaults.standard.removePersistentDomain(forName: bundleID)
 		}
+	}
+
+	private func syncWatchConfigurationFromPhonePreferences() {
+		let preferences = watchConfigurationPreferencesStore.load()
+		let parsed = watchConfigurationParser.parse(preferences.lastNotation)
+		let firstPool = parsed?.pools.first
+		let sideCount = firstPool?.sideCount ?? 6
+		let colorTag = firstPool?.colorTag ?? "ivory"
+		let intuitiveMode = firstPool?.intuitive ?? false
+		let snapshot = WatchSingleDieConfiguration(
+			sideCount: sideCount,
+			colorTag: colorTag,
+			isIntuitiveMode: intuitiveMode,
+			backgroundTexture: preferences.tableTexture.rawValue
+		)
+		watchConfigurationSync.applyPhoneSnapshotIfChanged(snapshot)
 	}
 
 

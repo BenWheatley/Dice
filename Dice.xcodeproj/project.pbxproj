@@ -67,6 +67,8 @@
 		D1CE110E2F50000E00D1CE00 /* PresetPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE100E2F50000E00D1CE00 /* PresetPickerViewController.swift */; };
 		D1CE110F2F50000F00D1CE00 /* RollHistoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE100F2F50000F00D1CE00 /* RollHistoryViewController.swift */; };
 		AACE00012F58000100D1CE00 /* RollDistributionSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACE00022F58000200D1CE00 /* RollDistributionSheetViewController.swift */; };
+		A1CE11012F5B000100D1CE00 /* WatchSingleDieConfigurationSyncBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1CE10012F5B000100D1CE00 /* WatchSingleDieConfigurationSyncBridge.swift */; };
+		A1CE11022F5B000100D1CE00 /* WatchSingleDieConfigurationSyncBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1CE10012F5B000100D1CE00 /* WatchSingleDieConfigurationSyncBridge.swift */; };
 		D2CE11012F51000100D1CE00 /* D6FaceOrientation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10012F51000100D1CE00 /* D6FaceOrientation.swift */; };
 		D2CE11022F51000200D1CE00 /* D6SceneKitRenderConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10022F51000200D1CE00 /* D6SceneKitRenderConfig.swift */; };
 		D2CE11192F51001900D1CE00 /* D6BeveledCubeGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10192F51001900D1CE00 /* D6BeveledCubeGeometry.swift */; };
@@ -222,6 +224,7 @@
 		B50B4511215D804300A6399B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B50B4512215D804300A6399B /* PushNotificationPayload.apns */ = {isa = PBXFileReference; lastKnownFileType = text; path = PushNotificationPayload.apns; sourceTree = "<group>"; };
 		B57DA5B92F4228E00057BC3A /* DiceCubeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceCubeView.swift; sourceTree = "<group>"; };
+		A1CE10012F5B000100D1CE00 /* WatchSingleDieConfigurationSyncBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSingleDieConfigurationSyncBridge.swift; sourceTree = "<group>"; };
 		C0DE00002F44000100D1CE00 /* DiceNotationParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceNotationParser.swift; sourceTree = "<group>"; };
 		C0DE00022F44003200D1CE00 /* TrueRandomRoller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrueRandomRoller.swift; sourceTree = "<group>"; };
 		C0DE00042F44005400D1CE00 /* IntuitiveRoller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntuitiveRoller.swift; sourceTree = "<group>"; };
@@ -398,6 +401,7 @@
 				C0DE004D2F44A00100D1CE00 /* DiceFaceLabelSizing.swift */,
 				C0DE004F2F44A20100D1CE00 /* DiceMotionBehaviorProfile.swift */,
 				C0DE00142F44016400D1CE00 /* WatchRollViewModel.swift */,
+				A1CE10012F5B000100D1CE00 /* WatchSingleDieConfigurationSyncBridge.swift */,
 				B57DA5B92F4228E00057BC3A /* DiceCubeView.swift */,
 				D1CE100B2F50000B00D1CE00 /* HistoryRowFormatter.swift */,
 				D1CE100C2F50000C00D1CE00 /* HistorySummaryCardRenderer.swift */,
@@ -733,6 +737,7 @@
 			files = (
 				C0DE00132F44014200D1CE00 /* DiceViewModel.swift in Sources */,
 				C0DE00152F44016400D1CE00 /* WatchRollViewModel.swift in Sources */,
+				A1CE11012F5B000100D1CE00 /* WatchSingleDieConfigurationSyncBridge.swift in Sources */,
 				C0DE00332F44035300D1CE00 /* DiceTheme.swift in Sources */,
 				C0DE00352F4403A100D1CE00 /* DiceTableTexture.swift in Sources */,
 				C0DE00372F4404DA00D1CE00 /* DiceDieFinish.swift in Sources */,
@@ -833,6 +838,7 @@
 				C0DE01A32F4402A300D1CE00 /* D6FaceOrientation.swift in Sources */,
 				C0DE01A52F4402A500D1CE00 /* D6BeveledCubeGeometry.swift in Sources */,
 				C0DE00292F44022900D1CE00 /* WatchRollViewModel.swift in Sources */,
+				A1CE11022F5B000100D1CE00 /* WatchSingleDieConfigurationSyncBridge.swift in Sources */,
 				C0DE00272F44022700D1CE00 /* DiceRollSession.swift in Sources */,
 				C0DE002D2F44022D00D1CE00 /* IntuitiveRollContext.swift in Sources */,
 				C0DE00252F44022500D1CE00 /* IntuitiveRoller.swift in Sources */,

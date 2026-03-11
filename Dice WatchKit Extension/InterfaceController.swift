@@ -18,7 +18,10 @@ class InterfaceController: WKInterfaceController {
 		case intuitive
 	}
 
-	private let viewModel = WatchRollViewModel()
+	private let configurationSync = WatchSingleDieConfigurationSyncBridge.shared
+	private lazy var viewModel = WatchRollViewModel(
+		isIntuitiveMode: configurationSync.currentConfiguration().isIntuitiveMode
+	)
 	private var rollCount = 0
 	private var d6Node = SCNNode()
 	private var usesSceneRenderer = false
@@ -31,6 +34,9 @@ class InterfaceController: WKInterfaceController {
 
     override func awake(withContext context: Any?) {
         super.awake(withContext: context)
+		configurationSync.onRemoteConfigurationApplied = { [weak self] configuration in
+			self?.applyRemoteConfiguration(configuration)
+		}
 		diceButton.setAccessibilityLabel("Roll dice")
 		diceButton.setAccessibilityHint("Double tap to roll one die")
 		diceView.setAccessibilityLabel("Latest die result")
@@ -53,6 +59,7 @@ class InterfaceController: WKInterfaceController {
 		if let lowPowerObserver {
 			NotificationCenter.default.removeObserver(lowPowerObserver)
 		}
+		configurationSync.onRemoteConfigurationApplied = nil
 	}
 
 	@IBAction func roll() {
@@ -62,6 +69,7 @@ class InterfaceController: WKInterfaceController {
 	@objc private func toggleMode() {
 		viewModel.toggleMode()
 		rollCount = 0
+		persistCurrentConfiguration()
 		feedbackDevice.play(viewModel.isIntuitiveMode ? .directionUp : .directionDown)
 		roll()
 	}
@@ -215,5 +223,18 @@ class InterfaceController: WKInterfaceController {
 	private func orientation(for value: Int) -> SCNVector3 {
 		let angles = D6FaceOrientation.eulerAngles(for: value)
 		return SCNVector3(angles.x, angles.y, angles.z)
+	}
+
+	private func applyRemoteConfiguration(_ configuration: WatchSingleDieConfiguration) {
+		guard viewModel.isIntuitiveMode != configuration.isIntuitiveMode else { return }
+		viewModel.setIntuitiveMode(configuration.isIntuitiveMode)
+		rollCount = 0
+		roll()
+	}
+
+	private func persistCurrentConfiguration() {
+		configurationSync.updateLocalConfiguration { configuration in
+			configuration.isIntuitiveMode = viewModel.isIntuitiveMode
+		}
 	}
 }

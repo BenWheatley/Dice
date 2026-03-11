@@ -99,6 +99,10 @@ This section is the canonical interaction contract for side count selection on w
   - mode
   - background texture (watch default remains `black` per separate task)
 - Restore on next launch before first roll.
+- Cross-device sync transport: `WatchConnectivity` application context (phone <-> watch).
+- Conflict policy: timestamped last-write-wins.
+  - Rationale: this is a single-user, multi-device preference profile, so newest write should become canonical.
+  - Tie-breaker: when timestamps are equal, prefer the remote payload to ensure both peers converge.
 
 ## Notes on Cross-Platform Consistency
 

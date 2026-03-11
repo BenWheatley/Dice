@@ -1919,6 +1919,67 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(viewModel.statusText(lastValue: 2), "INT·1d6i\nv2")
 	}
 
+	func testWatchSingleDieConfigurationStoreRoundTrip() {
+		let suiteName = "DiceTests.watch.config.store.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let store = WatchSingleDieConfigurationStore(defaults: defaults)
+		let expected = WatchSingleDieConfiguration(
+			sideCount: 20,
+			colorTag: "blue",
+			isIntuitiveMode: true,
+			backgroundTexture: "felt",
+			updatedAt: Date(timeIntervalSince1970: 1234)
+		)
+
+		store.save(expected)
+
+		XCTAssertEqual(store.load(), expected)
+	}
+
+	func testWatchSingleDieConfigurationConflictResolverPrefersNewerTimestamp() {
+		let local = WatchSingleDieConfiguration(
+			sideCount: 6,
+			colorTag: "ivory",
+			isIntuitiveMode: false,
+			backgroundTexture: "neutral",
+			updatedAt: Date(timeIntervalSince1970: 10)
+		)
+		let remote = WatchSingleDieConfiguration(
+			sideCount: 12,
+			colorTag: "red",
+			isIntuitiveMode: true,
+			backgroundTexture: "wood",
+			updatedAt: Date(timeIntervalSince1970: 20)
+		)
+
+		let resolved = WatchSingleDieConfigurationConflictResolver.resolve(local: local, remote: remote)
+
+		XCTAssertEqual(resolved, remote)
+	}
+
+	func testWatchSingleDieConfigurationConflictResolverUsesRemoteOnTimestampTie() {
+		let stamp = Date(timeIntervalSince1970: 42)
+		let local = WatchSingleDieConfiguration(
+			sideCount: 6,
+			colorTag: "ivory",
+			isIntuitiveMode: false,
+			backgroundTexture: "neutral",
+			updatedAt: stamp
+		)
+		let remote = WatchSingleDieConfiguration(
+			sideCount: 8,
+			colorTag: "green",
+			isIntuitiveMode: true,
+			backgroundTexture: "felt",
+			updatedAt: stamp
+		)
+
+		let resolved = WatchSingleDieConfigurationConflictResolver.resolve(local: local, remote: remote)
+
+		XCTAssertEqual(resolved, remote)
+	}
+
 	func testWatchSceneKitFlowRemainsInSyncAcrossModeSwitchAndRepeatedRolls() {
 		var scripted = [1, 2, 3, 4, 5]
 		let session = DiceRollSession(

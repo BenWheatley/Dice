@@ -11,7 +11,9 @@ import WatchKit
 class ExtensionDelegate: NSObject, WKExtensionDelegate {
 
     func applicationDidFinishLaunching() {
-        // Perform any final initialization of your application.
+        let sync = WatchSingleDieConfigurationSyncBridge.shared
+        sync.seedLocalIfMissing(WatchSingleDieConfiguration())
+        sync.start()
     }
 
     func applicationDidBecomeActive() {
