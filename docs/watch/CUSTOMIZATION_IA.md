@@ -45,6 +45,38 @@ Single vertically scrollable sheet with fixed section order:
 4. Footer actions
    - `Done` button (dismiss and apply).
 
+## Side Count Interaction Model (Digital Crown + Chips)
+
+This section is the canonical interaction contract for side count selection on watch.
+
+### Value Range and Stepping
+
+- Allowed side count range: `2...100`.
+- Step size: `1` side per Digital Crown detent.
+- Crown acceleration is allowed by system behavior, but logical step application remains integer-by-integer.
+- Value changes update the rendered die immediately (live preview).
+
+### Quick Chips
+
+- Always-visible common chips: `d2`, `d4`, `d6`, `d8`, `d10`, `d12`, `d20`.
+- Chip tap sets side count directly and refreshes preview immediately.
+- When side count equals a chip value, that chip is shown as selected.
+- Non-chip values (for example `d37`) are represented by the numeric control state; no synthetic chip is created.
+
+### Crown/Chip Synchronization
+
+- Crown changes update chip highlight state in real time.
+- Chip taps update the crown-bound value so subsequent crown turns continue from the tapped value.
+- No apply button is required for side-count edits; `Done` only closes the sheet.
+
+### Legibility and Truncation Rules
+
+- Side-count labels must always render as compact tokens (`dN`), never long-form text.
+- Quick chips must not truncate (`d12`, `d20` must remain fully visible).
+- If horizontal space is constrained, chips wrap/scroll; token text is never ellipsized.
+- Status line on main screen remains tokenized (`mode·notation`) and may truncate only notation tail, never the mode token.
+- For large side counts (`d100`), numeric control uses full numeric value without abbreviation.
+
 ## Interaction Rules
 
 - All controls must be operable with touch only; Digital Crown adds speed, not exclusivity.
