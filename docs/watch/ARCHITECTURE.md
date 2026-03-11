@@ -26,6 +26,7 @@ Target baseline: watchOS 10.2+.
   - roll engines/parsing: `DiceRollSession`, `IntuitiveRoller`, `TrueRandomRoller`, `DiceNotationParser`
   - D6 orientation math: `D6FaceOrientation`
   - D6 beveled geometry shape: `D6BeveledCubeGeometry`
+  - table texture model and shader source pipeline: `DiceTableTexture`, `DiceShaderModifierSourceLoader`, `DiceTableSurfaceShader.metal`
 - Watch-specific (intentional):
   - face texture generation path uses SpriteKit label scenes per face in `InterfaceController`.
   - iOS `D6SceneKitRenderConfig` remains UIKit-renderer based (`UIGraphicsImageRenderer`), which is unavailable on watchOS.
@@ -35,4 +36,5 @@ Target baseline: watchOS 10.2+.
   - this is acceptable because settings are single-user preferences across multiple owned devices, not collaborative shared edits.
 - Rationale:
   - keeps domain/geometry logic shared while using a watch-compatible material path.
+  - keeps table background behavior on the same first-class shader path across iOS and watch instead of maintaining a watch-only parallel shader implementation.
   - avoids parallel domain implementations and reduces drift between watch and iOS behavior.

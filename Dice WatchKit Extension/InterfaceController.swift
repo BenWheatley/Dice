@@ -24,6 +24,9 @@ class InterfaceController: WKInterfaceController {
 	)
 	private var rollCount = 0
 	private var d6Node = SCNNode()
+	private let tableNode = SCNNode()
+	private let tableMaterial = SCNMaterial()
+	private var activeTableTexture: DiceTableTexture = .black
 	private var usesSceneRenderer = false
 	private var lowPowerObserver: NSObjectProtocol?
 	private let feedbackDevice = WKInterfaceDevice.current()
@@ -125,12 +128,67 @@ class InterfaceController: WKInterfaceController {
 		ambient.light?.intensity = 300
 		scene.rootNode.addChildNode(ambient)
 
+		let initialTexture = DiceTableTexture(rawValue: configurationSync.currentConfiguration().backgroundTexture) ?? .black
+		configureTableSurface(in: scene, initialTexture: initialTexture)
 		d6Node = makeD6Node()
 		scene.rootNode.addChildNode(d6Node)
 		diceSceneView.setAccessibilityLabel("Latest die result, 3D preview")
 		usesSceneRenderer = true
 		diceSceneView.setHidden(false)
 		applyPowerModeProfile()
+	}
+
+	private func configureTableSurface(in scene: SCNScene, initialTexture: DiceTableTexture) {
+		let plane = SCNPlane(width: 24, height: 24)
+		tableMaterial.lightingModel = .lambert
+		tableMaterial.isLitPerPixel = true
+		tableMaterial.isDoubleSided = true
+		tableMaterial.diffuse.wrapS = .repeat
+		tableMaterial.diffuse.wrapT = .repeat
+		tableMaterial.writesToDepthBuffer = true
+		tableMaterial.readsFromDepthBuffer = true
+		if let tableShader = DiceShaderModifierSourceLoader.tableSurfaceShaderModifier() {
+			tableMaterial.shaderModifiers = [.surface: tableShader]
+		}
+		plane.materials = [tableMaterial]
+		tableNode.geometry = plane
+		tableNode.position = SCNVector3(0, 0, -0.8)
+		tableNode.castsShadow = false
+		scene.rootNode.addChildNode(tableNode)
+		applyTableTexture(initialTexture)
+	}
+
+	private func applyTableTexture(_ texture: DiceTableTexture) {
+		activeTableTexture = texture
+		tableMaterial.setValue(texture.shaderModeValue, forKey: "tableTextureMode")
+		let pointSize = WKInterfaceDevice.current().screenBounds.size
+		let width = max(1, pointSize.width)
+		let height = max(1, pointSize.height)
+		tableMaterial.setValue(max(1, min(width, height)) as NSNumber, forKey: "tableTextureScale")
+		tableMaterial.setValue(width as NSNumber, forKey: "tableTextureScaleX")
+		tableMaterial.setValue(height as NSNumber, forKey: "tableTextureScaleY")
+
+		if texture == .neutral, let neutralTexture = UIImage(named: "TableNeutralTexture"), neutralTexture.size.width > 0, neutralTexture.size.height > 0 {
+			tableMaterial.diffuse.contents = neutralTexture
+			let repeatX = Float(width / neutralTexture.size.width)
+			let repeatY = Float(height / neutralTexture.size.height)
+			tableMaterial.diffuse.contentsTransform = SCNMatrix4MakeScale(repeatX, repeatY, 1)
+			tableMaterial.diffuse.minificationFilter = .nearest
+			tableMaterial.diffuse.magnificationFilter = .nearest
+			tableMaterial.diffuse.mipFilter = .none
+		} else if texture == .black {
+			tableMaterial.diffuse.contents = UIColor.black
+			tableMaterial.diffuse.contentsTransform = SCNMatrix4Identity
+			tableMaterial.diffuse.minificationFilter = .nearest
+			tableMaterial.diffuse.magnificationFilter = .nearest
+			tableMaterial.diffuse.mipFilter = .none
+		} else {
+			tableMaterial.diffuse.contents = UIColor(red: 0.88, green: 0.88, blue: 0.88, alpha: 1.0)
+			tableMaterial.diffuse.contentsTransform = SCNMatrix4Identity
+			tableMaterial.diffuse.minificationFilter = .linear
+			tableMaterial.diffuse.magnificationFilter = .linear
+			tableMaterial.diffuse.mipFilter = .none
+		}
 	}
 
 	private func configurePowerModeObserver() {
@@ -226,6 +284,10 @@ class InterfaceController: WKInterfaceController {
 	}
 
 	private func applyRemoteConfiguration(_ configuration: WatchSingleDieConfiguration) {
+		let remoteTexture = DiceTableTexture(rawValue: configuration.backgroundTexture) ?? .black
+		if remoteTexture != activeTableTexture {
+			applyTableTexture(remoteTexture)
+		}
 		guard viewModel.isIntuitiveMode != configuration.isIntuitiveMode else { return }
 		viewModel.setIntuitiveMode(configuration.isIntuitiveMode)
 		rollCount = 0

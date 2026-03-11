@@ -2415,6 +2415,13 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(source?.contains("float knotCore = smoothstep(0.52, 0.90, knotField);") ?? false)
 	}
 
+	func testDiceTableTextureShaderModeValuesMatchSharedPipelineContract() {
+		XCTAssertEqual(DiceTableTexture.felt.shaderModeValue.intValue, 0)
+		XCTAssertEqual(DiceTableTexture.wood.shaderModeValue.intValue, 1)
+		XCTAssertEqual(DiceTableTexture.neutral.shaderModeValue.intValue, 2)
+		XCTAssertEqual(DiceTableTexture.black.shaderModeValue.intValue, 3)
+	}
+
 	func testDiceCubeViewMapsTableTextureModesForShaderUniform() {
 		XCTAssertEqual(DiceCubeView.debugTableTextureMode(for: .felt), 0)
 		XCTAssertEqual(DiceCubeView.debugTableTextureMode(for: .wood), 1)

@@ -692,7 +692,7 @@ final class DiceCubeView: UIView {
 	}
 
 	private func applyTableTexture() {
-		tableMaterial.setValue(tableTextureModeValue(for: activeTableTexture), forKey: "tableTextureMode")
+		tableMaterial.setValue(activeTableTexture.shaderModeValue, forKey: "tableTextureMode")
 		if activeTableTexture == .neutral, let neutralTexture = Self.neutralTableTextureImage {
 			tableMaterial.diffuse.contents = neutralTexture
 			tableMaterial.diffuse.minificationFilter = .nearest
@@ -732,19 +732,6 @@ final class DiceCubeView: UIView {
 	private func tableTexturePointScale() -> CGSize {
 		// Point mapping should track visible view points, not oversized background geometry.
 		return CGSize(width: max(1, bounds.width), height: max(1, bounds.height))
-	}
-
-	private func tableTextureModeValue(for texture: DiceTableTexture) -> NSNumber {
-		switch texture {
-		case .felt:
-			return 0
-		case .wood:
-			return 1
-		case .neutral:
-			return 2
-		case .black:
-			return 3
-		}
 	}
 
 	private func updateTableSurfaceSize() {

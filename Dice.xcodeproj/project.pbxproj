@@ -69,6 +69,9 @@
 		AACE00012F58000100D1CE00 /* RollDistributionSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACE00022F58000200D1CE00 /* RollDistributionSheetViewController.swift */; };
 		A1CE11012F5B000100D1CE00 /* WatchSingleDieConfigurationSyncBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1CE10012F5B000100D1CE00 /* WatchSingleDieConfigurationSyncBridge.swift */; };
 		A1CE11022F5B000100D1CE00 /* WatchSingleDieConfigurationSyncBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1CE10012F5B000100D1CE00 /* WatchSingleDieConfigurationSyncBridge.swift */; };
+		A2CE11012F5C000100D1CE00 /* DiceTableTexture.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00342F4403A100D1CE00 /* DiceTableTexture.swift */; };
+		A2CE11022F5C000100D1CE00 /* DiceShaderModifierSourceLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0CE10012F54000100D1CE00 /* DiceShaderModifierSourceLoader.swift */; };
+		A2CE11032F5C000100D1CE00 /* DiceTableSurfaceShader.metal in Resources */ = {isa = PBXBuildFile; fileRef = E1CE10042F59000400D1CE00 /* DiceTableSurfaceShader.metal */; };
 		D2CE11012F51000100D1CE00 /* D6FaceOrientation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10012F51000100D1CE00 /* D6FaceOrientation.swift */; };
 		D2CE11022F51000200D1CE00 /* D6SceneKitRenderConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10022F51000200D1CE00 /* D6SceneKitRenderConfig.swift */; };
 		D2CE11192F51001900D1CE00 /* D6BeveledCubeGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10192F51001900D1CE00 /* D6BeveledCubeGeometry.swift */; };
@@ -710,6 +713,7 @@
 			files = (
 				B50B44FE215D804200A6399B /* Assets.xcassets in Resources */,
 				B50B44FC215D804200A6399B /* Interface.storyboard in Resources */,
+				A2CE11032F5C000100D1CE00 /* DiceTableSurfaceShader.metal in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -831,6 +835,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A2CE11022F5C000100D1CE00 /* DiceShaderModifierSourceLoader.swift in Sources */,
+				A2CE11012F5C000100D1CE00 /* DiceTableTexture.swift in Sources */,
 				C0DE003A2F4406C900D1CE00 /* DiceFaceContrast.swift in Sources */,
 				C0DE002B2F44022B00D1CE00 /* FaceContrastStyle.swift in Sources */,
 				C0DE003F2F4408AB00D1CE00 /* DiceD6PipStyle.swift in Sources */,
