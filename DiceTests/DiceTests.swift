@@ -2112,6 +2112,21 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(current.updatedAt, Date(timeIntervalSince1970: 30))
 	}
 
+	func testWatchStoryboardUsesExtensionModuleForInterfaceController() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let storyboardURL = projectRoot
+			.appendingPathComponent("Dice WatchKit App")
+			.appendingPathComponent("Base.lproj")
+			.appendingPathComponent("Interface.storyboard")
+		let source = try String(contentsOf: storyboardURL, encoding: .utf8)
+		XCTAssertTrue(
+			source.contains("customClass=\"InterfaceController\" customModule=\"Dice_WatchKit_Extension\""),
+			"Watch storyboard InterfaceController must reference the extension module to load controller bindings."
+		)
+	}
+
 	func testSingleDieSceneGeometryFactorySupportsPolyhedralAndFallbackDescriptors() {
 		let d20 = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: 20, sideLength: 96)
 		XCTAssertFalse(d20.isCoin)

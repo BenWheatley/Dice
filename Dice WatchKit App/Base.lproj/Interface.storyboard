@@ -11,7 +11,7 @@
         <!--Interface Controller-->
         <scene sceneID="aou-V4-d1y">
             <objects>
-                <controller id="AgC-eL-Hgc" customClass="InterfaceController" customModule="Dice_WatchKit_App" customModuleProvider="target">
+                <controller id="AgC-eL-Hgc" customClass="InterfaceController" customModule="Dice_WatchKit_Extension" customModuleProvider="target">
                     <items>
                         <sceneKitScene alignment="left" id="YvH-5M-5jF"/>
                         <button alignment="center" verticalAlignment="center" id="64x-ie-It6">
