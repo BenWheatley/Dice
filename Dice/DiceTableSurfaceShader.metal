@@ -129,11 +129,15 @@ if (tableTextureMode < 0.5) {
 
 	color = woodColor;
 	_surface.roughness = 0.94;
-} else {
+} else if (tableTextureMode < 2.5) {
 	// Neutral: texture-backed stripes. Host code configures diffuse.contentsTransform so
 	// one source texture pixel maps to one screen point in neutral mode.
 	color = _surface.diffuse.rgb;
 	_surface.roughness = 0.95;
+} else {
+	// Black: exact #000000 background, unaffected by lighting/theme transforms.
+	color = float3(0.0, 0.0, 0.0);
+	_surface.roughness = 1.0;
 }
 
 _surface.diffuse.rgb = clamp(color, 0.0, 1.0);

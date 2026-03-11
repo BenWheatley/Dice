@@ -69,6 +69,7 @@
 "texture.felt" = "Felt";
 "texture.wood" = "Wood";
 "texture.neutral" = "Neutral";
+"texture.black" = "Black";
 "layout.compact" = "Compact";
 "layout.spacious" = "Spacious";
 "animation.off" = "Off";

@@ -300,9 +300,9 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 ### Cross-Platform Rendering and Background
 
-- [ ] Add `black` table background mode for all platforms (`#000000` exact) in shared table-texture model and options menus.
+- [x] Add `black` table background mode for all platforms (`#000000` exact) in shared table-texture model and options menus.
 - [ ] Set watch default background to `black` while preserving existing iOS/iPadOS/macOS defaults.
-- [ ] Add regression tests validating `black` mode color output is exact zero RGB and unaffected by theme switching.
+- [x] Add regression tests validating `black` mode color output is exact zero RGB and unaffected by theme switching.
 - [ ] Ensure watch background switching reuses the same shader/material pipeline used on iOS where feasible (no watch-only parallel renderer path for equivalent behavior).
 
 ### Watch Rendering Generalization (Any Single Die)

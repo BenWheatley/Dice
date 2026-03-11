@@ -1332,6 +1332,27 @@ final class DiceTests: XCTestCase {
 		viewModel.setTableTexture(.felt)
 		XCTAssertEqual(viewModel.tableTexture, .felt)
 		XCTAssertEqual(preferencesStore.load().tableTexture, .felt)
+		viewModel.setTableTexture(.black)
+		XCTAssertEqual(viewModel.tableTexture, .black)
+		XCTAssertEqual(preferencesStore.load().tableTexture, .black)
+	}
+
+	func testViewModelThemeSwitchDoesNotMutateBlackTextureSelection() {
+		let suiteName = "DiceTests.viewmodel.texture.theme.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let preferencesStore = DicePreferencesStore(defaults: defaults)
+		let viewModel = DiceViewModel(
+			preferencesStore: preferencesStore,
+			historyStore: DiceRollHistoryStore(defaults: defaults)
+		)
+
+		viewModel.setTableTexture(.black)
+		viewModel.setTheme(.lightMode)
+		viewModel.setTheme(.darkMode)
+
+		XCTAssertEqual(viewModel.tableTexture, .black)
+		XCTAssertEqual(preferencesStore.load().tableTexture, .black)
 	}
 
 	func testViewModelLightingAngleSelectionPersistsToPreferences() {
@@ -2393,6 +2414,19 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(DiceCubeView.debugTableTextureMode(for: .felt), 0)
 		XCTAssertEqual(DiceCubeView.debugTableTextureMode(for: .wood), 1)
 		XCTAssertEqual(DiceCubeView.debugTableTextureMode(for: .neutral), 2)
+		XCTAssertEqual(DiceCubeView.debugTableTextureMode(for: .black), 3)
+	}
+
+	@MainActor
+	func testDiceCubeViewBlackTextureRendersZeroRgb() {
+		let snapshots = DiceCubeView.debugShadowSnapshots(tableTexture: .black)
+		guard let stats = pixelStats(in: snapshots.withoutShadow, sampleRect: snapshots.sampleRect) else {
+			XCTFail("Expected readable pixel stats for black table texture")
+			return
+		}
+		XCTAssertLessThanOrEqual(stats.meanR, 0.001)
+		XCTAssertLessThanOrEqual(stats.meanG, 0.001)
+		XCTAssertLessThanOrEqual(stats.meanB, 0.001)
 	}
 
 	@MainActor
@@ -2416,15 +2450,28 @@ final class DiceTests: XCTestCase {
 	func testDiceCubeViewCastsMeasurableTableShadowForAllTableTextures() {
 		for texture in DiceTableTexture.allCases {
 			let snapshots = DiceCubeView.debugShadowSnapshots(tableTexture: texture)
+			guard let delta = shadowDeltaStats(withShadow: snapshots.withShadow, withoutShadow: snapshots.withoutShadow) else {
+				XCTFail("Expected readable shadow delta stats for \(texture.rawValue)")
+				return
+			}
+			if texture == .black {
+				XCTAssertGreaterThanOrEqual(
+					delta.meanDelta,
+					-0.001,
+					"Pure black tables cannot darken further; shadow delta should remain near zero for \(texture.rawValue)"
+				)
+				XCTAssertLessThanOrEqual(
+					delta.darkenedPixelRatio,
+					0.002,
+					"Pure black tables should not report large darkened regions for \(texture.rawValue)"
+				)
+				continue
+			}
 			XCTAssertNotEqual(
 				snapshots.withShadow.pngData(),
 				snapshots.withoutShadow.pngData(),
 				"Expected rendered output to differ when shadow casting is toggled for \(texture.rawValue)"
 			)
-			guard let delta = shadowDeltaStats(withShadow: snapshots.withShadow, withoutShadow: snapshots.withoutShadow) else {
-				XCTFail("Expected readable shadow delta stats for \(texture.rawValue)")
-				return
-			}
 			XCTAssertLessThan(
 				delta.meanDelta,
 				-0.003,

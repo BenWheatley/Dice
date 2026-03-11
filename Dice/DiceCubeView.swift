@@ -698,6 +698,11 @@ final class DiceCubeView: UIView {
 			tableMaterial.diffuse.minificationFilter = .nearest
 			tableMaterial.diffuse.magnificationFilter = .nearest
 			tableMaterial.diffuse.mipFilter = .none
+		} else if activeTableTexture == .black {
+			tableMaterial.diffuse.contents = UIColor.black
+			tableMaterial.diffuse.minificationFilter = .nearest
+			tableMaterial.diffuse.magnificationFilter = .nearest
+			tableMaterial.diffuse.mipFilter = .none
 		} else {
 			tableMaterial.diffuse.contents = UIColor(red: 0.88, green: 0.88, blue: 0.88, alpha: 1.0)
 			tableMaterial.diffuse.minificationFilter = .linear
@@ -737,6 +742,8 @@ final class DiceCubeView: UIView {
 			return 1
 		case .neutral:
 			return 2
+		case .black:
+			return 3
 		}
 	}
 

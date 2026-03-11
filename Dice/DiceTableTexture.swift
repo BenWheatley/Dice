@@ -1,9 +1,10 @@
-import UIKit
+import Foundation
 
 enum DiceTableTexture: String, CaseIterable {
 	case felt
 	case wood
 	case neutral
+	case black
 
 	var menuTitleKey: String {
 		switch self {
@@ -13,6 +14,8 @@ enum DiceTableTexture: String, CaseIterable {
 			return "texture.wood"
 		case .neutral:
 			return "texture.neutral"
+		case .black:
+			return "texture.black"
 		}
 	}
 }
