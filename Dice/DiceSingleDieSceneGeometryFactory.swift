@@ -13,6 +13,8 @@ enum DiceSingleDieSceneGeometryFactory {
 	static let minimumSideCount = 2
 	static let maximumSideCount = 100
 	static let supportedPolyhedralSideCounts: Set<Int> = [4, 6, 8, 10, 12, 20]
+	private static let coinThicknessRatio: CGFloat = 0.14
+	private static let tokenThicknessRatio: CGFloat = 0.30
 
 	private static let d4VertexValueByIndex: [Int] = [4, 3, 2, 1]
 	private static var orientationCache: [Int: [Int: SCNVector3]] = [:]
@@ -25,13 +27,13 @@ enum DiceSingleDieSceneGeometryFactory {
 	static func makeDescriptor(sideCount rawSideCount: Int, sideLength: CGFloat) -> DiceSingleDieGeometryDescriptor {
 		let sideCount = clampedSideCount(rawSideCount)
 		if usesCoinGeometry(for: sideCount) {
-			let coin = SCNCylinder(radius: sideLength * 0.48, height: max(6, sideLength * 0.14))
+			let coin = SCNCylinder(radius: sideLength * 0.48, height: sideLength * coinThicknessRatio)
 			coin.radialSegmentCount = 72
 			coin.materials = [SCNMaterial(), SCNMaterial(), SCNMaterial()]
 			return DiceSingleDieGeometryDescriptor(geometry: coin, faceValueCount: 2, isCoin: true, isToken: false)
 		}
 		if usesTokenGeometry(for: sideCount) {
-			let token = SCNCylinder(radius: sideLength * 0.48, height: max(10, sideLength * 0.30))
+			let token = SCNCylinder(radius: sideLength * 0.48, height: sideLength * tokenThicknessRatio)
 			token.radialSegmentCount = 60
 			token.materials = [SCNMaterial(), SCNMaterial(), SCNMaterial()]
 			return DiceSingleDieGeometryDescriptor(

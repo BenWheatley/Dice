@@ -2127,6 +2127,41 @@ final class DiceTests: XCTestCase {
 		)
 	}
 
+	func testWatchStoryboardAssignsNonZeroHeightToSceneKitView() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let storyboardURL = projectRoot
+			.appendingPathComponent("Dice WatchKit App")
+			.appendingPathComponent("Base.lproj")
+			.appendingPathComponent("Interface.storyboard")
+		let source = try String(contentsOf: storyboardURL, encoding: .utf8)
+
+		let sceneTagPattern = #"<sceneKitScene[^>]*id="YvH-5M-5jF"[^>]*>"#
+		let sceneTagRegex = try NSRegularExpression(pattern: sceneTagPattern)
+		let wholeRange = NSRange(source.startIndex..<source.endIndex, in: source)
+		guard let sceneTagMatch = sceneTagRegex.firstMatch(in: source, options: [], range: wholeRange),
+			  let sceneTagRange = Range(sceneTagMatch.range, in: source) else {
+			return XCTFail("Watch storyboard must contain the SceneKit scene element.")
+		}
+
+		let sceneTag = String(source[sceneTagRange])
+		let heightPattern = #"height="([0-9]*\.?[0-9]+)""#
+		let heightRegex = try NSRegularExpression(pattern: heightPattern)
+		let sceneTagNSRange = NSRange(sceneTag.startIndex..<sceneTag.endIndex, in: sceneTag)
+		guard let heightMatch = heightRegex.firstMatch(in: sceneTag, options: [], range: sceneTagNSRange),
+			  let captureRange = Range(heightMatch.range(at: 1), in: sceneTag),
+			  let heightValue = Double(sceneTag[captureRange]) else {
+			return XCTFail("Watch storyboard SceneKit element must provide an explicit height.")
+		}
+
+		XCTAssertGreaterThan(
+			heightValue,
+			0.0,
+			"Watch SceneKit view must have non-zero height; zero height produces a black frame."
+		)
+	}
+
 	func testSingleDieSceneGeometryFactorySupportsPolyhedralAndFallbackDescriptors() {
 		let d20 = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: 20, sideLength: 96)
 		XCTAssertFalse(d20.isCoin)
@@ -2167,6 +2202,22 @@ final class DiceTests: XCTestCase {
 				)
 			}
 		}
+	}
+
+	func testSingleDieSceneGeometryFactoryUsesScaleRelativeCylinderThickness() {
+		let coin = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: 2, sideLength: 1.8)
+		guard let coinGeometry = coin.geometry as? SCNCylinder else {
+			return XCTFail("Expected d2 to use cylinder geometry")
+		}
+		XCTAssertEqual(coinGeometry.height, 1.8 * 0.14, accuracy: 0.0001)
+		XCTAssertLessThan(coinGeometry.height, 1.0)
+
+		let token = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: 21, sideLength: 1.8)
+		guard let tokenGeometry = token.geometry as? SCNCylinder else {
+			return XCTFail("Expected non-polyhedral dN to use cylinder geometry")
+		}
+		XCTAssertEqual(tokenGeometry.height, 1.8 * 0.30, accuracy: 0.0001)
+		XCTAssertLessThan(tokenGeometry.height, 1.0)
 	}
 
 	func testWatchSceneKitFlowRemainsInSyncAcrossModeSwitchAndRepeatedRolls() {

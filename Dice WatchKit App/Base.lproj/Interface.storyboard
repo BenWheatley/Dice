@@ -13,8 +13,8 @@
             <objects>
                 <controller id="AgC-eL-Hgc" customClass="InterfaceController" customModule="Dice_WatchKit_Extension" customModuleProvider="target">
                     <items>
-                        <sceneKitScene alignment="left" id="YvH-5M-5jF"/>
-                        <button alignment="center" verticalAlignment="center" id="64x-ie-It6">
+                        <sceneKitScene width="1" height="0.84" alignment="left" id="YvH-5M-5jF"/>
+                        <button width="1" alignment="center" verticalAlignment="center" id="64x-ie-It6">
                             <group key="contentGroup" width="1" height="1" alignment="left" id="Rub-qg-0Kw">
                                 <items>
                                     <imageView width="1" height="1" alignment="center" verticalAlignment="center" contentMode="scaleAspectFit" id="fBg-Ge-r7O"/>
