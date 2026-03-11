@@ -11,16 +11,23 @@ import UIKit
 class DiceViewController: UIViewController, UITextFieldDelegate {
 	private static let readableReferenceWidth: CGFloat = 390
 	private static let readableReferenceColumns: CGFloat = 3
+	private static let notationTitleMinimumWidth: CGFloat = 160
+	private static let notationTitleHorizontalPadding: CGFloat = 16
+	private static let notationTitleBarButtonEstimatedWidth: CGFloat = 44
+	private static let notationTitleBarButtonSpacing: CGFloat = 12
 	private let viewModel = DiceViewModel()
 	private let soundEngine = DiceSoundEngine()
 	private let hapticsEngine = DiceHapticsEngine()
 	private var hasPerformedInitialRoll = false
 
 	private let notationField = UITextField()
+	private let notationTitleContainerView = UIView()
 	private let rollButton = UIButton(type: .system)
 	private let showStatsButton = UIButton(type: .system)
 	private var presetsBarButtonItem: UIBarButtonItem?
 	private var menuBarButtonItem: UIBarButtonItem?
+	private var notationTitleWidthConstraint: NSLayoutConstraint?
+	private var notationValidationActive = false
 	private var rollButtonBottomConstraint: NSLayoutConstraint?
 	private let diceBoardView = DiceCubeView()
 	private var currentPalette = DiceTheme.system.palette
@@ -97,6 +104,7 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 
 	override func viewDidLayoutSubviews() {
 		super.viewDidLayoutSubviews()
+		updateNotationTitleWidth()
 		let currentBounds = diceBoardView.bounds
 		if Self.boardLayoutNeedsRefresh(previousBounds: previousBoardLayoutBounds, currentBounds: currentBounds) {
 			updateDiceBoard(animated: false)
@@ -129,15 +137,28 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 		notationField.autocapitalizationType = .none
 		notationField.autocorrectionType = .no
 		notationField.clearButtonMode = .whileEditing
-		notationField.borderStyle = .roundedRect
+		notationField.borderStyle = .none
 		notationField.delegate = self
 		notationField.accessibilityLabel = NSLocalizedString("a11y.notation.label", comment: "Notation field accessibility label")
 		notationField.accessibilityHint = NSLocalizedString("a11y.notation.hint", comment: "Notation field accessibility hint")
 		notationField.accessibilityIdentifier = "notationField"
 		notationField.addTarget(self, action: #selector(notationEditingChanged), for: .editingChanged)
 		configureNotationInputAccessory()
-		notationField.widthAnchor.constraint(equalToConstant: 220).isActive = true
-		navigationItem.titleView = notationField
+		notationTitleContainerView.translatesAutoresizingMaskIntoConstraints = false
+		notationTitleContainerView.addSubview(notationField)
+		let notationHeightConstraint = notationTitleContainerView.heightAnchor.constraint(equalToConstant: 36)
+		let notationWidthConstraint = notationTitleContainerView.widthAnchor.constraint(equalToConstant: 220)
+		notationWidthConstraint.priority = .required
+		notationTitleWidthConstraint = notationWidthConstraint
+		NSLayoutConstraint.activate([
+			notationHeightConstraint,
+			notationWidthConstraint,
+			notationField.leadingAnchor.constraint(equalTo: notationTitleContainerView.leadingAnchor),
+			notationField.trailingAnchor.constraint(equalTo: notationTitleContainerView.trailingAnchor),
+			notationField.topAnchor.constraint(equalTo: notationTitleContainerView.topAnchor),
+			notationField.bottomAnchor.constraint(equalTo: notationTitleContainerView.bottomAnchor),
+		])
+		navigationItem.titleView = notationTitleContainerView
 		navigationItem.largeTitleDisplayMode = .never
 
 		let presetsItem = UIBarButtonItem(
@@ -206,6 +227,18 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 			showStatsButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -floatingControlBottomMargin),
 		])
 		updateShowStatsButtonVisibility()
+	}
+
+	private func updateNotationTitleWidth() {
+		let totalWidth = view.safeAreaLayoutGuide.layoutFrame.width
+		guard totalWidth > 0 else { return }
+		let barButtonCount = CGFloat(navigationItem.rightBarButtonItems?.count ?? 0)
+		let reservedRightWidth = barButtonCount * Self.notationTitleBarButtonEstimatedWidth
+		let usableWidth = totalWidth
+			- (2 * Self.notationTitleHorizontalPadding)
+			- reservedRightWidth
+			- (barButtonCount > 0 ? Self.notationTitleBarButtonSpacing : 0)
+		notationTitleWidthConstraint?.constant = max(Self.notationTitleMinimumWidth, usableWidth)
 	}
 
 	private func observeSceneRoutes() {
@@ -842,9 +875,8 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 
 	private func showValidationError(message: String) {
 		navigationItem.prompt = message
-		notationField.layer.borderColor = currentPalette.fieldBorderErrorColor.cgColor
-		notationField.layer.borderWidth = 1
-		notationField.layer.cornerRadius = 6
+		notationValidationActive = true
+		applyNotationFieldPalette()
 		let prefix = NSLocalizedString("alert.invalid.announcement", comment: "Accessibility announcement for invalid notation")
 		UIAccessibility.post(notification: .announcement, argument: "\(prefix) \(message)")
 		if viewModel.hapticsEnabled {
@@ -854,9 +886,8 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 
 	private func clearValidationFeedback() {
 		navigationItem.prompt = nil
-		notationField.layer.borderWidth = 0
-		notationField.layer.cornerRadius = 0
-		notationField.layer.borderColor = UIColor.clear.cgColor
+		notationValidationActive = false
+		applyNotationFieldPalette()
 	}
 
 	private func configureNotationInputAccessory() {
@@ -1284,7 +1315,7 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 		view.backgroundColor = palette.screenBackgroundColor
 		applyTexture()
 		updateTotalsGraph(with: currentTotalsGraphCounts)
-		notationField.textColor = palette.primaryTextColor
+		applyNotationFieldPalette()
 		notationField.keyboardAppearance = keyboardAppearance(for: viewModel.theme)
 		let buttonColor = palette.primaryTextColor
 		navigationController?.navigationBar.tintColor = buttonColor
@@ -1309,6 +1340,24 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 			showStatsButton.configuration = showStatsButtonConfig
 		}
 		diceBoardView.setDieFinish(currentDieFinish)
+	}
+
+	private func applyNotationFieldPalette() {
+		let palette = currentPalette
+		notationField.textColor = palette.primaryTextColor
+		notationField.tintColor = palette.primaryTextColor
+		notationField.backgroundColor = palette.panelBackgroundColor
+		notationField.layer.cornerRadius = 10
+		notationField.layer.borderWidth = 1
+		notationField.layer.borderColor = (
+			notationValidationActive
+				? palette.fieldBorderErrorColor
+				: palette.secondaryTextColor.withAlphaComponent(0.35)
+		).cgColor
+		notationField.attributedPlaceholder = NSAttributedString(
+			string: NSLocalizedString("notation.placeholder", comment: "Dice notation input placeholder"),
+			attributes: [.foregroundColor: palette.secondaryTextColor.withAlphaComponent(0.72)]
+		)
 	}
 
 	private func applyTexture() {

@@ -2206,6 +2206,44 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(presetsItem?.accessibilityLabel, NSLocalizedString("a11y.presets.label", comment: "Presets button accessibility label"))
 	}
 
+	func testControllerNotationFieldUsesFlexibleNavigationTitleWidth() {
+		let controller = makeController()
+		let navigationController = UINavigationController(rootViewController: controller)
+		navigationController.loadViewIfNeeded()
+		controller.loadViewIfNeeded()
+		navigationController.view.frame = CGRect(x: 0, y: 0, width: 932, height: 430)
+		navigationController.view.setNeedsLayout()
+		navigationController.view.layoutIfNeeded()
+
+		let titleView = controller.navigationItem.titleView
+		let notationField = findView(in: titleView ?? UIView(), accessibilityIdentifier: "notationField") as? UITextField
+		let titleWidthConstraint = titleView?.constraints.first(where: { $0.firstAttribute == .width })
+		XCTAssertNotNil(notationField)
+		XCTAssertGreaterThan(titleWidthConstraint?.constant ?? 0, 320)
+	}
+
+	func testControllerAppliesDarkThemeNotationFieldPalette() {
+		let defaults = UserDefaults.standard
+		let key = "Dice.theme"
+		let originalValue = defaults.object(forKey: key)
+		defer {
+			if let originalValue {
+				defaults.set(originalValue, forKey: key)
+			} else {
+				defaults.removeObject(forKey: key)
+			}
+		}
+
+		defaults.set("darkMode", forKey: key)
+		let controller = makeController()
+		controller.loadViewIfNeeded()
+		let notationField = findView(in: controller.navigationItem.titleView ?? UIView(), accessibilityIdentifier: "notationField") as? UITextField
+		XCTAssertNotNil(notationField)
+		XCTAssertEqual(notationField?.borderStyle, UITextField.BorderStyle.none)
+		XCTAssertEqual(notationField?.textColor, DiceTheme.darkMode.palette.primaryTextColor)
+		XCTAssertEqual(notationField?.backgroundColor, DiceTheme.darkMode.palette.panelBackgroundColor)
+	}
+
 	func testControllerUsesBottomCenteredRollButtonAndMovesItAboveStatsSheet() {
 		let defaults = UserDefaults.standard
 		let key = "Dice.showStats"

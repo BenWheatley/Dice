@@ -253,6 +253,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Remove projected/drop-in shadow fallback geometry and enforce true SceneKit geometry-cast shadows only, with regression checks that detect real frame-level darkening when shadow casting is enabled.
 - [x] Align dice caster depth to the table contact plane (per die geometry/orientation) so true cast shadows start at contact instead of appearing offset from floating dice.
 - [x] For cylindrical dice (`d2` and token-style `dN`), start roll spin at edge-contact depth (`table + radius`) while preserving the existing settled end depth.
+- [x] Fix top navigation notation input ergonomics by replacing the fixed-width title field with adaptive width sizing and explicit dark/light theme field styling.
 
 ### Performance and Interaction Safety
 
