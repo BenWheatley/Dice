@@ -230,25 +230,28 @@ class InterfaceController: WKInterfaceController {
 	}
 
 	private func applyMaterials(to descriptor: DiceSingleDieGeometryDescriptor, sideCount: Int, currentValue: Int) {
-		if descriptor.isCoin {
-			descriptor.geometry.materials = [
-				solidMaterial(fillColor: UIColor(white: 0.88, alpha: 1.0)),
-				faceMaterial(value: 1, sideCount: sideCount, includeSideLabel: true),
-				faceMaterial(value: 2, sideCount: sideCount, includeSideLabel: true),
-			]
-			return
+		let plan = DiceSingleDieMaterialPlanner.makePlan(
+			sideCount: sideCount,
+			currentValue: currentValue,
+			faceValueCount: descriptor.faceValueCount
+		)
+		let includeSideLabel = descriptor.isCoin || descriptor.isToken
+		var materials: [SCNMaterial] = []
+		for slot in plan.slots {
+			switch slot {
+			case .side:
+				materials.append(solidMaterial(fillColor: UIColor(white: 0.88, alpha: 1.0)))
+			case let .face(value):
+				materials.append(faceMaterial(value: value, sideCount: sideCount, includeSideLabel: includeSideLabel))
+			}
 		}
-		if descriptor.isToken {
-			descriptor.geometry.materials = [
-				solidMaterial(fillColor: UIColor(white: 0.88, alpha: 1.0)),
-				faceMaterial(value: currentValue, sideCount: sideCount, includeSideLabel: true),
-				faceMaterial(value: currentValue, sideCount: sideCount, includeSideLabel: true),
-			]
-			return
+		if plan.appliesCylindricalCapUVCompensation, materials.count >= 3 {
+			DiceSingleDieMaterialPlanner.applyCylindricalCapTextureCompensation(
+				top: materials[1],
+				bottom: materials[2]
+			)
 		}
-		descriptor.geometry.materials = (1...descriptor.faceValueCount).map { faceValue in
-			faceMaterial(value: faceValue, sideCount: sideCount, includeSideLabel: false)
-		}
+		descriptor.geometry.materials = materials
 	}
 
 	private func faceMaterial(value: Int, sideCount: Int, includeSideLabel: Bool) -> SCNMaterial {

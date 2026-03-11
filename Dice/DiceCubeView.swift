@@ -1951,87 +1951,65 @@ final class DiceCubeView: UIView {
 		currentValue: Int,
 		dieIndex: Int
 	) -> [SCNMaterial] {
-		let sideColor = multipliedColor(fillColor, factor: 0.78)
-		let value = max(1, min(sideCount, currentValue))
-		let topCap = faceMaterial(
-			faceIndex: value - 1,
-			face: [0, 1, 2],
-			sideCount: sideCount,
+		cylindricalMaterials(
 			fillColor: fillColor,
 			numeralFont: numeralFont,
-			dieIndex: dieIndex
-		)
-		let bottomCap = faceMaterial(
-			faceIndex: value - 1,
-			face: [0, 1, 2],
 			sideCount: sideCount,
-			fillColor: fillColor,
-			numeralFont: numeralFont,
-			dieIndex: dieIndex
+			currentValue: currentValue,
+			dieIndex: dieIndex,
+			sideColorFactor: 0.78
 		)
-		applyCylindricalCapTextureOrientation(topCap: topCap, bottomCap: bottomCap)
-		return [
-			solidDieMaterial(baseColor: sideColor, fillColor: fillColor, dieIndex: dieIndex),
-			topCap,
-			bottomCap
-		]
 	}
 
 	private func coinMaterials(fillColor: UIColor, numeralFont: DiceFaceNumeralFont, dieIndex: Int) -> [SCNMaterial] {
-		let sideColor = multipliedColor(fillColor, factor: 0.62)
-		let sideMaterial = solidDieMaterial(baseColor: sideColor, fillColor: fillColor, dieIndex: dieIndex)
-		let valueOneCap = faceMaterial(
-			faceIndex: 0,
-			face: [0, 1, 2],
-			sideCount: 2,
+		cylindricalMaterials(
 			fillColor: fillColor,
 			numeralFont: numeralFont,
-			dieIndex: dieIndex
-		)
-		let valueTwoCap = faceMaterial(
-			faceIndex: 1,
-			face: [0, 1, 2],
 			sideCount: 2,
-			fillColor: fillColor,
-			numeralFont: numeralFont,
-			dieIndex: dieIndex
+			currentValue: 1,
+			dieIndex: dieIndex,
+			sideColorFactor: 0.62
 		)
-		applyCylindricalCapTextureOrientation(topCap: valueOneCap, bottomCap: valueTwoCap)
-		return [
-			sideMaterial,
-			valueOneCap,
-			valueTwoCap
-		]
 	}
 
-	private func applyCylindricalCapTextureOrientation(topCap: SCNMaterial, bottomCap: SCNMaterial) {
-		// SceneKit cylinder cap UVs are quarter-turned relative to the expected upright numeral orientation.
-		// Apply opposite quarter-turns plus horizontal flip compensation so symbols are not mirrored.
-		let topTransform = centeredTextureTransform(rotation: -.pi / 2, mirrorX: true, scale: 1.04)
-		let bottomTransform = centeredTextureTransform(rotation: .pi / 2, mirrorX: true, scale: 1.04)
-		applyTextureTransform(topTransform, to: topCap)
-		applyTextureTransform(bottomTransform, to: bottomCap)
-	}
-
-	private func applyTextureTransform(_ transform: SCNMatrix4, to material: SCNMaterial) {
-		material.diffuse.contentsTransform = transform
-		material.normal.contentsTransform = transform
-		material.specular.contentsTransform = transform
-		material.metalness.contentsTransform = transform
-		material.roughness.contentsTransform = transform
-	}
-
-	private func centeredTextureTransform(rotation: Float, mirrorX: Bool = false, scale: Float = 1) -> SCNMatrix4 {
-		let toCenter = SCNMatrix4MakeTranslation(0.5, 0.5, 0)
-		let rotate = SCNMatrix4MakeRotation(rotation, 0, 0, 1)
-		let mirror = SCNMatrix4MakeScale(mirrorX ? -1 : 1, 1, 1)
-		let scaleMatrix = SCNMatrix4MakeScale(scale, scale, 1)
-		let fromCenter = SCNMatrix4MakeTranslation(-0.5, -0.5, 0)
-		// SCNMatrix4 texture transforms compose so the rightmost matrix is applied first.
-		// Move UVs to origin, apply orientation/scale, then move back to center.
-		let oriented = SCNMatrix4Mult(rotate, mirror)
-		let transformed = SCNMatrix4Mult(oriented, scaleMatrix)
-		return SCNMatrix4Mult(SCNMatrix4Mult(fromCenter, transformed), toCenter)
+	private func cylindricalMaterials(
+		fillColor: UIColor,
+		numeralFont: DiceFaceNumeralFont,
+		sideCount: Int,
+		currentValue: Int,
+		dieIndex: Int,
+		sideColorFactor: CGFloat
+	) -> [SCNMaterial] {
+		let plan = DiceSingleDieMaterialPlanner.makePlan(
+			sideCount: sideCount,
+			currentValue: currentValue,
+			faceValueCount: sideCount
+		)
+		var materials: [SCNMaterial] = []
+		for slot in plan.slots {
+			switch slot {
+			case .side:
+				let sideColor = multipliedColor(fillColor, factor: sideColorFactor)
+				materials.append(solidDieMaterial(baseColor: sideColor, fillColor: fillColor, dieIndex: dieIndex))
+			case let .face(value):
+				let material = faceMaterial(
+					faceIndex: value - 1,
+					face: [0, 1, 2],
+					sideCount: sideCount,
+					fillColor: fillColor,
+					numeralFont: numeralFont,
+					dieIndex: dieIndex
+				)
+				materials.append(material)
+			}
+		}
+		if plan.appliesCylindricalCapUVCompensation, materials.count >= 3 {
+			DiceSingleDieMaterialPlanner.applyCylindricalCapTextureCompensation(
+				top: materials[1],
+				bottom: materials[2]
+			)
+		}
+		return materials
 	}
 
 	private func solidDieMaterial(baseColor: UIColor, fillColor: UIColor, dieIndex: Int) -> SCNMaterial {

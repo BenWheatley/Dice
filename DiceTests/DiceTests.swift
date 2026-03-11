@@ -2220,6 +2220,33 @@ final class DiceTests: XCTestCase {
 		XCTAssertLessThan(tokenGeometry.height, 1.0)
 	}
 
+	func testSingleDieMaterialPlannerReturnsExpectedCoinTokenAndPolyPlans() {
+		let coinPlan = DiceSingleDieMaterialPlanner.makePlan(sideCount: 2, currentValue: 2, faceValueCount: 2)
+		XCTAssertEqual(coinPlan.slots, [.side, .face(value: 1), .face(value: 2)])
+		XCTAssertTrue(coinPlan.appliesCylindricalCapUVCompensation)
+
+		let tokenPlan = DiceSingleDieMaterialPlanner.makePlan(sideCount: 21, currentValue: 17, faceValueCount: 21)
+		XCTAssertEqual(tokenPlan.slots, [.side, .face(value: 17), .face(value: 17)])
+		XCTAssertTrue(tokenPlan.appliesCylindricalCapUVCompensation)
+
+		let polyPlan = DiceSingleDieMaterialPlanner.makePlan(sideCount: 20, currentValue: 8, faceValueCount: 20)
+		XCTAssertEqual(polyPlan.slots.count, 20)
+		XCTAssertEqual(polyPlan.slots.first, .face(value: 1))
+		XCTAssertEqual(polyPlan.slots.last, .face(value: 20))
+		XCTAssertFalse(polyPlan.appliesCylindricalCapUVCompensation)
+	}
+
+	func testSingleDieMaterialPlannerAppliesCylindricalCapTextureTransforms() {
+		let top = SCNMaterial()
+		let bottom = SCNMaterial()
+		DiceSingleDieMaterialPlanner.applyCylindricalCapTextureCompensation(top: top, bottom: bottom)
+
+		XCTAssertNotEqual(top.diffuse.contentsTransform.m11, SCNMatrix4Identity.m11)
+		XCTAssertNotEqual(bottom.diffuse.contentsTransform.m11, SCNMatrix4Identity.m11)
+		XCTAssertEqual(top.normal.contentsTransform.m11, top.diffuse.contentsTransform.m11, accuracy: 0.0001)
+		XCTAssertEqual(bottom.normal.contentsTransform.m11, bottom.diffuse.contentsTransform.m11, accuracy: 0.0001)
+	}
+
 	func testWatchSceneKitFlowRemainsInSyncAcrossModeSwitchAndRepeatedRolls() {
 		var scripted = [1, 2, 3, 4, 5]
 		let session = DiceRollSession(
