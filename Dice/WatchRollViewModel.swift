@@ -10,18 +10,22 @@ import Foundation
 final class WatchRollViewModel {
 	private let rollSession: DiceRollSession
 	private(set) var isIntuitiveMode: Bool
+	private(set) var sideCount: Int
 	private var lastRollConfiguration: RollConfiguration?
 
 	init(
 		rollSession: DiceRollSession = DiceRollSession(),
-		isIntuitiveMode: Bool = false
+		isIntuitiveMode: Bool = false,
+		sideCount: Int = 6
 	) {
 		self.rollSession = rollSession
 		self.isIntuitiveMode = isIntuitiveMode
+		self.sideCount = DiceSingleDieSceneGeometryFactory.clampedSideCount(sideCount)
 	}
 
 	var currentNotation: String {
-		isIntuitiveMode ? "1d6i" : "1d6"
+		let base = "1d\(sideCount)"
+		return isIntuitiveMode ? "\(base)i" : base
 	}
 
 	func statusText(rollCount: Int) -> String {
@@ -40,14 +44,19 @@ final class WatchRollViewModel {
 		isIntuitiveMode = enabled
 	}
 
+	func setSideCount(_ sideCount: Int) {
+		self.sideCount = DiceSingleDieSceneGeometryFactory.clampedSideCount(sideCount)
+		lastRollConfiguration = nil
+	}
+
 	func roll() -> RollOutcome {
-		let configuration = RollConfiguration(diceCount: 1, sideCount: 6, intuitive: isIntuitiveMode)
+		let configuration = RollConfiguration(diceCount: 1, sideCount: sideCount, intuitive: isIntuitiveMode)
 		lastRollConfiguration = configuration
 		return rollSession.roll(configuration)
 	}
 
 	func repeatLastRoll() -> RollOutcome {
-		let configuration = lastRollConfiguration ?? RollConfiguration(diceCount: 1, sideCount: 6, intuitive: isIntuitiveMode)
+		let configuration = lastRollConfiguration ?? RollConfiguration(diceCount: 1, sideCount: sideCount, intuitive: isIntuitiveMode)
 		lastRollConfiguration = configuration
 		return rollSession.roll(configuration)
 	}

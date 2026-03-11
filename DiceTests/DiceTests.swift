@@ -1940,6 +1940,34 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(viewModel.statusText(lastValue: 2), "INT·1d6i\nv2")
 	}
 
+	func testWatchRollViewModelUsesConfiguredSideCountForNotationAndRolls() {
+		let viewModel = WatchRollViewModel(
+			rollSession: DiceRollSession(
+				intuitiveRoller: IntuitiveRoller(
+					fallbackRoller: TrueRandomRoller { range in range.upperBound },
+					randomDouble: { 0.5 }
+				)
+			)
+		)
+
+		viewModel.setSideCount(20)
+		XCTAssertEqual(viewModel.currentNotation, "1d20")
+		let outcome = viewModel.roll()
+		XCTAssertEqual(outcome.sideCounts, [20])
+		XCTAssertEqual(outcome.values, [20])
+	}
+
+	func testWatchRollViewModelClampsSideCountToSupportedRange() {
+		let viewModel = WatchRollViewModel()
+		viewModel.setSideCount(1)
+		XCTAssertEqual(viewModel.sideCount, 2)
+		XCTAssertEqual(viewModel.currentNotation, "1d2")
+
+		viewModel.setSideCount(200)
+		XCTAssertEqual(viewModel.sideCount, 100)
+		XCTAssertEqual(viewModel.currentNotation, "1d100")
+	}
+
 	func testWatchSingleDieConfigurationStoreRoundTrip() {
 		let suiteName = "DiceTests.watch.config.store.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!
@@ -2004,6 +2032,48 @@ final class DiceTests: XCTestCase {
 		let resolved = WatchSingleDieConfigurationConflictResolver.resolve(local: local, remote: remote)
 
 		XCTAssertEqual(resolved, remote)
+	}
+
+	func testSingleDieSceneGeometryFactorySupportsPolyhedralAndFallbackDescriptors() {
+		let d20 = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: 20, sideLength: 96)
+		XCTAssertFalse(d20.isCoin)
+		XCTAssertFalse(d20.isToken)
+		XCTAssertEqual(d20.faceValueCount, 20)
+		XCTAssertEqual(d20.geometry.materials.count, 20)
+
+		let d2 = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: 2, sideLength: 96)
+		XCTAssertTrue(d2.isCoin)
+		XCTAssertFalse(d2.isToken)
+		XCTAssertEqual(d2.geometry.materials.count, 3)
+
+		let d37 = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: 37, sideLength: 96)
+		XCTAssertFalse(d37.isCoin)
+		XCTAssertTrue(d37.isToken)
+		XCTAssertEqual(d37.faceValueCount, 37)
+		XCTAssertEqual(d37.geometry.materials.count, 3)
+	}
+
+	func testSingleDieSceneGeometryFactoryReturnsFiniteOrientations() {
+		let scenarios: [(sideCount: Int, values: [Int])] = [
+			(2, [1, 2]),
+			(4, [1, 4]),
+			(6, [1, 6]),
+			(8, [1, 8]),
+			(10, [1, 10]),
+			(12, [1, 12]),
+			(20, [1, 20]),
+			(21, [1, 21]),
+		]
+
+		for scenario in scenarios {
+			for value in scenario.values {
+				let orientation = DiceSingleDieSceneGeometryFactory.orientation(for: value, sideCount: scenario.sideCount)
+				XCTAssertTrue(
+					orientation.x.isFinite && orientation.y.isFinite && orientation.z.isFinite,
+					"Expected finite orientation for d\(scenario.sideCount) value \(value)"
+				)
+			}
+		}
 	}
 
 	func testWatchSceneKitFlowRemainsInSyncAcrossModeSwitchAndRepeatedRolls() {

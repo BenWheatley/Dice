@@ -307,7 +307,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 ### Watch Rendering Generalization (Any Single Die)
 
-- [ ] Expand watch renderer from D6-only to any single die side count supported by shared geometry/material pipeline (including token/coin path for non-polyhedral counts).
+- [x] Expand watch renderer from D6-only to any single die side count supported by shared geometry/material pipeline (including token/coin path for non-polyhedral counts).
 - [ ] Reuse shared face-material generation and orientation helpers from iOS code paths for watch single-die rendering; remove watch-only duplicated face mapping logic.
 - [ ] Add watch-side fallback policy for unsupported/high-cost geometry (graceful downgrade to static image only when shared SceneKit path is unavailable).
 - [ ] Add focused watch simulator tests/checklists for side-count switching, reroll speed, and accessibility labels after customization changes.

@@ -20,10 +20,11 @@ class InterfaceController: WKInterfaceController {
 
 	private let configurationSync = WatchSingleDieConfigurationSyncBridge.shared
 	private lazy var viewModel = WatchRollViewModel(
-		isIntuitiveMode: configurationSync.currentConfiguration().isIntuitiveMode
+		isIntuitiveMode: configurationSync.currentConfiguration().isIntuitiveMode,
+		sideCount: configurationSync.currentConfiguration().sideCount
 	)
 	private var rollCount = 0
-	private var d6Node = SCNNode()
+	private var dieNode = SCNNode()
 	private let tableNode = SCNNode()
 	private let tableMaterial = SCNMaterial()
 	private var activeTableTexture: DiceTableTexture = .black
@@ -90,7 +91,17 @@ class InterfaceController: WKInterfaceController {
 		rollCount += 1
 		playRollStartFeedback()
 		if usesSceneRenderer {
-			animateD6(to: value) { [weak self] in
+			if DiceSingleDieSceneGeometryFactory.usesTokenGeometry(for: viewModel.sideCount),
+				let geometry = dieNode.geometry {
+				let descriptor = DiceSingleDieGeometryDescriptor(
+					geometry: geometry,
+					faceValueCount: viewModel.sideCount,
+					isCoin: false,
+					isToken: true
+				)
+				applyMaterials(to: descriptor, sideCount: viewModel.sideCount, currentValue: value)
+			}
+			animateDie(to: value, sideCount: viewModel.sideCount) { [weak self] in
 				self?.playRollSettleFeedback()
 			}
 			diceSceneView.setAccessibilityValue("Value \(value)")
@@ -130,8 +141,8 @@ class InterfaceController: WKInterfaceController {
 
 		let initialTexture = DiceTableTexture(rawValue: configurationSync.currentConfiguration().backgroundTexture) ?? .black
 		configureTableSurface(in: scene, initialTexture: initialTexture)
-		d6Node = makeD6Node()
-		scene.rootNode.addChildNode(d6Node)
+		dieNode = makeDieNode(sideCount: viewModel.sideCount, currentValue: 1)
+		scene.rootNode.addChildNode(dieNode)
 		diceSceneView.setAccessibilityLabel("Latest die result, 3D preview")
 		usesSceneRenderer = true
 		diceSceneView.setHidden(false)
@@ -210,16 +221,37 @@ class InterfaceController: WKInterfaceController {
 		}
 	}
 
-	private func makeD6Node() -> SCNNode {
-		let sideLength: CGFloat = 1.8
-		let geometry = D6BeveledCubeGeometry.make(sideLength: sideLength)
-		geometry.materials = (1...6).map { watchFaceMaterial(value: $0) }
-
-		let node = SCNNode(geometry: geometry)
+	private func makeDieNode(sideCount: Int, currentValue: Int) -> SCNNode {
+		let descriptor = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: sideCount, sideLength: 1.8)
+		let node = SCNNode(geometry: descriptor.geometry)
+		node.eulerAngles = DiceSingleDieSceneGeometryFactory.orientation(for: currentValue, sideCount: sideCount)
+		applyMaterials(to: descriptor, sideCount: sideCount, currentValue: currentValue)
 		return node
 	}
 
-	private func watchFaceMaterial(value: Int) -> SCNMaterial {
+	private func applyMaterials(to descriptor: DiceSingleDieGeometryDescriptor, sideCount: Int, currentValue: Int) {
+		if descriptor.isCoin {
+			descriptor.geometry.materials = [
+				solidMaterial(fillColor: UIColor(white: 0.88, alpha: 1.0)),
+				faceMaterial(value: 1, sideCount: sideCount, includeSideLabel: true),
+				faceMaterial(value: 2, sideCount: sideCount, includeSideLabel: true),
+			]
+			return
+		}
+		if descriptor.isToken {
+			descriptor.geometry.materials = [
+				solidMaterial(fillColor: UIColor(white: 0.88, alpha: 1.0)),
+				faceMaterial(value: currentValue, sideCount: sideCount, includeSideLabel: true),
+				faceMaterial(value: currentValue, sideCount: sideCount, includeSideLabel: true),
+			]
+			return
+		}
+		descriptor.geometry.materials = (1...descriptor.faceValueCount).map { faceValue in
+			faceMaterial(value: faceValue, sideCount: sideCount, includeSideLabel: false)
+		}
+	}
+
+	private func faceMaterial(value: Int, sideCount: Int, includeSideLabel: Bool) -> SCNMaterial {
 		let textureSize = CGSize(width: 256, height: 256)
 		let scene = SKScene(size: textureSize)
 		scene.scaleMode = .resizeFill
@@ -233,6 +265,16 @@ class InterfaceController: WKInterfaceController {
 		label.horizontalAlignmentMode = .center
 		label.position = CGPoint(x: textureSize.width / 2, y: textureSize.height / 2)
 		scene.addChild(label)
+		if includeSideLabel {
+			let subtitle = SKLabelNode(text: "d\(sideCount)")
+			subtitle.fontName = "SFProDisplay-Regular"
+			subtitle.fontSize = 52
+			subtitle.fontColor = UIColor.darkGray
+			subtitle.verticalAlignmentMode = .center
+			subtitle.horizontalAlignmentMode = .center
+			subtitle.position = CGPoint(x: textureSize.width / 2, y: textureSize.height * 0.18)
+			scene.addChild(subtitle)
+		}
 
 		let material = SCNMaterial()
 		material.diffuse.contents = scene
@@ -243,12 +285,22 @@ class InterfaceController: WKInterfaceController {
 		return material
 	}
 
-	private func animateD6(to value: Int, completion: (() -> Void)? = nil) {
-		let target = orientation(for: value)
+	private func solidMaterial(fillColor: UIColor) -> SCNMaterial {
+		let material = SCNMaterial()
+		material.diffuse.contents = fillColor
+		material.locksAmbientWithDiffuse = true
+		material.isDoubleSided = false
+		material.roughness.contents = NSNumber(value: 0.85)
+		material.metalness.contents = NSNumber(value: 0.0)
+		return material
+	}
+
+	private func animateDie(to value: Int, sideCount: Int, completion: (() -> Void)? = nil) {
+		let target = DiceSingleDieSceneGeometryFactory.orientation(for: value, sideCount: sideCount)
 		SCNTransaction.begin()
 		SCNTransaction.animationDuration = ProcessInfo.processInfo.isLowPowerModeEnabled ? 0.2 : 0.4
 		SCNTransaction.completionBlock = completion
-		d6Node.eulerAngles = target
+		dieNode.eulerAngles = target
 		SCNTransaction.commit()
 	}
 
@@ -278,9 +330,10 @@ class InterfaceController: WKInterfaceController {
 		viewModel.isIntuitiveMode ? .intuitive : .trueRandom
 	}
 
-	private func orientation(for value: Int) -> SCNVector3 {
-		let angles = D6FaceOrientation.eulerAngles(for: value)
-		return SCNVector3(angles.x, angles.y, angles.z)
+	private func rebuildDieNode(sideCount: Int, currentValue: Int) {
+		dieNode.removeFromParentNode()
+		dieNode = makeDieNode(sideCount: sideCount, currentValue: currentValue)
+		diceSceneView.scene?.rootNode.addChildNode(dieNode)
 	}
 
 	private func applyRemoteConfiguration(_ configuration: WatchSingleDieConfiguration) {
@@ -288,10 +341,22 @@ class InterfaceController: WKInterfaceController {
 		if remoteTexture != activeTableTexture {
 			applyTableTexture(remoteTexture)
 		}
-		guard viewModel.isIntuitiveMode != configuration.isIntuitiveMode else { return }
-		viewModel.setIntuitiveMode(configuration.isIntuitiveMode)
-		rollCount = 0
-		roll()
+		var shouldRoll = false
+		let remoteSideCount = DiceSingleDieSceneGeometryFactory.clampedSideCount(configuration.sideCount)
+		if remoteSideCount != viewModel.sideCount {
+			viewModel.setSideCount(remoteSideCount)
+			rebuildDieNode(sideCount: remoteSideCount, currentValue: 1)
+			rollCount = 0
+			shouldRoll = true
+		}
+		if viewModel.isIntuitiveMode != configuration.isIntuitiveMode {
+			viewModel.setIntuitiveMode(configuration.isIntuitiveMode)
+			rollCount = 0
+			shouldRoll = true
+		}
+		if shouldRoll {
+			roll()
+		}
 	}
 
 	private func persistCurrentConfiguration() {
