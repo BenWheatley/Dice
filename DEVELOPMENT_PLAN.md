@@ -297,6 +297,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Finalize watch customization IA for small screens: top-level roll view + single "Customize" sheet with side-count picker, color preset picker, and mode toggle; limit to one interaction depth from main screen.
 - [x] Define watch-side interaction model for side count selection (Digital Crown stepped values + quick chips for common sides: d2/d4/d6/d8/d10/d12/d20) and document truncation/legibility rules.
 - [x] Define watch persistence model for per-watch last selected single-die configuration (side count, color preset, roll mode, background) and conflict policy with phone defaults.
+- [x] Implement WatchConnectivity application-context sync with timestamped last-write-wins and remote-on-tie convergence, including a phone-projection change guard so unchanged phone defaults do not overwrite newer watch edits.
 
 ### Cross-Platform Rendering and Background
 

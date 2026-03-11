@@ -50,11 +50,19 @@ struct WatchSingleDieConfiguration: Codable, Equatable {
 	static func clamp(_ sideCount: Int) -> Int {
 		min(max(sideCount, minimumSideCount), maximumSideCount)
 	}
+
+	func matchesSemanticValues(_ other: WatchSingleDieConfiguration) -> Bool {
+		sideCount == other.sideCount
+			&& colorTag == other.colorTag
+			&& isIntuitiveMode == other.isIntuitiveMode
+			&& backgroundTexture == other.backgroundTexture
+	}
 }
 
 final class WatchSingleDieConfigurationStore {
 	private enum Keys {
 		static let configuration = "Dice.watchSingleDieConfiguration.v1"
+		static let lastPhoneProjection = "Dice.watchSingleDieConfiguration.phoneProjection.v1"
 	}
 
 	private let defaults: UserDefaults
@@ -89,12 +97,30 @@ final class WatchSingleDieConfigurationStore {
 		guard let encoded = try? encoder.encode(configuration) else { return }
 		defaults.set(encoded, forKey: Keys.configuration)
 	}
+
+	func loadLastPhoneProjection() -> WatchSingleDieConfiguration? {
+		guard let data = defaults.data(forKey: Keys.lastPhoneProjection) else { return nil }
+		guard let decoded = try? decoder.decode(WatchSingleDieConfiguration.self, from: data) else { return nil }
+		return WatchSingleDieConfiguration(
+			sideCount: decoded.sideCount,
+			colorTag: decoded.colorTag,
+			isIntuitiveMode: decoded.isIntuitiveMode,
+			backgroundTexture: decoded.backgroundTexture,
+			updatedAt: decoded.updatedAt
+		)
+	}
+
+	func saveLastPhoneProjection(_ configuration: WatchSingleDieConfiguration) {
+		guard let encoded = try? encoder.encode(configuration) else { return }
+		defaults.set(encoded, forKey: Keys.lastPhoneProjection)
+	}
 }
 
 enum WatchSingleDieConfigurationConflictResolver {
-	// Last-write-wins with timestamp is acceptable here because this is a single-user,
-	// multi-device preference sync problem: there is no multi-user concurrent authoring model.
-	// The newest write should become source-of-truth, and ties prefer remote to converge peers.
+	// Conflict policy: timestamped last-write-wins.
+	// Why this is acceptable: this sync domain is a single-user, multi-device preferences flow
+	// (phone/watch owned by one person), not collaborative multi-user document editing.
+	// Newest write should become canonical; equal timestamps prefer remote so peers converge.
 	static func resolve(local: WatchSingleDieConfiguration, remote: WatchSingleDieConfiguration) -> WatchSingleDieConfiguration {
 		if remote.updatedAt > local.updatedAt {
 			return remote
@@ -156,26 +182,38 @@ final class WatchSingleDieConfigurationSyncBridge: NSObject {
 	}
 
 	func applyPhoneSnapshotIfChanged(_ snapshot: WatchSingleDieConfiguration) {
-		let local = store.load()
-		guard local.sideCount != snapshot.sideCount
-				|| local.colorTag != snapshot.colorTag
-				|| local.isIntuitiveMode != snapshot.isIntuitiveMode
-				|| local.backgroundTexture != snapshot.backgroundTexture else {
-			return
-		}
-		let updated = WatchSingleDieConfiguration(
+		let normalizedSnapshot = WatchSingleDieConfiguration(
 			sideCount: snapshot.sideCount,
 			colorTag: snapshot.colorTag,
 			isIntuitiveMode: snapshot.isIntuitiveMode,
 			backgroundTexture: snapshot.backgroundTexture,
-			updatedAt: Date()
+			updatedAt: snapshot.updatedAt
 		)
-		store.save(updated)
-		publish(updated)
+		// Avoid clobbering a newer remote watch edit when the phone preferences have not changed.
+		// We only push a phone-originating write when that phone projection actually changed.
+		if let lastProjection = store.loadLastPhoneProjection(),
+			lastProjection.matchesSemanticValues(normalizedSnapshot) {
+			return
+		}
+		store.saveLastPhoneProjection(normalizedSnapshot)
+		guard store.hasPersistedConfiguration else {
+			store.save(normalizedSnapshot)
+			publish(normalizedSnapshot)
+			return
+		}
+		_ = applyRemoteConfiguration(normalizedSnapshot)
 	}
 
 	@discardableResult
 	func applyRemoteConfiguration(_ remote: WatchSingleDieConfiguration) -> WatchSingleDieConfiguration {
+		guard store.hasPersistedConfiguration else {
+			store.save(remote)
+			DispatchQueue.main.async { [weak self] in
+				self?.onRemoteConfigurationApplied?(remote)
+			}
+			publish(remote)
+			return remote
+		}
 		let local = store.load()
 		let winner = WatchSingleDieConfigurationConflictResolver.resolve(local: local, remote: remote)
 		if winner != local {

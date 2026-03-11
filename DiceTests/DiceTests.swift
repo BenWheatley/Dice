@@ -2034,6 +2034,84 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(resolved, remote)
 	}
 
+	func testWatchSyncBridgeDoesNotOverwriteNewerRemoteWhenPhoneProjectionIsUnchanged() {
+		let suiteName = "DiceTests.watch.config.bridge.nooverwrite.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let bridge = WatchSingleDieConfigurationSyncBridge(
+			store: WatchSingleDieConfigurationStore(defaults: defaults)
+		)
+
+		let phoneProjection = WatchSingleDieConfiguration(
+			sideCount: 6,
+			colorTag: "ivory",
+			isIntuitiveMode: false,
+			backgroundTexture: "neutral",
+			updatedAt: Date(timeIntervalSince1970: 10)
+		)
+		bridge.applyPhoneSnapshotIfChanged(phoneProjection)
+
+		let newerRemote = WatchSingleDieConfiguration(
+			sideCount: 20,
+			colorTag: "blue",
+			isIntuitiveMode: true,
+			backgroundTexture: "black",
+			updatedAt: Date(timeIntervalSince1970: 20)
+		)
+		_ = bridge.applyRemoteConfiguration(newerRemote)
+		bridge.applyPhoneSnapshotIfChanged(phoneProjection)
+
+		let current = bridge.currentConfiguration()
+		XCTAssertEqual(current.sideCount, 20)
+		XCTAssertEqual(current.colorTag, "blue")
+		XCTAssertTrue(current.isIntuitiveMode)
+		XCTAssertEqual(current.backgroundTexture, "black")
+		XCTAssertEqual(current.updatedAt, Date(timeIntervalSince1970: 20))
+	}
+
+	func testWatchSyncBridgeAppliesPhoneProjectionWhenPhonePreferencesChange() {
+		let suiteName = "DiceTests.watch.config.bridge.changed.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let bridge = WatchSingleDieConfigurationSyncBridge(
+			store: WatchSingleDieConfigurationStore(defaults: defaults)
+		)
+
+		let initialPhoneProjection = WatchSingleDieConfiguration(
+			sideCount: 6,
+			colorTag: "ivory",
+			isIntuitiveMode: false,
+			backgroundTexture: "neutral",
+			updatedAt: Date(timeIntervalSince1970: 10)
+		)
+		bridge.applyPhoneSnapshotIfChanged(initialPhoneProjection)
+
+		let remote = WatchSingleDieConfiguration(
+			sideCount: 20,
+			colorTag: "blue",
+			isIntuitiveMode: true,
+			backgroundTexture: "black",
+			updatedAt: Date(timeIntervalSince1970: 20)
+		)
+		_ = bridge.applyRemoteConfiguration(remote)
+
+		let changedPhoneProjection = WatchSingleDieConfiguration(
+			sideCount: 12,
+			colorTag: "amber",
+			isIntuitiveMode: false,
+			backgroundTexture: "wood",
+			updatedAt: Date(timeIntervalSince1970: 30)
+		)
+		bridge.applyPhoneSnapshotIfChanged(changedPhoneProjection)
+
+		let current = bridge.currentConfiguration()
+		XCTAssertEqual(current.sideCount, 12)
+		XCTAssertEqual(current.colorTag, "amber")
+		XCTAssertFalse(current.isIntuitiveMode)
+		XCTAssertEqual(current.backgroundTexture, "wood")
+		XCTAssertEqual(current.updatedAt, Date(timeIntervalSince1970: 30))
+	}
+
 	func testSingleDieSceneGeometryFactorySupportsPolyhedralAndFallbackDescriptors() {
 		let d20 = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: 20, sideLength: 96)
 		XCTAssertFalse(d20.isCoin)

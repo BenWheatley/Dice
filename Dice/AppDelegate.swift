@@ -74,6 +74,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 			isIntuitiveMode: intuitiveMode,
 			backgroundTexture: preferences.tableTexture.rawValue
 		)
+		// Bridge uses timestamped last-write-wins plus a phone-projection change guard so
+		// unchanged phone defaults do not clobber newer watch-originating edits.
 		watchConfigurationSync.applyPhoneSnapshotIfChanged(snapshot)
 	}
 
