@@ -288,3 +288,33 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Implement scene startup routing for quick-action launches with per-window state isolation on Catalyst/iPad multiwindow.
 - [x] Add unit tests for quick-action parsing/routing and no-op handling for unavailable actions.
 - [x] Add simulator manual QA checklist for long-press action invocation from SpringBoard and cold-start/warm-start behavior.
+
+## 14. Watch Single-Die Expansion and Shared Rendering
+
+### Planning and UX Scope
+
+- [x] Define watch v2 scope: one visible die at a time, user-selectable side count, SceneKit 3D rendering parity, and compact customization UX constrained for watch screen sizes.
+- [ ] Finalize watch customization IA for small screens: top-level roll view + single "Customize" sheet with side-count picker, color preset picker, and mode toggle; limit to one interaction depth from main screen.
+- [ ] Define watch-side interaction model for side count selection (Digital Crown stepped values + quick chips for common sides: d2/d4/d6/d8/d10/d12/d20) and document truncation/legibility rules.
+- [ ] Define watch persistence model for per-watch last selected single-die configuration (side count, color preset, roll mode, background) and conflict policy with phone defaults.
+
+### Cross-Platform Rendering and Background
+
+- [ ] Add `black` table background mode for all platforms (`#000000` exact) in shared table-texture model and options menus.
+- [ ] Set watch default background to `black` while preserving existing iOS/iPadOS/macOS defaults.
+- [ ] Add regression tests validating `black` mode color output is exact zero RGB and unaffected by theme switching.
+- [ ] Ensure watch background switching reuses the same shader/material pipeline used on iOS where feasible (no watch-only parallel renderer path for equivalent behavior).
+
+### Watch Rendering Generalization (Any Single Die)
+
+- [ ] Expand watch renderer from D6-only to any single die side count supported by shared geometry/material pipeline (including token/coin path for non-polyhedral counts).
+- [ ] Reuse shared face-material generation and orientation helpers from iOS code paths for watch single-die rendering; remove watch-only duplicated face mapping logic.
+- [ ] Add watch-side fallback policy for unsupported/high-cost geometry (graceful downgrade to static image only when shared SceneKit path is unavailable).
+- [ ] Add focused watch simulator tests/checklists for side-count switching, reroll speed, and accessibility labels after customization changes.
+
+### Shared-Code Consolidation
+
+- [ ] Fix watch target source membership so shared domain types (`RollConfiguration`, `RollOutcome`, `IntuitiveRollContext`, `FaceContrastStyle`) compile directly in watch extension instead of diverging paths.
+- [ ] Audit watch extension for duplicated roll/result application code and consolidate into shared helper methods where platform APIs allow.
+- [ ] Audit watch extension and iOS app for duplicated single-die SceneKit setup logic and extract common configuration helpers into shared files.
+- [ ] Verify `Dice WatchKit App` scheme builds on watchOS simulator after consolidation and document remaining intentional platform-specific deltas.
