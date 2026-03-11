@@ -34,13 +34,7 @@ struct D6SceneKitRenderConfig {
 	}
 
 	static func beveledCube(sideLength: CGFloat) -> SCNBox {
-		let box = SCNBox(
-			width: sideLength,
-			height: sideLength,
-			length: sideLength,
-			chamferRadius: sideLength * 0.08
-		)
-		box.chamferSegmentCount = 4
+		let box = D6BeveledCubeGeometry.make(sideLength: sideLength)
 		box.materials = (1...6).map { faceMaterial(value: $0) }
 		return box
 	}

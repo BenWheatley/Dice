@@ -18,3 +18,17 @@ Target baseline: watchOS 10.2+.
 
 - Simulator-only validation on a watchOS 10.2+ simulator runtime.
 - Unit tests cover watch state transitions and mode switching in shared test target.
+
+## Shared Code vs Platform Deltas (Current)
+
+- Shared with iOS/macOS targets:
+  - roll domain types: `RollConfiguration`, `RollOutcome`, `IntuitiveRollContext`, `DiceInputError`, `DicePool`
+  - roll engines/parsing: `DiceRollSession`, `IntuitiveRoller`, `TrueRandomRoller`, `DiceNotationParser`
+  - D6 orientation math: `D6FaceOrientation`
+  - D6 beveled geometry shape: `D6BeveledCubeGeometry`
+- Watch-specific (intentional):
+  - face texture generation path uses SpriteKit label scenes per face in `InterfaceController`.
+  - iOS `D6SceneKitRenderConfig` remains UIKit-renderer based (`UIGraphicsImageRenderer`), which is unavailable on watchOS.
+- Rationale:
+  - keeps domain/geometry logic shared while using a watch-compatible material path.
+  - avoids parallel domain implementations and reduces drift between watch and iOS behavior.

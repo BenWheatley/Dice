@@ -9,6 +9,7 @@
 import WatchKit
 import Foundation
 import SceneKit
+import SpriteKit
 
 
 class InterfaceController: WKInterfaceController {
@@ -55,27 +56,7 @@ class InterfaceController: WKInterfaceController {
 	}
 
 	@IBAction func roll() {
-		let outcome = viewModel.roll()
-		guard let value = outcome.values.first else {
-			playInvalidInputFeedback()
-			diceButton.setTitle("Invalid")
-			return
-		}
-		rollCount += 1
-		playRollStartFeedback()
-		if usesSceneRenderer {
-			animateD6(to: value) { [weak self] in
-				self?.playRollSettleFeedback()
-			}
-			diceSceneView.setAccessibilityValue("Value \(value)")
-			diceView.setHidden(true)
-		} else {
-			diceView.setImageNamed("\(value)")
-			diceView.setAccessibilityValue("Value \(value)")
-			diceView.setHidden(false)
-			playRollSettleFeedback()
-		}
-		diceButton.setTitle(viewModel.statusText(lastValue: value))
+		apply(outcome: viewModel.roll())
 	}
 
 	@objc private func toggleMode() {
@@ -86,7 +67,10 @@ class InterfaceController: WKInterfaceController {
 	}
 
 	@objc private func repeatLastRoll() {
-		let outcome = viewModel.repeatLastRoll()
+		apply(outcome: viewModel.repeatLastRoll())
+	}
+
+	private func apply(outcome: RollOutcome) {
 		guard let value = outcome.values.first else {
 			playInvalidInputFeedback()
 			diceButton.setTitle("Invalid")
@@ -162,10 +146,35 @@ class InterfaceController: WKInterfaceController {
 
 	private func makeD6Node() -> SCNNode {
 		let sideLength: CGFloat = 1.8
-		let geometry = D6SceneKitRenderConfig.beveledCube(sideLength: sideLength)
+		let geometry = D6BeveledCubeGeometry.make(sideLength: sideLength)
+		geometry.materials = (1...6).map { watchFaceMaterial(value: $0) }
 
 		let node = SCNNode(geometry: geometry)
 		return node
+	}
+
+	private func watchFaceMaterial(value: Int) -> SCNMaterial {
+		let textureSize = CGSize(width: 256, height: 256)
+		let scene = SKScene(size: textureSize)
+		scene.scaleMode = .resizeFill
+		scene.backgroundColor = UIColor(white: 0.96, alpha: 1.0)
+
+		let label = SKLabelNode(text: "\(value)")
+		label.fontName = "SFProDisplay-Bold"
+		label.fontSize = 148
+		label.fontColor = UIColor.black
+		label.verticalAlignmentMode = .center
+		label.horizontalAlignmentMode = .center
+		label.position = CGPoint(x: textureSize.width / 2, y: textureSize.height / 2)
+		scene.addChild(label)
+
+		let material = SCNMaterial()
+		material.diffuse.contents = scene
+		material.locksAmbientWithDiffuse = true
+		material.isDoubleSided = false
+		material.roughness.contents = NSNumber(value: 0.85)
+		material.metalness.contents = NSNumber(value: 0.0)
+		return material
 	}
 
 	private func animateD6(to value: Int, completion: (() -> Void)? = nil) {

@@ -314,7 +314,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 ### Shared-Code Consolidation
 
-- [ ] Fix watch target source membership so shared domain types (`RollConfiguration`, `RollOutcome`, `IntuitiveRollContext`, `FaceContrastStyle`) compile directly in watch extension instead of diverging paths.
-- [ ] Audit watch extension for duplicated roll/result application code and consolidate into shared helper methods where platform APIs allow.
-- [ ] Audit watch extension and iOS app for duplicated single-die SceneKit setup logic and extract common configuration helpers into shared files.
-- [ ] Verify `Dice WatchKit App` scheme builds on watchOS simulator after consolidation and document remaining intentional platform-specific deltas.
+- [x] Fix watch target source membership so shared domain types (`RollConfiguration`, `RollOutcome`, `IntuitiveRollContext`, `FaceContrastStyle`) compile directly in watch extension instead of diverging paths.
+- [x] Audit watch extension for duplicated roll/result application code and consolidate into shared helper methods where platform APIs allow.
+- [x] Audit watch extension and iOS app for duplicated single-die SceneKit setup logic and extract common configuration helpers into shared files.
+- [x] Verify `Dice WatchKit App` scheme builds on watchOS simulator after consolidation and document remaining intentional platform-specific deltas.

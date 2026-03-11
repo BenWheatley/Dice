@@ -69,6 +69,7 @@
 		AACE00012F58000100D1CE00 /* RollDistributionSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACE00022F58000200D1CE00 /* RollDistributionSheetViewController.swift */; };
 		D2CE11012F51000100D1CE00 /* D6FaceOrientation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10012F51000100D1CE00 /* D6FaceOrientation.swift */; };
 		D2CE11022F51000200D1CE00 /* D6SceneKitRenderConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10022F51000200D1CE00 /* D6SceneKitRenderConfig.swift */; };
+		D2CE11192F51001900D1CE00 /* D6BeveledCubeGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10192F51001900D1CE00 /* D6BeveledCubeGeometry.swift */; };
 		D2CE11032F51000300D1CE00 /* DiceDieColorPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10032F51000300D1CE00 /* DiceDieColorPreset.swift */; };
 		D2CE11042F51000400D1CE00 /* DiceInputError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10042F51000400D1CE00 /* DiceInputError.swift */; };
 		D2CE11052F51000500D1CE00 /* DicePool.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10052F51000500D1CE00 /* DicePool.swift */; };
@@ -110,6 +111,14 @@
 		C0DE00252F44022500D1CE00 /* IntuitiveRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00042F44005400D1CE00 /* IntuitiveRoller.swift */; };
 		C0DE00272F44022700D1CE00 /* DiceRollSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00062F44007600D1CE00 /* DiceRollSession.swift */; };
 		C0DE00292F44022900D1CE00 /* WatchRollViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00142F44016400D1CE00 /* WatchRollViewModel.swift */; };
+		C0DE002B2F44022B00D1CE00 /* FaceContrastStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE100C2F51000C00D1CE00 /* FaceContrastStyle.swift */; };
+		C0DE002D2F44022D00D1CE00 /* IntuitiveRollContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE100D2F51000D00D1CE00 /* IntuitiveRollContext.swift */; };
+		C0DE002F2F44022F00D1CE00 /* RollConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE100E2F51000E00D1CE00 /* RollConfiguration.swift */; };
+		C0DE00312F44023100D1CE00 /* RollOutcome.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10172F51001700D1CE00 /* RollOutcome.swift */; };
+		C0DE01A12F4402A100D1CE00 /* DiceInputError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10042F51000400D1CE00 /* DiceInputError.swift */; };
+		C0DE01A22F4402A200D1CE00 /* DicePool.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10052F51000500D1CE00 /* DicePool.swift */; };
+		C0DE01A32F4402A300D1CE00 /* D6FaceOrientation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10012F51000100D1CE00 /* D6FaceOrientation.swift */; };
+		C0DE01A52F4402A500D1CE00 /* D6BeveledCubeGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10192F51001900D1CE00 /* D6BeveledCubeGeometry.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -276,6 +285,7 @@
 		D2CE10162F51001600D1CE00 /* RollHistoryModeFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollHistoryModeFilter.swift; sourceTree = "<group>"; };
 		D2CE10172F51001700D1CE00 /* RollOutcome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollOutcome.swift; sourceTree = "<group>"; };
 		D2CE10182F51001800D1CE00 /* RollSessionSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RollSessionSummary.swift; sourceTree = "<group>"; };
+		D2CE10192F51001900D1CE00 /* D6BeveledCubeGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = D6BeveledCubeGeometry.swift; sourceTree = "<group>"; };
 		D5CE10012F53000100D1CE00 /* DiceRollDistributionChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceRollDistributionChartView.swift; sourceTree = "<group>"; };
 		E0CE10012F54000100D1CE00 /* DiceShaderModifierSourceLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceShaderModifierSourceLoader.swift; sourceTree = "<group>"; };
 		E0CE10022F54000200D1CE00 /* DiceSurfaceBaseShader.metal */ = {isa = PBXFileReference; lastKnownFileType = text; path = DiceSurfaceBaseShader.metal; sourceTree = "<group>"; };
@@ -428,6 +438,7 @@
 				D2CE10162F51001600D1CE00 /* RollHistoryModeFilter.swift */,
 				D2CE10172F51001700D1CE00 /* RollOutcome.swift */,
 				D2CE10182F51001800D1CE00 /* RollSessionSummary.swift */,
+				D2CE10192F51001900D1CE00 /* D6BeveledCubeGeometry.swift */,
 				F1CE10012F55000100D1CE00 /* DiceWidgetSnapshotStore.swift */,
 				F2CE10012F56010100D1CE00 /* DiceAppRoute.swift */,
 				QA0200022F57000100D1CE00 /* DiceQuickActionManager.swift */,
@@ -767,6 +778,7 @@
 				D1CE110F2F50000F00D1CE00 /* RollHistoryViewController.swift in Sources */,
 				D2CE11012F51000100D1CE00 /* D6FaceOrientation.swift in Sources */,
 				D2CE11022F51000200D1CE00 /* D6SceneKitRenderConfig.swift in Sources */,
+				D2CE11192F51001900D1CE00 /* D6BeveledCubeGeometry.swift in Sources */,
 				D2CE11032F51000300D1CE00 /* DiceDieColorPreset.swift in Sources */,
 				D2CE11042F51000400D1CE00 /* DiceInputError.swift in Sources */,
 				D2CE11052F51000500D1CE00 /* DicePool.swift in Sources */,
@@ -815,13 +827,21 @@
 			buildActionMask = 2147483647;
 			files = (
 				C0DE003A2F4406C900D1CE00 /* DiceFaceContrast.swift in Sources */,
+				C0DE002B2F44022B00D1CE00 /* FaceContrastStyle.swift in Sources */,
 				C0DE003F2F4408AB00D1CE00 /* DiceD6PipStyle.swift in Sources */,
 				C0DE00422F44092D00D1CE00 /* DiceFaceNumeralFont.swift in Sources */,
+				C0DE01A32F4402A300D1CE00 /* D6FaceOrientation.swift in Sources */,
+				C0DE01A52F4402A500D1CE00 /* D6BeveledCubeGeometry.swift in Sources */,
 				C0DE00292F44022900D1CE00 /* WatchRollViewModel.swift in Sources */,
 				C0DE00272F44022700D1CE00 /* DiceRollSession.swift in Sources */,
+				C0DE002D2F44022D00D1CE00 /* IntuitiveRollContext.swift in Sources */,
 				C0DE00252F44022500D1CE00 /* IntuitiveRoller.swift in Sources */,
 				C0DE00232F44022300D1CE00 /* TrueRandomRoller.swift in Sources */,
+				C0DE01A12F4402A100D1CE00 /* DiceInputError.swift in Sources */,
+				C0DE01A22F4402A200D1CE00 /* DicePool.swift in Sources */,
 				C0DE00212F44022100D1CE00 /* DiceNotationParser.swift in Sources */,
+				C0DE002F2F44022F00D1CE00 /* RollConfiguration.swift in Sources */,
+				C0DE00312F44023100D1CE00 /* RollOutcome.swift in Sources */,
 				B50B450E215D804200A6399B /* NotificationController.swift in Sources */,
 				B50B450C215D804200A6399B /* ExtensionDelegate.swift in Sources */,
 				B50B450A215D804200A6399B /* InterfaceController.swift in Sources */,
