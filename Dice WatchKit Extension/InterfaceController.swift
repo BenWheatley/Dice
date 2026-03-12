@@ -33,6 +33,7 @@ class InterfaceController: WKInterfaceController {
 	private var lastRenderedValue: Int = 1
 	private var usesSceneRenderer = false
 	private var renderDecision: WatchSceneRenderDecision = .staticImage(sideCount: 6, reason: .sceneViewUnavailable)
+	private var shouldOpenCustomizeForAutomation = false
 	private var lowPowerObserver: NSObjectProtocol?
 	private let feedbackDevice = WKInterfaceDevice.current()
 
@@ -49,6 +50,7 @@ class InterfaceController: WKInterfaceController {
 		configurationSync.onRemoteConfigurationApplied = { [weak self] configuration in
 			self?.applyRemoteConfiguration(configuration)
 		}
+		shouldOpenCustomizeForAutomation = ProcessInfo.processInfo.arguments.contains("-watchOpenCustomizeOnLaunch")
 		diceButton.setAccessibilityLabel(WatchAccessibilityFormatter.rollButtonLabel)
 		diceButton.setAccessibilityHint(WatchAccessibilityFormatter.rollButtonHint)
 		diceView.setAccessibilityLabel(WatchAccessibilityFormatter.latestResultLabel)
@@ -63,6 +65,7 @@ class InterfaceController: WKInterfaceController {
 	override func willActivate() {
         super.willActivate()
 		applyRemoteConfiguration(configurationSync.currentConfiguration())
+		openCustomizeIfRequestedForAutomation()
     }
 
     override func didDeactivate() {
@@ -94,6 +97,15 @@ class InterfaceController: WKInterfaceController {
 
 	@objc private func openCustomize() {
 		pushController(withName: "WatchCustomizeController", context: configurationSync.currentConfiguration())
+	}
+
+	private func openCustomizeIfRequestedForAutomation() {
+		// Keep screenshot capture deterministic in simulator automation without adding production UI surface.
+		guard shouldOpenCustomizeForAutomation else { return }
+		shouldOpenCustomizeForAutomation = false
+		DispatchQueue.main.async { [weak self] in
+			self?.openCustomize()
+		}
 	}
 
 	private func apply(outcome: RollOutcome) {

@@ -2330,6 +2330,19 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(source.contains("pushController(withName: \"WatchCustomizeController\""))
 	}
 
+	func testWatchInterfaceControllerSupportsCustomizeLaunchArgumentForSimulatorSnapshots() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let controllerURL = projectRoot
+			.appendingPathComponent("Dice WatchKit Extension")
+			.appendingPathComponent("InterfaceController.swift")
+		let source = try String(contentsOf: controllerURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("-watchOpenCustomizeOnLaunch"))
+		XCTAssertTrue(source.contains("openCustomizeIfRequestedForAutomation"))
+	}
+
 	func testSingleDieSceneGeometryFactorySupportsPolyhedralAndFallbackDescriptors() {
 		let d20 = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: 20, sideLength: 96)
 		XCTAssertFalse(d20.isCoin)

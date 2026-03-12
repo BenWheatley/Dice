@@ -3,6 +3,15 @@
 Date: 2026-03-12  
 Scope: watch single-die customization regressions (simulator only)
 
+## Customize Flow Ergonomics + One-Level Navigation
+
+- [x] Main roll screen screenshot captured: `docs/watch/screenshots/watch-main-customization-entry.png`.
+- [x] Customize screen screenshot captured: `docs/watch/screenshots/watch-customize-flow.png`.
+- [x] Customize screenshot automation uses simulator launch argument `-watchOpenCustomizeOnLaunch` for deterministic capture.
+- [x] One-level navigation confirmed: main roll screen pushes directly to Customize; back returns directly to main roll screen.
+- [x] Ergonomics confirmed on 40mm simulator: side picker + quick chips + color/background/mode controls reachable in one controller.
+- [x] Background selector acceptance pass: change in Customize persists and main scene texture updates after dismissal.
+
 ## Side Count Switching
 
 - [ ] Start from `d6`, switch to `d20`, roll, and verify visible die value range is `1...20`.
