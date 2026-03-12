@@ -148,7 +148,8 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 		notationTitleContainerView.addSubview(notationField)
 		let notationHeightConstraint = notationTitleContainerView.heightAnchor.constraint(equalToConstant: 36)
 		let notationWidthConstraint = notationTitleContainerView.widthAnchor.constraint(equalToConstant: 220)
-		notationWidthConstraint.priority = .required
+		// Keep this non-required so transient nav-bar width transitions do not emit unsatisfiable-constraint warnings.
+		notationWidthConstraint.priority = UILayoutPriority(999)
 		notationTitleWidthConstraint = notationWidthConstraint
 		NSLayoutConstraint.activate([
 			notationHeightConstraint,
@@ -230,7 +231,8 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 	}
 
 	private func updateNotationTitleWidth() {
-		let totalWidth = view.safeAreaLayoutGuide.layoutFrame.width
+		let navigationBarWidth = navigationController?.navigationBar.bounds.width ?? 0
+		let totalWidth = navigationBarWidth > 0 ? navigationBarWidth : view.safeAreaLayoutGuide.layoutFrame.width
 		guard totalWidth > 0 else { return }
 		let barButtonCount = CGFloat(navigationItem.rightBarButtonItems?.count ?? 0)
 		let reservedRightWidth = barButtonCount * Self.notationTitleBarButtonEstimatedWidth

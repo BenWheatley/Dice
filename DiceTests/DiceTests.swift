@@ -2642,6 +2642,43 @@ final class DiceTests: XCTestCase {
 		XCTAssertGreaterThan(titleWidthConstraint?.constant ?? 0, 320)
 	}
 
+	func testControllerNotationFieldWidthShrinksWhenNavigationBarCompacts() {
+		let controller = makeController()
+		let navigationController = UINavigationController(rootViewController: controller)
+		navigationController.loadViewIfNeeded()
+		controller.loadViewIfNeeded()
+
+		navigationController.view.frame = CGRect(x: 0, y: 0, width: 932, height: 430)
+		navigationController.view.setNeedsLayout()
+		navigationController.view.layoutIfNeeded()
+
+		let titleView = controller.navigationItem.titleView
+		let titleWidthConstraint = titleView?.constraints.first(where: { $0.firstAttribute == .width })
+		let wideConstant = titleWidthConstraint?.constant ?? 0
+		XCTAssertGreaterThan(wideConstant, 320)
+
+		navigationController.view.frame = CGRect(x: 0, y: 0, width: 390, height: 844)
+		navigationController.view.setNeedsLayout()
+		navigationController.view.layoutIfNeeded()
+
+		let compactConstant = titleWidthConstraint?.constant ?? 0
+		XCTAssertLessThan(compactConstant, wideConstant)
+		XCTAssertLessThanOrEqual(compactConstant, 260, "Compact nav width should never keep a wide fixed title width.")
+	}
+
+	func testControllerNotationTitleWidthConstraintIsNotRequiredPriority() {
+		let controller = makeController()
+		controller.loadViewIfNeeded()
+		let titleView = controller.navigationItem.titleView
+		let titleWidthConstraint = titleView?.constraints.first(where: { $0.firstAttribute == .width })
+		XCTAssertNotNil(titleWidthConstraint)
+		XCTAssertLessThan(
+			titleWidthConstraint?.priority.rawValue ?? UILayoutPriority.required.rawValue,
+			UILayoutPriority.required.rawValue,
+			"Title width should be non-required to avoid transient navigation bar width conflicts during size transitions."
+		)
+	}
+
 	func testControllerAppliesDarkThemeNotationFieldPalette() {
 		let defaults = UserDefaults.standard
 		let key = "Dice.theme"
