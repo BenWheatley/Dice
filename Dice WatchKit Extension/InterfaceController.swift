@@ -43,9 +43,9 @@ class InterfaceController: WKInterfaceController {
 		configurationSync.onRemoteConfigurationApplied = { [weak self] configuration in
 			self?.applyRemoteConfiguration(configuration)
 		}
-		diceButton.setAccessibilityLabel("Roll dice")
-		diceButton.setAccessibilityHint("Double tap to roll one die")
-		diceView.setAccessibilityLabel("Latest die result")
+		diceButton.setAccessibilityLabel(WatchAccessibilityFormatter.rollButtonLabel)
+		diceButton.setAccessibilityHint(WatchAccessibilityFormatter.rollButtonHint)
+		diceView.setAccessibilityLabel(WatchAccessibilityFormatter.latestResultLabel)
 		configureSceneRenderer()
 		configurePowerModeObserver()
 		addMenuItem(with: .more, title: "Mode", action: #selector(toggleMode))
@@ -106,11 +106,15 @@ class InterfaceController: WKInterfaceController {
 			animateDie(to: value, sideCount: sceneSideCount) { [weak self] in
 				self?.playRollSettleFeedback()
 			}
-			diceSceneView.setAccessibilityValue("Value \(value)")
+			diceSceneView.setAccessibilityValue(
+				WatchAccessibilityFormatter.dieValue(value: value, sideCount: sceneSideCount)
+			)
 			diceView.setHidden(true)
 		} else {
 			applyStaticFallbackImage(value: value, sideCount: renderDecision.sideCount)
-			diceView.setAccessibilityValue("Value \(value)")
+			diceView.setAccessibilityValue(
+				WatchAccessibilityFormatter.dieValue(value: value, sideCount: renderDecision.sideCount)
+			)
 			diceView.setHidden(false)
 			playRollSettleFeedback()
 		}
@@ -143,7 +147,7 @@ class InterfaceController: WKInterfaceController {
 
 		let initialTexture = DiceTableTexture(rawValue: configurationSync.currentConfiguration().backgroundTexture) ?? .black
 		configureTableSurface(in: scene, initialTexture: initialTexture)
-		diceSceneView.setAccessibilityLabel("Latest die result, 3D preview")
+		diceSceneView.setAccessibilityLabel(WatchAccessibilityFormatter.scenePreviewLabel)
 		refreshRenderMode(currentValue: 1)
 		applyPowerModeProfile()
 	}
@@ -350,6 +354,9 @@ class InterfaceController: WKInterfaceController {
 			usesSceneRenderer = true
 			diceSceneView.setHidden(false)
 			diceView.setHidden(true)
+			diceSceneView.setAccessibilityValue(
+				WatchAccessibilityFormatter.dieValue(value: currentValue, sideCount: sideCount)
+			)
 			if activeSceneSideCount != sideCount || dieNode.parent == nil {
 				rebuildDieNode(sideCount: sideCount, currentValue: currentValue)
 			}
@@ -357,6 +364,9 @@ class InterfaceController: WKInterfaceController {
 			usesSceneRenderer = false
 			diceSceneView.setHidden(true)
 			diceView.setHidden(false)
+			diceView.setAccessibilityValue(
+				WatchAccessibilityFormatter.dieValue(value: currentValue, sideCount: sideCount)
+			)
 			activeSceneSideCount = nil
 			applyStaticFallbackImage(value: currentValue, sideCount: sideCount)
 		}

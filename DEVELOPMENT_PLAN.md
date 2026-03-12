@@ -313,7 +313,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Fix watch launch black-screen regression by assigning explicit non-zero `WKInterfaceSCNScene` storyboard height and guarding with a regression test.
 - [x] Reuse shared face-material generation and orientation helpers from iOS code paths for watch single-die rendering; remove watch-only duplicated face mapping logic.
 - [x] Add watch-side fallback policy for unsupported/high-cost geometry (graceful downgrade to static image only when shared SceneKit path is unavailable).
-- [ ] Add focused watch simulator tests/checklists for side-count switching, reroll speed, and accessibility labels after customization changes.
+- [x] Add focused watch simulator tests/checklists for side-count switching, reroll speed, and accessibility labels after customization changes.
 
 ### Shared-Code Consolidation
 

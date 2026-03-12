@@ -1968,6 +1968,59 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(viewModel.currentNotation, "1d100")
 	}
 
+	func testWatchRollViewModelSideCountSwitchResetsRepeatConfigurationRange() {
+		var requestedRanges: [ClosedRange<Int>] = []
+		let deterministic = TrueRandomRoller { range in
+			requestedRanges.append(range)
+			return range.lowerBound
+		}
+		let session = DiceRollSession(
+			intuitiveRoller: IntuitiveRoller(
+				fallbackRoller: deterministic,
+				randomDouble: { 0.5 }
+			)
+		)
+		let viewModel = WatchRollViewModel(rollSession: session, isIntuitiveMode: false, sideCount: 6)
+
+		_ = viewModel.roll()
+		viewModel.setSideCount(21)
+		_ = viewModel.repeatLastRoll()
+
+		XCTAssertEqual(requestedRanges, [1...6, 1...21])
+		XCTAssertEqual(viewModel.currentNotation, "1d21")
+	}
+
+	func testWatchRollViewModelRerollBurstStaysWithinInteractionBudget() {
+		let deterministic = TrueRandomRoller { range in range.lowerBound }
+		let session = DiceRollSession(
+			intuitiveRoller: IntuitiveRoller(
+				fallbackRoller: deterministic,
+				randomDouble: { 0.5 }
+			)
+		)
+		let viewModel = WatchRollViewModel(rollSession: session, isIntuitiveMode: false, sideCount: 20)
+		_ = viewModel.roll()
+
+		let start = CFAbsoluteTimeGetCurrent()
+		for _ in 0..<200 {
+			_ = viewModel.repeatLastRoll()
+		}
+		let elapsed = CFAbsoluteTimeGetCurrent() - start
+		XCTAssertLessThan(elapsed, 1.0, "Expected 200 watch rerolls to stay under a 1s model budget.")
+	}
+
+	func testWatchAccessibilityFormatterUsesSideAwareValueStrings() {
+		XCTAssertEqual(WatchAccessibilityFormatter.dieValue(value: 17, sideCount: 21), "Value 17 on d21")
+		XCTAssertEqual(WatchAccessibilityFormatter.dieValue(value: 2, sideCount: 2), "Value 2 on d2")
+	}
+
+	func testWatchAccessibilityFormatterProvidesStableControlLabels() {
+		XCTAssertEqual(WatchAccessibilityFormatter.rollButtonLabel, "Roll dice")
+		XCTAssertEqual(WatchAccessibilityFormatter.rollButtonHint, "Double tap to roll one die")
+		XCTAssertEqual(WatchAccessibilityFormatter.latestResultLabel, "Latest die result")
+		XCTAssertEqual(WatchAccessibilityFormatter.scenePreviewLabel, "Latest die result, 3D preview")
+	}
+
 	func testWatchSingleDieConfigurationStoreRoundTrip() {
 		let suiteName = "DiceTests.watch.config.store.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!
