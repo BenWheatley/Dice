@@ -40,11 +40,54 @@
                 <controller identifier="WatchCustomizeController" id="hJq-MF-sG1" customClass="WatchCustomizeInterfaceController" customModule="Dice_WatchKit_Extension" customModuleProvider="target">
                     <items>
                         <label width="1" height="0.2" alignment="center" text="Customize" id="ZPf-Iu-L2V"/>
-                        <button width="1" alignment="center" title="Side: d6" id="xjp-6u-8mW">
+                        <picker width="1" alignment="center" id="xjp-6u-8mW">
                             <connections>
-                                <action selector="editSideCount" destination="hJq-MF-sG1" id="zEl-SW-L3Q"/>
+                                <action selector="sideCountPickerChanged:" destination="hJq-MF-sG1" id="zEl-SW-L3Q"/>
                             </connections>
-                        </button>
+                        </picker>
+                        <group width="1" height="0.2" alignment="center" layout="horizontal" id="u2S-fA-z3E">
+                            <items>
+                                <button width="0.25" alignment="center" title="d2" id="t9H-M2-P2J">
+                                    <connections>
+                                        <action selector="selectSideD2" destination="hJq-MF-sG1" id="yFS-vq-eY6"/>
+                                    </connections>
+                                </button>
+                                <button width="0.25" alignment="center" title="d4" id="MM6-QD-Sdy">
+                                    <connections>
+                                        <action selector="selectSideD4" destination="hJq-MF-sG1" id="5P9-hF-0VJ"/>
+                                    </connections>
+                                </button>
+                                <button width="0.25" alignment="center" title="d6" id="zop-Vh-xtV">
+                                    <connections>
+                                        <action selector="selectSideD6" destination="hJq-MF-sG1" id="8W6-JC-KT8"/>
+                                    </connections>
+                                </button>
+                                <button width="0.25" alignment="center" title="d8" id="9y0-eQ-IrB">
+                                    <connections>
+                                        <action selector="selectSideD8" destination="hJq-MF-sG1" id="rz6-t2-r6t"/>
+                                    </connections>
+                                </button>
+                            </items>
+                        </group>
+                        <group width="1" height="0.2" alignment="center" layout="horizontal" id="oDE-Xz-Bfq">
+                            <items>
+                                <button width="0.3333333333" alignment="center" title="d10" id="kXU-eS-q7E">
+                                    <connections>
+                                        <action selector="selectSideD10" destination="hJq-MF-sG1" id="q8M-Zp-Sbk"/>
+                                    </connections>
+                                </button>
+                                <button width="0.3333333333" alignment="center" title="d12" id="2Mx-AO-IU4">
+                                    <connections>
+                                        <action selector="selectSideD12" destination="hJq-MF-sG1" id="YM8-D0-2js"/>
+                                    </connections>
+                                </button>
+                                <button width="0.3333333333" alignment="center" title="d20" id="uLx-j3-c5f">
+                                    <connections>
+                                        <action selector="selectSideD20" destination="hJq-MF-sG1" id="WxE-qj-I57"/>
+                                    </connections>
+                                </button>
+                            </items>
+                        </group>
                         <button width="1" alignment="center" title="Color: Ivory" id="naG-PB-b0v">
                             <connections>
                                 <action selector="cycleColor" destination="hJq-MF-sG1" id="A9f-hE-I2H"/>
@@ -62,7 +105,14 @@
                         </button>
                     </items>
                     <connections>
-                        <outlet property="sideCountButton" destination="xjp-6u-8mW" id="cdL-vm-Q9k"/>
+                        <outlet property="sideCountPicker" destination="xjp-6u-8mW" id="cdL-vm-Q9k"/>
+                        <outlet property="sideD2Button" destination="t9H-M2-P2J" id="ZE0-7N-GBp"/>
+                        <outlet property="sideD4Button" destination="MM6-QD-Sdy" id="xhL-Xd-pP0"/>
+                        <outlet property="sideD6Button" destination="zop-Vh-xtV" id="coi-uP-LrR"/>
+                        <outlet property="sideD8Button" destination="9y0-eQ-IrB" id="ywt-s0-IYc"/>
+                        <outlet property="sideD10Button" destination="kXU-eS-q7E" id="O09-8y-k1X"/>
+                        <outlet property="sideD12Button" destination="2Mx-AO-IU4" id="um5-2p-9pi"/>
+                        <outlet property="sideD20Button" destination="uLx-j3-c5f" id="5tM-Su-hzA"/>
                         <outlet property="colorButton" destination="naG-PB-b0v" id="hIt-ev-R2U"/>
                         <outlet property="modeButton" destination="u7a-rw-Q3F" id="ER5-IR-R8W"/>
                     </connections>

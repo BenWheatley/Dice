@@ -2202,6 +2202,30 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(configuration.backgroundTexture, "black")
 	}
 
+	func testWatchSingleDieCustomizationStateProvidesQuickChipSideList() {
+		XCTAssertEqual(
+			WatchSingleDieCustomizationState.quickChipSideCounts,
+			[2, 4, 6, 8, 10, 12, 20]
+		)
+	}
+
+	func testWatchSingleDieCustomizationStateSynchronizesPickerAndQuickChipSelection() {
+		var state = WatchSingleDieCustomizationState(
+			configuration: WatchSingleDieConfiguration(sideCount: 6)
+		)
+
+		let d20PickerIndex = WatchSingleDieCustomizationState.pickerIndex(forSideCount: 20)
+		state.setSideCountFromPickerIndex(d20PickerIndex)
+		XCTAssertEqual(state.sideCount, 20)
+		XCTAssertTrue(state.isQuickChipSelected(20))
+		XCTAssertFalse(state.isQuickChipSelected(6))
+
+		state.setSideCount(37)
+		XCTAssertEqual(state.sideCount, 37)
+		XCTAssertFalse(WatchSingleDieCustomizationState.quickChipSideCounts.contains(state.sideCount))
+		XCTAssertEqual(WatchSingleDieCustomizationState.pickerIndex(forSideCount: state.sideCount), 35)
+	}
+
 	func testWatchStoryboardUsesExtensionModuleForInterfaceController() throws {
 		let projectRoot = URL(fileURLWithPath: #filePath)
 			.deletingLastPathComponent()
@@ -2264,7 +2288,14 @@ final class DiceTests: XCTestCase {
 
 		XCTAssertTrue(source.contains("customClass=\"WatchCustomizeInterfaceController\""))
 		XCTAssertTrue(source.contains("identifier=\"WatchCustomizeController\""))
-		XCTAssertTrue(source.contains("selector=\"editSideCount\""))
+		XCTAssertTrue(source.contains("selector=\"sideCountPickerChanged:\""))
+		XCTAssertTrue(source.contains("selector=\"selectSideD2\""))
+		XCTAssertTrue(source.contains("selector=\"selectSideD4\""))
+		XCTAssertTrue(source.contains("selector=\"selectSideD6\""))
+		XCTAssertTrue(source.contains("selector=\"selectSideD8\""))
+		XCTAssertTrue(source.contains("selector=\"selectSideD10\""))
+		XCTAssertTrue(source.contains("selector=\"selectSideD12\""))
+		XCTAssertTrue(source.contains("selector=\"selectSideD20\""))
 		XCTAssertTrue(source.contains("selector=\"cycleColor\""))
 		XCTAssertTrue(source.contains("selector=\"toggleMode\""))
 	}
