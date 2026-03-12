@@ -9,11 +9,13 @@ struct WatchSingleDieCustomizationState: Equatable {
 	private(set) var sideCount: Int
 	var colorPreset: DiceDieColorPreset
 	private(set) var isIntuitiveMode: Bool
+	private(set) var backgroundTexture: DiceTableTexture
 
 	init(configuration: WatchSingleDieConfiguration) {
 		sideCount = DiceSingleDieSceneGeometryFactory.clampedSideCount(configuration.sideCount)
 		colorPreset = DiceDieColorPreset.fromNotation(configuration.colorTag) ?? .ivory
 		isIntuitiveMode = configuration.isIntuitiveMode
+		backgroundTexture = DiceTableTexture(rawValue: configuration.backgroundTexture) ?? .black
 	}
 
 	mutating func setSideCount(_ sideCount: Int) {
@@ -39,6 +41,16 @@ struct WatchSingleDieCustomizationState: Equatable {
 		isIntuitiveMode.toggle()
 	}
 
+	mutating func cycleBackgroundForward() {
+		let allTextures = DiceTableTexture.allCases
+		guard let index = allTextures.firstIndex(of: backgroundTexture) else {
+			backgroundTexture = .black
+			return
+		}
+		let next = (index + 1) % allTextures.count
+		backgroundTexture = allTextures[next]
+	}
+
 	mutating func cycleColorForward() {
 		let colors = DiceDieColorPreset.allCases
 		guard let index = colors.firstIndex(of: colorPreset) else {
@@ -53,6 +65,7 @@ struct WatchSingleDieCustomizationState: Equatable {
 		configuration.sideCount = sideCount
 		configuration.colorTag = colorPreset.notationName
 		configuration.isIntuitiveMode = isIntuitiveMode
+		configuration.backgroundTexture = backgroundTexture.rawValue
 	}
 
 	var sideToken: String {
@@ -81,6 +94,19 @@ struct WatchSingleDieCustomizationState: Equatable {
 			return "Amber"
 		case .slate:
 			return "Slate"
+		}
+	}
+
+	var backgroundToken: String {
+		switch backgroundTexture {
+		case .black:
+			return "Black"
+		case .felt:
+			return "Felt"
+		case .wood:
+			return "Wood"
+		case .neutral:
+			return "Neutral"
 		}
 	}
 }

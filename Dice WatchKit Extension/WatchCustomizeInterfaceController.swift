@@ -14,6 +14,7 @@ final class WatchCustomizeInterfaceController: WKInterfaceController {
 	@IBOutlet private weak var sideD12Button: WKInterfaceButton!
 	@IBOutlet private weak var sideD20Button: WKInterfaceButton!
 	@IBOutlet private weak var colorButton: WKInterfaceButton!
+	@IBOutlet private weak var backgroundButton: WKInterfaceButton!
 	@IBOutlet private weak var modeButton: WKInterfaceButton!
 
 	override func awake(withContext context: Any?) {
@@ -50,6 +51,11 @@ final class WatchCustomizeInterfaceController: WKInterfaceController {
 		persistCustomization()
 	}
 
+	@IBAction func cycleBackground() {
+		customizationState.cycleBackgroundForward()
+		persistCustomization()
+	}
+
 	@IBAction func toggleMode() {
 		customizationState.toggleMode()
 		persistCustomization()
@@ -80,6 +86,7 @@ final class WatchCustomizeInterfaceController: WKInterfaceController {
 		sideCountPicker.setSelectedItemIndex(customizationState.sidePickerIndex)
 		updateQuickChipTitles()
 		colorButton.setTitle("Color: \(customizationState.colorToken)")
+		backgroundButton.setTitle("Background: \(customizationState.backgroundToken)")
 		modeButton.setTitle("Mode: \(customizationState.modeToken)")
 	}
 

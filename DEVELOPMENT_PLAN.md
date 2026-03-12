@@ -328,7 +328,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 - [x] Add a watch Customize sheet/controller reachable from the main roll screen, with controls for side count, die color, and mode in one level of navigation, persisting through `WatchSingleDieConfigurationSyncBridge`.
 - [x] Add quick side chips (`d2`, `d4`, `d6`, `d8`, `d10`, `d12`, `d20`) to the watch Customize flow and keep chip state synchronized with crown/picker value.
-- [ ] Add background texture selector to the watch Customize flow (including `black` default) and live preview updates on the main scene after dismissal.
+- [x] Add background texture selector to the watch Customize flow (including `black` default) and live preview updates on the main scene after dismissal.
 
 ### Watch UX and Validation
 

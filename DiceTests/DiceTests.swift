@@ -2179,6 +2179,7 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(state.sideCount, 20)
 		XCTAssertEqual(state.colorPreset, .emerald)
 		XCTAssertTrue(state.isIntuitiveMode)
+		XCTAssertEqual(state.backgroundTexture, .black)
 	}
 
 	func testWatchSingleDieCustomizationStateAppliesEditsBackToConfiguration() {
@@ -2193,13 +2194,28 @@ final class DiceTests: XCTestCase {
 		state.setSideCount(37)
 		state.colorPreset = .sapphire
 		state.toggleMode()
+		state.cycleBackgroundForward()
 
 		state.apply(to: &configuration)
 
 		XCTAssertEqual(configuration.sideCount, 37)
 		XCTAssertEqual(configuration.colorTag, "blue")
 		XCTAssertTrue(configuration.isIntuitiveMode)
-		XCTAssertEqual(configuration.backgroundTexture, "black")
+		XCTAssertEqual(configuration.backgroundTexture, "felt")
+	}
+
+	func testWatchSingleDieCustomizationStateCyclesBackgroundTexturesIncludingBlack() {
+		var state = WatchSingleDieCustomizationState(
+			configuration: WatchSingleDieConfiguration(backgroundTexture: "black")
+		)
+
+		state.cycleBackgroundForward()
+		XCTAssertEqual(state.backgroundTexture, .felt)
+
+		state.cycleBackgroundForward()
+		state.cycleBackgroundForward()
+		state.cycleBackgroundForward()
+		XCTAssertEqual(state.backgroundTexture, .black)
 	}
 
 	func testWatchSingleDieCustomizationStateProvidesQuickChipSideList() {
@@ -2297,6 +2313,7 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(source.contains("selector=\"selectSideD12\""))
 		XCTAssertTrue(source.contains("selector=\"selectSideD20\""))
 		XCTAssertTrue(source.contains("selector=\"cycleColor\""))
+		XCTAssertTrue(source.contains("selector=\"cycleBackground\""))
 		XCTAssertTrue(source.contains("selector=\"toggleMode\""))
 	}
 

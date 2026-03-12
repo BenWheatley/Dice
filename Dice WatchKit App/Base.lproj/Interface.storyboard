@@ -93,6 +93,11 @@
                                 <action selector="cycleColor" destination="hJq-MF-sG1" id="A9f-hE-I2H"/>
                             </connections>
                         </button>
+                        <button width="1" alignment="center" title="Background: Black" id="uqH-Iz-Xnq">
+                            <connections>
+                                <action selector="cycleBackground" destination="hJq-MF-sG1" id="gff-JC-qZf"/>
+                            </connections>
+                        </button>
                         <button width="1" alignment="center" title="Mode: TR" id="u7a-rw-Q3F">
                             <connections>
                                 <action selector="toggleMode" destination="hJq-MF-sG1" id="Qq3-f8-c0Y"/>
@@ -114,6 +119,7 @@
                         <outlet property="sideD12Button" destination="2Mx-AO-IU4" id="um5-2p-9pi"/>
                         <outlet property="sideD20Button" destination="uLx-j3-c5f" id="5tM-Su-hzA"/>
                         <outlet property="colorButton" destination="naG-PB-b0v" id="hIt-ev-R2U"/>
+                        <outlet property="backgroundButton" destination="uqH-Iz-Xnq" id="P0h-Ns-2w9"/>
                         <outlet property="modeButton" destination="u7a-rw-Q3F" id="ER5-IR-R8W"/>
                     </connections>
                 </controller>
