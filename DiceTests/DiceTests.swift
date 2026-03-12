@@ -2165,6 +2165,43 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(current.updatedAt, Date(timeIntervalSince1970: 30))
 	}
 
+	func testWatchSingleDieCustomizationStateLoadsFromConfiguration() {
+		let configuration = WatchSingleDieConfiguration(
+			sideCount: 20,
+			colorTag: "green",
+			isIntuitiveMode: true,
+			backgroundTexture: "black",
+			updatedAt: Date(timeIntervalSince1970: 99)
+		)
+
+		let state = WatchSingleDieCustomizationState(configuration: configuration)
+
+		XCTAssertEqual(state.sideCount, 20)
+		XCTAssertEqual(state.colorPreset, .emerald)
+		XCTAssertTrue(state.isIntuitiveMode)
+	}
+
+	func testWatchSingleDieCustomizationStateAppliesEditsBackToConfiguration() {
+		var configuration = WatchSingleDieConfiguration(
+			sideCount: 6,
+			colorTag: "ivory",
+			isIntuitiveMode: false,
+			backgroundTexture: "black",
+			updatedAt: Date(timeIntervalSince1970: 99)
+		)
+		var state = WatchSingleDieCustomizationState(configuration: configuration)
+		state.setSideCount(37)
+		state.colorPreset = .sapphire
+		state.toggleMode()
+
+		state.apply(to: &configuration)
+
+		XCTAssertEqual(configuration.sideCount, 37)
+		XCTAssertEqual(configuration.colorTag, "blue")
+		XCTAssertTrue(configuration.isIntuitiveMode)
+		XCTAssertEqual(configuration.backgroundTexture, "black")
+	}
+
 	func testWatchStoryboardUsesExtensionModuleForInterfaceController() throws {
 		let projectRoot = URL(fileURLWithPath: #filePath)
 			.deletingLastPathComponent()
@@ -2213,6 +2250,36 @@ final class DiceTests: XCTestCase {
 			0.0,
 			"Watch SceneKit view must have non-zero height; zero height produces a black frame."
 		)
+	}
+
+	func testWatchStoryboardContainsCustomizeControllerAndActions() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let storyboardURL = projectRoot
+			.appendingPathComponent("Dice WatchKit App")
+			.appendingPathComponent("Base.lproj")
+			.appendingPathComponent("Interface.storyboard")
+		let source = try String(contentsOf: storyboardURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("customClass=\"WatchCustomizeInterfaceController\""))
+		XCTAssertTrue(source.contains("identifier=\"WatchCustomizeController\""))
+		XCTAssertTrue(source.contains("selector=\"editSideCount\""))
+		XCTAssertTrue(source.contains("selector=\"cycleColor\""))
+		XCTAssertTrue(source.contains("selector=\"toggleMode\""))
+	}
+
+	func testWatchInterfaceControllerRegistersCustomizeEntryPoint() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let controllerURL = projectRoot
+			.appendingPathComponent("Dice WatchKit Extension")
+			.appendingPathComponent("InterfaceController.swift")
+		let source = try String(contentsOf: controllerURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("title: \"Customize\""))
+		XCTAssertTrue(source.contains("pushController(withName: \"WatchCustomizeController\""))
 	}
 
 	func testSingleDieSceneGeometryFactorySupportsPolyhedralAndFallbackDescriptors() {

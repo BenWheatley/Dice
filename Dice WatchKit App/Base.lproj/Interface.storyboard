@@ -34,5 +34,41 @@
             </objects>
             <point key="canvasLocation" x="220" y="345"/>
         </scene>
+        <!--Watch Customize Interface Controller-->
+        <scene sceneID="ANV-zL-aT8">
+            <objects>
+                <controller identifier="WatchCustomizeController" id="hJq-MF-sG1" customClass="WatchCustomizeInterfaceController" customModule="Dice_WatchKit_Extension" customModuleProvider="target">
+                    <items>
+                        <label width="1" height="0.2" alignment="center" text="Customize" id="ZPf-Iu-L2V"/>
+                        <button width="1" alignment="center" title="Side: d6" id="xjp-6u-8mW">
+                            <connections>
+                                <action selector="editSideCount" destination="hJq-MF-sG1" id="zEl-SW-L3Q"/>
+                            </connections>
+                        </button>
+                        <button width="1" alignment="center" title="Color: Ivory" id="naG-PB-b0v">
+                            <connections>
+                                <action selector="cycleColor" destination="hJq-MF-sG1" id="A9f-hE-I2H"/>
+                            </connections>
+                        </button>
+                        <button width="1" alignment="center" title="Mode: TR" id="u7a-rw-Q3F">
+                            <connections>
+                                <action selector="toggleMode" destination="hJq-MF-sG1" id="Qq3-f8-c0Y"/>
+                            </connections>
+                        </button>
+                        <button width="1" alignment="center" title="Done" id="v0X-RQ-SY2">
+                            <connections>
+                                <action selector="closeCustomize" destination="hJq-MF-sG1" id="9y5-pj-b9M"/>
+                            </connections>
+                        </button>
+                    </items>
+                    <connections>
+                        <outlet property="sideCountButton" destination="xjp-6u-8mW" id="cdL-vm-Q9k"/>
+                        <outlet property="colorButton" destination="naG-PB-b0v" id="hIt-ev-R2U"/>
+                        <outlet property="modeButton" destination="u7a-rw-Q3F" id="ER5-IR-R8W"/>
+                    </connections>
+                </controller>
+            </objects>
+            <point key="canvasLocation" x="760" y="345"/>
+        </scene>
     </scenes>
 </document>

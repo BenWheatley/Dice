@@ -29,6 +29,8 @@ class InterfaceController: WKInterfaceController {
 	private let tableNode = SCNNode()
 	private let tableMaterial = SCNMaterial()
 	private var activeTableTexture: DiceTableTexture = .black
+	private var activeColorPreset: DiceDieColorPreset = .ivory
+	private var lastRenderedValue: Int = 1
 	private var usesSceneRenderer = false
 	private var renderDecision: WatchSceneRenderDecision = .staticImage(sideCount: 6, reason: .sceneViewUnavailable)
 	private var lowPowerObserver: NSObjectProtocol?
@@ -40,6 +42,10 @@ class InterfaceController: WKInterfaceController {
 
     override func awake(withContext context: Any?) {
         super.awake(withContext: context)
+		let currentConfiguration = configurationSync.currentConfiguration()
+		activeColorPreset = Self.colorPreset(for: currentConfiguration.colorTag)
+		viewModel.setSideCount(currentConfiguration.sideCount)
+		viewModel.setIntuitiveMode(currentConfiguration.isIntuitiveMode)
 		configurationSync.onRemoteConfigurationApplied = { [weak self] configuration in
 			self?.applyRemoteConfiguration(configuration)
 		}
@@ -48,6 +54,7 @@ class InterfaceController: WKInterfaceController {
 		diceView.setAccessibilityLabel(WatchAccessibilityFormatter.latestResultLabel)
 		configureSceneRenderer()
 		configurePowerModeObserver()
+		addMenuItem(with: .more, title: "Customize", action: #selector(openCustomize))
 		addMenuItem(with: .more, title: "Mode", action: #selector(toggleMode))
 		addMenuItem(with: .repeat, title: "Repeat", action: #selector(repeatLastRoll))
 		roll()
@@ -55,6 +62,7 @@ class InterfaceController: WKInterfaceController {
 
 	override func willActivate() {
         super.willActivate()
+		applyRemoteConfiguration(configurationSync.currentConfiguration())
     }
 
     override func didDeactivate() {
@@ -84,12 +92,17 @@ class InterfaceController: WKInterfaceController {
 		apply(outcome: viewModel.repeatLastRoll())
 	}
 
+	@objc private func openCustomize() {
+		pushController(withName: "WatchCustomizeController", context: configurationSync.currentConfiguration())
+	}
+
 	private func apply(outcome: RollOutcome) {
 		guard let value = outcome.values.first else {
 			playInvalidInputFeedback()
 			diceButton.setTitle("Invalid")
 			return
 		}
+		lastRenderedValue = value
 		rollCount += 1
 		playRollStartFeedback()
 		if case let .sceneKit(sceneSideCount) = renderDecision, usesSceneRenderer {
@@ -238,12 +251,13 @@ class InterfaceController: WKInterfaceController {
 			currentValue: currentValue,
 			faceValueCount: descriptor.faceValueCount
 		)
+		let style = DiceFaceContrast.style(for: activeColorPreset.fillColor)
 		let includeSideLabel = descriptor.isCoin || descriptor.isToken
 		var materials: [SCNMaterial] = []
 		for slot in plan.slots {
 			switch slot {
 			case .side:
-				materials.append(solidMaterial(fillColor: UIColor(white: 0.88, alpha: 1.0)))
+				materials.append(solidMaterial(fillColor: style.borderColor))
 			case let .face(value):
 				materials.append(faceMaterial(value: value, sideCount: sideCount, includeSideLabel: includeSideLabel))
 			}
@@ -261,12 +275,13 @@ class InterfaceController: WKInterfaceController {
 		let textureSize = CGSize(width: 256, height: 256)
 		let scene = SKScene(size: textureSize)
 		scene.scaleMode = .resizeFill
-		scene.backgroundColor = UIColor(white: 0.96, alpha: 1.0)
+		let style = DiceFaceContrast.style(for: activeColorPreset.fillColor)
+		scene.backgroundColor = style.fillColor
 
 		let label = SKLabelNode(text: "\(value)")
 		label.fontName = "SFProDisplay-Bold"
 		label.fontSize = 148
-		label.fontColor = UIColor.black
+		label.fontColor = style.primaryInkColor
 		label.verticalAlignmentMode = .center
 		label.horizontalAlignmentMode = .center
 		label.position = CGPoint(x: textureSize.width / 2, y: textureSize.height / 2)
@@ -275,7 +290,7 @@ class InterfaceController: WKInterfaceController {
 			let subtitle = SKLabelNode(text: "d\(sideCount)")
 			subtitle.fontName = "SFProDisplay-Regular"
 			subtitle.fontSize = 52
-			subtitle.fontColor = UIColor.darkGray
+			subtitle.fontColor = style.secondaryInkColor
 			subtitle.verticalAlignmentMode = .center
 			subtitle.horizontalAlignmentMode = .center
 			subtitle.position = CGPoint(x: textureSize.width / 2, y: textureSize.height * 0.18)
@@ -344,6 +359,7 @@ class InterfaceController: WKInterfaceController {
 	}
 
 	private func refreshRenderMode(currentValue: Int) {
+		lastRenderedValue = currentValue
 		let decision = WatchSceneRenderFallbackPolicy.resolve(
 			rawSideCount: viewModel.sideCount,
 			isSceneViewReady: diceSceneView.scene != nil
@@ -388,11 +404,16 @@ class InterfaceController: WKInterfaceController {
 		if remoteTexture != activeTableTexture {
 			applyTableTexture(remoteTexture)
 		}
+		let remotePreset = Self.colorPreset(for: configuration.colorTag)
+		if remotePreset != activeColorPreset {
+			activeColorPreset = remotePreset
+			refreshCurrentDieAppearance()
+		}
 		var shouldRoll = false
 		let remoteSideCount = DiceSingleDieSceneGeometryFactory.clampedSideCount(configuration.sideCount)
 		if remoteSideCount != viewModel.sideCount {
 			viewModel.setSideCount(remoteSideCount)
-			refreshRenderMode(currentValue: 1)
+			refreshRenderMode(currentValue: lastRenderedValue)
 			rollCount = 0
 			shouldRoll = true
 		}
@@ -408,7 +429,27 @@ class InterfaceController: WKInterfaceController {
 
 	private func persistCurrentConfiguration() {
 		configurationSync.updateLocalConfiguration { configuration in
+			configuration.sideCount = viewModel.sideCount
+			configuration.colorTag = activeColorPreset.notationName
 			configuration.isIntuitiveMode = viewModel.isIntuitiveMode
+			configuration.backgroundTexture = activeTableTexture.rawValue
 		}
+	}
+
+	private func refreshCurrentDieAppearance() {
+		guard case let .sceneKit(sideCount) = renderDecision,
+			  usesSceneRenderer,
+			  let geometry = dieNode.geometry else { return }
+		let descriptor = DiceSingleDieGeometryDescriptor(
+			geometry: geometry,
+			faceValueCount: sideCount,
+			isCoin: DiceSingleDieSceneGeometryFactory.usesCoinGeometry(for: sideCount),
+			isToken: DiceSingleDieSceneGeometryFactory.usesTokenGeometry(for: sideCount)
+		)
+		applyMaterials(to: descriptor, sideCount: sideCount, currentValue: lastRenderedValue)
+	}
+
+	private static func colorPreset(for colorTag: String) -> DiceDieColorPreset {
+		DiceDieColorPreset.fromNotation(colorTag) ?? .ivory
 	}
 }

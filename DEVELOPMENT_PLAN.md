@@ -321,3 +321,16 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Audit watch extension for duplicated roll/result application code and consolidate into shared helper methods where platform APIs allow.
 - [x] Audit watch extension and iOS app for duplicated single-die SceneKit setup logic and extract common configuration helpers into shared files.
 - [x] Verify `Dice WatchKit App` scheme builds on watchOS simulator after consolidation and document remaining intentional platform-specific deltas.
+
+## 15. watchOS V2 Completion Follow-up
+
+### In-Watch Customization
+
+- [x] Add a watch Customize sheet/controller reachable from the main roll screen, with controls for side count, die color, and mode in one level of navigation, persisting through `WatchSingleDieConfigurationSyncBridge`.
+- [ ] Add quick side chips (`d2`, `d4`, `d6`, `d8`, `d10`, `d12`, `d20`) to the watch Customize flow and keep chip state synchronized with crown/picker value.
+- [ ] Add background texture selector to the watch Customize flow (including `black` default) and live preview updates on the main scene after dismissal.
+
+### Watch UX and Validation
+
+- [ ] Add focused watch simulator acceptance checklist entries/screenshots for Customize flow ergonomics and one-level navigation compliance.
+- [ ] Add watch-side regression tests for local customization edits ensuring last-write-wins timestamp updates and no stale state after repeated open/close of Customize flow.
