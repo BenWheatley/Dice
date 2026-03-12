@@ -334,3 +334,86 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 - [x] Add focused watch simulator acceptance checklist entries/screenshots for Customize flow ergonomics and one-level navigation compliance.
 - [x] Add watch-side regression tests for local customization edits ensuring last-write-wins timestamp updates and no stale state after repeated open/close of Customize flow.
+
+## 16. Full Platform Expansion (macOS, tvOS, visionOS)
+
+### Cross-Platform Architecture Baseline
+
+- [ ] Define shared-core vs platform-shell boundaries for macOS, tvOS, and visionOS targets, and document target/module ownership.
+- [ ] Create a platform capability matrix (input, rendering, audio/haptics, widgets, shortcuts, notifications) and mark required v1 parity vs platform-specific deltas.
+- [ ] Add new target scaffolds and build settings for tvOS and visionOS, ensuring simulator-first deployment constraints and shared source inclusion.
+- [ ] Add compile-time platform adapters for unsupported APIs (for example haptics, watch-specific controls, UIKit-only presentation APIs).
+- [ ] Add cross-platform smoke tests that instantiate shared roll/session/configuration services from each platform target.
+
+### macOS Completion (Beyond Current Catalyst Baseline)
+
+- [ ] Finalize macOS distribution approach (Catalyst-only vs native AppKit/SwiftUI shell), with a written decision record and migration path.
+- [ ] Implement full menubar command map for roll, repeat, presets, stats, customization, and reset actions with standard macOS key equivalents.
+- [ ] Add macOS-native window behavior polish (toolbar/titlebar spacing, window restoration, per-window independent dice set state verification).
+- [ ] Add pointer/hover affordances and right-click context interactions for per-die customization and lock state.
+- [ ] Add drag-and-drop and pasteboard support for notation import/export and roll summary text snippets.
+- [ ] Run macOS acceptance pass against Human Interface Guidelines for command discoverability, keyboard-first workflows, and multiwindow ergonomics.
+
+### tvOS Experience and Modality Adaptation
+
+- [ ] Create tvOS root scene/navigation shell using Focus Engine patterns instead of touch-first controls.
+- [ ] Replace free-form text notation entry with tvOS-friendly token composer (quick dice chips + count stepper + separator actions).
+- [ ] Map Siri Remote inputs to roll interactions (click, play/pause, swipe gestures) and define predictable focus transitions.
+- [ ] Implement per-die option overlays using focusable panels, including lock/color/mode controls with clear focused states.
+- [ ] Tune SceneKit/3D board layout for 10-foot readability (minimum die size, label scaling, contrast thresholds).
+- [ ] Add tvOS audio feedback profile tuned for living-room output levels and no-haptics fallback behavior.
+- [ ] Add tvOS simulator acceptance checklist with focus traversal, roll latency, and legibility screenshots.
+
+### visionOS Experience and Modality Adaptation
+
+- [ ] Decide visionOS delivery mode for v1 (windowed compatible app, native windowed app, or mixed with immersive board) and document rationale.
+- [ ] Introduce visionOS target shell with shared roll domain and platform-specific interaction layer.
+- [ ] Replace/augment SceneKit rendering path with RealityKit where immersive 3D interaction is required, while preserving shared material/label logic via adapters.
+- [ ] Implement spatial interaction model (tap/pinch select die, drag reposition board, dwell-safe context actions) with comfort-safe defaults.
+- [ ] Add depth-aware board scaling and placement controls appropriate for spatial windows and seated/standing use.
+- [ ] Implement visionOS-specific accessibility and comfort guardrails (motion reduction, contrast modes, input alternatives).
+- [ ] Add visionOS simulator acceptance checklist with modality-specific UX validation (windowed + spatial interactions).
+
+### Platform QA and Release Readiness
+
+- [ ] Expand simulator matrix and CI jobs to include macOS, tvOS simulator, and visionOS simulator build/test lanes.
+- [ ] Add cross-platform regression suite for mixed dice notation parsing, roll determinism bounds, and per-die customization persistence.
+- [ ] Perform per-platform performance baselines (startup, roll latency, memory) and capture budget thresholds in docs.
+- [ ] Add platform-specific release checklists for assets, metadata, shortcuts/voice capabilities, and feature flags.
+
+## 17. Voice Control and Siri Integration (Current OS Stack)
+
+### Capability and API Strategy
+
+- [ ] Document current Siri/voice architecture decision: App Intents + App Shortcuts as primary path, with SiriKit intent-domain usage only where still required.
+- [ ] Define user command taxonomy (roll, repeat, set notation, set mode, lock/unlock die, show stats, apply preset) and map each to App Intent actions.
+- [ ] Define intent parameter model for mixed dice notation, per-die customization, and mode/background options.
+
+### App Intents Implementation
+
+- [ ] Implement core `AppIntent` actions for roll, repeat, apply preset, and set notation with validation/confirmation dialogs.
+- [ ] Implement entities/enums for presets, rolling mode, background texture, and common dice expressions for richer Siri disambiguation.
+- [ ] Implement intent result payloads that provide concise spoken/dialog output and structured values for Shortcuts chains.
+- [ ] Add foreground continuation behavior for intents requiring UI confirmation or visual die interaction.
+- [ ] Add migration stubs (where needed) for any legacy custom SiriKit intents to preserve existing shortcuts continuity.
+
+### App Shortcuts and Discoverability
+
+- [ ] Register App Shortcuts phrases for top commands (for example "Roll my dice", "Repeat last roll", "Set dice to 3d20+1d6").
+- [ ] Add parameterized shortcut phrases for mode/background switching and preset application.
+- [ ] Add Spotlight/Shortcuts metadata polish (short titles, synonyms, parameter prompts, localized dialog).
+- [ ] Add in-app shortcut education surface (small guidance sheet) with platform-appropriate placement.
+
+### Voice Control UX and Accessibility
+
+- [ ] Audit interactive controls for Voice Control naming clarity and uniqueness across screens.
+- [ ] Add accessibility labels/hints for per-die actions so spoken command overlays map reliably to controls.
+- [ ] Add large-action fallback paths for non-touch modalities (tvOS remote, visionOS gestures, macOS voice workflows).
+- [ ] Add acceptance checklist for hands-free flows (launch, set notation, roll, repeat, read result) across supported platforms.
+
+### Validation, Telemetry, and Reliability
+
+- [ ] Add unit tests for intent parameter parsing, validation failures, and dialog/result formatting.
+- [ ] Add integration tests for shortcut execution path against shared roll engine and persistence layer.
+- [ ] Add resilience tests for unavailable capabilities/offline conditions and user-cancel paths.
+- [ ] Add lightweight analytics hooks (privacy-safe, opt-in where required) to measure intent invocation success/failure rates.
