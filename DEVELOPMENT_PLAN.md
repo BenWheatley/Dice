@@ -333,4 +333,4 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 ### Watch UX and Validation
 
 - [x] Add focused watch simulator acceptance checklist entries/screenshots for Customize flow ergonomics and one-level navigation compliance.
-- [ ] Add watch-side regression tests for local customization edits ensuring last-write-wins timestamp updates and no stale state after repeated open/close of Customize flow.
+- [x] Add watch-side regression tests for local customization edits ensuring last-write-wins timestamp updates and no stale state after repeated open/close of Customize flow.

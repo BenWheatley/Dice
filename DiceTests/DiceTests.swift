@@ -2165,6 +2165,103 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(current.updatedAt, Date(timeIntervalSince1970: 30))
 	}
 
+	func testWatchSyncBridgeLocalCustomizationEditAdvancesTimestampAndWinsOverOlderRemote() {
+		let suiteName = "DiceTests.watch.config.bridge.localwins.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let bridge = WatchSingleDieConfigurationSyncBridge(
+			store: WatchSingleDieConfigurationStore(defaults: defaults)
+		)
+
+		let baseline = WatchSingleDieConfiguration(
+			sideCount: 6,
+			colorTag: "ivory",
+			isIntuitiveMode: false,
+			backgroundTexture: "black",
+			updatedAt: Date(timeIntervalSince1970: 10)
+		)
+		_ = bridge.applyRemoteConfiguration(baseline)
+		let baselineTimestamp = bridge.currentConfiguration().updatedAt
+
+		bridge.updateLocalConfiguration { configuration in
+			configuration.sideCount = 20
+			configuration.colorTag = "blue"
+			configuration.isIntuitiveMode = true
+			configuration.backgroundTexture = "wood"
+		}
+
+		let locallyEdited = bridge.currentConfiguration()
+		XCTAssertGreaterThan(locallyEdited.updatedAt, baselineTimestamp)
+		XCTAssertEqual(locallyEdited.sideCount, 20)
+		XCTAssertEqual(locallyEdited.colorTag, "blue")
+		XCTAssertTrue(locallyEdited.isIntuitiveMode)
+		XCTAssertEqual(locallyEdited.backgroundTexture, "wood")
+
+		let staleRemote = WatchSingleDieConfiguration(
+			sideCount: 4,
+			colorTag: "red",
+			isIntuitiveMode: false,
+			backgroundTexture: "felt",
+			updatedAt: baselineTimestamp
+		)
+		let resolved = bridge.applyRemoteConfiguration(staleRemote)
+
+		XCTAssertEqual(resolved, locallyEdited)
+		XCTAssertEqual(bridge.currentConfiguration(), locallyEdited)
+	}
+
+	func testWatchSyncBridgeAvoidsStaleStateAcrossRepeatedCustomizeOpenCloseCycles() {
+		let suiteName = "DiceTests.watch.config.bridge.reopen.\(UUID().uuidString)"
+		let defaults = UserDefaults(suiteName: suiteName)!
+		defer { defaults.removePersistentDomain(forName: suiteName) }
+		let bridge = WatchSingleDieConfigurationSyncBridge(
+			store: WatchSingleDieConfigurationStore(defaults: defaults)
+		)
+
+		let seed = WatchSingleDieConfiguration(
+			sideCount: 6,
+			colorTag: "ivory",
+			isIntuitiveMode: false,
+			backgroundTexture: "black",
+			updatedAt: Date(timeIntervalSince1970: 5)
+		)
+		_ = bridge.applyRemoteConfiguration(seed)
+
+		let edits: [(side: Int, color: DiceDieColorPreset, mode: Bool, background: DiceTableTexture)] = [
+			(20, .emerald, true, .wood),
+			(8, .amber, false, .felt),
+			(12, .sapphire, true, .black),
+		]
+
+		var expected = seed
+		for edit in edits {
+			let openedConfiguration = bridge.currentConfiguration()
+			XCTAssertEqual(openedConfiguration.sideCount, expected.sideCount)
+			XCTAssertEqual(openedConfiguration.colorTag, expected.colorTag)
+			XCTAssertEqual(openedConfiguration.isIntuitiveMode, expected.isIntuitiveMode)
+			XCTAssertEqual(openedConfiguration.backgroundTexture, expected.backgroundTexture)
+
+			var state = WatchSingleDieCustomizationState(configuration: openedConfiguration)
+			state.setSideCount(edit.side)
+			state.colorPreset = edit.color
+			if state.isIntuitiveMode != edit.mode {
+				state.toggleMode()
+			}
+			while state.backgroundTexture != edit.background {
+				state.cycleBackgroundForward()
+			}
+			bridge.updateLocalConfiguration { configuration in
+				state.apply(to: &configuration)
+			}
+
+			expected = bridge.currentConfiguration()
+			XCTAssertEqual(expected.sideCount, edit.side)
+			XCTAssertEqual(expected.colorTag, edit.color.notationName)
+			XCTAssertEqual(expected.isIntuitiveMode, edit.mode)
+			XCTAssertEqual(expected.backgroundTexture, edit.background.rawValue)
+		}
+	}
+
 	func testWatchSingleDieCustomizationStateLoadsFromConfiguration() {
 		let configuration = WatchSingleDieConfiguration(
 			sideCount: 20,
