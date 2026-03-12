@@ -25,10 +25,12 @@ class InterfaceController: WKInterfaceController {
 	)
 	private var rollCount = 0
 	private var dieNode = SCNNode()
+	private var activeSceneSideCount: Int?
 	private let tableNode = SCNNode()
 	private let tableMaterial = SCNMaterial()
 	private var activeTableTexture: DiceTableTexture = .black
 	private var usesSceneRenderer = false
+	private var renderDecision: WatchSceneRenderDecision = .staticImage(sideCount: 6, reason: .sceneViewUnavailable)
 	private var lowPowerObserver: NSObjectProtocol?
 	private let feedbackDevice = WKInterfaceDevice.current()
 
@@ -90,24 +92,24 @@ class InterfaceController: WKInterfaceController {
 		}
 		rollCount += 1
 		playRollStartFeedback()
-		if usesSceneRenderer {
-			if DiceSingleDieSceneGeometryFactory.usesTokenGeometry(for: viewModel.sideCount),
+		if case let .sceneKit(sceneSideCount) = renderDecision, usesSceneRenderer {
+			if DiceSingleDieSceneGeometryFactory.usesTokenGeometry(for: sceneSideCount),
 				let geometry = dieNode.geometry {
 				let descriptor = DiceSingleDieGeometryDescriptor(
 					geometry: geometry,
-					faceValueCount: viewModel.sideCount,
+					faceValueCount: sceneSideCount,
 					isCoin: false,
 					isToken: true
 				)
-				applyMaterials(to: descriptor, sideCount: viewModel.sideCount, currentValue: value)
+				applyMaterials(to: descriptor, sideCount: sceneSideCount, currentValue: value)
 			}
-			animateDie(to: value, sideCount: viewModel.sideCount) { [weak self] in
+			animateDie(to: value, sideCount: sceneSideCount) { [weak self] in
 				self?.playRollSettleFeedback()
 			}
 			diceSceneView.setAccessibilityValue("Value \(value)")
 			diceView.setHidden(true)
 		} else {
-			diceView.setImageNamed("\(value)")
+			applyStaticFallbackImage(value: value, sideCount: renderDecision.sideCount)
 			diceView.setAccessibilityValue("Value \(value)")
 			diceView.setHidden(false)
 			playRollSettleFeedback()
@@ -141,11 +143,8 @@ class InterfaceController: WKInterfaceController {
 
 		let initialTexture = DiceTableTexture(rawValue: configurationSync.currentConfiguration().backgroundTexture) ?? .black
 		configureTableSurface(in: scene, initialTexture: initialTexture)
-		dieNode = makeDieNode(sideCount: viewModel.sideCount, currentValue: 1)
-		scene.rootNode.addChildNode(dieNode)
 		diceSceneView.setAccessibilityLabel("Latest die result, 3D preview")
-		usesSceneRenderer = true
-		diceSceneView.setHidden(false)
+		refreshRenderMode(currentValue: 1)
 		applyPowerModeProfile()
 	}
 
@@ -337,6 +336,41 @@ class InterfaceController: WKInterfaceController {
 		dieNode.removeFromParentNode()
 		dieNode = makeDieNode(sideCount: sideCount, currentValue: currentValue)
 		diceSceneView.scene?.rootNode.addChildNode(dieNode)
+		activeSceneSideCount = sideCount
+	}
+
+	private func refreshRenderMode(currentValue: Int) {
+		let decision = WatchSceneRenderFallbackPolicy.resolve(
+			rawSideCount: viewModel.sideCount,
+			isSceneViewReady: diceSceneView.scene != nil
+		)
+		renderDecision = decision
+		switch decision {
+		case let .sceneKit(sideCount):
+			usesSceneRenderer = true
+			diceSceneView.setHidden(false)
+			diceView.setHidden(true)
+			if activeSceneSideCount != sideCount || dieNode.parent == nil {
+				rebuildDieNode(sideCount: sideCount, currentValue: currentValue)
+			}
+		case let .staticImage(sideCount, _):
+			usesSceneRenderer = false
+			diceSceneView.setHidden(true)
+			diceView.setHidden(false)
+			activeSceneSideCount = nil
+			applyStaticFallbackImage(value: currentValue, sideCount: sideCount)
+		}
+	}
+
+	private func applyStaticFallbackImage(value: Int, sideCount: Int) {
+		let clampedValue = min(max(1, value), max(1, sideCount))
+		let symbolValue = min(max(1, clampedValue), 6)
+		let systemName = "die.face.\(symbolValue).fill"
+		if let image = UIImage(systemName: systemName) ?? UIImage(systemName: "die.face.5.fill") {
+			diceView.setImage(image)
+		} else {
+			diceView.setImage(nil)
+		}
 	}
 
 	private func applyRemoteConfiguration(_ configuration: WatchSingleDieConfiguration) {
@@ -348,7 +382,7 @@ class InterfaceController: WKInterfaceController {
 		let remoteSideCount = DiceSingleDieSceneGeometryFactory.clampedSideCount(configuration.sideCount)
 		if remoteSideCount != viewModel.sideCount {
 			viewModel.setSideCount(remoteSideCount)
-			rebuildDieNode(sideCount: remoteSideCount, currentValue: 1)
+			refreshRenderMode(currentValue: 1)
 			rollCount = 0
 			shouldRoll = true
 		}

@@ -2247,6 +2247,45 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(bottom.normal.contentsTransform.m11, bottom.diffuse.contentsTransform.m11, accuracy: 0.0001)
 	}
 
+	func testWatchSceneRenderFallbackPolicyPrefersSceneKitForHighCostGeometryWhenSharedPathIsAvailable() {
+		let decision = WatchSceneRenderFallbackPolicy.resolve(
+			rawSideCount: 21,
+			isSceneViewReady: true,
+			canBuildSharedGeometry: { _ in true }
+		)
+		XCTAssertEqual(decision, .sceneKit(sideCount: 21))
+	}
+
+	func testWatchSceneRenderFallbackPolicyFallsBackWhenSceneViewIsUnavailable() {
+		let decision = WatchSceneRenderFallbackPolicy.resolve(
+			rawSideCount: 6,
+			isSceneViewReady: false,
+			canBuildSharedGeometry: { _ in true }
+		)
+		XCTAssertEqual(decision, .staticImage(sideCount: 6, reason: .sceneViewUnavailable))
+	}
+
+	func testWatchSceneRenderFallbackPolicyFallsBackForUnsupportedSideCount() {
+		let decision = WatchSceneRenderFallbackPolicy.resolve(
+			rawSideCount: 101,
+			isSceneViewReady: true,
+			canBuildSharedGeometry: { _ in true }
+		)
+		XCTAssertEqual(decision, .staticImage(sideCount: 100, reason: .unsupportedSideCount))
+	}
+
+	func testWatchSceneRenderFallbackPolicyFallsBackWhenHighCostSharedPathIsUnavailable() {
+		let decision = WatchSceneRenderFallbackPolicy.resolve(
+			rawSideCount: 37,
+			isSceneViewReady: true,
+			canBuildSharedGeometry: { _ in false }
+		)
+		XCTAssertEqual(
+			decision,
+			.staticImage(sideCount: 37, reason: .sharedGeometryUnavailable(isHighCost: true))
+		)
+	}
+
 	func testWatchSceneKitFlowRemainsInSyncAcrossModeSwitchAndRepeatedRolls() {
 		var scripted = [1, 2, 3, 4, 5]
 		let session = DiceRollSession(
