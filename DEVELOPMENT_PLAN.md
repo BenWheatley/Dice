@@ -386,7 +386,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 ### Capability and API Strategy
 
 - [x] Document current Siri/voice architecture decision: App Intents + App Shortcuts as primary path, with SiriKit intent-domain usage only where still required.
-- [ ] Define user command taxonomy (roll, repeat, set notation, set mode, lock/unlock die, show stats, apply preset) and map each to App Intent actions.
+- [x] Define user command taxonomy (roll, repeat, set notation, set mode, lock/unlock die, show stats, apply preset) and map each to App Intent actions.
 - [ ] Define intent parameter model for mixed dice notation, per-die customization, and mode/background options.
 
 ### App Intents Implementation

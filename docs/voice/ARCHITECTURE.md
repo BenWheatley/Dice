@@ -39,3 +39,7 @@ This keeps Siri/voice behavior aligned with UI-triggered behavior.
 
 - This file does not define final phrase catalogs or localized utterance strings.
 - This file does not add backward-compatibility shims unless explicitly required by a remaining SiriKit-only capability.
+
+## Related Docs
+
+- Command-to-intent mapping: `docs/voice/COMMAND_TAXONOMY.md`
