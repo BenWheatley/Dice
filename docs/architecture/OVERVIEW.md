@@ -57,3 +57,8 @@
 - Catalyst uses scene-based multiwindow configuration; each scene has isolated active dice state.
 - watchOS uses dedicated watch UI with shared parser/session/roller domain logic.
 - v1 validation remains simulator-first to avoid Apple Developer Team provisioning dependencies.
+
+## Voice and Siri Integration Notes
+- App Intents + App Shortcuts are the first-class integration path for Siri and voice-triggered commands.
+- Intent handlers must call the same shared roll/configuration services used by UI actions so results stay behaviorally identical across iOS, watchOS, and Mac Catalyst.
+- Legacy SiriKit intent-domain integration is treated as fallback-only when a capability has no App Intents equivalent.

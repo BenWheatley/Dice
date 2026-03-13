@@ -40,3 +40,9 @@ Target baseline: watchOS 10.2+.
   - keeps table background behavior on the same first-class shader path across iOS and watch instead of maintaining a watch-only parallel shader implementation.
   - avoids parallel domain implementations and reduces drift between watch and iOS behavior.
   - unsupported or unavailable watch SceneKit states degrade gracefully without forking rendering logic for common supported flows.
+
+## Voice and Siri Alignment
+
+- watchOS voice command behavior follows the same App Intents-first architecture used by the phone app.
+- Intent execution must use shared parser/roller/session services to keep watch voice results consistent with watch tap-based rolls and phone-triggered shortcuts.
+- Cross-device preference mutations triggered by voice commands continue to use timestamped last-write-wins through the existing `WatchConnectivity` sync bridge.
