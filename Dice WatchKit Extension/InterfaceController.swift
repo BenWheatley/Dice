@@ -36,11 +36,10 @@ class InterfaceController: WKInterfaceController {
 	private var shouldOpenCustomizeForAutomation = false
 	private var lowPowerObserver: NSObjectProtocol?
 	private let feedbackDevice = WKInterfaceDevice.current()
+	private let watchDieSideLength: CGFloat = 2.7
 
 	@IBOutlet weak var diceButton: WKInterfaceButton!
 	@IBOutlet weak var statusLabel: WKInterfaceLabel!
-	@IBOutlet weak var modeButton: WKInterfaceButton!
-	@IBOutlet weak var diceView: WKInterfaceImage!
 	@IBOutlet weak var diceSceneView: WKInterfaceSCNScene!
 
     override func awake(withContext context: Any?) {
@@ -55,7 +54,6 @@ class InterfaceController: WKInterfaceController {
 		shouldOpenCustomizeForAutomation = ProcessInfo.processInfo.arguments.contains("-watchOpenCustomizeOnLaunch")
 		diceButton.setAccessibilityLabel(WatchAccessibilityFormatter.rollButtonLabel)
 		diceButton.setAccessibilityHint(WatchAccessibilityFormatter.rollButtonHint)
-		diceView.setAccessibilityLabel(WatchAccessibilityFormatter.latestResultLabel)
 		statusLabel.setAccessibilityLabel("Roll status")
 		updateControlTitles()
 		configureSceneRenderer()
@@ -82,14 +80,6 @@ class InterfaceController: WKInterfaceController {
 
 	@IBAction func roll() {
 		apply(outcome: viewModel.roll())
-	}
-
-	@IBAction private func toggleMode() {
-		viewModel.toggleMode()
-		rollCount = 0
-		persistCurrentConfiguration()
-		feedbackDevice.play(viewModel.isIntuitiveMode ? .directionUp : .directionDown)
-		roll()
 	}
 
 	@IBAction private func repeatLastRoll() {
@@ -133,16 +123,13 @@ class InterfaceController: WKInterfaceController {
 			animateDie(to: value, sideCount: sceneSideCount) { [weak self] in
 				self?.playRollSettleFeedback()
 			}
-			diceSceneView.setAccessibilityValue(
-				WatchAccessibilityFormatter.dieValue(value: value, sideCount: sceneSideCount)
-			)
-			diceView.setHidden(true)
+			let a11yValue = WatchAccessibilityFormatter.dieValue(value: value, sideCount: sceneSideCount)
+			diceSceneView.setAccessibilityValue(a11yValue)
+			diceButton.setAccessibilityValue(a11yValue)
 		} else {
 			applyStaticFallbackImage(value: value, sideCount: renderDecision.sideCount)
-			diceView.setAccessibilityValue(
-				WatchAccessibilityFormatter.dieValue(value: value, sideCount: renderDecision.sideCount)
-			)
-			diceView.setHidden(false)
+			let a11yValue = WatchAccessibilityFormatter.dieValue(value: value, sideCount: renderDecision.sideCount)
+			diceButton.setAccessibilityValue(a11yValue)
 			playRollSettleFeedback()
 		}
 		updateControlTitles()
@@ -157,7 +144,7 @@ class InterfaceController: WKInterfaceController {
 
 		let cameraNode = SCNNode()
 		cameraNode.camera = SCNCamera()
-		cameraNode.position = SCNVector3(0, 0, 6)
+		cameraNode.position = SCNVector3(0, 0, 4.2)
 		scene.rootNode.addChildNode(cameraNode)
 
 		let keyLight = SCNNode()
@@ -253,7 +240,7 @@ class InterfaceController: WKInterfaceController {
 	}
 
 	private func makeDieNode(sideCount: Int, currentValue: Int) -> SCNNode {
-		let descriptor = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: sideCount, sideLength: 1.8)
+		let descriptor = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: sideCount, sideLength: watchDieSideLength)
 		let node = SCNNode(geometry: descriptor.geometry)
 		node.eulerAngles = DiceSingleDieSceneGeometryFactory.orientation(for: currentValue, sideCount: sideCount)
 		applyMaterials(to: descriptor, sideCount: sideCount, currentValue: currentValue)
@@ -384,7 +371,7 @@ class InterfaceController: WKInterfaceController {
 		case let .sceneKit(sideCount):
 			usesSceneRenderer = true
 			diceSceneView.setHidden(false)
-			diceView.setHidden(true)
+			diceButton.setBackgroundImage(nil)
 			diceSceneView.setAccessibilityValue(
 				WatchAccessibilityFormatter.dieValue(value: currentValue, sideCount: sideCount)
 			)
@@ -394,10 +381,6 @@ class InterfaceController: WKInterfaceController {
 		case let .staticImage(sideCount, _):
 			usesSceneRenderer = false
 			diceSceneView.setHidden(true)
-			diceView.setHidden(false)
-			diceView.setAccessibilityValue(
-				WatchAccessibilityFormatter.dieValue(value: currentValue, sideCount: sideCount)
-			)
 			activeSceneSideCount = nil
 			applyStaticFallbackImage(value: currentValue, sideCount: sideCount)
 		}
@@ -408,9 +391,9 @@ class InterfaceController: WKInterfaceController {
 		let symbolValue = min(max(1, clampedValue), 6)
 		let systemName = "die.face.\(symbolValue).fill"
 		if let image = UIImage(systemName: systemName) ?? UIImage(systemName: "die.face.5.fill") {
-			diceView.setImage(image)
+			diceButton.setBackgroundImage(image)
 		} else {
-			diceView.setImage(nil)
+			diceButton.setBackgroundImage(nil)
 		}
 	}
 
@@ -445,15 +428,6 @@ class InterfaceController: WKInterfaceController {
 		}
 	}
 
-	private func persistCurrentConfiguration() {
-		configurationSync.updateLocalConfiguration { configuration in
-			configuration.sideCount = viewModel.sideCount
-			configuration.colorTag = activeColorPreset.notationName
-			configuration.isIntuitiveMode = viewModel.isIntuitiveMode
-			configuration.backgroundTexture = activeTableTexture.rawValue
-		}
-	}
-
 	private func refreshCurrentDieAppearance() {
 		guard case let .sceneKit(sideCount) = renderDecision,
 			  usesSceneRenderer,
@@ -472,7 +446,6 @@ class InterfaceController: WKInterfaceController {
 	}
 
 	private func updateControlTitles() {
-		diceButton.setTitle("Roll")
-		modeButton.setTitle("Mode: \(viewModel.isIntuitiveMode ? "INT" : "TR")")
+		diceButton.setTitle(nil)
 	}
 }

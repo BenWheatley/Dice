@@ -1928,16 +1928,16 @@ final class DiceTests: XCTestCase {
 
 	func testWatchRollViewModelStatusTextReflectsModeAndCount() {
 		let viewModel = WatchRollViewModel()
-		XCTAssertEqual(viewModel.statusText(rollCount: 1), "TR·1d6\nr1")
+		XCTAssertEqual(viewModel.statusText(rollCount: 1), "Random • d6\nRolls: 1")
 		viewModel.toggleMode()
-		XCTAssertEqual(viewModel.statusText(rollCount: 4), "INT·1d6i\nr4")
+		XCTAssertEqual(viewModel.statusText(rollCount: 4), "Intuitive • d6\nRolls: 4")
 	}
 
 	func testWatchRollViewModelStatusTextUsesGlanceableTokensWithLastValue() {
 		let viewModel = WatchRollViewModel()
-		XCTAssertEqual(viewModel.statusText(lastValue: 5), "TR·1d6\nv5")
+		XCTAssertEqual(viewModel.statusText(lastValue: 5), "Random • d6\nLast: 5\nTap die to roll")
 		viewModel.toggleMode()
-		XCTAssertEqual(viewModel.statusText(lastValue: 2), "INT·1d6i\nv2")
+		XCTAssertEqual(viewModel.statusText(lastValue: 2), "Intuitive • d6\nLast: 2\nTap die to roll")
 	}
 
 	func testWatchRollViewModelUsesConfiguredSideCountForNotationAndRolls() {
@@ -2315,14 +2315,13 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(state.backgroundTexture, .black)
 	}
 
-	func testWatchSingleDieCustomizationStateProvidesQuickChipSideList() {
-		XCTAssertEqual(
-			WatchSingleDieCustomizationState.quickChipSideCounts,
-			[2, 4, 6, 8, 10, 12, 20]
-		)
+	func testWatchSingleDieCustomizationStateProvidesFullPickerSideRange() {
+		XCTAssertEqual(WatchSingleDieCustomizationState.pickerSideCounts.first, 2)
+		XCTAssertEqual(WatchSingleDieCustomizationState.pickerSideCounts.last, 100)
+		XCTAssertEqual(WatchSingleDieCustomizationState.pickerSideCounts.count, 99)
 	}
 
-	func testWatchSingleDieCustomizationStateSynchronizesPickerAndQuickChipSelection() {
+	func testWatchSingleDieCustomizationStateSynchronizesPickerAndSideCountSelection() {
 		var state = WatchSingleDieCustomizationState(
 			configuration: WatchSingleDieConfiguration(sideCount: 6)
 		)
@@ -2330,12 +2329,9 @@ final class DiceTests: XCTestCase {
 		let d20PickerIndex = WatchSingleDieCustomizationState.pickerIndex(forSideCount: 20)
 		state.setSideCountFromPickerIndex(d20PickerIndex)
 		XCTAssertEqual(state.sideCount, 20)
-		XCTAssertTrue(state.isQuickChipSelected(20))
-		XCTAssertFalse(state.isQuickChipSelected(6))
 
 		state.setSideCount(37)
 		XCTAssertEqual(state.sideCount, 37)
-		XCTAssertFalse(WatchSingleDieCustomizationState.quickChipSideCounts.contains(state.sideCount))
 		XCTAssertEqual(WatchSingleDieCustomizationState.pickerIndex(forSideCount: state.sideCount), 35)
 	}
 
@@ -2402,13 +2398,6 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(source.contains("customClass=\"WatchCustomizeInterfaceController\""))
 		XCTAssertTrue(source.contains("identifier=\"WatchCustomizeController\""))
 		XCTAssertTrue(source.contains("selector=\"sideCountPickerChanged:\""))
-		XCTAssertTrue(source.contains("selector=\"selectSideD2\""))
-		XCTAssertTrue(source.contains("selector=\"selectSideD4\""))
-		XCTAssertTrue(source.contains("selector=\"selectSideD6\""))
-		XCTAssertTrue(source.contains("selector=\"selectSideD8\""))
-		XCTAssertTrue(source.contains("selector=\"selectSideD10\""))
-		XCTAssertTrue(source.contains("selector=\"selectSideD12\""))
-		XCTAssertTrue(source.contains("selector=\"selectSideD20\""))
 		XCTAssertTrue(source.contains("selector=\"cycleColor\""))
 		XCTAssertTrue(source.contains("selector=\"cycleBackground\""))
 		XCTAssertTrue(source.contains("selector=\"toggleMode\""))
@@ -2452,12 +2441,11 @@ final class DiceTests: XCTestCase {
 			.appendingPathComponent("Interface.storyboard")
 		let source = try String(contentsOf: storyboardURL, encoding: .utf8)
 
-		XCTAssertTrue(source.contains("title=\"Roll\""))
-		XCTAssertTrue(source.contains("title=\"Customize\""))
-		XCTAssertTrue(source.contains("title=\"Mode:"))
+		XCTAssertTrue(source.contains("selector=\"roll\""))
+		XCTAssertTrue(source.contains("title=\"Options\""))
 		XCTAssertTrue(source.contains("title=\"Repeat\""))
+		XCTAssertTrue(source.contains("Tap die to roll"))
 		XCTAssertTrue(source.contains("selector=\"openCustomize\""))
-		XCTAssertTrue(source.contains("selector=\"toggleMode\""))
 		XCTAssertTrue(source.contains("selector=\"repeatLastRoll\""))
 	}
 
@@ -2612,7 +2600,7 @@ final class DiceTests: XCTestCase {
 		let second = viewModel.roll().values[0]
 		let third = viewModel.roll().values[0]
 		XCTAssertEqual([first, second, third], [1, 2, 3])
-		XCTAssertEqual(viewModel.statusText(lastValue: third), "TR·1d6\nv3")
+		XCTAssertEqual(viewModel.statusText(lastValue: third), "Random • d6\nLast: 3\nTap die to roll")
 		_ = D6FaceOrientation.eulerAngles(for: first)
 		_ = D6FaceOrientation.eulerAngles(for: second)
 		_ = D6FaceOrientation.eulerAngles(for: third)
@@ -2621,7 +2609,7 @@ final class DiceTests: XCTestCase {
 		let afterToggle = viewModel.roll()
 		XCTAssertEqual(afterToggle.totalRolls, 1)
 		XCTAssertEqual(afterToggle.values, [4])
-		XCTAssertEqual(viewModel.statusText(lastValue: 4), "INT·1d6i\nv4")
+		XCTAssertEqual(viewModel.statusText(lastValue: 4), "Intuitive • d6\nLast: 4\nTap die to roll")
 		_ = D6FaceOrientation.eulerAngles(for: 4)
 	}
 

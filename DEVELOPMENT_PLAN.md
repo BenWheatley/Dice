@@ -205,6 +205,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Replace dense text with glanceable status tokens (notation, mode, last value) tuned for watch legibility.
 - [x] Add dynamic type and accessibility size pass specific to watch small-screen clipping cases.
 - [x] Add watch UI snapshot checklist for edge-case strings and long localized labels.
+- [x] Rework watch 40mm usability regressions: enlarge die framing, remove clipped quick-chip controls, use explicit labels (no contractions), and preserve clear tap-die reroll affordance.
 
 ### SceneKit Feasibility and Reuse
 

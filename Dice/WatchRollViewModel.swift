@@ -29,11 +29,11 @@ final class WatchRollViewModel {
 	}
 
 	func statusText(rollCount: Int) -> String {
-		"\(compactModeToken())·\(compactNotationToken())\nr\(rollCount)"
+		"\(readableModeLabel()) • d\(sideCount)\nRolls: \(rollCount)"
 	}
 
 	func statusText(lastValue: Int) -> String {
-		"\(compactModeToken())·\(compactNotationToken())\nv\(lastValue)"
+		"\(readableModeLabel()) • d\(sideCount)\nLast: \(lastValue)\nTap die to roll"
 	}
 
 	func toggleMode() {
@@ -61,13 +61,7 @@ final class WatchRollViewModel {
 		return rollSession.roll(configuration)
 	}
 
-	private func compactModeToken() -> String {
-		isIntuitiveMode ? "INT" : "TR"
-	}
-
-	private func compactNotationToken(maxLength: Int = 6) -> String {
-		let token = currentNotation.replacingOccurrences(of: " ", with: "")
-		guard token.count > maxLength else { return token }
-		return String(token.prefix(maxLength - 1)) + "…"
+	private func readableModeLabel() -> String {
+		isIntuitiveMode ? "Intuitive" : "Random"
 	}
 }

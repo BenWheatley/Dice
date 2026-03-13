@@ -1,7 +1,6 @@
 import Foundation
 
 struct WatchSingleDieCustomizationState: Equatable {
-	static let quickChipSideCounts = [2, 4, 6, 8, 10, 12, 20]
 	static let pickerSideCounts = Array(
 		DiceSingleDieSceneGeometryFactory.minimumSideCount...DiceSingleDieSceneGeometryFactory.maximumSideCount
 	)
@@ -26,10 +25,6 @@ struct WatchSingleDieCustomizationState: Equatable {
 		let maxIndex = Self.pickerSideCounts.count - 1
 		let clampedIndex = min(max(0, index), maxIndex)
 		sideCount = Self.pickerSideCounts[clampedIndex]
-	}
-
-	func isQuickChipSelected(_ quickChipSideCount: Int) -> Bool {
-		sideCount == quickChipSideCount
 	}
 
 	static func pickerIndex(forSideCount sideCount: Int) -> Int {
@@ -76,8 +71,8 @@ struct WatchSingleDieCustomizationState: Equatable {
 		Self.pickerIndex(forSideCount: sideCount)
 	}
 
-	var modeToken: String {
-		isIntuitiveMode ? "INT" : "TR"
+	var modeLabel: String {
+		isIntuitiveMode ? "Intuitive" : "Random"
 	}
 
 	var colorToken: String {
