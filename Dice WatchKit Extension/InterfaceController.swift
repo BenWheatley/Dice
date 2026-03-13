@@ -38,6 +38,8 @@ class InterfaceController: WKInterfaceController {
 	private let feedbackDevice = WKInterfaceDevice.current()
 
 	@IBOutlet weak var diceButton: WKInterfaceButton!
+	@IBOutlet weak var statusLabel: WKInterfaceLabel!
+	@IBOutlet weak var modeButton: WKInterfaceButton!
 	@IBOutlet weak var diceView: WKInterfaceImage!
 	@IBOutlet weak var diceSceneView: WKInterfaceSCNScene!
 
@@ -54,11 +56,10 @@ class InterfaceController: WKInterfaceController {
 		diceButton.setAccessibilityLabel(WatchAccessibilityFormatter.rollButtonLabel)
 		diceButton.setAccessibilityHint(WatchAccessibilityFormatter.rollButtonHint)
 		diceView.setAccessibilityLabel(WatchAccessibilityFormatter.latestResultLabel)
+		statusLabel.setAccessibilityLabel("Roll status")
+		updateControlTitles()
 		configureSceneRenderer()
 		configurePowerModeObserver()
-		addMenuItem(with: .more, title: "Customize", action: #selector(openCustomize))
-		addMenuItem(with: .more, title: "Mode", action: #selector(toggleMode))
-		addMenuItem(with: .repeat, title: "Repeat", action: #selector(repeatLastRoll))
 		roll()
     }
 
@@ -83,7 +84,7 @@ class InterfaceController: WKInterfaceController {
 		apply(outcome: viewModel.roll())
 	}
 
-	@objc private func toggleMode() {
+	@IBAction private func toggleMode() {
 		viewModel.toggleMode()
 		rollCount = 0
 		persistCurrentConfiguration()
@@ -91,11 +92,11 @@ class InterfaceController: WKInterfaceController {
 		roll()
 	}
 
-	@objc private func repeatLastRoll() {
+	@IBAction private func repeatLastRoll() {
 		apply(outcome: viewModel.repeatLastRoll())
 	}
 
-	@objc private func openCustomize() {
+	@IBAction func openCustomize() {
 		pushController(withName: "WatchCustomizeController", context: configurationSync.currentConfiguration())
 	}
 
@@ -111,7 +112,8 @@ class InterfaceController: WKInterfaceController {
 	private func apply(outcome: RollOutcome) {
 		guard let value = outcome.values.first else {
 			playInvalidInputFeedback()
-			diceButton.setTitle("Invalid")
+			statusLabel.setText("Invalid roll")
+			updateControlTitles()
 			return
 		}
 		lastRenderedValue = value
@@ -143,7 +145,8 @@ class InterfaceController: WKInterfaceController {
 			diceView.setHidden(false)
 			playRollSettleFeedback()
 		}
-		diceButton.setTitle(viewModel.statusText(lastValue: value))
+		updateControlTitles()
+		statusLabel.setText(viewModel.statusText(lastValue: value))
 	}
 
 	private func configureSceneRenderer() {
@@ -436,6 +439,9 @@ class InterfaceController: WKInterfaceController {
 		}
 		if shouldRoll {
 			roll()
+		} else {
+			updateControlTitles()
+			statusLabel.setText(viewModel.statusText(lastValue: lastRenderedValue))
 		}
 	}
 
@@ -463,5 +469,10 @@ class InterfaceController: WKInterfaceController {
 
 	private static func colorPreset(for colorTag: String) -> DiceDieColorPreset {
 		DiceDieColorPreset.fromNotation(colorTag) ?? .ivory
+	}
+
+	private func updateControlTitles() {
+		diceButton.setTitle("Roll")
+		modeButton.setTitle("Mode: \(viewModel.isIntuitiveMode ? "INT" : "TR")")
 	}
 }

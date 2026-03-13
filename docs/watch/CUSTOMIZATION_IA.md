@@ -16,6 +16,7 @@ Depth budget: one level from the main roll screen.
    - Compact status token line (`mode·notation`) and value token line (`v#`).
    - Primary `Roll` action.
    - Secondary `Customize` entry point.
+   - Compact quick actions row for `Mode` and `Repeat` so core operations remain visible without legacy action menus.
 2. Customize Sheet (single sheet, no sub-navigation)
    - Side Count control group.
    - Color control group.
@@ -27,8 +28,8 @@ No deeper drill-down views are allowed in this IA.
 ## Main Roll Screen Layout
 
 - Keep one dominant CTA (`Roll`).
-- Keep only one secondary action (`Customize`).
-- Reserve at least 65% of interaction area for the primary roll path.
+- Keep `Customize` as primary secondary action, with compact `Mode` and `Repeat` quick actions below.
+- Reserve at least 55% of interaction area for die preview + primary roll path.
 - Keep status text to compact token format only.
 
 ## Customize Sheet Layout

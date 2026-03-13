@@ -2423,8 +2423,42 @@ final class DiceTests: XCTestCase {
 			.appendingPathComponent("InterfaceController.swift")
 		let source = try String(contentsOf: controllerURL, encoding: .utf8)
 
-		XCTAssertTrue(source.contains("title: \"Customize\""))
 		XCTAssertTrue(source.contains("pushController(withName: \"WatchCustomizeController\""))
+		XCTAssertTrue(source.contains("@IBAction func openCustomize()"))
+	}
+
+	func testWatchInterfaceControllerAvoidsDeprecatedMenuItemsForPrimaryActions() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let controllerURL = projectRoot
+			.appendingPathComponent("Dice WatchKit Extension")
+			.appendingPathComponent("InterfaceController.swift")
+		let source = try String(contentsOf: controllerURL, encoding: .utf8)
+
+		XCTAssertFalse(
+			source.contains("addMenuItem(with:"),
+			"Primary watch actions should be visible controls, not hidden deprecated menu items."
+		)
+	}
+
+	func testWatchMainStoryboardContainsVisiblePrimaryActionButtons() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let storyboardURL = projectRoot
+			.appendingPathComponent("Dice WatchKit App")
+			.appendingPathComponent("Base.lproj")
+			.appendingPathComponent("Interface.storyboard")
+		let source = try String(contentsOf: storyboardURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("title=\"Roll\""))
+		XCTAssertTrue(source.contains("title=\"Customize\""))
+		XCTAssertTrue(source.contains("title=\"Mode:"))
+		XCTAssertTrue(source.contains("title=\"Repeat\""))
+		XCTAssertTrue(source.contains("selector=\"openCustomize\""))
+		XCTAssertTrue(source.contains("selector=\"toggleMode\""))
+		XCTAssertTrue(source.contains("selector=\"repeatLastRoll\""))
 	}
 
 	func testWatchInterfaceControllerSupportsCustomizeLaunchArgumentForSimulatorSnapshots() throws {

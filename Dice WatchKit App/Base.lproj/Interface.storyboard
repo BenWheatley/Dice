@@ -13,22 +13,48 @@
             <objects>
                 <controller id="AgC-eL-Hgc" customClass="InterfaceController" customModule="Dice_WatchKit_Extension" customModuleProvider="target">
                     <items>
-                        <sceneKitScene width="1" height="0.84" alignment="left" id="YvH-5M-5jF"/>
-                        <button width="1" alignment="center" verticalAlignment="center" id="64x-ie-It6">
-                            <group key="contentGroup" width="1" height="1" alignment="left" id="Rub-qg-0Kw">
-                                <items>
-                                    <imageView width="1" height="1" alignment="center" verticalAlignment="center" contentMode="scaleAspectFit" id="fBg-Ge-r7O"/>
-                                </items>
-                            </group>
-                            <connections>
-                                <action selector="roll" destination="AgC-eL-Hgc" id="VKZ-xf-75P"/>
-                            </connections>
-                        </button>
+                        <sceneKitScene width="1" height="0.56" alignment="center" id="YvH-5M-5jF"/>
+                        <label width="1" height="0.12" alignment="center" text="TR·1d6&#10;v1" id="8Nt-Kv-ew0"/>
+                        <group width="1" height="0.16" alignment="center" layout="horizontal" id="ml6-fj-RS8">
+                            <items>
+                                <button width="0.5" alignment="center" title="Roll" id="64x-ie-It6">
+                                    <group key="contentGroup" width="0.22" height="1" alignment="center" id="Rub-qg-0Kw">
+                                        <items>
+                                            <imageView width="0.7" height="0.7" alignment="center" verticalAlignment="center" contentMode="scaleAspectFit" id="fBg-Ge-r7O"/>
+                                        </items>
+                                    </group>
+                                    <connections>
+                                        <action selector="roll" destination="AgC-eL-Hgc" id="VKZ-xf-75P"/>
+                                    </connections>
+                                </button>
+                                <button width="0.5" alignment="center" title="Customize" id="q2l-3p-c8P">
+                                    <connections>
+                                        <action selector="openCustomize" destination="AgC-eL-Hgc" id="pG9-eW-eqK"/>
+                                    </connections>
+                                </button>
+                            </items>
+                        </group>
+                        <group width="1" height="0.16" alignment="center" layout="horizontal" id="2i5-w1-t2s">
+                            <items>
+                                <button width="0.5" alignment="center" title="Mode: TR" id="v8L-wB-z6q">
+                                    <connections>
+                                        <action selector="toggleMode" destination="AgC-eL-Hgc" id="8xe-fA-3iI"/>
+                                    </connections>
+                                </button>
+                                <button width="0.5" alignment="center" title="Repeat" id="Q9Y-JL-nJB">
+                                    <connections>
+                                        <action selector="repeatLastRoll" destination="AgC-eL-Hgc" id="hgf-u7-8vm"/>
+                                    </connections>
+                                </button>
+                            </items>
+                        </group>
                     </items>
                     <connections>
                         <outlet property="diceButton" destination="64x-ie-It6" id="ZmX-2S-onO"/>
                         <outlet property="diceSceneView" destination="YvH-5M-5jF" id="Cr8-Sr-5Wh"/>
                         <outlet property="diceView" destination="fBg-Ge-r7O" id="yWX-oM-HPU"/>
+                        <outlet property="modeButton" destination="v8L-wB-z6q" id="m8A-M1-E05"/>
+                        <outlet property="statusLabel" destination="8Nt-Kv-ew0" id="dKO-fg-f7U"/>
                     </connections>
                 </controller>
             </objects>
