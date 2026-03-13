@@ -64,6 +64,13 @@ These rules apply to all agents working in this repository.
 20. Enforce first-class-path commit attestation:
    - every commit message must include a line `First-class path used: YES` or `First-class path used: NO`
    - `First-class path used: NO` is not allowed for production changes; block commit until implementation uses a first-class path
+21. Canonical render path enforcement across platforms:
+   - treat iOS rendering/material code paths as canonical unless the user explicitly approves a platform-specific divergence
+   - watchOS/macOS/tvOS/visionOS rendering should reuse shared render/material utilities instead of duplicating per-platform implementations
+   - if fixing a watchOS rendering issue, validate with watchOS build/tests first (do not rely on iPhone simulator runs as primary validation)
+22. In this repository, run simulator `xcodebuild` commands outside sandbox first:
+   - do not spend tokens on in-sandbox simulator build/test attempts as a first step
+   - prefer direct outside-sandbox execution for simulator destinations (watchOS/iOS/tvOS/visionOS) and only report sandbox behavior when explicitly requested
 
 ## Platform/Feature Scope
 
