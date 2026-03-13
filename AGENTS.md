@@ -71,6 +71,12 @@ These rules apply to all agents working in this repository.
 22. In this repository, run simulator `xcodebuild` commands outside sandbox first:
    - do not spend tokens on in-sandbox simulator build/test attempts as a first step
    - prefer direct outside-sandbox execution for simulator destinations (watchOS/iOS/tvOS/visionOS) and only report sandbox behavior when explicitly requested
+23. UI fix validation must be batched and layered to avoid permission stalls:
+   - do not use simulator runs as the first feedback loop for UI tweaks
+   - first validate with fast non-simulator checks (source-level storyboard/controller assertions, layout budget tests, state/view-model tests, and compile checks)
+   - for each reported UI regression, add or update a deterministic automated test before declaring the fix complete
+   - run simulator validation only once per task as an outside-sandbox acceptance pass after the non-simulator checks are green
+   - avoid iterative "tiny change -> simulator run -> tiny change" cycles that block on permissions and slow delivery
 
 ## Platform/Feature Scope
 
