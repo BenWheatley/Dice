@@ -667,7 +667,8 @@ enum DiceFaceTextureFactory {
 
 	private static func glyphPath(for text: String, font: UIFont) -> GlyphPathData? {
 		guard !text.isEmpty else { return nil }
-		let ctFont = CTFontCreateWithName(font.fontName as CFString, font.pointSize, nil)
+		// Preserve the platform-resolved UIFont exactly; recreating by name can fall back to serif faces.
+		let ctFont = font as CTFont
 		var characters = Array(text.utf16)
 		var glyphs = Array(repeating: CGGlyph(), count: characters.count)
 		guard CTFontGetGlyphsForCharacters(ctFont, &characters, &glyphs, glyphs.count) else {

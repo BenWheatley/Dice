@@ -3931,6 +3931,18 @@ final class DiceTests: XCTestCase {
 		XCTAssertFalse(source.contains("watchTextureSet("))
 	}
 
+	func testSharedFaceTextureRendererKeepsUIFontBackedCoreTextBridge() throws {
+		let testsFile = URL(fileURLWithPath: #filePath)
+		let projectRoot = testsFile
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let plannerFile = projectRoot.appendingPathComponent("Dice/DiceSingleDieMaterialPlanner.swift")
+		let source = try String(contentsOf: plannerFile, encoding: .utf8)
+
+		XCTAssertFalse(source.contains("CTFontCreateWithName("))
+		XCTAssertTrue(source.contains("font as CTFont"))
+	}
+
 	private enum SnapshotLayout {
 		case iphone
 		case ipad

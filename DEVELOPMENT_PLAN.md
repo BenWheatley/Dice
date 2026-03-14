@@ -259,6 +259,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Replace shared face/pip texture rasterization backend with a single CoreGraphics/CoreText path that compiles on both iOS and watchOS, removing UIKit image-renderer/SpriteKit forks from `DiceFaceTextureFactory`.
 - [x] Remove duplicated iOS/watch table material setup by introducing a shared `DiceTableSurfaceMaterialConfigurator` used by both `DiceCubeView` and watch `InterfaceController`.
 - [x] Fix post-unification cylindrical-cap UV mirroring (coin/token faces) by restoring explicit X-mirror compensation in shared cap transforms, and rebalance watch single-die camera/table framing so background remains visible without clipping.
+- [x] Restore baseline sans-serif readability in shared face-label rendering by bridging `UIFont` directly into CoreText glyph extraction (avoid name-based serif fallback across platforms).
 - [ ] Remove remaining duplicated cylindrical roll animation math by extracting shared spin/settle helpers consumed by iOS and watch controllers.
 
 ### Performance and Interaction Safety
