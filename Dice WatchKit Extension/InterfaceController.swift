@@ -39,7 +39,6 @@ class InterfaceController: WKInterfaceController {
 	private let watchRollAnimationDuration: TimeInterval = 0.42
 
 	@IBOutlet weak var diceButton: WKInterfaceButton!
-	@IBOutlet weak var statusLabel: WKInterfaceLabel!
 	@IBOutlet weak var diceSceneView: WKInterfaceSCNScene!
 	@IBOutlet weak var optionsButton: WKInterfaceButton!
 
@@ -55,7 +54,6 @@ class InterfaceController: WKInterfaceController {
 		shouldOpenCustomizeForAutomation = ProcessInfo.processInfo.arguments.contains("-watchOpenCustomizeOnLaunch")
 		diceButton.setAccessibilityLabel(WatchAccessibilityFormatter.rollButtonLabel)
 		diceButton.setAccessibilityHint(WatchAccessibilityFormatter.rollButtonHint)
-		statusLabel.setAccessibilityLabel("Roll status")
 		updateControlTitles()
 		configureSceneRenderer()
 		configurePowerModeObserver()
@@ -99,7 +97,6 @@ class InterfaceController: WKInterfaceController {
 	private func apply(outcome: RollOutcome) {
 		guard let value = outcome.values.first else {
 			playInvalidInputFeedback()
-			statusLabel.setText("Invalid roll")
 			updateControlTitles()
 			return
 		}
@@ -130,7 +127,6 @@ class InterfaceController: WKInterfaceController {
 			playRollSettleFeedback()
 		}
 		updateControlTitles()
-		statusLabel.setText(viewModel.statusText(lastValue: value))
 	}
 
 	private func configureSceneRenderer() {
@@ -441,7 +437,6 @@ class InterfaceController: WKInterfaceController {
 			roll()
 		} else {
 			updateControlTitles()
-			statusLabel.setText(viewModel.statusText(lastValue: lastRenderedValue))
 		}
 	}
 
