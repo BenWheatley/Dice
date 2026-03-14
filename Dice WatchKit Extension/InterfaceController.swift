@@ -40,7 +40,6 @@ class InterfaceController: WKInterfaceController {
 
 	@IBOutlet weak var diceButton: WKInterfaceButton!
 	@IBOutlet weak var diceSceneView: WKInterfaceSCNScene!
-	@IBOutlet weak var optionsButton: WKInterfaceButton!
 
     override func awake(withContext context: Any?) {
         super.awake(withContext: context)
@@ -54,6 +53,7 @@ class InterfaceController: WKInterfaceController {
 		shouldOpenCustomizeForAutomation = ProcessInfo.processInfo.arguments.contains("-watchOpenCustomizeOnLaunch")
 		diceButton.setAccessibilityLabel(WatchAccessibilityFormatter.rollButtonLabel)
 		diceButton.setAccessibilityHint(WatchAccessibilityFormatter.rollButtonHint)
+		configureMenuItems()
 		updateControlTitles()
 		configureSceneRenderer()
 		configurePowerModeObserver()
@@ -83,6 +83,11 @@ class InterfaceController: WKInterfaceController {
 
 	@IBAction func openCustomize() {
 		pushController(withName: "WatchCustomizeController", context: configurationSync.currentConfiguration())
+	}
+
+	private func configureMenuItems() {
+		clearAllMenuItems()
+		addMenuItem(with: .more, title: "Customize", action: #selector(openCustomize))
 	}
 
 	private func openCustomizeIfRequestedForAutomation() {
@@ -459,6 +464,5 @@ class InterfaceController: WKInterfaceController {
 
 	private func updateControlTitles() {
 		diceButton.setTitle(nil)
-		optionsButton.setTitle("Customize")
 	}
 }

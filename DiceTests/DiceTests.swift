@@ -2327,7 +2327,7 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(state.sideCount, DiceSingleDieSceneGeometryFactory.maximumSideCount)
 	}
 
-	func testWatchStoryboardUsesExtensionModuleForInterfaceController() throws {
+	func testWatchStoryboardBindsInterfaceControllerToTargetModule() throws {
 		let projectRoot = URL(fileURLWithPath: #filePath)
 			.deletingLastPathComponent()
 			.deletingLastPathComponent()
@@ -2337,9 +2337,10 @@ final class DiceTests: XCTestCase {
 			.appendingPathComponent("Interface.storyboard")
 		let source = try String(contentsOf: storyboardURL, encoding: .utf8)
 		XCTAssertTrue(
-			source.contains("customClass=\"InterfaceController\" customModule=\"Dice_WatchKit_Extension\""),
-			"Watch storyboard InterfaceController must reference the extension module to load controller bindings."
+			source.contains("customClass=\"InterfaceController\""),
+			"Watch storyboard must reference InterfaceController for the main watch scene."
 		)
+		XCTAssertTrue(source.contains("customModuleProvider=\"target\""))
 	}
 
 	func testWatchStoryboardAssignsNonZeroHeightToSceneKitView() throws {
@@ -2389,10 +2390,12 @@ final class DiceTests: XCTestCase {
 
 		XCTAssertTrue(source.contains("customClass=\"WatchCustomizeInterfaceController\""))
 		XCTAssertTrue(source.contains("identifier=\"WatchCustomizeController\""))
-		XCTAssertTrue(source.contains("selector=\"sideCountPickerChanged:\""))
+		XCTAssertTrue(source.contains("selector=\"decrementSideCount\""))
+		XCTAssertTrue(source.contains("selector=\"incrementSideCount\""))
 		XCTAssertTrue(source.contains("selector=\"cycleColor\""))
 		XCTAssertTrue(source.contains("selector=\"cycleBackground\""))
 		XCTAssertTrue(source.contains("selector=\"toggleMode\""))
+		XCTAssertFalse(source.contains("selector=\"closeCustomize\""))
 	}
 
 	func testWatchInterfaceControllerRegistersCustomizeEntryPoint() throws {
@@ -2408,7 +2411,7 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(source.contains("@IBAction func openCustomize()"))
 	}
 
-	func testWatchInterfaceControllerAvoidsDeprecatedMenuItemsForPrimaryActions() throws {
+	func testWatchInterfaceControllerUsesLongPressMenuForCustomize() throws {
 		let projectRoot = URL(fileURLWithPath: #filePath)
 			.deletingLastPathComponent()
 			.deletingLastPathComponent()
@@ -2417,13 +2420,12 @@ final class DiceTests: XCTestCase {
 			.appendingPathComponent("InterfaceController.swift")
 		let source = try String(contentsOf: controllerURL, encoding: .utf8)
 
-		XCTAssertFalse(
-			source.contains("addMenuItem(with:"),
-			"Primary watch actions should be visible controls, not hidden deprecated menu items."
-		)
+		XCTAssertTrue(source.contains("addMenuItem(with:"))
+		XCTAssertTrue(source.contains("title: \"Customize\""))
+		XCTAssertFalse(source.contains("optionsButton"))
 	}
 
-	func testWatchMainStoryboardContainsVisiblePrimaryActionButtons() throws {
+	func testWatchMainStoryboardUsesFullscreenDieWithoutVisibleCustomizeButton() throws {
 		let projectRoot = URL(fileURLWithPath: #filePath)
 			.deletingLastPathComponent()
 			.deletingLastPathComponent()
@@ -2434,10 +2436,12 @@ final class DiceTests: XCTestCase {
 		let source = try String(contentsOf: storyboardURL, encoding: .utf8)
 
 		XCTAssertTrue(source.contains("selector=\"roll\""))
-		XCTAssertTrue(source.contains("title=\"Customize\""))
+		XCTAssertFalse(source.contains("title=\"Customize\""))
 		XCTAssertFalse(source.contains("Tap die to roll"))
-		XCTAssertTrue(source.contains("selector=\"openCustomize\""))
+		XCTAssertFalse(source.contains("selector=\"openCustomize\""))
 		XCTAssertFalse(source.contains("selector=\"repeatLastRoll\""))
+		XCTAssertTrue(source.contains("id=\"64x-ie-It6\""))
+		XCTAssertTrue(source.contains("height=\"1\""))
 	}
 
 	func testWatchInterfaceControllerSupportsCustomizeLaunchArgumentForSimulatorSnapshots() throws {
@@ -2628,10 +2632,11 @@ final class DiceTests: XCTestCase {
 		XCTAssertFalse(elementHasExplicitHeight(id: "naG-PB-b0v"))
 		XCTAssertFalse(elementHasExplicitHeight(id: "uqH-Iz-Xnq"))
 		XCTAssertFalse(elementHasExplicitHeight(id: "u7a-rw-Q3F"))
-		XCTAssertFalse(elementHasExplicitHeight(id: "v0X-RQ-SY2"))
+		XCTAssertFalse(source.contains("id=\"v0X-RQ-SY2\""))
 		XCTAssertTrue(source.contains("selector=\"decrementSideCount\""))
 		XCTAssertTrue(source.contains("selector=\"incrementSideCount\""))
 		XCTAssertFalse(source.contains("selector=\"sideCountPickerChanged:\""))
+		XCTAssertFalse(source.contains("selector=\"closeCustomize\""))
 	}
 
 	func testWatchSceneRenderFallbackPolicyPrefersSceneKitForHighCostGeometryWhenSharedPathIsAvailable() {

@@ -10,30 +10,20 @@
             <objects>
                 <controller id="AgC-eL-Hgc" customClass="InterfaceController" customModule="Dice_WatchKit_App" customModuleProvider="target">
                     <items>
-                        <button width="1" height="0.54000000000000004" alignment="center" verticalAlignment="center" id="64x-ie-It6">
-                            <group key="contentGroup" width="1" height="168" alignment="center" id="Rub-qg-0Kw">
+                        <button width="1" height="1" alignment="center" verticalAlignment="center" id="64x-ie-It6">
+                            <group key="contentGroup" width="1" height="1" alignment="center" id="Rub-qg-0Kw">
                                 <items>
-                                    <sceneKitScene width="1" height="110" alignment="center" id="YvH-5M-5jF"/>
+                                    <sceneKitScene width="1" height="1" alignment="center" id="YvH-5M-5jF"/>
                                 </items>
                             </group>
                             <connections>
                                 <action selector="roll" destination="AgC-eL-Hgc" id="VKZ-xf-75P"/>
                             </connections>
                         </button>
-                        <group width="1" alignment="center" id="ml6-fj-RS8">
-                            <items>
-                                <button width="1" alignment="center" title="Customize" id="q2l-3p-c8P">
-                                    <connections>
-                                        <action selector="openCustomize" destination="AgC-eL-Hgc" id="pG9-eW-eqK"/>
-                                    </connections>
-                                </button>
-                            </items>
-                        </group>
                     </items>
                     <connections>
                         <outlet property="diceButton" destination="64x-ie-It6" id="ZmX-2S-onO"/>
                         <outlet property="diceSceneView" destination="YvH-5M-5jF" id="Cr8-Sr-5Wh"/>
-                        <outlet property="optionsButton" destination="q2l-3p-c8P" id="DHh-Mw-rfJ"/>
                     </connections>
                 </controller>
             </objects>
@@ -76,17 +66,11 @@
                                 <action selector="toggleMode" destination="hJq-MF-sG1" id="Qq3-f8-c0Y"/>
                             </connections>
                         </button>
-                        <button width="1" alignment="center" title="Done" id="v0X-RQ-SY2">
-                            <connections>
-                                <action selector="closeCustomize" destination="hJq-MF-sG1" id="9y5-pj-b9M"/>
-                            </connections>
-                        </button>
                     </items>
                     <connections>
                         <outlet property="backgroundButton" destination="uqH-Iz-Xnq" id="P0h-Ns-2w9"/>
                         <outlet property="colorButton" destination="naG-PB-b0v" id="hIt-ev-R2U"/>
                         <outlet property="decrementSideCountButton" destination="T5k-pU-UwE" id="w5T-QY-Yq7"/>
-                        <outlet property="doneButton" destination="v0X-RQ-SY2" id="dQX-B9-7QW"/>
                         <outlet property="incrementSideCountButton" destination="6uk-bI-1Kt" id="3N1-RU-RfT"/>
                         <outlet property="modeButton" destination="u7a-rw-Q3F" id="ER5-IR-R8W"/>
                         <outlet property="sideCountValueLabel" destination="pPZ-2h-Byh" id="5Rw-QI-fwn"/>

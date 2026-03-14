@@ -11,7 +11,6 @@ final class WatchCustomizeInterfaceController: WKInterfaceController {
 	@IBOutlet private weak var colorButton: WKInterfaceButton!
 	@IBOutlet private weak var backgroundButton: WKInterfaceButton!
 	@IBOutlet private weak var modeButton: WKInterfaceButton!
-	@IBOutlet private weak var doneButton: WKInterfaceButton!
 
 	override func awake(withContext context: Any?) {
 		super.awake(withContext: context)
@@ -49,10 +48,6 @@ final class WatchCustomizeInterfaceController: WKInterfaceController {
 		persistCustomization()
 	}
 
-	@IBAction func closeCustomize() {
-		pop()
-	}
-
 	private func persistCustomization() {
 		configurationSync.updateLocalConfiguration { [customizationState] configuration in
 			customizationState.apply(to: &configuration)
@@ -67,6 +62,5 @@ final class WatchCustomizeInterfaceController: WKInterfaceController {
 		colorButton.setTitle("Color: \(customizationState.colorToken)")
 		backgroundButton.setTitle("Background: \(customizationState.backgroundToken)")
 		modeButton.setTitle("Mode: \(customizationState.modeLabel)")
-		doneButton.setTitle("Done")
 	}
 }
