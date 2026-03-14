@@ -1928,16 +1928,16 @@ final class DiceTests: XCTestCase {
 
 	func testWatchRollViewModelStatusTextReflectsModeAndCount() {
 		let viewModel = WatchRollViewModel()
-		XCTAssertEqual(viewModel.statusText(rollCount: 1), "Random • d6\nRolls: 1")
+		XCTAssertEqual(viewModel.statusText(rollCount: 1), "d6 • Rolls 1")
 		viewModel.toggleMode()
-		XCTAssertEqual(viewModel.statusText(rollCount: 4), "Intuitive • d6\nRolls: 4")
+		XCTAssertEqual(viewModel.statusText(rollCount: 4), "d6 • Rolls 4")
 	}
 
 	func testWatchRollViewModelStatusTextUsesGlanceableTokensWithLastValue() {
 		let viewModel = WatchRollViewModel()
-		XCTAssertEqual(viewModel.statusText(lastValue: 5), "Random • d6\nLast: 5\nTap die to roll")
+		XCTAssertEqual(viewModel.statusText(lastValue: 5), "d6 • Result 5")
 		viewModel.toggleMode()
-		XCTAssertEqual(viewModel.statusText(lastValue: 2), "Intuitive • d6\nLast: 2\nTap die to roll")
+		XCTAssertEqual(viewModel.statusText(lastValue: 2), "d6 • Result 2")
 	}
 
 	func testWatchRollViewModelUsesConfiguredSideCountForNotationAndRolls() {
@@ -2315,24 +2315,16 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(state.backgroundTexture, .black)
 	}
 
-	func testWatchSingleDieCustomizationStateProvidesFullPickerSideRange() {
-		XCTAssertEqual(WatchSingleDieCustomizationState.pickerSideCounts.first, 2)
-		XCTAssertEqual(WatchSingleDieCustomizationState.pickerSideCounts.last, 100)
-		XCTAssertEqual(WatchSingleDieCustomizationState.pickerSideCounts.count, 99)
-	}
-
-	func testWatchSingleDieCustomizationStateSynchronizesPickerAndSideCountSelection() {
+	func testWatchSingleDieCustomizationStateClampsSideRangeForStepperControls() {
 		var state = WatchSingleDieCustomizationState(
 			configuration: WatchSingleDieConfiguration(sideCount: 6)
 		)
 
-		let d20PickerIndex = WatchSingleDieCustomizationState.pickerIndex(forSideCount: 20)
-		state.setSideCountFromPickerIndex(d20PickerIndex)
-		XCTAssertEqual(state.sideCount, 20)
+		state.setSideCount(DiceSingleDieSceneGeometryFactory.minimumSideCount - 1)
+		XCTAssertEqual(state.sideCount, DiceSingleDieSceneGeometryFactory.minimumSideCount)
 
-		state.setSideCount(37)
-		XCTAssertEqual(state.sideCount, 37)
-		XCTAssertEqual(WatchSingleDieCustomizationState.pickerIndex(forSideCount: state.sideCount), 35)
+		state.setSideCount(DiceSingleDieSceneGeometryFactory.maximumSideCount + 1)
+		XCTAssertEqual(state.sideCount, DiceSingleDieSceneGeometryFactory.maximumSideCount)
 	}
 
 	func testWatchStoryboardUsesExtensionModuleForInterfaceController() throws {
@@ -2442,11 +2434,10 @@ final class DiceTests: XCTestCase {
 		let source = try String(contentsOf: storyboardURL, encoding: .utf8)
 
 		XCTAssertTrue(source.contains("selector=\"roll\""))
-		XCTAssertTrue(source.contains("title=\"Options\""))
-		XCTAssertTrue(source.contains("title=\"Repeat\""))
-		XCTAssertTrue(source.contains("Tap die to roll"))
+		XCTAssertTrue(source.contains("title=\"Customize\""))
+		XCTAssertFalse(source.contains("Tap die to roll"))
 		XCTAssertTrue(source.contains("selector=\"openCustomize\""))
-		XCTAssertTrue(source.contains("selector=\"repeatLastRoll\""))
+		XCTAssertFalse(source.contains("selector=\"repeatLastRoll\""))
 	}
 
 	func testWatchInterfaceControllerSupportsCustomizeLaunchArgumentForSimulatorSnapshots() throws {
@@ -2460,6 +2451,60 @@ final class DiceTests: XCTestCase {
 
 		XCTAssertTrue(source.contains("-watchOpenCustomizeOnLaunch"))
 		XCTAssertTrue(source.contains("openCustomizeIfRequestedForAutomation"))
+	}
+
+	func testWatchInterfaceControllerUsesSharedFaceTextureFactoryInsteadOfSpriteKitFaceScenes() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let controllerURL = projectRoot
+			.appendingPathComponent("Dice WatchKit Extension")
+			.appendingPathComponent("InterfaceController.swift")
+		let source = try String(contentsOf: controllerURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("DiceFaceTextureFactory.textureSet"))
+		XCTAssertFalse(
+			source.contains("SKScene(size:"),
+			"Watch rendering should use the shared face texture path, not a watch-only SpriteKit face scene path."
+		)
+	}
+
+	func testWatchInterfaceControllerUsesSharedTableMaterialConfigurator() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let controllerURL = projectRoot
+			.appendingPathComponent("Dice WatchKit Extension")
+			.appendingPathComponent("InterfaceController.swift")
+		let source = try String(contentsOf: controllerURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("DiceTableSurfaceMaterialConfigurator.configureBaseMaterial"))
+		XCTAssertTrue(source.contains("DiceTableSurfaceMaterialConfigurator.applyTexture"))
+	}
+
+	func testDiceCubeViewUsesSharedFaceTextureFactoryForFaceTextures() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let cubeViewURL = projectRoot
+			.appendingPathComponent("Dice")
+			.appendingPathComponent("DiceCubeView.swift")
+		let source = try String(contentsOf: cubeViewURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("DiceFaceTextureFactory.textureSet"))
+	}
+
+	func testDiceCubeViewUsesSharedTableMaterialConfigurator() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let cubeViewURL = projectRoot
+			.appendingPathComponent("Dice")
+			.appendingPathComponent("DiceCubeView.swift")
+		let source = try String(contentsOf: cubeViewURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("DiceTableSurfaceMaterialConfigurator.configureBaseMaterial"))
+		XCTAssertTrue(source.contains("DiceTableSurfaceMaterialConfigurator.applyTexture"))
 	}
 
 	func testSingleDieSceneGeometryFactorySupportsPolyhedralAndFallbackDescriptors() {
@@ -2545,6 +2590,48 @@ final class DiceTests: XCTestCase {
 		XCTAssertNotEqual(bottom.diffuse.contentsTransform.m11, SCNMatrix4Identity.m11)
 		XCTAssertEqual(top.normal.contentsTransform.m11, top.diffuse.contentsTransform.m11, accuracy: 0.0001)
 		XCTAssertEqual(bottom.normal.contentsTransform.m11, bottom.diffuse.contentsTransform.m11, accuracy: 0.0001)
+
+		let topDeterminant = top.diffuse.contentsTransform.m11 * top.diffuse.contentsTransform.m22 - top.diffuse.contentsTransform.m12 * top.diffuse.contentsTransform.m21
+		let bottomDeterminant = bottom.diffuse.contentsTransform.m11 * bottom.diffuse.contentsTransform.m22 - bottom.diffuse.contentsTransform.m12 * bottom.diffuse.contentsTransform.m21
+		XCTAssertGreaterThan(topDeterminant, 0, "Top cap UV transform must preserve winding (no mirrored symbols).")
+		XCTAssertGreaterThan(bottomDeterminant, 0, "Bottom cap UV transform must preserve winding (no mirrored symbols).")
+	}
+
+	func testWatchCustomizeStoryboardUsesContentSizedButtons() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let storyboardURL = projectRoot
+			.appendingPathComponent("Dice WatchKit App")
+			.appendingPathComponent("Base.lproj")
+			.appendingPathComponent("Interface.storyboard")
+		let source = try String(contentsOf: storyboardURL, encoding: .utf8)
+
+		func elementHasExplicitHeight(id: String) -> Bool {
+			let patterns = [
+				#"id="\#(id)"[^>]*\bheight=""#,
+				#"\bheight="[^>]*id="\#(id)""#
+			]
+			for pattern in patterns {
+				guard let regex = try? NSRegularExpression(pattern: pattern) else { continue }
+				if regex.firstMatch(
+					in: source,
+					range: NSRange(source.startIndex..<source.endIndex, in: source)
+				) != nil {
+					return true
+				}
+			}
+			return false
+		}
+
+		XCTAssertFalse(elementHasExplicitHeight(id: "R5G-Kz-oXf"))
+		XCTAssertFalse(elementHasExplicitHeight(id: "naG-PB-b0v"))
+		XCTAssertFalse(elementHasExplicitHeight(id: "uqH-Iz-Xnq"))
+		XCTAssertFalse(elementHasExplicitHeight(id: "u7a-rw-Q3F"))
+		XCTAssertFalse(elementHasExplicitHeight(id: "v0X-RQ-SY2"))
+		XCTAssertTrue(source.contains("selector=\"decrementSideCount\""))
+		XCTAssertTrue(source.contains("selector=\"incrementSideCount\""))
+		XCTAssertFalse(source.contains("selector=\"sideCountPickerChanged:\""))
 	}
 
 	func testWatchSceneRenderFallbackPolicyPrefersSceneKitForHighCostGeometryWhenSharedPathIsAvailable() {
@@ -2600,7 +2687,7 @@ final class DiceTests: XCTestCase {
 		let second = viewModel.roll().values[0]
 		let third = viewModel.roll().values[0]
 		XCTAssertEqual([first, second, third], [1, 2, 3])
-		XCTAssertEqual(viewModel.statusText(lastValue: third), "Random • d6\nLast: 3\nTap die to roll")
+		XCTAssertEqual(viewModel.statusText(lastValue: third), "d6 • Result 3")
 		_ = D6FaceOrientation.eulerAngles(for: first)
 		_ = D6FaceOrientation.eulerAngles(for: second)
 		_ = D6FaceOrientation.eulerAngles(for: third)
@@ -2609,7 +2696,7 @@ final class DiceTests: XCTestCase {
 		let afterToggle = viewModel.roll()
 		XCTAssertEqual(afterToggle.totalRolls, 1)
 		XCTAssertEqual(afterToggle.values, [4])
-		XCTAssertEqual(viewModel.statusText(lastValue: 4), "Intuitive • d6\nLast: 4\nTap die to roll")
+		XCTAssertEqual(viewModel.statusText(lastValue: 4), "d6 • Result 4")
 		_ = D6FaceOrientation.eulerAngles(for: 4)
 	}
 

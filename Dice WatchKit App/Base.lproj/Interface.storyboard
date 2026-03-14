@@ -13,7 +13,8 @@
             <objects>
                 <controller id="AgC-eL-Hgc" customClass="InterfaceController" customModule="Dice_WatchKit_Extension" customModuleProvider="target">
                     <items>
-                        <button width="1" height="0.58" alignment="center" verticalAlignment="center" id="64x-ie-It6">
+                        <label width="1" height="0.10" alignment="center" text="d6 • Result 1" id="8Nt-Kv-ew0"/>
+                        <button width="1" height="0.54" alignment="center" verticalAlignment="center" id="64x-ie-It6">
                             <group key="contentGroup" width="1" height="1" alignment="center" id="Rub-qg-0Kw">
                                 <items>
                                     <sceneKitScene width="1" height="1" alignment="center" id="YvH-5M-5jF"/>
@@ -23,17 +24,11 @@
                                 <action selector="roll" destination="AgC-eL-Hgc" id="VKZ-xf-75P"/>
                             </connections>
                         </button>
-                        <label width="1" height="0.2" alignment="center" text="Random • d6&#10;Last: 1&#10;Tap die to roll" id="8Nt-Kv-ew0"/>
-                        <group width="1" height="0.12" alignment="center" layout="horizontal" id="ml6-fj-RS8">
+                        <group width="1" alignment="center" layout="horizontal" id="ml6-fj-RS8">
                             <items>
-                                <button width="0.5" alignment="center" title="Options" id="q2l-3p-c8P">
+                                <button width="1" alignment="center" title="Customize" id="q2l-3p-c8P">
                                     <connections>
                                         <action selector="openCustomize" destination="AgC-eL-Hgc" id="pG9-eW-eqK"/>
-                                    </connections>
-                                </button>
-                                <button width="0.5" alignment="center" title="Repeat" id="Q9Y-JL-nJB">
-                                    <connections>
-                                        <action selector="repeatLastRoll" destination="AgC-eL-Hgc" id="hgf-u7-8vm"/>
                                     </connections>
                                 </button>
                             </items>
@@ -42,6 +37,7 @@
                     <connections>
                         <outlet property="diceButton" destination="64x-ie-It6" id="ZmX-2S-onO"/>
                         <outlet property="diceSceneView" destination="YvH-5M-5jF" id="Cr8-Sr-5Wh"/>
+                        <outlet property="optionsButton" destination="q2l-3p-c8P" id="DHh-Mw-rfJ"/>
                         <outlet property="statusLabel" destination="8Nt-Kv-ew0" id="dKO-fg-f7U"/>
                     </connections>
                 </controller>
@@ -53,34 +49,47 @@
             <objects>
                 <controller identifier="WatchCustomizeController" id="hJq-MF-sG1" customClass="WatchCustomizeInterfaceController" customModule="Dice_WatchKit_Extension" customModuleProvider="target">
                     <items>
-                        <picker width="1" height="0.42" alignment="center" id="xjp-6u-8mW">
-                            <connections>
-                                <action selector="sideCountPickerChanged:" destination="hJq-MF-sG1" id="zEl-SW-L3Q"/>
-                            </connections>
-                        </picker>
-                        <button width="1" height="0.11" alignment="center" title="Color: Ivory" id="naG-PB-b0v">
+                        <group width="1" alignment="center" layout="horizontal" id="R5G-Kz-oXf">
+                            <items>
+                                <button width="0.28" alignment="center" title="-" id="T5k-pU-UwE">
+                                    <connections>
+                                        <action selector="decrementSideCount" destination="hJq-MF-sG1" id="WsS-zO-PrK"/>
+                                    </connections>
+                                </button>
+                                <label width="0.44" alignment="center" text="d6" id="pPZ-2h-Byh"/>
+                                <button width="0.28" alignment="center" title="+" id="6uk-bI-1Kt">
+                                    <connections>
+                                        <action selector="incrementSideCount" destination="hJq-MF-sG1" id="B5X-9J-wvG"/>
+                                    </connections>
+                                </button>
+                            </items>
+                        </group>
+                        <button width="1" alignment="center" title="Color: Ivory" id="naG-PB-b0v">
                             <connections>
                                 <action selector="cycleColor" destination="hJq-MF-sG1" id="A9f-hE-I2H"/>
                             </connections>
                         </button>
-                        <button width="1" height="0.11" alignment="center" title="Background: Black" id="uqH-Iz-Xnq">
+                        <button width="1" alignment="center" title="Background: Black" id="uqH-Iz-Xnq">
                             <connections>
                                 <action selector="cycleBackground" destination="hJq-MF-sG1" id="gff-JC-qZf"/>
                             </connections>
                         </button>
-                        <button width="1" height="0.11" alignment="center" title="Roll Mode: Random" id="u7a-rw-Q3F">
+                        <button width="1" alignment="center" title="Mode: Random" id="u7a-rw-Q3F">
                             <connections>
                                 <action selector="toggleMode" destination="hJq-MF-sG1" id="Qq3-f8-c0Y"/>
                             </connections>
                         </button>
-                        <button width="1" height="0.11" alignment="center" title="Done" id="v0X-RQ-SY2">
+                        <button width="1" alignment="center" title="Done" id="v0X-RQ-SY2">
                             <connections>
                                 <action selector="closeCustomize" destination="hJq-MF-sG1" id="9y5-pj-b9M"/>
                             </connections>
                         </button>
                     </items>
                     <connections>
-                        <outlet property="sideCountPicker" destination="xjp-6u-8mW" id="cdL-vm-Q9k"/>
+                        <outlet property="sideCountValueLabel" destination="pPZ-2h-Byh" id="5Rw-QI-fwn"/>
+                        <outlet property="decrementSideCountButton" destination="T5k-pU-UwE" id="w5T-QY-Yq7"/>
+                        <outlet property="incrementSideCountButton" destination="6uk-bI-1Kt" id="3N1-RU-RfT"/>
+                        <outlet property="doneButton" destination="v0X-RQ-SY2" id="dQX-B9-7QW"/>
                         <outlet property="colorButton" destination="naG-PB-b0v" id="hIt-ev-R2U"/>
                         <outlet property="backgroundButton" destination="uqH-Iz-Xnq" id="P0h-Ns-2w9"/>
                         <outlet property="modeButton" destination="u7a-rw-Q3F" id="ER5-IR-R8W"/>

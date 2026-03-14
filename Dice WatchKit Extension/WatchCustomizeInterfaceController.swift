@@ -5,10 +5,13 @@ final class WatchCustomizeInterfaceController: WKInterfaceController {
 	private let configurationSync = WatchSingleDieConfigurationSyncBridge.shared
 	private var customizationState = WatchSingleDieCustomizationState(configuration: WatchSingleDieConfiguration.watchDefault)
 
-	@IBOutlet private weak var sideCountPicker: WKInterfacePicker!
+	@IBOutlet private weak var sideCountValueLabel: WKInterfaceLabel!
+	@IBOutlet private weak var decrementSideCountButton: WKInterfaceButton!
+	@IBOutlet private weak var incrementSideCountButton: WKInterfaceButton!
 	@IBOutlet private weak var colorButton: WKInterfaceButton!
 	@IBOutlet private weak var backgroundButton: WKInterfaceButton!
 	@IBOutlet private weak var modeButton: WKInterfaceButton!
+	@IBOutlet private weak var doneButton: WKInterfaceButton!
 
 	override func awake(withContext context: Any?) {
 		super.awake(withContext: context)
@@ -18,12 +21,16 @@ final class WatchCustomizeInterfaceController: WKInterfaceController {
 		} else {
 			customizationState = WatchSingleDieCustomizationState(configuration: configurationSync.currentConfiguration())
 		}
-		configureSidePicker()
 		applyUIState()
 	}
 
-	@IBAction func sideCountPickerChanged(_ pickerIndex: Int) {
-		customizationState.setSideCountFromPickerIndex(pickerIndex)
+	@IBAction func decrementSideCount() {
+		customizationState.setSideCount(customizationState.sideCount - 1)
+		persistCustomization()
+	}
+
+	@IBAction func incrementSideCount() {
+		customizationState.setSideCount(customizationState.sideCount + 1)
 		persistCustomization()
 	}
 
@@ -53,20 +60,13 @@ final class WatchCustomizeInterfaceController: WKInterfaceController {
 		applyUIState()
 	}
 
-	private func configureSidePicker() {
-		let items = WatchSingleDieCustomizationState.pickerSideCounts.map { sideCount -> WKPickerItem in
-			let item = WKPickerItem()
-			item.title = "d\(sideCount)"
-			return item
-		}
-		sideCountPicker.setItems(items)
-		sideCountPicker.setSelectedItemIndex(customizationState.sidePickerIndex)
-	}
-
 	private func applyUIState() {
-		sideCountPicker.setSelectedItemIndex(customizationState.sidePickerIndex)
+		sideCountValueLabel.setText(customizationState.sideToken)
+		decrementSideCountButton.setEnabled(customizationState.sideCount > DiceSingleDieSceneGeometryFactory.minimumSideCount)
+		incrementSideCountButton.setEnabled(customizationState.sideCount < DiceSingleDieSceneGeometryFactory.maximumSideCount)
 		colorButton.setTitle("Color: \(customizationState.colorToken)")
 		backgroundButton.setTitle("Background: \(customizationState.backgroundToken)")
-		modeButton.setTitle("Roll Mode: \(customizationState.modeLabel)")
+		modeButton.setTitle("Mode: \(customizationState.modeLabel)")
+		doneButton.setTitle("Done")
 	}
 }

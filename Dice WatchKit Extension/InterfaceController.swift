@@ -9,7 +9,6 @@
 import WatchKit
 import Foundation
 import SceneKit
-import SpriteKit
 
 
 class InterfaceController: WKInterfaceController {
@@ -36,11 +35,13 @@ class InterfaceController: WKInterfaceController {
 	private var shouldOpenCustomizeForAutomation = false
 	private var lowPowerObserver: NSObjectProtocol?
 	private let feedbackDevice = WKInterfaceDevice.current()
-	private let watchDieSideLength: CGFloat = 2.7
+	private let watchDieSideLength: CGFloat = 3.4
+	private let watchRollAnimationDuration: TimeInterval = 0.42
 
 	@IBOutlet weak var diceButton: WKInterfaceButton!
 	@IBOutlet weak var statusLabel: WKInterfaceLabel!
 	@IBOutlet weak var diceSceneView: WKInterfaceSCNScene!
+	@IBOutlet weak var optionsButton: WKInterfaceButton!
 
     override func awake(withContext context: Any?) {
         super.awake(withContext: context)
@@ -80,10 +81,6 @@ class InterfaceController: WKInterfaceController {
 
 	@IBAction func roll() {
 		apply(outcome: viewModel.roll())
-	}
-
-	@IBAction private func repeatLastRoll() {
-		apply(outcome: viewModel.repeatLastRoll())
 	}
 
 	@IBAction func openCustomize() {
@@ -144,7 +141,7 @@ class InterfaceController: WKInterfaceController {
 
 		let cameraNode = SCNNode()
 		cameraNode.camera = SCNCamera()
-		cameraNode.position = SCNVector3(0, 0, 4.2)
+		cameraNode.position = SCNVector3(0, 0, 3.2)
 		scene.rootNode.addChildNode(cameraNode)
 
 		let keyLight = SCNNode()
@@ -169,16 +166,7 @@ class InterfaceController: WKInterfaceController {
 
 	private func configureTableSurface(in scene: SCNScene, initialTexture: DiceTableTexture) {
 		let plane = SCNPlane(width: 24, height: 24)
-		tableMaterial.lightingModel = .lambert
-		tableMaterial.isLitPerPixel = true
-		tableMaterial.isDoubleSided = true
-		tableMaterial.diffuse.wrapS = .repeat
-		tableMaterial.diffuse.wrapT = .repeat
-		tableMaterial.writesToDepthBuffer = true
-		tableMaterial.readsFromDepthBuffer = true
-		if let tableShader = DiceShaderModifierSourceLoader.tableSurfaceShaderModifier() {
-			tableMaterial.shaderModifiers = [.surface: tableShader]
-		}
+		DiceTableSurfaceMaterialConfigurator.configureBaseMaterial(tableMaterial)
 		plane.materials = [tableMaterial]
 		tableNode.geometry = plane
 		tableNode.position = SCNVector3(0, 0, -0.8)
@@ -189,35 +177,12 @@ class InterfaceController: WKInterfaceController {
 
 	private func applyTableTexture(_ texture: DiceTableTexture) {
 		activeTableTexture = texture
-		tableMaterial.setValue(texture.shaderModeValue, forKey: "tableTextureMode")
 		let pointSize = WKInterfaceDevice.current().screenBounds.size
-		let width = max(1, pointSize.width)
-		let height = max(1, pointSize.height)
-		tableMaterial.setValue(max(1, min(width, height)) as NSNumber, forKey: "tableTextureScale")
-		tableMaterial.setValue(width as NSNumber, forKey: "tableTextureScaleX")
-		tableMaterial.setValue(height as NSNumber, forKey: "tableTextureScaleY")
-
-		if texture == .neutral, let neutralTexture = UIImage(named: "TableNeutralTexture"), neutralTexture.size.width > 0, neutralTexture.size.height > 0 {
-			tableMaterial.diffuse.contents = neutralTexture
-			let repeatX = Float(width / neutralTexture.size.width)
-			let repeatY = Float(height / neutralTexture.size.height)
-			tableMaterial.diffuse.contentsTransform = SCNMatrix4MakeScale(repeatX, repeatY, 1)
-			tableMaterial.diffuse.minificationFilter = .nearest
-			tableMaterial.diffuse.magnificationFilter = .nearest
-			tableMaterial.diffuse.mipFilter = .none
-		} else if texture == .black {
-			tableMaterial.diffuse.contents = UIColor.black
-			tableMaterial.diffuse.contentsTransform = SCNMatrix4Identity
-			tableMaterial.diffuse.minificationFilter = .nearest
-			tableMaterial.diffuse.magnificationFilter = .nearest
-			tableMaterial.diffuse.mipFilter = .none
-		} else {
-			tableMaterial.diffuse.contents = UIColor(red: 0.88, green: 0.88, blue: 0.88, alpha: 1.0)
-			tableMaterial.diffuse.contentsTransform = SCNMatrix4Identity
-			tableMaterial.diffuse.minificationFilter = .linear
-			tableMaterial.diffuse.magnificationFilter = .linear
-			tableMaterial.diffuse.mipFilter = .none
-		}
+		DiceTableSurfaceMaterialConfigurator.applyTexture(
+			texture,
+			to: tableMaterial,
+			pointScale: CGSize(width: max(1, pointSize.width), height: max(1, pointSize.height))
+		)
 	}
 
 	private func configurePowerModeObserver() {
@@ -274,37 +239,30 @@ class InterfaceController: WKInterfaceController {
 	}
 
 	private func faceMaterial(value: Int, sideCount: Int, includeSideLabel: Bool) -> SCNMaterial {
-		let textureSize = CGSize(width: 256, height: 256)
-		let scene = SKScene(size: textureSize)
-		scene.scaleMode = .resizeFill
-		let style = DiceFaceContrast.style(for: activeColorPreset.fillColor)
-		scene.backgroundColor = style.fillColor
-
-		let label = SKLabelNode(text: "\(value)")
-		label.fontName = "SFProDisplay-Bold"
-		label.fontSize = 148
-		label.fontColor = style.primaryInkColor
-		label.verticalAlignmentMode = .center
-		label.horizontalAlignmentMode = .center
-		label.position = CGPoint(x: textureSize.width / 2, y: textureSize.height / 2)
-		scene.addChild(label)
-		if includeSideLabel {
-			let subtitle = SKLabelNode(text: "d\(sideCount)")
-			subtitle.fontName = "SFProDisplay-Regular"
-			subtitle.fontSize = 52
-			subtitle.fontColor = style.secondaryInkColor
-			subtitle.verticalAlignmentMode = .center
-			subtitle.horizontalAlignmentMode = .center
-			subtitle.position = CGPoint(x: textureSize.width / 2, y: textureSize.height * 0.18)
-			scene.addChild(subtitle)
-		}
+		let fillColor = activeColorPreset.fillColor
+		let d4VertexLabels = sideCount == 4 ? DiceSingleDieSceneGeometryFactory.d4VertexLabels(forFaceValue: value) : []
+		let textureSet = DiceFaceTextureFactory.textureSet(
+			value: value,
+			sideCount: sideCount,
+			fillColor: fillColor,
+			numeralFont: .classic,
+			pipStyle: .round,
+			largeFaceLabelsEnabled: false,
+			d4VertexLabels: d4VertexLabels
+		)
 
 		let material = SCNMaterial()
-		material.diffuse.contents = scene
+		material.diffuse.contents = textureSet.diffuse
+		material.normal.contents = textureSet.normal
+		material.normal.intensity = 0.95
+		material.specular.contents = textureSet.metalness
+		material.metalness.contents = textureSet.metalness
+		material.roughness.contents = textureSet.roughness
 		material.locksAmbientWithDiffuse = true
 		material.isDoubleSided = false
-		material.roughness.contents = NSNumber(value: 0.85)
-		material.metalness.contents = NSNumber(value: 0.0)
+		if includeSideLabel {
+			material.diffuse.contentsTransform = SCNMatrix4Identity
+		}
 		return material
 	}
 
@@ -320,11 +278,70 @@ class InterfaceController: WKInterfaceController {
 
 	private func animateDie(to value: Int, sideCount: Int, completion: (() -> Void)? = nil) {
 		let target = DiceSingleDieSceneGeometryFactory.orientation(for: value, sideCount: sideCount)
-		SCNTransaction.begin()
-		SCNTransaction.animationDuration = ProcessInfo.processInfo.isLowPowerModeEnabled ? 0.2 : 0.4
-		SCNTransaction.completionBlock = completion
-		dieNode.eulerAngles = target
-		SCNTransaction.commit()
+		dieNode.removeAllActions()
+		let duration = ProcessInfo.processInfo.isLowPowerModeEnabled ? max(0.24, watchRollAnimationDuration * 0.65) : watchRollAnimationDuration
+		if DiceSingleDieSceneGeometryFactory.usesCoinGeometry(for: sideCount) || DiceSingleDieSceneGeometryFactory.usesTokenGeometry(for: sideCount) {
+			let spinDirection: Float = Bool.random() ? 1 : -1
+			let action = SCNAction.customAction(duration: duration) { [weak self] node, elapsed in
+				guard let self else { return }
+				let progress = Float(max(0, min(1, elapsed / CGFloat(duration))))
+				node.eulerAngles = self.cylindricalAnimationEulerAngles(
+					sideCount: sideCount,
+					targetValue: value,
+					progress: progress,
+					spinDirection: spinDirection
+				)
+			}
+			dieNode.runAction(action) { completion?() }
+			return
+		}
+
+		let start = dieNode.presentation.eulerAngles
+		let spinTarget = SCNVector3(
+			target.x + randomTurnRadians(min: 2, max: 4),
+			target.y + randomTurnRadians(min: 2, max: 4),
+			target.z + randomTurnRadians(min: 1, max: 3)
+		)
+		let rotateAction = SCNAction.customAction(duration: duration) { node, elapsed in
+			let progress = Float(max(0, min(1, elapsed / CGFloat(duration))))
+			let eased = 1 - powf(1 - progress, 3)
+			node.eulerAngles = SCNVector3(
+				start.x + (spinTarget.x - start.x) * eased,
+				start.y + (spinTarget.y - start.y) * eased,
+				start.z + (spinTarget.z - start.z) * eased
+			)
+		}
+		dieNode.runAction(rotateAction) { completion?() }
+	}
+
+	private func randomTurnRadians(min: Int, max: Int) -> Float {
+		let turns = Float(Int.random(in: min...max))
+		let sign: Float = Bool.random() ? 1 : -1
+		return turns * sign * Float.pi * 2
+	}
+
+	private func pinnedRollSettleProgress(_ progress: Float) -> Float {
+		let clamped = max(0, min(1, progress))
+		return 1 - powf(1 - clamped, 3)
+	}
+
+	private func cylindricalAnimationEulerAngles(
+		sideCount: Int,
+		targetValue: Int,
+		progress: Float,
+		spinDirection: Float
+	) -> SCNVector3 {
+		let clamped = max(0, min(1, progress))
+		let target = DiceSingleDieSceneGeometryFactory.orientation(for: targetValue, sideCount: sideCount)
+		let turns: Float = 3
+		let spinMagnitude = turns * spinDirection * Float.pi * 2
+		let tiltProgress = pinnedRollSettleProgress(clamped)
+		let residualSpin = pow(1 - clamped, 3)
+		return SCNVector3(
+			target.x * tiltProgress,
+			target.y * tiltProgress,
+			target.z + (spinMagnitude * residualSpin)
+		)
 	}
 
 	private func playRollStartFeedback() {
@@ -447,5 +464,6 @@ class InterfaceController: WKInterfaceController {
 
 	private func updateControlTitles() {
 		diceButton.setTitle(nil)
+		optionsButton.setTitle("Customize")
 	}
 }

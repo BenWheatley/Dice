@@ -104,6 +104,18 @@ enum DiceSingleDieSceneGeometryFactory {
 		!usesCoinGeometry(for: sideCount) && !supportedPolyhedralSideCounts.contains(sideCount)
 	}
 
+	static func d4VertexLabels(forFaceValue value: Int) -> [Int] {
+		guard (1...4).contains(value) else { return [4, 3, 2] }
+		let vertices = tetrahedronVertices()
+		let faces = orientedFaces(sideCount: 4, vertices: vertices, faces: tetrahedronFaces())
+		let index = value - 1
+		guard faces.indices.contains(index) else { return [4, 3, 2] }
+		return faces[index].map { vertexIndex in
+			guard d4VertexValueByIndex.indices.contains(vertexIndex) else { return 1 }
+			return d4VertexValueByIndex[vertexIndex]
+		}
+	}
+
 	private static func cachedOrientation(for sideCount: Int, value: Int) -> SCNVector3? {
 		orientationCacheLock.lock()
 		let cached = orientationCache[sideCount]?[value]

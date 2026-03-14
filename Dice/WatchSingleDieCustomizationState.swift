@@ -1,10 +1,6 @@
 import Foundation
 
 struct WatchSingleDieCustomizationState: Equatable {
-	static let pickerSideCounts = Array(
-		DiceSingleDieSceneGeometryFactory.minimumSideCount...DiceSingleDieSceneGeometryFactory.maximumSideCount
-	)
-
 	private(set) var sideCount: Int
 	var colorPreset: DiceDieColorPreset
 	private(set) var isIntuitiveMode: Bool
@@ -19,17 +15,6 @@ struct WatchSingleDieCustomizationState: Equatable {
 
 	mutating func setSideCount(_ sideCount: Int) {
 		self.sideCount = DiceSingleDieSceneGeometryFactory.clampedSideCount(sideCount)
-	}
-
-	mutating func setSideCountFromPickerIndex(_ index: Int) {
-		let maxIndex = Self.pickerSideCounts.count - 1
-		let clampedIndex = min(max(0, index), maxIndex)
-		sideCount = Self.pickerSideCounts[clampedIndex]
-	}
-
-	static func pickerIndex(forSideCount sideCount: Int) -> Int {
-		let clamped = DiceSingleDieSceneGeometryFactory.clampedSideCount(sideCount)
-		return clamped - DiceSingleDieSceneGeometryFactory.minimumSideCount
 	}
 
 	mutating func toggleMode() {
@@ -65,10 +50,6 @@ struct WatchSingleDieCustomizationState: Equatable {
 
 	var sideToken: String {
 		"d\(sideCount)"
-	}
-
-	var sidePickerIndex: Int {
-		Self.pickerIndex(forSideCount: sideCount)
 	}
 
 	var modeLabel: String {

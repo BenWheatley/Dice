@@ -29,11 +29,11 @@ final class WatchRollViewModel {
 	}
 
 	func statusText(rollCount: Int) -> String {
-		"\(readableModeLabel()) • d\(sideCount)\nRolls: \(rollCount)"
+		"d\(sideCount) • Rolls \(rollCount)"
 	}
 
 	func statusText(lastValue: Int) -> String {
-		"\(readableModeLabel()) • d\(sideCount)\nLast: \(lastValue)\nTap die to roll"
+		"d\(sideCount) • Result \(lastValue)"
 	}
 
 	func toggleMode() {
@@ -61,7 +61,4 @@ final class WatchRollViewModel {
 		return rollSession.roll(configuration)
 	}
 
-	private func readableModeLabel() -> String {
-		isIntuitiveMode ? "Intuitive" : "Random"
-	}
 }

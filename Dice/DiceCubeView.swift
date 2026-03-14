@@ -12,7 +12,6 @@ import simd
 
 final class DiceCubeView: UIView {
 	private static let faceTextureEdgeLength: CGFloat = 256
-	private static let neutralTextureName = "stripes"
 	private static let cameraDefaultZ: Float = 800
 	private static let tablePlaneZ: Float = -60
 	private static let tablePlaneMargin: CGFloat = 96
@@ -36,23 +35,6 @@ final class DiceCubeView: UIView {
 	private static let keyLightNaturalNightIntensityDefault: CGFloat = 900
 	private static let fillLightIntensityDefault: CGFloat = 90
 
-	private static let neutralTableTextureImage: UIImage? = {
-		let bundles = [Bundle.main, Bundle(for: DiceCubeView.self)]
-		for bundle in bundles {
-			if let image = UIImage(named: neutralTextureName, in: bundle, compatibleWith: nil) {
-				return image
-			}
-		}
-		return UIImage(named: neutralTextureName)
-	}()
-
-	private static let neutralTableTexturePixelSize: CGSize = {
-		guard let image = neutralTableTextureImage else { return .zero }
-		if let cgImage = image.cgImage {
-			return CGSize(width: cgImage.width, height: cgImage.height)
-		}
-		return CGSize(width: image.size.width * image.scale, height: image.size.height * image.scale)
-	}()
 	private struct MeshCacheKey: Hashable {
 		let sideCount: Int
 		let roundedSideLength: Int
@@ -672,16 +654,7 @@ final class DiceCubeView: UIView {
 		let plane = SCNPlane(width: 10, height: 10)
 		plane.widthSegmentCount = Self.tableShadowReceiverMinSegments
 		plane.heightSegmentCount = Self.tableShadowReceiverMinSegments
-		tableMaterial.lightingModel = Self.tableLightingModelDefault
-		tableMaterial.isLitPerPixel = Self.tableLitPerPixelDefault
-		tableMaterial.isDoubleSided = true
-		tableMaterial.diffuse.wrapS = .repeat
-		tableMaterial.diffuse.wrapT = .repeat
-		tableMaterial.writesToDepthBuffer = Self.tableWritesDepthDefault
-		tableMaterial.readsFromDepthBuffer = Self.tableReadsDepthDefault
-		if let tableShader = DiceShaderModifierSourceLoader.tableSurfaceShaderModifier() {
-			tableMaterial.shaderModifiers = [.surface: tableShader]
-		}
+		DiceTableSurfaceMaterialConfigurator.configureBaseMaterial(tableMaterial)
 		plane.materials = [tableMaterial]
 		tableNode.geometry = plane
 		tableNode.position = SCNVector3(0, 0, Self.tablePlaneZ)
@@ -692,41 +665,19 @@ final class DiceCubeView: UIView {
 	}
 
 	private func applyTableTexture() {
-		tableMaterial.setValue(activeTableTexture.shaderModeValue, forKey: "tableTextureMode")
-		if activeTableTexture == .neutral, let neutralTexture = Self.neutralTableTextureImage {
-			tableMaterial.diffuse.contents = neutralTexture
-			tableMaterial.diffuse.minificationFilter = .nearest
-			tableMaterial.diffuse.magnificationFilter = .nearest
-			tableMaterial.diffuse.mipFilter = .none
-		} else if activeTableTexture == .black {
-			tableMaterial.diffuse.contents = UIColor.black
-			tableMaterial.diffuse.minificationFilter = .nearest
-			tableMaterial.diffuse.magnificationFilter = .nearest
-			tableMaterial.diffuse.mipFilter = .none
-		} else {
-			tableMaterial.diffuse.contents = UIColor(red: 0.88, green: 0.88, blue: 0.88, alpha: 1.0)
-			tableMaterial.diffuse.minificationFilter = .linear
-			tableMaterial.diffuse.magnificationFilter = .linear
-			tableMaterial.diffuse.mipFilter = .none
-		}
-		applyTableTextureScale()
+		DiceTableSurfaceMaterialConfigurator.applyTexture(
+			activeTableTexture,
+			to: tableMaterial,
+			pointScale: tableTexturePointScale()
+		)
 	}
 
 	private func applyTableTextureScale() {
-		let scale = max(1, min(bounds.width, bounds.height))
-		let pointScale = tableTexturePointScale()
-		tableMaterial.setValue(scale as NSNumber, forKey: "tableTextureScale")
-		tableMaterial.setValue(pointScale.width as NSNumber, forKey: "tableTextureScaleX")
-		tableMaterial.setValue(pointScale.height as NSNumber, forKey: "tableTextureScaleY")
-		if activeTableTexture == .neutral,
-			Self.neutralTableTexturePixelSize.width > 0,
-			Self.neutralTableTexturePixelSize.height > 0 {
-			let repeatX = Float(pointScale.width / Self.neutralTableTexturePixelSize.width)
-			let repeatY = Float(pointScale.height / Self.neutralTableTexturePixelSize.height)
-			tableMaterial.diffuse.contentsTransform = SCNMatrix4MakeScale(repeatX, repeatY, 1)
-		} else {
-			tableMaterial.diffuse.contentsTransform = SCNMatrix4Identity
-		}
+		DiceTableSurfaceMaterialConfigurator.applyTexture(
+			activeTableTexture,
+			to: tableMaterial,
+			pointScale: tableTexturePointScale()
+		)
 	}
 
 	private func tableTexturePointScale() -> CGSize {
@@ -1439,7 +1390,7 @@ final class DiceCubeView: UIView {
 	}
 
 	static func debugNeutralTableTexturePixelSize() -> CGSize {
-		neutralTableTexturePixelSize
+		DiceTableSurfaceMaterialConfigurator.neutralTexturePixelSize
 	}
 
 	static func debugNeutralTableTextureRepeat(for size: CGSize) -> CGSize {
@@ -1767,37 +1718,16 @@ final class DiceCubeView: UIView {
 		let value = faceIndex + 1
 		let resolvedFillColor = fillColor ?? activeDieColorPreferences.fillColor(for: sideCount)
 		let resolvedFont = numeralFont ?? activeFaceNumeralFont
-		let textureSet: FaceTextureSet
-		if sideCount == 6 {
-			let d6TextureSet = D6SceneKitRenderConfig.faceTextureSet(value: value, fillColor: resolvedFillColor, pipStyle: activeD6PipStyle)
-			textureSet = FaceTextureSet(
-				diffuse: d6TextureSet.diffuse,
-				normal: d6TextureSet.normal,
-				metalness: d6TextureSet.metalness,
-				roughness: d6TextureSet.roughness
-			)
-		} else if sideCount == 4 {
-			let vertexLabels = d4VertexLabels(forFace: face)
-			textureSet = cachedFaceTextureSet(
-				sideCount: sideCount,
-				value: value,
-				d4VertexLabels: vertexLabels,
-				fillColor: resolvedFillColor,
-				numeralFont: resolvedFont
-			) {
-				d4FaceTextureSet(vertexLabels: vertexLabels, fillColor: resolvedFillColor, numeralFont: resolvedFont)
-			}
-		} else {
-			textureSet = cachedFaceTextureSet(
-				sideCount: sideCount,
-				value: value,
-				d4VertexLabels: [],
-				fillColor: resolvedFillColor,
-				numeralFont: resolvedFont
-			) {
-				faceValueTextureSet(value: value, sideCount: sideCount, fillColor: resolvedFillColor, numeralFont: resolvedFont)
-			}
-		}
+		let d4VertexLabels = sideCount == 4 ? d4VertexLabels(forFace: face) : []
+		let textureSet = DiceFaceTextureFactory.textureSet(
+			value: value,
+			sideCount: sideCount,
+			fillColor: resolvedFillColor,
+			numeralFont: resolvedFont,
+			pipStyle: activeD6PipStyle,
+			largeFaceLabelsEnabled: activeLargeFaceLabelsEnabled,
+			d4VertexLabels: d4VertexLabels
+		)
 		material.diffuse.contents = textureSet.diffuse
 		material.normal.contents = textureSet.normal
 		material.normal.intensity = 0.95
