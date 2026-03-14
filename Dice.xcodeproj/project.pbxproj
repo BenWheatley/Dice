@@ -41,6 +41,7 @@
 		C0DE00332F44035300D1CE00 /* DiceTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00322F44035300D1CE00 /* DiceTheme.swift */; };
 		C0DE00352F4403A100D1CE00 /* DiceTableTexture.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00342F4403A100D1CE00 /* DiceTableTexture.swift */; };
 		C0DE00372F4404DA00D1CE00 /* DiceDieFinish.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00362F4404DA00D1CE00 /* DiceDieFinish.swift */; };
+		AFCE11032F5E100100D1CE00 /* DiceDieFinish.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00362F4404DA00D1CE00 /* DiceDieFinish.swift */; };
 		C0DE00392F4406AF00D1CE00 /* DiceFaceContrast.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00382F4406AF00D1CE00 /* DiceFaceContrast.swift */; };
 		C0DE003A2F4406C900D1CE00 /* DiceFaceContrast.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00382F4406AF00D1CE00 /* DiceFaceContrast.swift */; };
 		C0DE003C2F4407DD00D1CE00 /* DiceDieColorPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE003B2F4407DD00D1CE00 /* DiceDieColorPreferences.swift */; };
@@ -54,6 +55,7 @@
 			C0DE00512F44C00100D1CE00 /* DiceLightingAngle.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00502F44C00100D1CE00 /* DiceLightingAngle.swift */; };
 			C0DE00532F44C00200D1CE00 /* DiceLightingDirectionResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00522F44C00200D1CE00 /* DiceLightingDirectionResolver.swift */; };
 			C0DE004B2F44A00100D1CE00 /* DiceFaceLabelSizing.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE004D2F44A00100D1CE00 /* DiceFaceLabelSizing.swift */; };
+			AACE10012F70000100D1CE00 /* DiceFaceLabelSizing.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE004D2F44A00100D1CE00 /* DiceFaceLabelSizing.swift */; };
 		C0DE004E2F44A20100D1CE00 /* DiceMotionBehaviorProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE004F2F44A20100D1CE00 /* DiceMotionBehaviorProfile.swift */; };
 		D1CE11022F50000200D1CE00 /* DiceHapticsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10022F50000200D1CE00 /* DiceHapticsEngine.swift */; };
 		D1CE11042F50000400D1CE00 /* DiceOptionsSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10042F50000400D1CE00 /* DiceOptionsSheetViewController.swift */; };
@@ -76,6 +78,8 @@
 		A3CE11022F5C100100D1CE00 /* DiceSingleDieSceneGeometryFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3CE10012F5C100100D1CE00 /* DiceSingleDieSceneGeometryFactory.swift */; };
 		A4CE11012F5C200100D1CE00 /* DiceSingleDieMaterialPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4CE10012F5C200100D1CE00 /* DiceSingleDieMaterialPlanner.swift */; };
 		A4CE11022F5C200100D1CE00 /* DiceSingleDieMaterialPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4CE10012F5C200100D1CE00 /* DiceSingleDieMaterialPlanner.swift */; };
+		AFCE11012F5E100100D1CE00 /* DiceRollAnimationMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFCE10012F5E100100D1CE00 /* DiceRollAnimationMath.swift */; };
+		AFCE11022F5E100100D1CE00 /* DiceRollAnimationMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFCE10012F5E100100D1CE00 /* DiceRollAnimationMath.swift */; };
 		A5CE11012F5D000100D1CE00 /* WatchSceneRenderFallbackPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5CE10012F5D000100D1CE00 /* WatchSceneRenderFallbackPolicy.swift */; };
 		A5CE11022F5D000100D1CE00 /* WatchSceneRenderFallbackPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5CE10012F5D000100D1CE00 /* WatchSceneRenderFallbackPolicy.swift */; };
 		A6CE11012F5D100100D1CE00 /* WatchAccessibilityFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6CE10012F5D100100D1CE00 /* WatchAccessibilityFormatter.swift */; };
@@ -244,6 +248,7 @@
 		A1CE10012F5B000100D1CE00 /* WatchSingleDieConfigurationSyncBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSingleDieConfigurationSyncBridge.swift; sourceTree = "<group>"; };
 		A3CE10012F5C100100D1CE00 /* DiceSingleDieSceneGeometryFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceSingleDieSceneGeometryFactory.swift; sourceTree = "<group>"; };
 		A4CE10012F5C200100D1CE00 /* DiceSingleDieMaterialPlanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceSingleDieMaterialPlanner.swift; sourceTree = "<group>"; };
+		AFCE10012F5E100100D1CE00 /* DiceRollAnimationMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceRollAnimationMath.swift; sourceTree = "<group>"; };
 		A5CE10012F5D000100D1CE00 /* WatchSceneRenderFallbackPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSceneRenderFallbackPolicy.swift; sourceTree = "<group>"; };
 		A6CE10012F5D100100D1CE00 /* WatchAccessibilityFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchAccessibilityFormatter.swift; sourceTree = "<group>"; };
 		A7CE10012F5D200100D1CE00 /* WatchSingleDieCustomizationState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSingleDieCustomizationState.swift; sourceTree = "<group>"; };
@@ -429,6 +434,7 @@
 				A1CE10012F5B000100D1CE00 /* WatchSingleDieConfigurationSyncBridge.swift */,
 				A3CE10012F5C100100D1CE00 /* DiceSingleDieSceneGeometryFactory.swift */,
 				A4CE10012F5C200100D1CE00 /* DiceSingleDieMaterialPlanner.swift */,
+				AFCE10012F5E100100D1CE00 /* DiceRollAnimationMath.swift */,
 				A5CE10012F5D000100D1CE00 /* WatchSceneRenderFallbackPolicy.swift */,
 				A6CE10012F5D100100D1CE00 /* WatchAccessibilityFormatter.swift */,
 				A7CE10012F5D200100D1CE00 /* WatchSingleDieCustomizationState.swift */,
@@ -772,6 +778,7 @@
 				A1CE11012F5B000100D1CE00 /* WatchSingleDieConfigurationSyncBridge.swift in Sources */,
 				A3CE11012F5C100100D1CE00 /* DiceSingleDieSceneGeometryFactory.swift in Sources */,
 				A4CE11012F5C200100D1CE00 /* DiceSingleDieMaterialPlanner.swift in Sources */,
+				AFCE11012F5E100100D1CE00 /* DiceRollAnimationMath.swift in Sources */,
 				A5CE11012F5D000100D1CE00 /* WatchSceneRenderFallbackPolicy.swift in Sources */,
 				A6CE11012F5D100100D1CE00 /* WatchAccessibilityFormatter.swift in Sources */,
 				A7CE11012F5D200100D1CE00 /* WatchSingleDieCustomizationState.swift in Sources */,
@@ -872,10 +879,12 @@
 				A2CE11022F5C000100D1CE00 /* DiceShaderModifierSourceLoader.swift in Sources */,
 				A2CE11012F5C000100D1CE00 /* DiceTableTexture.swift in Sources */,
 				B1CE11022F5E000100D1CE00 /* DiceTableSurfaceMaterialConfigurator.swift in Sources */,
+				AFCE11032F5E100100D1CE00 /* DiceDieFinish.swift in Sources */,
 				C0DE003A2F4406C900D1CE00 /* DiceFaceContrast.swift in Sources */,
 				C0DE002B2F44022B00D1CE00 /* FaceContrastStyle.swift in Sources */,
 				C0DE003F2F4408AB00D1CE00 /* DiceD6PipStyle.swift in Sources */,
 				C0DE00422F44092D00D1CE00 /* DiceFaceNumeralFont.swift in Sources */,
+				AACE10012F70000100D1CE00 /* DiceFaceLabelSizing.swift in Sources */,
 				C0DE01A32F4402A300D1CE00 /* D6FaceOrientation.swift in Sources */,
 				C0DE01A52F4402A500D1CE00 /* D6BeveledCubeGeometry.swift in Sources */,
 				A9CE11012F5D220100D1CE00 /* DiceDieColorPreset.swift in Sources */,
@@ -883,6 +892,7 @@
 				A1CE11022F5B000100D1CE00 /* WatchSingleDieConfigurationSyncBridge.swift in Sources */,
 				A3CE11022F5C100100D1CE00 /* DiceSingleDieSceneGeometryFactory.swift in Sources */,
 				A4CE11022F5C200100D1CE00 /* DiceSingleDieMaterialPlanner.swift in Sources */,
+				AFCE11022F5E100100D1CE00 /* DiceRollAnimationMath.swift in Sources */,
 				A5CE11022F5D000100D1CE00 /* WatchSceneRenderFallbackPolicy.swift in Sources */,
 				A6CE11022F5D100100D1CE00 /* WatchAccessibilityFormatter.swift in Sources */,
 				A7CE11022F5D200100D1CE00 /* WatchSingleDieCustomizationState.swift in Sources */,

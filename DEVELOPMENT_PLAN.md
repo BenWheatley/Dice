@@ -255,6 +255,10 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Align dice caster depth to the table contact plane (per die geometry/orientation) so true cast shadows start at contact instead of appearing offset from floating dice.
 - [x] For cylindrical dice (`d2` and token-style `dN`), start roll spin at edge-contact depth (`table + radius`) while preserving the existing settled end depth.
 - [x] Fix top navigation notation input ergonomics by replacing the fixed-width title field with adaptive width sizing and explicit dark/light theme field styling.
+- [x] Remove watch-only face/pip texture generation divergence and route watchOS die face rendering through the shared canonical `DiceFaceTextureFactory` pipeline.
+- [x] Replace shared face/pip texture rasterization backend with a single CoreGraphics/CoreText path that compiles on both iOS and watchOS, removing UIKit image-renderer/SpriteKit forks from `DiceFaceTextureFactory`.
+- [x] Remove duplicated iOS/watch table material setup by introducing a shared `DiceTableSurfaceMaterialConfigurator` used by both `DiceCubeView` and watch `InterfaceController`.
+- [ ] Remove remaining duplicated cylindrical roll animation math by extracting shared spin/settle helpers consumed by iOS and watch controllers.
 
 ### Performance and Interaction Safety
 

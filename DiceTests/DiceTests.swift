@@ -2486,6 +2486,27 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(source.contains("DiceTableSurfaceMaterialConfigurator.applyTexture"))
 	}
 
+	func testWatchInterfaceControllerDelegatesMaterialConstructionToSharedFactory() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let controllerURL = projectRoot
+			.appendingPathComponent("Dice WatchKit Extension")
+			.appendingPathComponent("InterfaceController.swift")
+		let source = try String(contentsOf: controllerURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("DiceSingleDieMaterialFactory.makeFaceMaterial"))
+		XCTAssertTrue(source.contains("DiceSingleDieMaterialFactory.makeSolidMaterial"))
+		XCTAssertFalse(
+			source.contains("private func faceMaterial("),
+			"Watch renderer should not reimplement face-material construction when shared factory exists."
+		)
+		XCTAssertFalse(
+			source.contains("private func solidMaterial("),
+			"Watch renderer should not reimplement solid-material construction when shared factory exists."
+		)
+	}
+
 	func testDiceCubeViewUsesSharedFaceTextureFactoryForFaceTextures() throws {
 		let projectRoot = URL(fileURLWithPath: #filePath)
 			.deletingLastPathComponent()
@@ -2509,6 +2530,19 @@ final class DiceTests: XCTestCase {
 
 		XCTAssertTrue(source.contains("DiceTableSurfaceMaterialConfigurator.configureBaseMaterial"))
 		XCTAssertTrue(source.contains("DiceTableSurfaceMaterialConfigurator.applyTexture"))
+	}
+
+	func testDiceCubeViewDelegatesMaterialConstructionToSharedFactory() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let cubeViewURL = projectRoot
+			.appendingPathComponent("Dice")
+			.appendingPathComponent("DiceCubeView.swift")
+		let source = try String(contentsOf: cubeViewURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("DiceSingleDieMaterialFactory.makeFaceMaterial"))
+		XCTAssertTrue(source.contains("DiceSingleDieMaterialFactory.makeSolidMaterial"))
 	}
 
 	func testSingleDieSceneGeometryFactorySupportsPolyhedralAndFallbackDescriptors() {
@@ -3854,6 +3888,47 @@ final class DiceTests: XCTestCase {
 			sideCounts: [4, 6, 10, 12, 6, 8, 4, 20, 20]
 		)
 		XCTAssertEqual(hash, "3624d848cb91f989")
+	}
+
+	func testDiceFaceTextureFactoryReturnsCGImageBackedTextures() {
+		let d6 = DiceFaceTextureFactory.textureSet(
+			value: 5,
+			sideCount: 6,
+			fillColor: DiceDieColorPreset.amber.fillColor,
+			numeralFont: .classic,
+			pipStyle: .round,
+			largeFaceLabelsEnabled: false
+		)
+		XCTAssertFalse(d6.diffuse is UIImage)
+		XCTAssertFalse(d6.normal is UIImage)
+		XCTAssertFalse(d6.metalness is UIImage)
+		XCTAssertFalse(d6.roughness is UIImage)
+
+		let d8 = DiceFaceTextureFactory.textureSet(
+			value: 7,
+			sideCount: 8,
+			fillColor: DiceDieColorPreset.slate.fillColor,
+			numeralFont: .classic,
+			pipStyle: .round,
+			largeFaceLabelsEnabled: false
+		)
+		XCTAssertFalse(d8.diffuse is UIImage)
+		XCTAssertFalse(d8.normal is UIImage)
+		XCTAssertFalse(d8.metalness is UIImage)
+		XCTAssertFalse(d8.roughness is UIImage)
+	}
+
+	func testSharedFaceTextureRendererSourceDoesNotUseUIKitImageRendererOrSpriteKit() throws {
+		let testsFile = URL(fileURLWithPath: #filePath)
+		let projectRoot = testsFile
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let plannerFile = projectRoot.appendingPathComponent("Dice/DiceSingleDieMaterialPlanner.swift")
+		let source = try String(contentsOf: plannerFile, encoding: .utf8)
+
+		XCTAssertFalse(source.contains("UIGraphicsImageRenderer"))
+		XCTAssertFalse(source.contains("SKScene"))
+		XCTAssertFalse(source.contains("watchTextureSet("))
 	}
 
 	private enum SnapshotLayout {

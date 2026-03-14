@@ -1,8 +1,9 @@
 import Foundation
 import SceneKit
+import CoreGraphics
+import CoreText
 #if os(watchOS)
 import WatchKit
-import SpriteKit
 #else
 import UIKit
 #endif
@@ -93,6 +94,11 @@ enum DiceFaceTextureFactory {
 		let largeLabels: Bool
 	}
 
+	private struct GlyphPathData {
+		let path: CGPath
+		let bounds: CGRect
+	}
+
 	private struct FaceValueTextureLayout {
 		let numeralSize: CGFloat
 		let captionSize: CGFloat
@@ -103,6 +109,31 @@ enum DiceFaceTextureFactory {
 
 	private static var cache: [CacheKey: DiceFaceTextureSet] = [:]
 	private static let cacheLock = NSLock()
+	private static let flatNormalTexture: CGImage = makeSolidImage(
+		size: CGSize(width: 1, height: 1),
+		color: UIColor(red: 0.5, green: 0.5, blue: 1.0, alpha: 1.0)
+	)
+
+	private static let d6PipPositions: [CGPoint] = [
+		CGPoint(x: textureEdgeLength * 0.28, y: textureEdgeLength * 0.28),
+		CGPoint(x: textureEdgeLength * 0.50, y: textureEdgeLength * 0.28),
+		CGPoint(x: textureEdgeLength * 0.72, y: textureEdgeLength * 0.28),
+		CGPoint(x: textureEdgeLength * 0.28, y: textureEdgeLength * 0.50),
+		CGPoint(x: textureEdgeLength * 0.50, y: textureEdgeLength * 0.50),
+		CGPoint(x: textureEdgeLength * 0.72, y: textureEdgeLength * 0.50),
+		CGPoint(x: textureEdgeLength * 0.28, y: textureEdgeLength * 0.72),
+		CGPoint(x: textureEdgeLength * 0.50, y: textureEdgeLength * 0.72),
+		CGPoint(x: textureEdgeLength * 0.72, y: textureEdgeLength * 0.72),
+	]
+
+	private static let d6PipIndicesByValue: [Int: [Int]] = [
+		1: [4],
+		2: [0, 8],
+		3: [0, 4, 8],
+		4: [0, 2, 6, 8],
+		5: [0, 2, 4, 6, 8],
+		6: [0, 2, 3, 5, 6, 8],
+	]
 
 	static func textureSet(
 		value rawValue: Int,
@@ -115,18 +146,6 @@ enum DiceFaceTextureFactory {
 	) -> DiceFaceTextureSet {
 		let sideCount = DiceSingleDieSceneGeometryFactory.clampedSideCount(rawSideCount)
 		let value = max(1, min(sideCount, rawValue))
-#if os(watchOS)
-		return watchTextureSet(value: value, sideCount: sideCount, fillColor: fillColor)
-#else
-		if sideCount == 6 {
-			let d6 = D6SceneKitRenderConfig.faceTextureSet(value: value, fillColor: fillColor, pipStyle: pipStyle)
-			return DiceFaceTextureSet(
-				diffuse: d6.diffuse,
-				normal: d6.normal,
-				metalness: d6.metalness,
-				roughness: d6.roughness
-			)
-		}
 
 		let rgba = rgbaComponents(fillColor)
 		let cacheKey = CacheKey(
@@ -149,7 +168,9 @@ enum DiceFaceTextureFactory {
 		cacheLock.unlock()
 
 		let generated: DiceFaceTextureSet
-		if sideCount == 4, d4VertexLabels.count == 3 {
+		if sideCount == 6 {
+			generated = d6TextureSet(value: value, fillColor: fillColor, pipStyle: pipStyle)
+		} else if sideCount == 4, d4VertexLabels.count == 3 {
 			generated = d4TextureSet(
 				vertexLabels: d4VertexLabels,
 				fillColor: fillColor,
@@ -170,45 +191,86 @@ enum DiceFaceTextureFactory {
 		cache[cacheKey] = generated
 		cacheLock.unlock()
 		return generated
-#endif
 	}
 
-#if os(watchOS)
-	private static func watchTextureSet(value: Int, sideCount: Int, fillColor: UIColor) -> DiceFaceTextureSet {
+	static func flatNormalMap() -> CGImage {
+		flatNormalTexture
+	}
+
+	private static func d6TextureSet(
+		value: Int,
+		fillColor: UIColor,
+		pipStyle: DiceD6PipStyle
+	) -> DiceFaceTextureSet {
 		let size = CGSize(width: textureEdgeLength, height: textureEdgeLength)
-		let scene = SKScene(size: size)
-		scene.scaleMode = .resizeFill
 		let style = DiceFaceContrast.style(for: fillColor)
-		scene.backgroundColor = style.fillColor
+		let outlineColor = oppositeInkColor(for: style.primaryInkColor)
+		let radius = size.width * 0.08
+		let outlineWidth = radius * 0.20
 
-		let numeral = SKLabelNode(text: "\(value)")
-		numeral.fontName = "SFCompactRounded-Bold"
-		numeral.fontSize = sideCount == 2 || DiceSingleDieSceneGeometryFactory.usesTokenGeometry(for: sideCount) ? 138 : 132
-		numeral.fontColor = style.primaryInkColor
-		numeral.verticalAlignmentMode = .center
-		numeral.horizontalAlignmentMode = .center
-		numeral.position = CGPoint(x: size.width / 2, y: size.height * 0.53)
-		scene.addChild(numeral)
+		let diffuse = makeImage(size: size) { context in
+			context.setFillColor(style.fillColor.cgColor)
+			context.fill(CGRect(origin: .zero, size: size))
+			for index in d6PipIndicesByValue[value] ?? [] {
+				let center = d6PipPositions[index]
+				drawPip(
+					context: context,
+					centerTopLeft: center,
+					radius: radius,
+					pipStyle: pipStyle,
+					canvasSize: size,
+					fillColor: style.primaryInkColor.cgColor
+				)
+				drawPipRing(
+					context: context,
+					centerTopLeft: center,
+					radius: radius,
+					ringWidth: outlineWidth,
+					pipStyle: pipStyle,
+					canvasSize: size,
+					ringColor: outlineColor.cgColor
+				)
+			}
+		}
 
-		if sideCount == 2 || DiceSingleDieSceneGeometryFactory.usesTokenGeometry(for: sideCount) {
-			let subtitle = SKLabelNode(text: "d\(sideCount)")
-			subtitle.fontName = "SFCompactRounded-Semibold"
-			subtitle.fontSize = 48
-			subtitle.fontColor = style.secondaryInkColor
-			subtitle.verticalAlignmentMode = .center
-			subtitle.horizontalAlignmentMode = .center
-			subtitle.position = CGPoint(x: size.width / 2, y: size.height * 0.20)
-			scene.addChild(subtitle)
+		let symbolFillMask = makeImage(size: size) { context in
+			context.setFillColor(UIColor.black.cgColor)
+			context.fill(CGRect(origin: .zero, size: size))
+			for index in d6PipIndicesByValue[value] ?? [] {
+				drawPip(
+					context: context,
+					centerTopLeft: d6PipPositions[index],
+					radius: radius,
+					pipStyle: pipStyle,
+					canvasSize: size,
+					fillColor: UIColor.white.cgColor
+				)
+			}
+		}
+
+		let symbolOutlineMask = makeImage(size: size) { context in
+			context.setFillColor(UIColor.black.cgColor)
+			context.fill(CGRect(origin: .zero, size: size))
+			for index in d6PipIndicesByValue[value] ?? [] {
+				drawPipRing(
+					context: context,
+					centerTopLeft: d6PipPositions[index],
+					radius: radius,
+					ringWidth: outlineWidth,
+					pipStyle: pipStyle,
+					canvasSize: size,
+					ringColor: UIColor.white.cgColor
+				)
+			}
 		}
 
 		return DiceFaceTextureSet(
-			diffuse: scene,
-			normal: UIColor(red: 0.5, green: 0.5, blue: 1.0, alpha: 1.0),
-			metalness: UIColor.black,
-			roughness: UIColor(white: 0.88, alpha: 1.0)
+			diffuse: diffuse,
+			normal: flatNormalTexture,
+			metalness: symbolOutlineMask,
+			roughness: symbolFillMask
 		)
 	}
-#else
 
 	private static func faceValueTextureSet(
 		value: Int,
@@ -227,88 +289,94 @@ enum DiceFaceTextureFactory {
 		let captionSize = layout.captionSize
 		let numeralOutlineWidth = max(1.4, numeralSize * 0.075)
 		let captionOutlineWidth = max(1.0, captionSize * 0.08)
-		let text = "\(value)" as NSString
-		let subtitle = "d\(sideCount)" as NSString
+		let numeralText = "\(value)"
+		let captionText = "d\(sideCount)"
+		let numeralFontRef = numeralFont.numeralFont(ofSize: numeralSize)
+		let captionFontRef = numeralFont.captionFont(ofSize: captionSize)
 
-		func drawText(attributes: [NSAttributedString.Key: Any], subtitleAttributes: [NSAttributedString.Key: Any]) {
-			let tSize = text.size(withAttributes: attributes)
-			let tRect = CGRect(
-				x: (size.width - tSize.width) / 2,
-				y: (size.height - tSize.height) / 2 + layout.numeralYOffset,
-				width: tSize.width,
-				height: tSize.height
+		let symbolFillMask = makeImage(size: size) { context in
+			context.setFillColor(UIColor.black.cgColor)
+			context.fill(rect)
+			drawCenteredText(
+				numeralText,
+				font: numeralFontRef,
+				centerTopLeft: CGPoint(x: size.width * 0.5, y: (size.height * 0.5) + layout.numeralYOffset),
+				canvasSize: size,
+				fillColor: UIColor.white.cgColor,
+				in: context
 			)
-			text.draw(in: tRect, withAttributes: attributes)
-
-			let sSize = subtitle.size(withAttributes: subtitleAttributes)
-			let sRect = CGRect(
-				x: (size.width - sSize.width) / 2,
-				y: layout.subtitleY,
-				width: sSize.width,
-				height: sSize.height
-			)
-			subtitle.draw(in: sRect, withAttributes: subtitleAttributes)
-		}
-
-		let symbolFillMask = UIGraphicsImageRenderer(size: size).image { context in
-			UIColor.black.setFill()
-			context.cgContext.fill(rect)
-			drawText(
-				attributes: [
-					.font: numeralFont.numeralFont(ofSize: numeralSize),
-					.foregroundColor: UIColor.white
-				],
-				subtitleAttributes: [
-					.font: numeralFont.captionFont(ofSize: captionSize),
-					.foregroundColor: UIColor.white
-				]
-			)
-		}
-		let symbolOutlineMask = UIGraphicsImageRenderer(size: size).image { context in
-			UIColor.black.setFill()
-			context.cgContext.fill(rect)
-			drawText(
-				attributes: [
-					.font: numeralFont.numeralFont(ofSize: numeralSize),
-					.foregroundColor: UIColor.clear,
-					.strokeColor: UIColor.white,
-					.strokeWidth: numeralOutlineWidth
-				],
-				subtitleAttributes: [
-					.font: numeralFont.captionFont(ofSize: captionSize),
-					.foregroundColor: UIColor.clear,
-					.strokeColor: UIColor.white,
-					.strokeWidth: captionOutlineWidth
-				]
+			drawTextWithTopOrigin(
+				captionText,
+				font: captionFontRef,
+				topY: layout.subtitleY,
+				canvasSize: size,
+				fillColor: UIColor.white.cgColor,
+				in: context
 			)
 		}
 
-		let diffuse = UIGraphicsImageRenderer(size: size).image { context in
-			context.cgContext.setFillColor(style.fillColor.cgColor)
-			context.cgContext.fill(rect)
+		let symbolOutlineMask = makeImage(size: size) { context in
+			context.setFillColor(UIColor.black.cgColor)
+			context.fill(rect)
+			drawCenteredText(
+				numeralText,
+				font: numeralFontRef,
+				centerTopLeft: CGPoint(x: size.width * 0.5, y: (size.height * 0.5) + layout.numeralYOffset),
+				canvasSize: size,
+				fillColor: UIColor.black.cgColor,
+				strokeColor: UIColor.white.cgColor,
+				strokeWidth: numeralOutlineWidth,
+				in: context
+			)
+			drawTextWithTopOrigin(
+				captionText,
+				font: captionFontRef,
+				topY: layout.subtitleY,
+				canvasSize: size,
+				fillColor: UIColor.black.cgColor,
+				strokeColor: UIColor.white.cgColor,
+				strokeWidth: captionOutlineWidth,
+				in: context
+			)
+		}
+
+		let diffuse = makeImage(size: size) { context in
+			context.setFillColor(style.fillColor.cgColor)
+			context.fill(rect)
 			if layout.drawsBorder {
-				context.cgContext.setStrokeColor(style.borderColor.cgColor)
-				context.cgContext.setLineWidth(8)
-				context.cgContext.stroke(rect.insetBy(dx: 6, dy: 6))
+				context.setStrokeColor(style.borderColor.cgColor)
+				context.setLineWidth(8)
+				context.stroke(rect.insetBy(dx: 6, dy: 6))
 			}
-			drawText(
-				attributes: [
-					.font: numeralFont.numeralFont(ofSize: numeralSize),
-					.foregroundColor: style.primaryInkColor,
-					.strokeColor: numeralOutlineColor,
-					.strokeWidth: -numeralOutlineWidth
-				],
-				subtitleAttributes: [
-					.font: numeralFont.captionFont(ofSize: captionSize),
-					.foregroundColor: style.secondaryInkColor,
-					.strokeColor: captionOutlineColor,
-					.strokeWidth: -captionOutlineWidth
-				]
+
+			drawCenteredText(
+				numeralText,
+				font: numeralFontRef,
+				centerTopLeft: CGPoint(x: size.width * 0.5, y: (size.height * 0.5) + layout.numeralYOffset),
+				canvasSize: size,
+				fillColor: style.primaryInkColor.cgColor,
+				strokeColor: numeralOutlineColor.cgColor,
+				strokeWidth: numeralOutlineWidth,
+				in: context
+			)
+			drawTextWithTopOrigin(
+				captionText,
+				font: captionFontRef,
+				topY: layout.subtitleY,
+				canvasSize: size,
+				fillColor: style.secondaryInkColor.cgColor,
+				strokeColor: captionOutlineColor.cgColor,
+				strokeWidth: captionOutlineWidth,
+				in: context
 			)
 		}
 
-		let normal = D6SceneKitRenderConfig.flatNormalMapImage()
-		return DiceFaceTextureSet(diffuse: diffuse, normal: normal, metalness: symbolOutlineMask, roughness: symbolFillMask)
+		return DiceFaceTextureSet(
+			diffuse: diffuse,
+			normal: flatNormalTexture,
+			metalness: symbolOutlineMask,
+			roughness: symbolFillMask
+		)
 	}
 
 	private static func d4TextureSet(
@@ -325,71 +393,82 @@ enum DiceFaceTextureFactory {
 		let placements = d4LabelPlacements(triangle: trianglePoints)
 		let numeralSize = DiceFaceLabelSizing.textureNumeralPointSize(sideCount: 4, large: largeFaceLabelsEnabled)
 		let numeralOutlineWidth = max(1.6, numeralSize * 0.075)
+		let numeralFontRef = numeralFont.numeralFont(ofSize: numeralSize)
 
-		let drawLabels: (_ context: CGContext, _ attributes: [NSAttributedString.Key: Any]) -> Void = { context, attributes in
+		let symbolFillMask = makeImage(size: size) { context in
+			context.setFillColor(UIColor.black.cgColor)
+			context.fill(rect)
 			for (index, placement) in placements.enumerated() where index < vertexLabels.count {
-				let text = "\(vertexLabels[index])" as NSString
-				let textSize = text.size(withAttributes: attributes)
-				let textRect = CGRect(
-					x: -textSize.width / 2,
-					y: -textSize.height / 2,
-					width: textSize.width,
-					height: textSize.height
+				drawCenteredText(
+					"\(vertexLabels[index])",
+					font: numeralFontRef,
+					centerTopLeft: placement.position,
+					canvasSize: size,
+					fillColor: UIColor.white.cgColor,
+					rotation: placement.angle,
+					in: context
 				)
-				context.saveGState()
-				context.translateBy(x: placement.position.x, y: placement.position.y)
-				context.rotate(by: placement.angle)
-				text.draw(in: textRect, withAttributes: attributes)
-				context.restoreGState()
 			}
 		}
 
-		let symbolFillMask = UIGraphicsImageRenderer(size: size).image { context in
-			UIColor.black.setFill()
-			context.cgContext.fill(rect)
-			let attrs: [NSAttributedString.Key: Any] = [
-				.font: numeralFont.numeralFont(ofSize: numeralSize),
-				.foregroundColor: UIColor.white
-			]
-			drawLabels(context.cgContext, attrs)
-		}
-		let symbolOutlineMask = UIGraphicsImageRenderer(size: size).image { context in
-			UIColor.black.setFill()
-			context.cgContext.fill(rect)
-			let attrs: [NSAttributedString.Key: Any] = [
-				.font: numeralFont.numeralFont(ofSize: numeralSize),
-				.foregroundColor: UIColor.clear,
-				.strokeColor: UIColor.white,
-				.strokeWidth: numeralOutlineWidth
-			]
-			drawLabels(context.cgContext, attrs)
-		}
-
-		let diffuse = UIGraphicsImageRenderer(size: size).image { _ in
-			let triangle = UIBezierPath()
-			triangle.move(to: trianglePoints[0])
-			triangle.addLine(to: trianglePoints[1])
-			triangle.addLine(to: trianglePoints[2])
-			triangle.close()
-			style.fillColor.setFill()
-			triangle.fill()
-			style.borderColor.setStroke()
-			triangle.lineWidth = 6
-			triangle.stroke()
-
-			let attrs: [NSAttributedString.Key: Any] = [
-				.font: numeralFont.numeralFont(ofSize: numeralSize),
-				.foregroundColor: style.primaryInkColor,
-				.strokeColor: outlineInkColor,
-				.strokeWidth: -numeralOutlineWidth
-			]
-			if let context = UIGraphicsGetCurrentContext() {
-				drawLabels(context, attrs)
+		let symbolOutlineMask = makeImage(size: size) { context in
+			context.setFillColor(UIColor.black.cgColor)
+			context.fill(rect)
+			for (index, placement) in placements.enumerated() where index < vertexLabels.count {
+				drawCenteredText(
+					"\(vertexLabels[index])",
+					font: numeralFontRef,
+					centerTopLeft: placement.position,
+					canvasSize: size,
+					fillColor: UIColor.black.cgColor,
+					strokeColor: UIColor.white.cgColor,
+					strokeWidth: numeralOutlineWidth,
+					rotation: placement.angle,
+					in: context
+				)
 			}
 		}
 
-		let normal = D6SceneKitRenderConfig.flatNormalMapImage()
-		return DiceFaceTextureSet(diffuse: diffuse, normal: normal, metalness: symbolOutlineMask, roughness: symbolFillMask)
+		let diffuse = makeImage(size: size) { context in
+			let converted = trianglePoints.map { quartzPoint(fromTopLeft: $0, in: size) }
+			context.beginPath()
+			context.move(to: converted[0])
+			context.addLine(to: converted[1])
+			context.addLine(to: converted[2])
+			context.closePath()
+			context.setFillColor(style.fillColor.cgColor)
+			context.fillPath()
+
+			context.beginPath()
+			context.move(to: converted[0])
+			context.addLine(to: converted[1])
+			context.addLine(to: converted[2])
+			context.closePath()
+			context.setStrokeColor(style.borderColor.cgColor)
+			context.setLineWidth(6)
+			context.strokePath()
+
+			for (index, placement) in placements.enumerated() where index < vertexLabels.count {
+				drawCenteredText(
+					"\(vertexLabels[index])",
+					font: numeralFontRef,
+					centerTopLeft: placement.position,
+					canvasSize: size,
+					fillColor: style.primaryInkColor.cgColor,
+					strokeColor: outlineInkColor.cgColor,
+					strokeWidth: numeralOutlineWidth,
+					rotation: placement.angle,
+					in: context
+				)
+			}
+		}
+
+		return DiceFaceTextureSet(
+			diffuse: diffuse,
+			normal: flatNormalTexture,
+			metalness: symbolOutlineMask,
+			roughness: symbolFillMask
+		)
 	}
 
 	private static func faceValueTextureLayout(sideCount: Int, largeFaceLabelsEnabled: Bool) -> FaceValueTextureLayout {
@@ -467,7 +546,332 @@ enum DiceFaceTextureFactory {
 		}
 		return (r: 245, g: 245, b: 245, a: 255)
 	}
-#endif
+
+	private static func makeSolidImage(size: CGSize, color: UIColor) -> CGImage {
+		makeImage(size: size) { context in
+			context.setFillColor(color.cgColor)
+			context.fill(CGRect(origin: .zero, size: size))
+		}
+	}
+
+	private static func makeImage(size: CGSize, draw: (CGContext) -> Void) -> CGImage {
+		let width = max(1, Int(size.width.rounded(.toNearestOrAwayFromZero)))
+		let height = max(1, Int(size.height.rounded(.toNearestOrAwayFromZero)))
+		let colorSpace = CGColorSpaceCreateDeviceRGB()
+		guard let context = CGContext(
+			data: nil,
+			width: width,
+			height: height,
+			bitsPerComponent: 8,
+			bytesPerRow: 0,
+			space: colorSpace,
+			bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+		) else {
+			fatalError("Failed to create texture bitmap context")
+		}
+		context.interpolationQuality = .high
+		context.setAllowsAntialiasing(true)
+		context.setShouldAntialias(true)
+		draw(context)
+		guard let image = context.makeImage() else {
+			fatalError("Failed to create texture image")
+		}
+		return image
+	}
+
+	private static func drawTextWithTopOrigin(
+		_ text: String,
+		font: UIFont,
+		topY: CGFloat,
+		canvasSize: CGSize,
+		fillColor: CGColor?,
+		strokeColor: CGColor? = nil,
+		strokeWidth: CGFloat = 0,
+		in context: CGContext
+	) {
+		guard let glyph = glyphPath(for: text, font: font) else { return }
+		let centerY = topY + (glyph.bounds.height * 0.5)
+		drawGlyph(
+			glyph,
+			centerTopLeft: CGPoint(x: canvasSize.width * 0.5, y: centerY),
+			canvasSize: canvasSize,
+			fillColor: fillColor,
+			strokeColor: strokeColor,
+			strokeWidth: strokeWidth,
+			in: context
+		)
+	}
+
+	private static func drawCenteredText(
+		_ text: String,
+		font: UIFont,
+		centerTopLeft: CGPoint,
+		canvasSize: CGSize,
+		fillColor: CGColor?,
+		strokeColor: CGColor? = nil,
+		strokeWidth: CGFloat = 0,
+		rotation: CGFloat = 0,
+		in context: CGContext
+	) {
+		guard let glyph = glyphPath(for: text, font: font) else { return }
+		drawGlyph(
+			glyph,
+			centerTopLeft: centerTopLeft,
+			canvasSize: canvasSize,
+			fillColor: fillColor,
+			strokeColor: strokeColor,
+			strokeWidth: strokeWidth,
+			rotation: rotation,
+			in: context
+		)
+	}
+
+	private static func drawGlyph(
+		_ glyph: GlyphPathData,
+		centerTopLeft: CGPoint,
+		canvasSize: CGSize,
+		fillColor: CGColor?,
+		strokeColor: CGColor? = nil,
+		strokeWidth: CGFloat = 0,
+		rotation: CGFloat = 0,
+		in context: CGContext
+	) {
+		var transform = CGAffineTransform.identity
+		let center = quartzPoint(fromTopLeft: centerTopLeft, in: canvasSize)
+		transform = transform.translatedBy(x: center.x, y: center.y)
+		if rotation != 0 {
+			transform = transform.rotated(by: -rotation)
+		}
+		transform = transform.translatedBy(x: -glyph.bounds.midX, y: -glyph.bounds.midY)
+		guard let positionedPath = glyph.path.copy(using: &transform) else { return }
+
+		if let strokeColor, strokeWidth > 0 {
+			context.saveGState()
+			context.addPath(positionedPath)
+			context.setStrokeColor(strokeColor)
+			context.setLineWidth(strokeWidth)
+			context.setLineJoin(.round)
+			context.setLineCap(.round)
+			context.strokePath()
+			context.restoreGState()
+		}
+
+		if let fillColor {
+			context.saveGState()
+			context.addPath(positionedPath)
+			context.setFillColor(fillColor)
+			context.fillPath()
+			context.restoreGState()
+		}
+	}
+
+	private static func glyphPath(for text: String, font: UIFont) -> GlyphPathData? {
+		guard !text.isEmpty else { return nil }
+		let ctFont = CTFontCreateWithName(font.fontName as CFString, font.pointSize, nil)
+		var characters = Array(text.utf16)
+		var glyphs = Array(repeating: CGGlyph(), count: characters.count)
+		guard CTFontGetGlyphsForCharacters(ctFont, &characters, &glyphs, glyphs.count) else {
+			return nil
+		}
+
+		var advances = Array(repeating: CGSize.zero, count: glyphs.count)
+		CTFontGetAdvancesForGlyphs(ctFont, .horizontal, glyphs, &advances, glyphs.count)
+		let path = CGMutablePath()
+		var xOffset: CGFloat = 0
+		for (index, glyph) in glyphs.enumerated() {
+			defer { xOffset += advances[index].width }
+			guard let glyphPath = CTFontCreatePathForGlyph(ctFont, glyph, nil) else { continue }
+			let transform = CGAffineTransform(translationX: xOffset, y: 0)
+			path.addPath(glyphPath, transform: transform)
+		}
+
+		let bounds = path.boundingBoxOfPath
+		return GlyphPathData(path: path.copy() ?? path, bounds: bounds)
+	}
+
+	private static func drawPip(
+		context: CGContext,
+		centerTopLeft: CGPoint,
+		radius: CGFloat,
+		pipStyle: DiceD6PipStyle,
+		canvasSize: CGSize,
+		fillColor: CGColor
+	) {
+		let path = pipPath(
+			centerTopLeft: centerTopLeft,
+			radius: radius,
+			pipStyle: pipStyle,
+			canvasSize: canvasSize
+		)
+		context.saveGState()
+		context.addPath(path)
+		context.setFillColor(fillColor)
+		context.fillPath()
+		context.restoreGState()
+	}
+
+	private static func drawPipRing(
+		context: CGContext,
+		centerTopLeft: CGPoint,
+		radius: CGFloat,
+		ringWidth: CGFloat,
+		pipStyle: DiceD6PipStyle,
+		canvasSize: CGSize,
+		ringColor: CGColor
+	) {
+		let outerPath = pipPath(
+			centerTopLeft: centerTopLeft,
+			radius: radius + ringWidth,
+			pipStyle: pipStyle,
+			canvasSize: canvasSize
+		)
+		let innerPath = pipPath(
+			centerTopLeft: centerTopLeft,
+			radius: radius,
+			pipStyle: pipStyle,
+			canvasSize: canvasSize
+		)
+		context.saveGState()
+		context.addPath(outerPath)
+		context.addPath(innerPath)
+		context.setFillColor(ringColor)
+		context.drawPath(using: .eoFill)
+		context.restoreGState()
+	}
+
+	private static func pipPath(
+		centerTopLeft: CGPoint,
+		radius: CGFloat,
+		pipStyle: DiceD6PipStyle,
+		canvasSize: CGSize
+	) -> CGPath {
+		let center = quartzPoint(fromTopLeft: centerTopLeft, in: canvasSize)
+		let rect = CGRect(
+			x: center.x - radius,
+			y: center.y - radius,
+			width: radius * 2,
+			height: radius * 2
+		)
+		switch pipStyle {
+		case .round:
+			return CGPath(ellipseIn: rect, transform: nil)
+		case .square:
+			return CGPath(rect: rect.insetBy(dx: radius * 0.08, dy: radius * 0.08), transform: nil)
+		}
+	}
+
+	private static func quartzPoint(fromTopLeft point: CGPoint, in canvasSize: CGSize) -> CGPoint {
+		CGPoint(x: point.x, y: canvasSize.height - point.y)
+	}
+}
+
+enum DiceSingleDieMaterialFactory {
+	static func makeFaceMaterial(
+		value rawValue: Int,
+		sideCount rawSideCount: Int,
+		fillColor: UIColor,
+		numeralFont: DiceFaceNumeralFont,
+		pipStyle: DiceD6PipStyle,
+		largeFaceLabelsEnabled: Bool,
+		d4VertexLabels: [Int] = [],
+		dieFinish: DiceDieFinish,
+		dieIndex: Int
+	) -> SCNMaterial {
+		let sideCount = DiceSingleDieSceneGeometryFactory.clampedSideCount(rawSideCount)
+		let value = max(1, min(sideCount, rawValue))
+		let textureSet = DiceFaceTextureFactory.textureSet(
+			value: value,
+			sideCount: sideCount,
+			fillColor: fillColor,
+			numeralFont: numeralFont,
+			pipStyle: pipStyle,
+			largeFaceLabelsEnabled: largeFaceLabelsEnabled,
+			d4VertexLabels: d4VertexLabels
+		)
+
+		let material = SCNMaterial()
+		material.diffuse.contents = textureSet.diffuse
+		material.normal.contents = textureSet.normal
+		material.normal.intensity = 0.95
+		material.specular.contents = textureSet.metalness
+		material.metalness.contents = textureSet.metalness
+		material.roughness.contents = textureSet.roughness
+		material.diffuse.wrapS = .clamp
+		material.diffuse.wrapT = .clamp
+		material.normal.wrapS = .clamp
+		material.normal.wrapT = .clamp
+		material.specular.wrapS = .clamp
+		material.specular.wrapT = .clamp
+		material.metalness.wrapS = .clamp
+		material.metalness.wrapT = .clamp
+		material.roughness.wrapS = .clamp
+		material.roughness.wrapT = .clamp
+		// Keep symbol masks crisp; filtered+mipped mask sampling causes edge bleed on beveled D6 geometry.
+		material.metalness.minificationFilter = .nearest
+		material.metalness.magnificationFilter = .nearest
+		material.metalness.mipFilter = .none
+		material.roughness.minificationFilter = .nearest
+		material.roughness.magnificationFilter = .nearest
+		material.roughness.mipFilter = .none
+		material.locksAmbientWithDiffuse = true
+		material.isDoubleSided = false
+
+		if dieFinish == .stone {
+			material.emission.contents = DiceFaceContrast.style(for: fillColor).primaryInkColor
+			material.emission.intensity = 1.0
+		} else {
+			material.emission.contents = UIColor.black
+			material.emission.intensity = 0.0
+		}
+		dieFinish.apply(to: material, baseColor: fillColor, dieIndex: dieIndex)
+		material.specular.contents = textureSet.metalness
+		if dieFinish != .stone {
+			material.shininess = max(material.shininess, 0.42)
+		}
+		return material
+	}
+
+	static func makeSolidMaterial(
+		baseColor: UIColor,
+		fillColor: UIColor,
+		dieFinish: DiceDieFinish,
+		dieIndex: Int
+	) -> SCNMaterial {
+		let material = SCNMaterial()
+		material.diffuse.contents = baseColor
+		material.normal.contents = DiceFaceTextureFactory.flatNormalMap()
+		material.normal.intensity = 0.35
+		material.specular.contents = UIColor.black
+		material.metalness.contents = UIColor.black
+		material.roughness.contents = UIColor.black
+		material.locksAmbientWithDiffuse = true
+		material.isDoubleSided = false
+		material.emission.contents = UIColor.black
+		material.emission.intensity = 0.0
+		dieFinish.apply(to: material, baseColor: fillColor, dieIndex: dieIndex)
+		return material
+	}
+
+	static func multipliedColor(_ color: UIColor, factor: CGFloat) -> UIColor {
+		var red: CGFloat = 0
+		var green: CGFloat = 0
+		var blue: CGFloat = 0
+		var alpha: CGFloat = 0
+		if color.getRed(&red, green: &green, blue: &blue, alpha: &alpha) {
+			return UIColor(
+				red: max(0, min(1, red * factor)),
+				green: max(0, min(1, green * factor)),
+				blue: max(0, min(1, blue * factor)),
+				alpha: alpha
+			)
+		}
+		var white: CGFloat = 0
+		if color.getWhite(&white, alpha: &alpha) {
+			let adjusted = max(0, min(1, white * factor))
+			return UIColor(white: adjusted, alpha: alpha)
+		}
+		return color
+	}
 }
 
 private extension UIColor {
