@@ -2631,8 +2631,8 @@ final class DiceTests: XCTestCase {
 
 		let topDeterminant = top.diffuse.contentsTransform.m11 * top.diffuse.contentsTransform.m22 - top.diffuse.contentsTransform.m12 * top.diffuse.contentsTransform.m21
 		let bottomDeterminant = bottom.diffuse.contentsTransform.m11 * bottom.diffuse.contentsTransform.m22 - bottom.diffuse.contentsTransform.m12 * bottom.diffuse.contentsTransform.m21
-		XCTAssertGreaterThan(topDeterminant, 0, "Top cap UV transform must preserve winding (no mirrored symbols).")
-		XCTAssertGreaterThan(bottomDeterminant, 0, "Bottom cap UV transform must preserve winding (no mirrored symbols).")
+		XCTAssertLessThan(topDeterminant, 0, "Top cap UV transform must include horizontal mirror compensation for cylinder-cap mapping.")
+		XCTAssertLessThan(bottomDeterminant, 0, "Bottom cap UV transform must include horizontal mirror compensation for cylinder-cap mapping.")
 	}
 
 	func testWatchCustomizeStoryboardUsesContentSizedButtons() throws {

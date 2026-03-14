@@ -35,7 +35,10 @@ class InterfaceController: WKInterfaceController {
 	private var shouldOpenCustomizeForAutomation = false
 	private var lowPowerObserver: NSObjectProtocol?
 	private let feedbackDevice = WKInterfaceDevice.current()
-	private let watchDieSideLength: CGFloat = 3.4
+	private let watchDieSideLength: CGFloat = 2.1
+	private let watchCameraDistance: Float = 5.2
+	private let watchTablePlaneSpan: CGFloat = 32
+	private let watchTablePlaneZ: Float = -1.2
 	private let watchRollAnimationDuration: TimeInterval = 0.42
 
 	@IBOutlet weak var diceButton: WKInterfaceButton!
@@ -142,7 +145,9 @@ class InterfaceController: WKInterfaceController {
 
 		let cameraNode = SCNNode()
 		cameraNode.camera = SCNCamera()
-		cameraNode.position = SCNVector3(0, 0, 3.2)
+		cameraNode.camera?.zNear = 0.05
+		cameraNode.camera?.zFar = 120
+		cameraNode.position = SCNVector3(0, 0, watchCameraDistance)
 		scene.rootNode.addChildNode(cameraNode)
 
 		let keyLight = SCNNode()
@@ -166,11 +171,11 @@ class InterfaceController: WKInterfaceController {
 	}
 
 	private func configureTableSurface(in scene: SCNScene, initialTexture: DiceTableTexture) {
-		let plane = SCNPlane(width: 24, height: 24)
+		let plane = SCNPlane(width: watchTablePlaneSpan, height: watchTablePlaneSpan)
 		DiceTableSurfaceMaterialConfigurator.configureBaseMaterial(tableMaterial)
 		plane.materials = [tableMaterial]
 		tableNode.geometry = plane
-		tableNode.position = SCNVector3(0, 0, -0.8)
+		tableNode.position = SCNVector3(0, 0, watchTablePlaneZ)
 		tableNode.castsShadow = false
 		scene.rootNode.addChildNode(tableNode)
 		applyTableTexture(initialTexture)
@@ -219,15 +224,36 @@ class InterfaceController: WKInterfaceController {
 			currentValue: currentValue,
 			faceValueCount: descriptor.faceValueCount
 		)
-		let style = DiceFaceContrast.style(for: activeColorPreset.fillColor)
-		let includeSideLabel = descriptor.isCoin || descriptor.isToken
+		let fillColor = activeColorPreset.fillColor
+		let sideColorFactor: CGFloat = descriptor.isCoin ? 0.62 : 0.78
 		var materials: [SCNMaterial] = []
 		for slot in plan.slots {
 			switch slot {
 			case .side:
-				materials.append(solidMaterial(fillColor: style.borderColor))
+				let sideColor = DiceSingleDieMaterialFactory.multipliedColor(fillColor, factor: sideColorFactor)
+				materials.append(
+					DiceSingleDieMaterialFactory.makeSolidMaterial(
+						baseColor: sideColor,
+						fillColor: fillColor,
+						dieFinish: .matte,
+						dieIndex: 0
+					)
+				)
 			case let .face(value):
-				materials.append(faceMaterial(value: value, sideCount: sideCount, includeSideLabel: includeSideLabel))
+				let d4VertexLabels = sideCount == 4 ? DiceSingleDieSceneGeometryFactory.d4VertexLabels(forFaceValue: value) : []
+				materials.append(
+					DiceSingleDieMaterialFactory.makeFaceMaterial(
+						value: value,
+						sideCount: sideCount,
+						fillColor: fillColor,
+						numeralFont: .classic,
+						pipStyle: .round,
+						largeFaceLabelsEnabled: false,
+						d4VertexLabels: d4VertexLabels,
+						dieFinish: .matte,
+						dieIndex: 0
+					)
+				)
 			}
 		}
 		if plan.appliesCylindricalCapUVCompensation, materials.count >= 3 {
@@ -239,57 +265,18 @@ class InterfaceController: WKInterfaceController {
 		descriptor.geometry.materials = materials
 	}
 
-	private func faceMaterial(value: Int, sideCount: Int, includeSideLabel: Bool) -> SCNMaterial {
-		let fillColor = activeColorPreset.fillColor
-		let d4VertexLabels = sideCount == 4 ? DiceSingleDieSceneGeometryFactory.d4VertexLabels(forFaceValue: value) : []
-		let textureSet = DiceFaceTextureFactory.textureSet(
-			value: value,
-			sideCount: sideCount,
-			fillColor: fillColor,
-			numeralFont: .classic,
-			pipStyle: .round,
-			largeFaceLabelsEnabled: false,
-			d4VertexLabels: d4VertexLabels
-		)
-
-		let material = SCNMaterial()
-		material.diffuse.contents = textureSet.diffuse
-		material.normal.contents = textureSet.normal
-		material.normal.intensity = 0.95
-		material.specular.contents = textureSet.metalness
-		material.metalness.contents = textureSet.metalness
-		material.roughness.contents = textureSet.roughness
-		material.locksAmbientWithDiffuse = true
-		material.isDoubleSided = false
-		if includeSideLabel {
-			material.diffuse.contentsTransform = SCNMatrix4Identity
-		}
-		return material
-	}
-
-	private func solidMaterial(fillColor: UIColor) -> SCNMaterial {
-		let material = SCNMaterial()
-		material.diffuse.contents = fillColor
-		material.locksAmbientWithDiffuse = true
-		material.isDoubleSided = false
-		material.roughness.contents = NSNumber(value: 0.85)
-		material.metalness.contents = NSNumber(value: 0.0)
-		return material
-	}
-
 	private func animateDie(to value: Int, sideCount: Int, completion: (() -> Void)? = nil) {
 		let target = DiceSingleDieSceneGeometryFactory.orientation(for: value, sideCount: sideCount)
 		dieNode.removeAllActions()
 		let duration = ProcessInfo.processInfo.isLowPowerModeEnabled ? max(0.24, watchRollAnimationDuration * 0.65) : watchRollAnimationDuration
 		if DiceSingleDieSceneGeometryFactory.usesCoinGeometry(for: sideCount) || DiceSingleDieSceneGeometryFactory.usesTokenGeometry(for: sideCount) {
 			let spinDirection: Float = Bool.random() ? 1 : -1
-			let action = SCNAction.customAction(duration: duration) { [weak self] node, elapsed in
-				guard let self else { return }
-				let progress = Float(max(0, min(1, elapsed / CGFloat(duration))))
-				node.eulerAngles = self.cylindricalAnimationEulerAngles(
-					sideCount: sideCount,
-					targetValue: value,
+			let action = SCNAction.customAction(duration: duration) { node, elapsed in
+				let progress = Float(elapsed / CGFloat(duration))
+				node.eulerAngles = DiceRollAnimationMath.cylindricalEulerAngles(
+					targetOrientation: target,
 					progress: progress,
+					motionScale: 1,
 					spinDirection: spinDirection
 				)
 			}
@@ -299,13 +286,13 @@ class InterfaceController: WKInterfaceController {
 
 		let start = dieNode.presentation.eulerAngles
 		let spinTarget = SCNVector3(
-			target.x + randomTurnRadians(min: 2, max: 4),
-			target.y + randomTurnRadians(min: 2, max: 4),
-			target.z + randomTurnRadians(min: 1, max: 3)
+			target.x + DiceRollAnimationMath.randomTurnRadians(min: 2, max: 4),
+			target.y + DiceRollAnimationMath.randomTurnRadians(min: 2, max: 4),
+			target.z + DiceRollAnimationMath.randomTurnRadians(min: 1, max: 3)
 		)
 		let rotateAction = SCNAction.customAction(duration: duration) { node, elapsed in
-			let progress = Float(max(0, min(1, elapsed / CGFloat(duration))))
-			let eased = 1 - powf(1 - progress, 3)
+			let progress = Float(elapsed / CGFloat(duration))
+			let eased = DiceRollAnimationMath.settleProgress(progress)
 			node.eulerAngles = SCNVector3(
 				start.x + (spinTarget.x - start.x) * eased,
 				start.y + (spinTarget.y - start.y) * eased,
@@ -313,36 +300,6 @@ class InterfaceController: WKInterfaceController {
 			)
 		}
 		dieNode.runAction(rotateAction) { completion?() }
-	}
-
-	private func randomTurnRadians(min: Int, max: Int) -> Float {
-		let turns = Float(Int.random(in: min...max))
-		let sign: Float = Bool.random() ? 1 : -1
-		return turns * sign * Float.pi * 2
-	}
-
-	private func pinnedRollSettleProgress(_ progress: Float) -> Float {
-		let clamped = max(0, min(1, progress))
-		return 1 - powf(1 - clamped, 3)
-	}
-
-	private func cylindricalAnimationEulerAngles(
-		sideCount: Int,
-		targetValue: Int,
-		progress: Float,
-		spinDirection: Float
-	) -> SCNVector3 {
-		let clamped = max(0, min(1, progress))
-		let target = DiceSingleDieSceneGeometryFactory.orientation(for: targetValue, sideCount: sideCount)
-		let turns: Float = 3
-		let spinMagnitude = turns * spinDirection * Float.pi * 2
-		let tiltProgress = pinnedRollSettleProgress(clamped)
-		let residualSpin = pow(1 - clamped, 3)
-		return SCNVector3(
-			target.x * tiltProgress,
-			target.y * tiltProgress,
-			target.z + (spinMagnitude * residualSpin)
-		)
 	}
 
 	private func playRollStartFeedback() {

@@ -1714,58 +1714,21 @@ final class DiceCubeView: UIView {
 		numeralFont: DiceFaceNumeralFont? = nil,
 		dieIndex: Int = 0
 	) -> SCNMaterial {
-		let material = SCNMaterial()
 		let value = faceIndex + 1
 		let resolvedFillColor = fillColor ?? activeDieColorPreferences.fillColor(for: sideCount)
 		let resolvedFont = numeralFont ?? activeFaceNumeralFont
 		let d4VertexLabels = sideCount == 4 ? d4VertexLabels(forFace: face) : []
-		let textureSet = DiceFaceTextureFactory.textureSet(
+		return DiceSingleDieMaterialFactory.makeFaceMaterial(
 			value: value,
 			sideCount: sideCount,
 			fillColor: resolvedFillColor,
 			numeralFont: resolvedFont,
 			pipStyle: activeD6PipStyle,
 			largeFaceLabelsEnabled: activeLargeFaceLabelsEnabled,
-			d4VertexLabels: d4VertexLabels
+			d4VertexLabels: d4VertexLabels,
+			dieFinish: activeDieFinish,
+			dieIndex: dieIndex
 		)
-		material.diffuse.contents = textureSet.diffuse
-		material.normal.contents = textureSet.normal
-		material.normal.intensity = 0.95
-		material.specular.contents = textureSet.metalness
-		material.metalness.contents = textureSet.metalness
-		material.roughness.contents = textureSet.roughness
-		material.diffuse.wrapS = .clamp
-		material.diffuse.wrapT = .clamp
-		material.normal.wrapS = .clamp
-		material.normal.wrapT = .clamp
-		material.specular.wrapS = .clamp
-		material.specular.wrapT = .clamp
-		material.metalness.wrapS = .clamp
-		material.metalness.wrapT = .clamp
-		material.roughness.wrapS = .clamp
-		material.roughness.wrapT = .clamp
-		// Keep symbol masks crisp; filtered+mipped mask sampling causes edge bleed on beveled D6 geometry.
-		material.metalness.minificationFilter = .nearest
-		material.metalness.magnificationFilter = .nearest
-		material.metalness.mipFilter = .none
-		material.roughness.minificationFilter = .nearest
-		material.roughness.magnificationFilter = .nearest
-		material.roughness.mipFilter = .none
-		material.locksAmbientWithDiffuse = true
-		material.isDoubleSided = false
-		if activeDieFinish == .stone {
-			material.emission.contents = symbolInkColor(for: resolvedFillColor)
-			material.emission.intensity = 1.0
-		} else {
-			material.emission.contents = UIColor.black
-			material.emission.intensity = 0.0
-		}
-		activeDieFinish.apply(to: material, baseColor: resolvedFillColor, dieIndex: dieIndex)
-		material.specular.contents = textureSet.metalness
-		if activeDieFinish != .stone {
-			material.shininess = max(material.shininess, 0.42)
-		}
-		return material
 	}
 
 	private func cachedFaceTextureSet(
@@ -1919,7 +1882,7 @@ final class DiceCubeView: UIView {
 		for slot in plan.slots {
 			switch slot {
 			case .side:
-				let sideColor = multipliedColor(fillColor, factor: sideColorFactor)
+				let sideColor = DiceSingleDieMaterialFactory.multipliedColor(fillColor, factor: sideColorFactor)
 				materials.append(solidDieMaterial(baseColor: sideColor, fillColor: fillColor, dieIndex: dieIndex))
 			case let .face(value):
 				let material = faceMaterial(
@@ -1943,40 +1906,12 @@ final class DiceCubeView: UIView {
 	}
 
 	private func solidDieMaterial(baseColor: UIColor, fillColor: UIColor, dieIndex: Int) -> SCNMaterial {
-		let material = SCNMaterial()
-		material.diffuse.contents = baseColor
-		material.normal.contents = D6SceneKitRenderConfig.flatNormalMapImage()
-		material.normal.intensity = 0.35
-		material.specular.contents = UIColor.black
-		material.metalness.contents = UIColor.black
-		material.roughness.contents = UIColor.black
-		material.locksAmbientWithDiffuse = true
-		material.isDoubleSided = false
-		material.emission.contents = UIColor.black
-		material.emission.intensity = 0.0
-		activeDieFinish.apply(to: material, baseColor: fillColor, dieIndex: dieIndex)
-		return material
-	}
-
-	private func multipliedColor(_ color: UIColor, factor: CGFloat) -> UIColor {
-		var red: CGFloat = 0
-		var green: CGFloat = 0
-		var blue: CGFloat = 0
-		var alpha: CGFloat = 0
-		if color.getRed(&red, green: &green, blue: &blue, alpha: &alpha) {
-			return UIColor(
-				red: max(0, min(1, red * factor)),
-				green: max(0, min(1, green * factor)),
-				blue: max(0, min(1, blue * factor)),
-				alpha: alpha
-			)
-		}
-		var white: CGFloat = 0
-		if color.getWhite(&white, alpha: &alpha) {
-			let adjusted = max(0, min(1, white * factor))
-			return UIColor(white: adjusted, alpha: alpha)
-		}
-		return color
+		DiceSingleDieMaterialFactory.makeSolidMaterial(
+			baseColor: baseColor,
+			fillColor: fillColor,
+			dieFinish: activeDieFinish,
+			dieIndex: dieIndex
+		)
 	}
 
 
@@ -2464,13 +2399,8 @@ final class DiceCubeView: UIView {
 		return Float(sideLength * 0.5)
 	}
 
-	private func pinnedRollSettleProgress(_ progress: Float) -> Float {
-		let clamped = max(0, min(1, progress))
-		return 1 - powf(1 - clamped, 3)
-	}
-
 	private func pinnedRollInterpolatedCenterZ(startZ: Float, targetZ: Float, progress: Float) -> Float {
-		let settle = pinnedRollSettleProgress(progress)
+		let settle = DiceRollAnimationMath.settleProgress(progress)
 		return startZ + ((targetZ - startZ) * settle)
 	}
 
@@ -2565,16 +2495,10 @@ final class DiceCubeView: UIView {
 		let rampSharpness = 5.0
 		let decaySharpness = 6.0
 
-		func randomTurns(min: Int, max: Int) -> Float {
-			let turns = Float(Int.random(in: min...max))
-			let sign: Float = Bool.random() ? 1 : -1
-			return turns * sign
-		}
-
 		let spinTarget = SCNVector3(
-			target.x + randomTurns(min: 2, max: 4) * Float.pi * 2 * motionScale,
-			target.y + randomTurns(min: 2, max: 4) * Float.pi * 2 * motionScale,
-			target.z + randomTurns(min: 1, max: 3) * Float.pi * 2 * motionScale
+			target.x + DiceRollAnimationMath.randomTurnRadians(min: 2, max: 4, motionScale: motionScale),
+			target.y + DiceRollAnimationMath.randomTurnRadians(min: 2, max: 4, motionScale: motionScale),
+			target.z + DiceRollAnimationMath.randomTurnRadians(min: 1, max: 3, motionScale: motionScale)
 		)
 
 		let eRamp = exp(-rampSharpness)
@@ -2619,16 +2543,12 @@ final class DiceCubeView: UIView {
 		motionScale: Float,
 		spinDirection: Float
 	) -> SCNVector3 {
-		let clamped = max(0, min(1, progress))
 		let target = orientation(for: targetValue, sideCount: sideCount)
-		let turns = max(2, Int(round(3.0 * Double(max(0.5, motionScale)))))
-		let spinMagnitude = Float(turns) * spinDirection * Float.pi * 2.0
-		let tiltProgress = pinnedRollSettleProgress(clamped)
-		let residualSpin = pow(1 - clamped, 3)
-		return SCNVector3(
-			target.x * tiltProgress,
-			target.y * tiltProgress,
-			target.z + (spinMagnitude * residualSpin)
+		return DiceRollAnimationMath.cylindricalEulerAngles(
+			targetOrientation: target,
+			progress: progress,
+			motionScale: motionScale,
+			spinDirection: spinDirection
 		)
 	}
 

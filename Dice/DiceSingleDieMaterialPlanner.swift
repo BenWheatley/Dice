@@ -43,10 +43,10 @@ enum DiceSingleDieMaterialPlanner {
 	}
 
 	static func applyCylindricalCapTextureCompensation(top: SCNMaterial, bottom: SCNMaterial) {
-		// SceneKit cylinder cap UVs are quarter-turned relative to upright symbols.
-		// Rotate by opposite quarter-turns while preserving winding to avoid mirrored labels.
-		let topTransform = centeredTextureTransform(rotation: -.pi / 2, mirrorX: false, scale: 1.04)
-		let bottomTransform = centeredTextureTransform(rotation: .pi / 2, mirrorX: false, scale: 1.04)
+		// SceneKit cylinder caps are quarter-turned and mirrored relative to our shared CGImage textures.
+		// Compensate with opposite quarter-turns plus an X reflection so symbols read correctly.
+		let topTransform = centeredTextureTransform(rotation: -.pi / 2, mirrorX: true, scale: 1.04)
+		let bottomTransform = centeredTextureTransform(rotation: .pi / 2, mirrorX: true, scale: 1.04)
 		applyTextureTransform(topTransform, to: top)
 		applyTextureTransform(bottomTransform, to: bottom)
 	}
