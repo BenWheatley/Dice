@@ -35,13 +35,13 @@ class InterfaceController: WKInterfaceController {
 	private var shouldOpenCustomizeForAutomation = false
 	private var lowPowerObserver: NSObjectProtocol?
 	private let feedbackDevice = WKInterfaceDevice.current()
-	private let watchDieSideLength: CGFloat = 2.1
-	private let watchCameraDistance: Float = 5.2
-	private let watchTablePlaneSpan: CGFloat = 32
-	private let watchTablePlaneZ: Float = -1.2
+	private let watchDieSideLength: CGFloat = 1.3
+	private let watchCameraDistance: Float = 6.4
+	private let watchTablePlaneSpan: CGFloat = 48
+	private let watchTablePlaneZ: Float = -1.8
 	private let watchRollAnimationDuration: TimeInterval = 0.42
 
-	@IBOutlet weak var diceButton: WKInterfaceButton!
+	@IBOutlet weak var diceSurfaceGroup: WKInterfaceGroup!
 	@IBOutlet weak var diceSceneView: WKInterfaceSCNScene!
 
     override func awake(withContext context: Any?) {
@@ -54,9 +54,8 @@ class InterfaceController: WKInterfaceController {
 			self?.applyRemoteConfiguration(configuration)
 		}
 		shouldOpenCustomizeForAutomation = ProcessInfo.processInfo.arguments.contains("-watchOpenCustomizeOnLaunch")
-		diceButton.setAccessibilityLabel(WatchAccessibilityFormatter.rollButtonLabel)
-		diceButton.setAccessibilityHint(WatchAccessibilityFormatter.rollButtonHint)
-		configureMenuItems()
+		diceSurfaceGroup.setAccessibilityLabel(WatchAccessibilityFormatter.rollButtonLabel)
+		diceSurfaceGroup.setAccessibilityHint(WatchAccessibilityFormatter.rollButtonHint)
 		updateControlTitles()
 		configureSceneRenderer()
 		configurePowerModeObserver()
@@ -65,6 +64,11 @@ class InterfaceController: WKInterfaceController {
 
 	override func willActivate() {
         super.willActivate()
+		if !usesSceneRenderer {
+			// WKInterfaceSCNScene can report unavailable in early lifecycle; retry when the interface activates.
+			refreshRenderMode(currentValue: lastRenderedValue)
+		}
+		applyTableTexture(activeTableTexture)
 		applyRemoteConfiguration(configurationSync.currentConfiguration())
 		openCustomizeIfRequestedForAutomation()
     }
@@ -84,13 +88,18 @@ class InterfaceController: WKInterfaceController {
 		apply(outcome: viewModel.roll())
 	}
 
+	@IBAction func handleDieTap(_ recognizer: WKTapGestureRecognizer) {
+		guard recognizer.state == .ended else { return }
+		roll()
+	}
+
 	@IBAction func openCustomize() {
 		pushController(withName: "WatchCustomizeController", context: configurationSync.currentConfiguration())
 	}
 
-	private func configureMenuItems() {
-		clearAllMenuItems()
-		addMenuItem(with: .more, title: "Customize", action: #selector(openCustomize))
+	@IBAction func handleDieLongPress(_ recognizer: WKLongPressGestureRecognizer) {
+		guard recognizer.state == .began else { return }
+		openCustomize()
 	}
 
 	private func openCustomizeIfRequestedForAutomation() {
@@ -127,11 +136,11 @@ class InterfaceController: WKInterfaceController {
 			}
 			let a11yValue = WatchAccessibilityFormatter.dieValue(value: value, sideCount: sceneSideCount)
 			diceSceneView.setAccessibilityValue(a11yValue)
-			diceButton.setAccessibilityValue(a11yValue)
+			diceSurfaceGroup.setAccessibilityValue(a11yValue)
 		} else {
 			applyStaticFallbackImage(value: value, sideCount: renderDecision.sideCount)
 			let a11yValue = WatchAccessibilityFormatter.dieValue(value: value, sideCount: renderDecision.sideCount)
-			diceButton.setAccessibilityValue(a11yValue)
+			diceSurfaceGroup.setAccessibilityValue(a11yValue)
 			playRollSettleFeedback()
 		}
 		updateControlTitles()
@@ -183,12 +192,20 @@ class InterfaceController: WKInterfaceController {
 
 	private func applyTableTexture(_ texture: DiceTableTexture) {
 		activeTableTexture = texture
-		let pointSize = WKInterfaceDevice.current().screenBounds.size
+		let pointSize = tablePointScale()
 		DiceTableSurfaceMaterialConfigurator.applyTexture(
 			texture,
 			to: tableMaterial,
 			pointScale: CGSize(width: max(1, pointSize.width), height: max(1, pointSize.height))
 		)
+	}
+
+	private func tablePointScale() -> CGSize {
+		let viewport = diceSceneView.currentViewport.size
+		if viewport.width > 1, viewport.height > 1 {
+			return viewport
+		}
+		return WKInterfaceDevice.current().screenBounds.size
 	}
 
 	private func configurePowerModeObserver() {
@@ -337,16 +354,19 @@ class InterfaceController: WKInterfaceController {
 
 	private func refreshRenderMode(currentValue: Int) {
 		lastRenderedValue = currentValue
+		// Main watch scene is storyboard-provisioned and configured in `configureSceneRenderer()`;
+		// avoid sticky static fallback caused by transient scene readiness checks.
+		let sceneViewReady = true
 		let decision = WatchSceneRenderFallbackPolicy.resolve(
 			rawSideCount: viewModel.sideCount,
-			isSceneViewReady: diceSceneView.scene != nil
+			isSceneViewReady: sceneViewReady
 		)
 		renderDecision = decision
 		switch decision {
 		case let .sceneKit(sideCount):
 			usesSceneRenderer = true
 			diceSceneView.setHidden(false)
-			diceButton.setBackgroundImage(nil)
+			diceSurfaceGroup.setBackgroundImage(nil)
 			diceSceneView.setAccessibilityValue(
 				WatchAccessibilityFormatter.dieValue(value: currentValue, sideCount: sideCount)
 			)
@@ -366,9 +386,9 @@ class InterfaceController: WKInterfaceController {
 		let symbolValue = min(max(1, clampedValue), 6)
 		let systemName = "die.face.\(symbolValue).fill"
 		if let image = UIImage(systemName: systemName) ?? UIImage(systemName: "die.face.5.fill") {
-			diceButton.setBackgroundImage(image)
+			diceSurfaceGroup.setBackgroundImage(image)
 		} else {
-			diceButton.setBackgroundImage(nil)
+			diceSurfaceGroup.setBackgroundImage(nil)
 		}
 	}
 
@@ -420,6 +440,6 @@ class InterfaceController: WKInterfaceController {
 	}
 
 	private func updateControlTitles() {
-		diceButton.setTitle(nil)
+		// The roll surface is gesture-only; no visible title is shown on watch main view.
 	}
 }

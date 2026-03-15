@@ -10,19 +10,26 @@
             <objects>
                 <controller id="AgC-eL-Hgc" customClass="InterfaceController" customModule="Dice_WatchKit_App" customModuleProvider="target">
                     <items>
-                        <button width="1" height="1" alignment="center" verticalAlignment="center" id="64x-ie-It6">
-                            <group key="contentGroup" width="1" height="1" alignment="center" id="Rub-qg-0Kw">
-                                <items>
-                                    <sceneKitScene width="1" height="1" alignment="center" id="YvH-5M-5jF"/>
-                                </items>
-                            </group>
-                            <connections>
-                                <action selector="roll" destination="AgC-eL-Hgc" id="VKZ-xf-75P"/>
-                            </connections>
-                        </button>
+                        <group width="1" height="1" alignment="center" id="64x-ie-It6">
+                            <items>
+                                <sceneKitScene width="1" height="1" alignment="center" id="YvH-5M-5jF"/>
+                            </items>
+                            <gestureRecognizers>
+                                <tapGestureRecognizer id="hq1-cv-8h5">
+                                    <connections>
+                                        <action selector="handleDieTap:" destination="AgC-eL-Hgc" id="aZV-Gj-41S"/>
+                                    </connections>
+                                </tapGestureRecognizer>
+                                <longPressGestureRecognizer id="7V7-0I-mfw">
+                                    <connections>
+                                        <action selector="handleDieLongPress:" destination="AgC-eL-Hgc" id="QoY-0F-34r"/>
+                                    </connections>
+                                </longPressGestureRecognizer>
+                            </gestureRecognizers>
+                        </group>
                     </items>
                     <connections>
-                        <outlet property="diceButton" destination="64x-ie-It6" id="ZmX-2S-onO"/>
+                        <outlet property="diceSurfaceGroup" destination="64x-ie-It6" id="ZmX-2S-onO"/>
                         <outlet property="diceSceneView" destination="YvH-5M-5jF" id="Cr8-Sr-5Wh"/>
                     </connections>
                 </controller>

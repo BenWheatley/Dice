@@ -342,6 +342,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Add focused watch simulator acceptance checklist entries/screenshots for Customize flow ergonomics and one-level navigation compliance.
 - [x] Add watch-side regression tests for local customization edits ensuring last-write-wins timestamp updates and no stale state after repeated open/close of Customize flow.
 - [x] Replace deprecated hidden watch menu actions with visible on-screen primary controls (Roll, Customize, Mode, Repeat) and lock this behavior with storyboard/controller regression tests.
+- [x] Fix watch main die interaction/background regressions after full-screen refactor: use gesture-recognizer-driven die surface for tap-roll + long-press customize, guarantee watch extension owns required table resources (`DiceTableSurfaceShader.metal`, `stripes` asset), and add regression tests for lifecycle/scene fallback recovery.
 
 ## 16. Full Platform Expansion (macOS, tvOS, visionOS)
 

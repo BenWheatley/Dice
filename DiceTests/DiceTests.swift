@@ -2411,7 +2411,7 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(source.contains("@IBAction func openCustomize()"))
 	}
 
-	func testWatchInterfaceControllerUsesLongPressMenuForCustomize() throws {
+	func testWatchInterfaceControllerUsesDieLongPressGestureForCustomize() throws {
 		let projectRoot = URL(fileURLWithPath: #filePath)
 			.deletingLastPathComponent()
 			.deletingLastPathComponent()
@@ -2420,9 +2420,15 @@ final class DiceTests: XCTestCase {
 			.appendingPathComponent("InterfaceController.swift")
 		let source = try String(contentsOf: controllerURL, encoding: .utf8)
 
-		XCTAssertTrue(source.contains("addMenuItem(with:"))
-		XCTAssertTrue(source.contains("title: \"Customize\""))
-		XCTAssertFalse(source.contains("optionsButton"))
+		XCTAssertTrue(source.contains("@IBOutlet weak var diceSurfaceGroup: WKInterfaceGroup!"))
+		XCTAssertTrue(source.contains("@IBAction func handleDieTap"))
+		XCTAssertTrue(source.contains("@IBAction func handleDieLongPress"))
+		XCTAssertTrue(source.contains("recognizer.state == .began"))
+		XCTAssertTrue(source.contains("roll()"))
+		XCTAssertTrue(source.contains("openCustomize()"))
+		XCTAssertFalse(source.contains("addMenuItem(with:"))
+		XCTAssertFalse(source.contains("configureMenuItems()"))
+		XCTAssertFalse(source.contains("WKInterfaceButton"))
 	}
 
 	func testWatchMainStoryboardUsesFullscreenDieWithoutVisibleCustomizeButton() throws {
@@ -2435,7 +2441,11 @@ final class DiceTests: XCTestCase {
 			.appendingPathComponent("Interface.storyboard")
 		let source = try String(contentsOf: storyboardURL, encoding: .utf8)
 
-		XCTAssertTrue(source.contains("selector=\"roll\""))
+		XCTAssertTrue(source.contains("selector=\"handleDieTap:\""))
+		XCTAssertTrue(source.contains("longPressGestureRecognizer"))
+		XCTAssertTrue(source.contains("selector=\"handleDieLongPress:\""))
+		XCTAssertTrue(source.contains("tapGestureRecognizer"))
+		XCTAssertFalse(source.contains("<button width=\"1\" height=\"1\" alignment=\"center\" verticalAlignment=\"center\" id=\"64x-ie-It6\">"))
 		XCTAssertFalse(source.contains("title=\"Customize\""))
 		XCTAssertFalse(source.contains("Tap die to roll"))
 		XCTAssertFalse(source.contains("selector=\"openCustomize\""))
@@ -2484,6 +2494,64 @@ final class DiceTests: XCTestCase {
 
 		XCTAssertTrue(source.contains("DiceTableSurfaceMaterialConfigurator.configureBaseMaterial"))
 		XCTAssertTrue(source.contains("DiceTableSurfaceMaterialConfigurator.applyTexture"))
+	}
+
+	func testWatchWillActivateRetriesSceneKitWhenEarlyLifecycleFallbackOccurred() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let controllerURL = projectRoot
+			.appendingPathComponent("Dice WatchKit Extension")
+			.appendingPathComponent("InterfaceController.swift")
+		let source = try String(contentsOf: controllerURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("if !usesSceneRenderer"))
+		XCTAssertTrue(source.contains("refreshRenderMode(currentValue: lastRenderedValue)"))
+		XCTAssertTrue(source.contains("let sceneViewReady = true"))
+		XCTAssertFalse(source.contains("isSceneViewReady: diceSceneView.scene != nil"))
+	}
+
+	func testWatchExtensionResourcesIncludeTableSurfaceShader() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let pbxprojURL = projectRoot
+			.appendingPathComponent("Dice.xcodeproj")
+			.appendingPathComponent("project.pbxproj")
+		let source = try String(contentsOf: pbxprojURL, encoding: .utf8)
+
+		let watchExtensionResourcesHeader = "B50B4502215D804200A6399B /* Resources */ = {"
+		guard let headerRange = source.range(of: watchExtensionResourcesHeader) else {
+			return XCTFail("Watch extension resources phase not found in project file.")
+		}
+		let suffix = source[headerRange.upperBound...]
+		guard let phaseEnd = suffix.range(of: "};") else {
+			return XCTFail("Watch extension resources phase appears malformed.")
+		}
+		let resourcesBody = String(suffix[..<phaseEnd.lowerBound])
+		XCTAssertTrue(
+			resourcesBody.contains("DiceTableSurfaceShader.metal in Resources"),
+			"Watch extension must include the table shader resource so shared table backgrounds render correctly."
+		)
+	}
+
+	func testWatchExtensionIncludesNeutralStripeTextureAsset() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let stripesAssetURL = projectRoot
+			.appendingPathComponent("Dice WatchKit Extension")
+			.appendingPathComponent("Assets.xcassets")
+			.appendingPathComponent("stripes.imageset")
+			.appendingPathComponent("stripes.png")
+		let stripesMetadataURL = projectRoot
+			.appendingPathComponent("Dice WatchKit Extension")
+			.appendingPathComponent("Assets.xcassets")
+			.appendingPathComponent("stripes.imageset")
+			.appendingPathComponent("Contents.json")
+
+		XCTAssertTrue(FileManager.default.fileExists(atPath: stripesAssetURL.path))
+		XCTAssertTrue(FileManager.default.fileExists(atPath: stripesMetadataURL.path))
 	}
 
 	func testWatchInterfaceControllerDelegatesMaterialConstructionToSharedFactory() throws {

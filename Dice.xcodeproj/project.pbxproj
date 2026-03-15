@@ -74,6 +74,7 @@
 		A2CE11012F5C000100D1CE00 /* DiceTableTexture.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00342F4403A100D1CE00 /* DiceTableTexture.swift */; };
 		A2CE11022F5C000100D1CE00 /* DiceShaderModifierSourceLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0CE10012F54000100D1CE00 /* DiceShaderModifierSourceLoader.swift */; };
 		A2CE11032F5C000100D1CE00 /* DiceTableSurfaceShader.metal in Resources */ = {isa = PBXBuildFile; fileRef = E1CE10042F59000400D1CE00 /* DiceTableSurfaceShader.metal */; };
+		A2CE11042F5C000100D1CE00 /* DiceTableSurfaceShader.metal in Resources */ = {isa = PBXBuildFile; fileRef = E1CE10042F59000400D1CE00 /* DiceTableSurfaceShader.metal */; };
 		A3CE11012F5C100100D1CE00 /* DiceSingleDieSceneGeometryFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3CE10012F5C100100D1CE00 /* DiceSingleDieSceneGeometryFactory.swift */; };
 		A3CE11022F5C100100D1CE00 /* DiceSingleDieSceneGeometryFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3CE10012F5C100100D1CE00 /* DiceSingleDieSceneGeometryFactory.swift */; };
 		A4CE11012F5C200100D1CE00 /* DiceSingleDieMaterialPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4CE10012F5C200100D1CE00 /* DiceSingleDieMaterialPlanner.swift */; };
@@ -755,6 +756,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A2CE11042F5C000100D1CE00 /* DiceTableSurfaceShader.metal in Resources */,
 				B50B4510215D804300A6399B /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
