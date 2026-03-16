@@ -36,7 +36,7 @@ class InterfaceController: WKInterfaceController {
 	private var lowPowerObserver: NSObjectProtocol?
 	private let feedbackDevice = WKInterfaceDevice.current()
 	private let watchDieSideLength: CGFloat = 1.3
-	private let watchCameraDistance: Float = 6.4
+	private let watchCameraDistance: Float = 2.4
 	private let watchTablePlaneSpan: CGFloat = 48
 	private let watchTablePlaneZ: Float = -1.8
 	private let watchRollAnimationDuration: TimeInterval = 0.42

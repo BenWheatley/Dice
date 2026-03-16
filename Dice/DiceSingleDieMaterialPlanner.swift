@@ -271,6 +271,10 @@ enum DiceFaceTextureFactory {
 			roughness: symbolFillMask
 		)
 	}
+    
+    private static func showsCaption(sideCount: Int) -> Bool {
+        !([4,6,8,10,12,20].contains { $0 == sideCount })
+    }
 
 	private static func faceValueTextureSet(
 		value: Int,
@@ -290,7 +294,7 @@ enum DiceFaceTextureFactory {
 		let numeralOutlineWidth = max(1.4, numeralSize * 0.075)
 		let captionOutlineWidth = max(1.0, captionSize * 0.08)
 		let numeralText = "\(value)"
-		let captionText = "d\(sideCount)"
+        let captionText = showsCaption(sideCount: sideCount) ? "d\(sideCount)" : ""
 		let numeralFontRef = numeralFont.numeralFont(ofSize: numeralSize)
 		let captionFontRef = numeralFont.captionFont(ofSize: captionSize)
 
@@ -481,7 +485,7 @@ enum DiceFaceTextureFactory {
 			return FaceValueTextureLayout(
 				numeralSize: numeralSize,
 				captionSize: numeralSize * 0.5,
-				numeralYOffset: -textureEdgeLength * 0.09,
+				numeralYOffset: 0,
 				subtitleY: textureEdgeLength * 0.72,
 				drawsBorder: false
 			)
@@ -490,7 +494,7 @@ enum DiceFaceTextureFactory {
 		return FaceValueTextureLayout(
 			numeralSize: baseNumeralSize,
 			captionSize: captionSize,
-			numeralYOffset: -textureEdgeLength * 0.08,
+			numeralYOffset: 0,
 			subtitleY: textureEdgeLength * 0.74,
 			drawsBorder: sideCount == 6
 		)
