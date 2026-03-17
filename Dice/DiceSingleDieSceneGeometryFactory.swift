@@ -272,6 +272,7 @@ enum DiceSingleDieSceneGeometryFactory {
 		return map[value] ?? SCNVector3Zero
 	}
 
+    // TODO: why does this exist? This crashes on watchOS, but I don't see it used at all on iOS
 	private static func d4OrderedFaceVertices(for face: [Int], vertices: [SIMD3<Float>]) -> [Int] {
 		guard face.count == 3 else { return face }
 		let sortedByZ = face.sorted { vertices[$0].z > vertices[$1].z }
