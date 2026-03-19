@@ -2613,6 +2613,40 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(source.contains("DiceSingleDieMaterialFactory.makeSolidMaterial"))
 	}
 
+	func testDiceCubeViewDelegatesGeometryConstructionToSharedSingleDieFactory() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let cubeViewURL = projectRoot
+			.appendingPathComponent("Dice")
+			.appendingPathComponent("DiceCubeView.swift")
+		let source = try String(contentsOf: cubeViewURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("DiceSingleDieSceneGeometryFactory.makeDescriptor"))
+		XCTAssertFalse(source.contains("private func meshData("))
+		XCTAssertFalse(source.contains("private func tetrahedronVertices("))
+		XCTAssertFalse(source.contains("private func cubeVertices("))
+		XCTAssertFalse(source.contains("private func octahedronVertices("))
+		XCTAssertFalse(source.contains("private func pentagonalTrapezohedron("))
+		XCTAssertFalse(source.contains("private func dodecahedronFromIcosahedronDual("))
+		XCTAssertFalse(source.contains("private func icosahedron("))
+	}
+
+	func testDiceCubeViewDelegatesOrientationResolutionToSharedSingleDieFactory() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let cubeViewURL = projectRoot
+			.appendingPathComponent("Dice")
+			.appendingPathComponent("DiceCubeView.swift")
+		let source = try String(contentsOf: cubeViewURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("DiceSingleDieSceneGeometryFactory.orientation"))
+		XCTAssertFalse(source.contains("private func orientation(for value: Int, sideCount: Int)"))
+		XCTAssertFalse(source.contains("private func coinTargetOrientation("))
+		XCTAssertFalse(source.contains("private func d4Orientation("))
+	}
+
 	func testSingleDieSceneGeometryFactorySupportsPolyhedralAndFallbackDescriptors() {
 		let d20 = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: 20, sideLength: 96)
 		XCTAssertFalse(d20.isCoin)
@@ -2655,6 +2689,18 @@ final class DiceTests: XCTestCase {
 		}
 	}
 
+	func testSingleDieSceneGeometryFactoryReturnsZeroOrientationForOutOfRangeValues() {
+		let d4Orientation = DiceSingleDieSceneGeometryFactory.orientation(for: 0, sideCount: 4)
+		XCTAssertEqual(d4Orientation.x, 0, accuracy: 0.0001)
+		XCTAssertEqual(d4Orientation.y, 0, accuracy: 0.0001)
+		XCTAssertEqual(d4Orientation.z, 0, accuracy: 0.0001)
+
+		let d8Orientation = DiceSingleDieSceneGeometryFactory.orientation(for: 99, sideCount: 8)
+		XCTAssertEqual(d8Orientation.x, 0, accuracy: 0.0001)
+		XCTAssertEqual(d8Orientation.y, 0, accuracy: 0.0001)
+		XCTAssertEqual(d8Orientation.z, 0, accuracy: 0.0001)
+	}
+
 	func testSingleDieSceneGeometryFactoryUsesScaleRelativeCylinderThickness() {
 		let coin = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: 2, sideLength: 1.8)
 		guard let coinGeometry = coin.geometry as? SCNCylinder else {
@@ -2669,6 +2715,104 @@ final class DiceTests: XCTestCase {
 		}
 		XCTAssertEqual(tokenGeometry.height, 1.8 * 0.30, accuracy: 0.0001)
 		XCTAssertLessThan(tokenGeometry.height, 1.0)
+	}
+
+	func testSingleDieSceneGeometryFactoryClampsAndDetectsGeometryModes() {
+		XCTAssertEqual(DiceSingleDieSceneGeometryFactory.clampedSideCount(1), 2)
+		XCTAssertEqual(DiceSingleDieSceneGeometryFactory.clampedSideCount(101), 100)
+		XCTAssertEqual(DiceSingleDieSceneGeometryFactory.clampedSideCount(20), 20)
+
+		XCTAssertTrue(DiceSingleDieSceneGeometryFactory.usesCoinGeometry(for: 2))
+		XCTAssertFalse(DiceSingleDieSceneGeometryFactory.usesCoinGeometry(for: 3))
+		XCTAssertFalse(DiceSingleDieSceneGeometryFactory.usesTokenGeometry(for: 2))
+		XCTAssertTrue(DiceSingleDieSceneGeometryFactory.usesTokenGeometry(for: 21))
+		XCTAssertFalse(DiceSingleDieSceneGeometryFactory.usesTokenGeometry(for: 20))
+	}
+
+	func testSingleDieSceneGeometryFactoryD4MaterialFacesMatchFaceValueLabels() {
+		let descriptor = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: 4, sideLength: 96)
+		let expectedLabelsByFaceValue = (1...4).map {
+			DiceSingleDieSceneGeometryFactory.d4VertexLabels(forFaceValue: $0)
+		}
+		let actualLabelsByMaterialFace = descriptor.materialFaces.map { face in
+			face.map { [4, 3, 2, 1][$0] }
+		}
+
+		XCTAssertEqual(descriptor.materialFaces.count, 4)
+		XCTAssertEqual(actualLabelsByMaterialFace, expectedLabelsByFaceValue)
+	}
+
+	func testSingleDieSceneGeometryFactoryDescriptorMaterialFaceCountsTrackFaceValueCounts() {
+		let d4 = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: 4, sideLength: 96)
+		XCTAssertEqual(d4.materialFaces.count, d4.faceValueCount)
+
+		let d6 = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: 6, sideLength: 96)
+		XCTAssertEqual(d6.materialFaces.count, d6.faceValueCount)
+
+		let d20 = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: 20, sideLength: 96)
+		XCTAssertEqual(d20.materialFaces.count, d20.faceValueCount)
+
+		let d2 = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: 2, sideLength: 96)
+		XCTAssertEqual(d2.materialFaces.count, 1)
+
+		let d37 = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: 37, sideLength: 96)
+		XCTAssertEqual(d37.materialFaces.count, 1)
+	}
+
+	func testSingleDieSceneGeometryFactoryOrdersD4FacesDeterministicallyForValidAndDegenerateInputs() {
+		let planarFaceVertices: [SIMD3<Float>] = [
+			SIMD3(0, 2, 0),
+			SIMD3(-1, 0, 0),
+			SIMD3(1, 0, 0)
+		]
+		XCTAssertEqual(
+			DiceSingleDieSceneGeometryFactory.orderedD4FaceVertices(for: [0, 2, 1], vertices: planarFaceVertices),
+			[0, 2, 1]
+		)
+		XCTAssertEqual(
+			DiceSingleDieSceneGeometryFactory.orderedD4FaceVertices(for: [1, 0, 2], vertices: planarFaceVertices),
+			[0, 2, 1]
+		)
+
+		let swapFaceVertices: [SIMD3<Float>] = [
+			SIMD3(0, 2, 0),
+			SIMD3(-1, 0, 0),
+			SIMD3(0, 0, 1)
+		]
+		XCTAssertEqual(
+			DiceSingleDieSceneGeometryFactory.orderedD4FaceVertices(for: [0, 2, 1], vertices: swapFaceVertices),
+			[0, 1, 2]
+		)
+
+		let flatFaceVertices: [SIMD3<Float>] = [
+			SIMD3(-1, 0, 1),
+			SIMD3(0, 0, -1),
+			SIMD3(1, 0, 1)
+		]
+		XCTAssertEqual(
+			DiceSingleDieSceneGeometryFactory.orderedD4FaceVertices(for: [0, 1, 2], vertices: flatFaceVertices),
+			[2, 0, 1]
+		)
+
+		let duplicateFaceVertices: [SIMD3<Float>] = [
+			SIMD3(1, 1, 1),
+			SIMD3(-1, -1, 1)
+		]
+		XCTAssertEqual(
+			DiceSingleDieSceneGeometryFactory.orderedD4FaceVertices(for: [0, 0, 1], vertices: duplicateFaceVertices),
+			[0, 0, 1]
+		)
+
+		let nonTriangleFaceVertices: [SIMD3<Float>] = [
+			SIMD3(1, 1, 1),
+			SIMD3(-1, -1, 1),
+			SIMD3(-1, 1, -1),
+			SIMD3(1, -1, -1)
+		]
+		XCTAssertEqual(
+			DiceSingleDieSceneGeometryFactory.orderedD4FaceVertices(for: [0, 1, 2, 3], vertices: nonTriangleFaceVertices),
+			[0, 1, 2, 3]
+		)
 	}
 
 	func testSingleDieMaterialPlannerReturnsExpectedCoinTokenAndPolyPlans() {

@@ -49,15 +49,8 @@ final class DiceCubeView: UIView {
 		let showsSideCount: Bool
 	}
 
-	private struct MeshData {
-		let vertices: [SIMD3<Float>]
-		let faces: [[Int]]
-	}
-
 	private struct BuiltMesh {
 		let geometry: SCNGeometry
-		let faceNormals: [SIMD3<Float>]
-		let faceUps: [SIMD3<Float>]
 		let materialFaces: [[Int]]
 	}
 
@@ -114,7 +107,6 @@ final class DiceCubeView: UIView {
 	private var appliedAppearanceGeneration: [Int] = []
 	private var appliedSurfaceValues: [Int?] = []
 	private var appearanceGeneration: Int = 0
-	private var orientationCache: [Int: [Int: SCNVector3]] = [:]
 	private var meshCache: [MeshCacheKey: BuiltMesh] = [:]
 	private var meshVertexCache: [MeshCacheKey: [SIMD3<Float>]] = [:]
 	private var contactDepthCache: [ContactDepthCacheKey: Float] = [:]
@@ -142,9 +134,6 @@ final class DiceCubeView: UIView {
 	private var needsMeshRefresh = false
 	private var activeRollAnimationToken: Int = 0
 	private var pendingRollAnimationCompletions = 0
-	private let supportedPolyhedralSideCounts: Set<Int> = [4, 6, 8, 10, 12, 20]
-	// D4 numbering is vertex-based and intentionally decoupled from raw mesh indices.
-	private let d4VertexValueByIndex: [Int] = [4, 3, 2, 1]
 #if DEBUG
 	private var debugMaterialRefreshCount = 0
 	private var debugMeshBuildCount = 0
@@ -313,7 +302,7 @@ final class DiceCubeView: UIView {
 			} else {
 				container.removeAllActions()
 				container.position = targetPosition
-				container.eulerAngles = orientation(for: targetFace, sideCount: sideCount)
+				container.eulerAngles = DiceSingleDieSceneGeometryFactory.orientation(for: targetFace, sideCount: sideCount)
 			}
 		}
 		updateAccessibilityElements(
@@ -740,11 +729,11 @@ final class DiceCubeView: UIView {
 	}
 
 	private func usesCoinGeometry(for sideCount: Int) -> Bool {
-		sideCount == 2
+		DiceSingleDieSceneGeometryFactory.usesCoinGeometry(for: sideCount)
 	}
 
 	private func usesTokenGeometry(for sideCount: Int) -> Bool {
-		!usesCoinGeometry(for: sideCount) && !supportedPolyhedralSideCounts.contains(sideCount)
+		DiceSingleDieSceneGeometryFactory.usesTokenGeometry(for: sideCount)
 	}
 
 	private func usesPinnedRollPosition(for sideCount: Int) -> Bool {
@@ -931,28 +920,6 @@ final class DiceCubeView: UIView {
 		accessibilityElements = elements
 	}
 
-	private func meshData(for sideCount: Int) -> MeshData {
-		switch sideCount {
-		case 4:
-			return MeshData(vertices: tetrahedronVertices(), faces: tetrahedronFaces())
-		case 6:
-			return MeshData(vertices: cubeVertices(), faces: cubeFaces())
-		case 8:
-			return MeshData(vertices: octahedronVertices(), faces: octahedronFaces())
-		case 10:
-			let d10 = pentagonalTrapezohedron()
-			return MeshData(vertices: d10.vertices, faces: d10.faces)
-		case 12:
-			let d12 = dodecahedronFromIcosahedronDual()
-			return MeshData(vertices: d12.vertices, faces: d12.faces)
-		case 20:
-			let d20 = icosahedron()
-			return MeshData(vertices: d20.vertices, faces: d20.faces)
-		default:
-			return MeshData(vertices: cubeVertices(), faces: cubeFaces())
-		}
-	}
-
 #if DEBUG
 	static func debugResolvedColorPreset(
 		sideCount: Int,
@@ -970,40 +937,34 @@ final class DiceCubeView: UIView {
 	}
 
 	static func debugMeshData(sideCount: Int) -> (vertices: [SIMD3<Float>], faces: [[Int]]) {
-		let view = DiceCubeView(frame: .zero)
-		let mesh = view.meshData(for: sideCount)
-		return (mesh.vertices, mesh.faces)
+		DiceSingleDieSceneGeometryFactory.polyhedralMeshData(sideCount: sideCount)
 	}
 
 	static func debugD4FaceVertexLabels() -> [[Int]] {
-		let view = DiceCubeView(frame: .zero)
-		return view.tetrahedronFaces().map { view.d4VertexLabels(forFace: $0) }
+		let mesh = DiceSingleDieSceneGeometryFactory.polyhedralMeshData(sideCount: 4)
+		return mesh.faces.map { DiceSingleDieSceneGeometryFactory.d4VertexLabels(forOrderedFaceVertices: $0) }
 	}
 
 	static func debugD4OrderedFaceVertexLabels() -> [[Int]] {
-		let view = DiceCubeView(frame: .zero)
-		let faces = view.builtMesh(sideLength: 120, sideCount: 4).materialFaces
-		return faces.map { view.d4VertexLabels(forFace: $0) }
+		let descriptor = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: 4, sideLength: 120)
+		return descriptor.materialFaces.map { DiceSingleDieSceneGeometryFactory.d4VertexLabels(forOrderedFaceVertices: $0) }
 	}
 
 	static func debugD4MaterialFaceVertexLabels() -> [[Int]] {
-		let view = DiceCubeView(frame: .zero)
-		let faces = view.builtMesh(sideLength: 120, sideCount: 4).materialFaces
-		return faces.map { view.d4VertexLabels(forFace: $0) }
+		let descriptor = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: 4, sideLength: 120)
+		return descriptor.materialFaces.map { DiceSingleDieSceneGeometryFactory.d4VertexLabels(forOrderedFaceVertices: $0) }
 	}
 
 	static func debugD4GeometryFaceVertexLabels() -> [[Int]] {
-		let view = DiceCubeView(frame: .zero)
-		let mesh = view.builtMesh(sideLength: 120, sideCount: 4)
-		return mesh.materialFaces.map { view.d4VertexLabels(forFace: $0) }
+		let descriptor = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: 4, sideLength: 120)
+		return descriptor.materialFaces.map { DiceSingleDieSceneGeometryFactory.d4VertexLabels(forOrderedFaceVertices: $0) }
 	}
 
 	static func debugD4TopVertex(for value: Int) -> Int {
-		let view = DiceCubeView(frame: .zero)
-		let orientation = view.orientation(for: value, sideCount: 4)
+		let orientation = DiceSingleDieSceneGeometryFactory.orientation(for: value, sideCount: 4)
 		let node = SCNNode()
 		node.eulerAngles = orientation
-		let vertices = view.tetrahedronVertices()
+		let vertices = DiceSingleDieSceneGeometryFactory.polyhedralMeshData(sideCount: 4).vertices
 		var bestIndex = 0
 		var bestZ = -Float.greatestFiniteMagnitude
 		for (index, vertex) in vertices.enumerated() {
@@ -1013,8 +974,9 @@ final class DiceCubeView: UIView {
 				bestIndex = index
 			}
 		}
-		guard view.d4VertexValueByIndex.indices.contains(bestIndex) else { return 1 }
-		return view.d4VertexValueByIndex[bestIndex]
+		let d4VertexValues = [4, 3, 2, 1]
+		guard d4VertexValues.indices.contains(bestIndex) else { return 1 }
+		return d4VertexValues[bestIndex]
 	}
 
 	static func debugD4LabelLayout(size: CGSize) -> (triangle: [CGPoint], placements: [(position: CGPoint, angle: CGFloat)]) {
@@ -1415,8 +1377,7 @@ final class DiceCubeView: UIView {
 	}
 
 	static func debugOrientation(value: Int, sideCount: Int) -> SCNVector3 {
-		let view = DiceCubeView(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
-		return view.orientation(for: value, sideCount: sideCount)
+		DiceSingleDieSceneGeometryFactory.orientation(for: value, sideCount: sideCount)
 	}
 
 	static func debugCylindricalAnimationEulerAngles(
@@ -1570,129 +1531,14 @@ final class DiceCubeView: UIView {
 #if DEBUG
 		debugMeshBuildCount += 1
 #endif
-		if sideCount == 2 {
-			let coin = SCNCylinder(radius: sideLength * 0.48, height: max(6, sideLength * 0.14))
-			coin.radialSegmentCount = 72
-			coin.materials = [SCNMaterial(), SCNMaterial(), SCNMaterial()]
-			return BuiltMesh(
-				geometry: coin,
-				faceNormals: [SIMD3<Float>(0, 0, 1)],
-				faceUps: [SIMD3<Float>(0, 1, 0)],
-				materialFaces: [[0]]
-			)
-		}
-
-		if !supportedPolyhedralSideCounts.contains(sideCount) {
-			let token = SCNCylinder(radius: sideLength * 0.48, height: max(10, sideLength * 0.30))
-			token.radialSegmentCount = 60
-			token.materials = [SCNMaterial(), SCNMaterial(), SCNMaterial()]
-			return BuiltMesh(
-				geometry: token,
-				faceNormals: [SIMD3<Float>(0, 0, 1)],
-				faceUps: [SIMD3<Float>(0, 1, 0)],
-				materialFaces: [[0]]
-			)
-		}
-
-		let mesh = meshData(for: sideCount)
-		let maxNorm = mesh.vertices.map { simd_length($0) }.max() ?? 1
-		let scale = Float(sideLength * 0.5) / maxNorm
-		let scaledVerts = mesh.vertices.map { $0 * scale }
-
-		var finalVertices: [SCNVector3] = []
-		var finalUVs: [CGPoint] = []
-		var elements: [SCNGeometryElement] = []
-		var materials: [SCNMaterial] = []
-		var faceNormals: [SIMD3<Float>] = []
-		var faceUps: [SIMD3<Float>] = []
-		var materialFaces: [[Int]] = []
-
-		for (faceIndex, face) in mesh.faces.enumerated() {
-			guard face.count >= 3 else { continue }
-
-			var workingFace = face
-			var points = workingFace.map { scaledVerts[$0] }
-			let center = points.reduce(SIMD3<Float>(repeating: 0), +) / Float(points.count)
-			var n = simd_normalize(simd_cross(points[1] - points[0], points[2] - points[0]))
-			// Force outward normals so face orientation and texturing remain consistent.
-			if simd_dot(n, center) < 0 {
-				workingFace = Array(workingFace.reversed())
-				points = workingFace.map { scaledVerts[$0] }
-				n = simd_normalize(simd_cross(points[1] - points[0], points[2] - points[0]))
+		let descriptor = DiceSingleDieSceneGeometryFactory.makeDescriptor(sideCount: sideCount, sideLength: sideLength)
+		let geometry = descriptor.geometry
+		if !descriptor.isCoin, !descriptor.isToken {
+			geometry.materials = descriptor.materialFaces.enumerated().map { faceIndex, face in
+				faceMaterial(faceIndex: faceIndex, face: face, sideCount: sideCount)
 			}
-			if sideCount == 4 {
-				workingFace = d4OrderedFaceVertices(for: workingFace, vertices: scaledVerts)
-				points = workingFace.map { scaledVerts[$0] }
-				n = simd_normalize(simd_cross(points[1] - points[0], points[2] - points[0]))
-				// Keep tetrahedron winding outward after custom top/left/right ordering.
-				// Without this, some faces can mirror labels due to flipped vertex order.
-				if simd_dot(n, center) < 0 {
-					workingFace.swapAt(1, 2)
-					points = workingFace.map { scaledVerts[$0] }
-					n = simd_normalize(simd_cross(points[1] - points[0], points[2] - points[0]))
-				}
-			}
-			let up = simd_normalize(points[1] - points[0])
-			faceNormals.append(n)
-			faceUps.append(up)
-
-			let u = up
-			let v = simd_normalize(simd_cross(n, u))
-			var maxProj: Float = 0.001
-			for p in points {
-				let d = p - center
-				maxProj = max(maxProj, abs(simd_dot(d, u)), abs(simd_dot(d, v)))
-			}
-
-			var faceTriIndices: [Int32] = []
-			for i in 1..<(face.count - 1) {
-				let tri = [points[0], points[i], points[i + 1]]
-				let base = Int32(finalVertices.count)
-				for (vertexIndex, p) in tri.enumerated() {
-					// D4 labels represent vertex values; map texture coordinates directly to
-					// triangle corners so each face corner can carry one vertex number.
-					if sideCount == 4 {
-						let d4UVs = [
-							CGPoint(x: 0.5, y: 0.10),
-							CGPoint(x: 0.14, y: 0.86),
-							CGPoint(x: 0.86, y: 0.86),
-						]
-						finalVertices.append(SCNVector3(p.x, p.y, p.z))
-						finalUVs.append(d4UVs[vertexIndex])
-						continue
-					}
-
-					let d = p - center
-					let px = simd_dot(d, u) / maxProj
-					let py = simd_dot(d, v) / maxProj
-					// Project each face to a local 2D plane for stable UV placement.
-					finalVertices.append(SCNVector3(p.x, p.y, p.z))
-					finalUVs.append(CGPoint(
-						x: 0.5 - CGFloat(py) * 0.45,
-						y: 0.5 - CGFloat(px) * 0.45
-					))
-				}
-				faceTriIndices += [base, base + 1, base + 2]
-			}
-
-			elements.append(SCNGeometryElement(indices: faceTriIndices, primitiveType: .triangles))
-			materials.append(faceMaterial(faceIndex: faceIndex, face: workingFace, sideCount: sideCount))
-			materialFaces.append(workingFace)
 		}
-
-		let vSource = SCNGeometrySource(vertices: finalVertices)
-		let uvSource = SCNGeometrySource(textureCoordinates: finalUVs)
-		let geometry: SCNGeometry
-		if sideCount == 6 {
-			// D6 uses a beveled cube body while preserving the same face ordering.
-			let box = D6SceneKitRenderConfig.beveledCube(sideLength: sideLength)
-			box.materials = materials
-			geometry = box
-		} else {
-			geometry = SCNGeometry(sources: [vSource, uvSource], elements: elements)
-			geometry.materials = materials
-		}
-		return BuiltMesh(geometry: geometry, faceNormals: faceNormals, faceUps: faceUps, materialFaces: materialFaces)
+		return BuiltMesh(geometry: geometry, materialFaces: descriptor.materialFaces)
 	}
 
 	private func builtMesh(sideLength: CGFloat, sideCount: Int) -> BuiltMesh {
@@ -1931,53 +1777,7 @@ final class DiceCubeView: UIView {
 	}
 
 	private func d4VertexLabels(forFace face: [Int]) -> [Int] {
-		face.map { vertexIndex in
-			guard d4VertexValueByIndex.indices.contains(vertexIndex) else { return 1 }
-			return d4VertexValueByIndex[vertexIndex]
-		}
-	}
-
-	private func d4OrderedFaceVertices(for face: [Int], vertices: [SIMD3<Float>]) -> [Int] {
-		guard face.count == 3 else { return face }
-		let points = face.map { vertices[$0] }
-		let center = points.reduce(SIMD3<Float>(repeating: 0), +) / Float(points.count)
-		let normal = simd_normalize(simd_cross(points[1] - points[0], points[2] - points[0]))
-
-		var worldUp = SIMD3<Float>(0, 1, 0)
-		if abs(simd_dot(normal, worldUp)) > 0.95 {
-			worldUp = SIMD3<Float>(1, 0, 0)
-		}
-		let xAxis = simd_normalize(simd_cross(worldUp, normal))
-		let yAxis = simd_normalize(simd_cross(normal, xAxis))
-
-		let projected: [(vertex: Int, x: Float, y: Float)] = face.map { vertexIndex in
-			let point = vertices[vertexIndex]
-			let delta = point - center
-			return (
-				vertex: vertexIndex,
-				x: simd_dot(delta, xAxis),
-				y: simd_dot(delta, yAxis)
-			)
-		}
-
-		guard let top = projected.max(by: { lhs, rhs in
-			if lhs.y == rhs.y { return lhs.vertex > rhs.vertex }
-			return lhs.y < rhs.y
-		}) else {
-			return face
-		}
-		let remaining = projected.filter { $0.vertex != top.vertex }
-		guard remaining.count == 2 else { return face }
-		let left: (vertex: Int, x: Float, y: Float)
-		let right: (vertex: Int, x: Float, y: Float)
-		if remaining[0].x <= remaining[1].x {
-			left = remaining[0]
-			right = remaining[1]
-		} else {
-			left = remaining[1]
-			right = remaining[0]
-		}
-		return [top.vertex, left.vertex, right.vertex]
+		DiceSingleDieSceneGeometryFactory.d4VertexLabels(forOrderedFaceVertices: face)
 	}
 
 	private func d4FaceTextureSet(vertexLabels: [Int], fillColor: UIColor, numeralFont: DiceFaceNumeralFont) -> FaceTextureSet {
@@ -2323,7 +2123,7 @@ final class DiceCubeView: UIView {
 		let vertices = meshVertices(sideLength: sideLength, sideCount: sideCount)
 		guard !vertices.isEmpty else { return 0 }
 		let node = SCNNode()
-		node.eulerAngles = orientation(for: faceValue, sideCount: sideCount)
+		node.eulerAngles = DiceSingleDieSceneGeometryFactory.orientation(for: faceValue, sideCount: sideCount)
 		var minZ = Float.greatestFiniteMagnitude
 		for vertex in vertices {
 			let transformed = node.simdConvertPosition(vertex, to: nil)
@@ -2408,7 +2208,7 @@ final class DiceCubeView: UIView {
 		node.removeAllActions()
 		if activeAnimationIntensity == .off {
 			node.position = target
-			node.eulerAngles = orientation(for: faceValue, sideCount: sideCount)
+			node.eulerAngles = DiceSingleDieSceneGeometryFactory.orientation(for: faceValue, sideCount: sideCount)
 			completion()
 			return
 		}
@@ -2475,7 +2275,7 @@ final class DiceCubeView: UIView {
 		motionScale: Float,
 		cylindricalSpinDirection: Float? = nil
 	) -> SCNAction {
-		let target = orientation(for: targetFace, sideCount: sideCount)
+		let target = DiceSingleDieSceneGeometryFactory.orientation(for: targetFace, sideCount: sideCount)
 		if usesCoinGeometry(for: sideCount) || usesTokenGeometry(for: sideCount) {
 			let spinDirection: Float = cylindricalSpinDirection ?? (Bool.random() ? 1 : -1)
 			return SCNAction.customAction(duration: duration) { n, elapsed in
@@ -2543,7 +2343,7 @@ final class DiceCubeView: UIView {
 		motionScale: Float,
 		spinDirection: Float
 	) -> SCNVector3 {
-		let target = orientation(for: targetValue, sideCount: sideCount)
+		let target = DiceSingleDieSceneGeometryFactory.orientation(for: targetValue, sideCount: sideCount)
 		return DiceRollAnimationMath.cylindricalEulerAngles(
 			targetOrientation: target,
 			progress: progress,
@@ -2606,204 +2406,6 @@ final class DiceCubeView: UIView {
 		}
 	}
 
-	private func orientation(for value: Int, sideCount: Int) -> SCNVector3 {
-		if usesCoinGeometry(for: sideCount) {
-			return coinTargetOrientation(for: value)
-		}
-		if usesTokenGeometry(for: sideCount) {
-			// SCNCylinder primary axis is Y; rotate so coin/token faces point toward camera (Z).
-			return SCNVector3(Float.pi * 0.5, 0, 0)
-		}
-		if sideCount == 6 {
-			let angles = D6FaceOrientation.eulerAngles(for: value)
-			return SCNVector3(angles.x, angles.y, angles.z)
-		}
-		if sideCount == 4 {
-			return d4Orientation(for: value)
-		}
-		if let cached = orientationCache[sideCount]?[value] { return cached }
-
-		let mesh = builtMesh(sideLength: 120, sideCount: sideCount)
-		var map: [Int: SCNVector3] = [:]
-		let targetNormal = SIMD3<Float>(0, 0, 1)
-		let worldUp = SIMD3<Float>(0, 1, 0)
-
-		for i in 0..<mesh.faceNormals.count {
-			let faceValue = i + 1
-			let n = simd_normalize(mesh.faceNormals[i])
-			let up = simd_normalize(mesh.faceUps[i])
-
-			// First rotate the selected face toward camera.
-			let q1 = simd_quatf(from: n, to: targetNormal)
-			let up1 = simd_act(q1, up)
-			let upProjected = simd_normalize(SIMD3<Float>(up1.x, up1.y, 0))
-			let dotVal = simd_dot(upProjected, worldUp)
-			let clampedDot = max(-1 as Float, min(1 as Float, dotVal))
-			let crossZ = upProjected.x * worldUp.y - upProjected.y * worldUp.x
-			let angle = atan2(crossZ, clampedDot)
-			// Then spin around camera axis so face numbering remains upright.
-			let q2 = simd_quatf(angle: angle, axis: targetNormal)
-			let q = simd_normalize(q2 * q1)
-
-			let tmp = SCNNode()
-			tmp.simdOrientation = q
-			map[faceValue] = tmp.eulerAngles
-		}
-
-		orientationCache[sideCount] = map
-		return map[value] ?? SCNVector3(0, 0, 0)
-	}
-
-	private func coinTargetOrientation(for value: Int) -> SCNVector3 {
-		let sign: Float = value.isMultiple(of: 2) ? -1 : 1
-		return SCNVector3(sign * Float.pi * 0.5, 0, 0)
-	}
-
-	private func d4Orientation(for value: Int) -> SCNVector3 {
-		if let cached = orientationCache[4]?[value] {
-			return cached
-		}
-
-		let vertices = tetrahedronVertices()
-		let targetTop = SIMD3<Float>(0, 0, 1)
-		var map: [Int: SCNVector3] = [:]
-
-		for topValue in 1...4 {
-			guard let topIndex = d4VertexValueByIndex.firstIndex(of: topValue) else { continue }
-			let topVertex = simd_normalize(vertices[topIndex])
-			let q1 = simd_quatf(from: topVertex, to: targetTop)
-
-			let neighborIndex = (topIndex + 1) % 4
-			let neighborDir = simd_normalize(vertices[neighborIndex] - vertices[topIndex])
-			let rotatedNeighbor = simd_act(q1, neighborDir)
-			let projectedNeighbor = simd_normalize(rotatedNeighbor - simd_dot(rotatedNeighbor, targetTop) * targetTop)
-
-			let worldUp = SIMD3<Float>(0, 1, 0)
-			let projectedUp = simd_normalize(worldUp - simd_dot(worldUp, targetTop) * targetTop)
-			let crossVec = simd_cross(projectedNeighbor, projectedUp)
-			let signed = simd_dot(crossVec, targetTop)
-			let angle = atan2(signed, simd_dot(projectedNeighbor, projectedUp))
-			let q2 = simd_quatf(angle: angle, axis: targetTop)
-
-			let q = simd_normalize(q2 * q1)
-			let node = SCNNode()
-			node.simdOrientation = q
-			map[topValue] = node.eulerAngles
-		}
-
-		orientationCache[4] = map
-		return map[value] ?? SCNVector3Zero
-	}
-
-	// MARK: - Polyhedra
-	private func cubeVertices() -> [SIMD3<Float>] {
-		[
-			SIMD3(-1, -1, -1), SIMD3(1, -1, -1), SIMD3(1, 1, -1), SIMD3(-1, 1, -1),
-			SIMD3(-1, -1, 1), SIMD3(1, -1, 1), SIMD3(1, 1, 1), SIMD3(-1, 1, 1)
-		]
-	}
-
-	private func cubeFaces() -> [[Int]] {
-		// front, right, back, left, top, bottom
-		[[4, 5, 6, 7], [5, 1, 2, 6], [1, 0, 3, 2], [0, 4, 7, 3], [7, 6, 2, 3], [0, 1, 5, 4]]
-	}
-
-	private func tetrahedronVertices() -> [SIMD3<Float>] {
-		[SIMD3(1, 1, 1), SIMD3(-1, -1, 1), SIMD3(-1, 1, -1), SIMD3(1, -1, -1)]
-	}
-
-	private func tetrahedronFaces() -> [[Int]] {
-		[[0, 1, 2], [0, 3, 1], [0, 2, 3], [1, 3, 2]]
-	}
-
-	private func octahedronVertices() -> [SIMD3<Float>] {
-		[
-			SIMD3(1, 0, 0), SIMD3(-1, 0, 0),
-			SIMD3(0, 1, 0), SIMD3(0, -1, 0),
-			SIMD3(0, 0, 1), SIMD3(0, 0, -1)
-		]
-	}
-
-	private func octahedronFaces() -> [[Int]] {
-		[[0, 2, 4], [4, 2, 1], [1, 2, 5], [5, 2, 0], [4, 3, 0], [1, 3, 4], [5, 3, 1], [0, 3, 5]]
-	}
-
-	private func icosahedron() -> (vertices: [SIMD3<Float>], faces: [[Int]]) {
-		let t = Float((1.0 + sqrt(5.0)) / 2.0)
-		let verts: [SIMD3<Float>] = [
-			SIMD3(-1, t, 0), SIMD3(1, t, 0), SIMD3(-1, -t, 0), SIMD3(1, -t, 0),
-			SIMD3(0, -1, t), SIMD3(0, 1, t), SIMD3(0, -1, -t), SIMD3(0, 1, -t),
-			SIMD3(t, 0, -1), SIMD3(t, 0, 1), SIMD3(-t, 0, -1), SIMD3(-t, 0, 1)
-		]
-		let faces = [
-			[0, 11, 5], [0, 5, 1], [0, 1, 7], [0, 7, 10], [0, 10, 11],
-			[1, 5, 9], [5, 11, 4], [11, 10, 2], [10, 7, 6], [7, 1, 8],
-			[3, 9, 4], [3, 4, 2], [3, 2, 6], [3, 6, 8], [3, 8, 9],
-			[4, 9, 5], [2, 4, 11], [6, 2, 10], [8, 6, 7], [9, 8, 1]
-		]
-		return (verts, faces)
-	}
-
-	private func dodecahedronFromIcosahedronDual() -> (vertices: [SIMD3<Float>], faces: [[Int]]) {
-		let ico = icosahedron()
-		let iv = ico.vertices
-		let ifaces = ico.faces
-
-		var centroids: [SIMD3<Float>] = []
-		for f in ifaces {
-			let c = (iv[f[0]] + iv[f[1]] + iv[f[2]]) / 3
-			centroids.append(simd_normalize(c))
-		}
-
-		var faces: [[Int]] = []
-		for vi in iv.indices {
-			let v = simd_normalize(iv[vi])
-			let axis = abs(v.y) < 0.9 ? SIMD3<Float>(0, 1, 0) : SIMD3<Float>(1, 0, 0)
-			let u = simd_normalize(simd_cross(v, axis))
-			let w = simd_normalize(simd_cross(v, u))
-
-			var around: [(Int, Float)] = []
-			for fi in ifaces.indices where ifaces[fi].contains(vi) {
-				let c = simd_normalize(centroids[fi])
-				around.append((fi, atan2(simd_dot(c, w), simd_dot(c, u))))
-			}
-			around.sort { $0.1 < $1.1 }
-			faces.append(around.map { $0.0 })
-		}
-
-		return (centroids, faces)
-	}
-
-	private func pentagonalTrapezohedron() -> (vertices: [SIMD3<Float>], faces: [[Int]]) {
-		let r: Float = 1.0
-		let k: Float = 0.11
-		let s36 = sin(Float.pi / 5)
-		let s72 = sin(2 * Float.pi / 5)
-		// Enforce coplanar kite faces for [top, u(i), l(i), u(i+1)] and [bottom, l(i), u(i+1), l(i+1)].
-		let h: Float = k * (s72 + 2 * s36) / (2 * s36 - s72)
-
-		var vertices: [SIMD3<Float>] = [SIMD3(0, h, 0), SIMD3(0, -h, 0)]
-		for i in 0..<5 {
-			let a = Float(i) * 2 * .pi / 5
-			vertices.append(SIMD3(r * cos(a), k, r * sin(a)))
-		}
-		for i in 0..<5 {
-			let a = (Float(i) + 0.5) * 2 * .pi / 5
-			vertices.append(SIMD3(r * cos(a), -k, r * sin(a)))
-		}
-
-		var faces: [[Int]] = []
-		for i in 0..<5 {
-			let u0 = 2 + i
-			let u1 = 2 + ((i + 1) % 5)
-			let l0 = 7 + i
-			let l1 = 7 + ((i + 1) % 5)
-			// Connect each kite through adjacent upper/lower vertices to avoid twisted quads.
-			faces.append([0, u0, l0, u1])
-			faces.append([1, l0, u1, l1])
-		}
-		return (vertices, faces)
-	}
 }
 
 private extension UIColor {

@@ -127,7 +127,8 @@ class InterfaceController: WKInterfaceController {
 					geometry: geometry,
 					faceValueCount: sceneSideCount,
 					isCoin: false,
-					isToken: true
+					isToken: true,
+					materialFaces: [[0]]
 				)
 				applyMaterials(to: descriptor, sideCount: sceneSideCount, currentValue: value)
 			}
@@ -430,7 +431,8 @@ class InterfaceController: WKInterfaceController {
 			geometry: geometry,
 			faceValueCount: sideCount,
 			isCoin: DiceSingleDieSceneGeometryFactory.usesCoinGeometry(for: sideCount),
-			isToken: DiceSingleDieSceneGeometryFactory.usesTokenGeometry(for: sideCount)
+			isToken: DiceSingleDieSceneGeometryFactory.usesTokenGeometry(for: sideCount),
+			materialFaces: [[0]]
 		)
 		applyMaterials(to: descriptor, sideCount: sideCount, currentValue: lastRenderedValue)
 	}

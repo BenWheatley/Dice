@@ -7,9 +7,21 @@ struct DiceSingleDieGeometryDescriptor {
 	let faceValueCount: Int
 	let isCoin: Bool
 	let isToken: Bool
+	let materialFaces: [[Int]]
 }
 
 enum DiceSingleDieSceneGeometryFactory {
+	private typealias PolyhedralMesh = (vertices: [SIMD3<Float>], faces: [[Int]])
+
+	private enum PolyhedralMeshKind: Int {
+		case d4 = 4
+		case d6 = 6
+		case d8 = 8
+		case d10 = 10
+		case d12 = 12
+		case d20 = 20
+	}
+
 	static let minimumSideCount = 2
 	static let maximumSideCount = 100
 	static let supportedPolyhedralSideCounts: Set<Int> = [4, 6, 8, 10, 12, 20]
@@ -30,7 +42,13 @@ enum DiceSingleDieSceneGeometryFactory {
 			let coin = SCNCylinder(radius: sideLength * 0.48, height: sideLength * coinThicknessRatio)
 			coin.radialSegmentCount = 72
 			coin.materials = [SCNMaterial(), SCNMaterial(), SCNMaterial()]
-			return DiceSingleDieGeometryDescriptor(geometry: coin, faceValueCount: 2, isCoin: true, isToken: false)
+			return DiceSingleDieGeometryDescriptor(
+				geometry: coin,
+				faceValueCount: 2,
+				isCoin: true,
+				isToken: false,
+				materialFaces: [[0]]
+			)
 		}
 		if usesTokenGeometry(for: sideCount) {
 			let token = SCNCylinder(radius: sideLength * 0.48, height: sideLength * tokenThicknessRatio)
@@ -40,32 +58,42 @@ enum DiceSingleDieSceneGeometryFactory {
 				geometry: token,
 				faceValueCount: sideCount,
 				isCoin: false,
-				isToken: true
+				isToken: true,
+				materialFaces: [[0]]
 			)
 		}
 
-		let mesh = meshData(for: sideCount)
-		let maxNorm = mesh.vertices.map { simd_length($0) }.max() ?? 1
+		let mesh = polyhedralMeshData(sideCount: sideCount)
+		let materialFaces = orientedFaces(sideCount: sideCount, vertices: mesh.vertices, faces: mesh.faces)
+		let maxNorm = mesh.vertices.reduce(Float.zero) { partialResult, vertex in
+			max(partialResult, simd_length(vertex))
+		}
 		let scale = Float(sideLength * 0.5) / maxNorm
 		let scaledVertices = mesh.vertices.map { $0 * scale }
 
 		if sideCount == 6 {
 			let box = D6BeveledCubeGeometry.make(sideLength: sideLength)
-			box.materials = (0..<mesh.faces.count).map { _ in SCNMaterial() }
+			box.materials = (0..<materialFaces.count).map { _ in SCNMaterial() }
 			return DiceSingleDieGeometryDescriptor(
 				geometry: box,
-				faceValueCount: mesh.faces.count,
+				faceValueCount: materialFaces.count,
 				isCoin: false,
-				isToken: false
+				isToken: false,
+				materialFaces: materialFaces
 			)
 		}
 
-		let polyhedron = makePolyhedronGeometry(sideCount: sideCount, vertices: scaledVertices, faces: mesh.faces)
+		let polyhedron = makePolyhedronGeometry(
+			sideCount: sideCount,
+			vertices: scaledVertices,
+			faces: materialFaces
+		)
 		return DiceSingleDieGeometryDescriptor(
 			geometry: polyhedron,
-			faceValueCount: mesh.faces.count,
+			faceValueCount: materialFaces.count,
 			isCoin: false,
-			isToken: false
+			isToken: false,
+			materialFaces: materialFaces
 		)
 	}
 
@@ -89,11 +117,14 @@ enum DiceSingleDieSceneGeometryFactory {
 			return cached
 		}
 
-		let mesh = meshData(for: sideCount)
+		let mesh = polyhedralMeshData(sideCount: sideCount)
 		let orderedFaces = orientedFaces(sideCount: sideCount, vertices: mesh.vertices, faces: mesh.faces)
 		let map = orientationMapForFaces(vertices: mesh.vertices, faces: orderedFaces)
 		storeOrientationMap(map, for: sideCount)
-		return map[value] ?? SCNVector3Zero
+		if let orientation = map[value] {
+			return orientation
+		}
+		return SCNVector3Zero
 	}
 
 	static func usesCoinGeometry(for sideCount: Int) -> Bool {
@@ -106,14 +137,24 @@ enum DiceSingleDieSceneGeometryFactory {
 
 	static func d4VertexLabels(forFaceValue value: Int) -> [Int] {
 		guard (1...4).contains(value) else { return [4, 3, 2] }
-		let vertices = tetrahedronVertices()
-		let faces = orientedFaces(sideCount: 4, vertices: vertices, faces: tetrahedronFaces())
+		let mesh = polyhedralMeshData(sideCount: 4)
+		let faces = orientedFaces(sideCount: 4, vertices: mesh.vertices, faces: mesh.faces)
 		let index = value - 1
 		guard faces.indices.contains(index) else { return [4, 3, 2] }
-		return faces[index].map { vertexIndex in
+		return d4VertexLabels(forOrderedFaceVertices: faces[index])
+	}
+
+	static func d4VertexLabels(forOrderedFaceVertices face: [Int]) -> [Int] {
+		face.map { vertexIndex in
 			guard d4VertexValueByIndex.indices.contains(vertexIndex) else { return 1 }
 			return d4VertexValueByIndex[vertexIndex]
 		}
+	}
+
+	static func polyhedralMeshData(sideCount rawSideCount: Int) -> (vertices: [SIMD3<Float>], faces: [[Int]]) {
+		let sideCount = clampedSideCount(rawSideCount)
+		precondition(!usesCoinGeometry(for: sideCount) && !usesTokenGeometry(for: sideCount))
+		return meshData(for: sideCount)
 	}
 
 	private static func cachedOrientation(for sideCount: Int, value: Int) -> SCNVector3? {
@@ -173,12 +214,7 @@ enum DiceSingleDieSceneGeometryFactory {
 				normal = simd_normalize(simd_cross(points[1] - points[0], points[2] - points[0]))
 			}
 			if sideCount == 4 {
-				workingFace = d4OrderedFaceVertices(for: workingFace, vertices: vertices)
-				points = workingFace.map { vertices[$0] }
-				normal = simd_normalize(simd_cross(points[1] - points[0], points[2] - points[0]))
-				if simd_dot(normal, center) < 0 {
-					workingFace.swapAt(1, 2)
-				}
+				workingFace = orderedD4FaceVertices(for: workingFace, vertices: vertices)
 			}
 			return workingFace
 		}
@@ -189,12 +225,11 @@ enum DiceSingleDieSceneGeometryFactory {
 		vertices: [SIMD3<Float>],
 		faces: [[Int]]
 	) -> SCNGeometry {
-		let orderedFaces = orientedFaces(sideCount: sideCount, vertices: vertices, faces: faces)
 		var finalVertices: [SCNVector3] = []
 		var finalUVs: [CGPoint] = []
 		var elements: [SCNGeometryElement] = []
 
-		for face in orderedFaces {
+		for face in faces {
 			let points = face.map { vertices[$0] }
 			let center = points.reduce(SIMD3<Float>(repeating: 0), +) / Float(points.count)
 			let normal = simd_normalize(simd_cross(points[1] - points[0], points[2] - points[0]))
@@ -211,7 +246,18 @@ enum DiceSingleDieSceneGeometryFactory {
 			for i in 1..<(points.count - 1) {
 				let triangle = [points[0], points[i], points[i + 1]]
 				let base = Int32(finalVertices.count)
-				for point in triangle {
+				for (vertexIndex, point) in triangle.enumerated() {
+					if sideCount == 4 {
+						let d4UVs = [
+							CGPoint(x: 0.5, y: 0.10),
+							CGPoint(x: 0.14, y: 0.86),
+							CGPoint(x: 0.86, y: 0.86)
+						]
+						finalVertices.append(SCNVector3(point.x, point.y, point.z))
+						finalUVs.append(d4UVs[vertexIndex])
+						continue
+					}
+
 					let delta = point - center
 					let px = simd_dot(delta, up) / maxProj
 					let py = simd_dot(delta, v) / maxProj
@@ -229,7 +275,7 @@ enum DiceSingleDieSceneGeometryFactory {
 		let vertexSource = SCNGeometrySource(vertices: finalVertices)
 		let uvSource = SCNGeometrySource(textureCoordinates: finalUVs)
 		let geometry = SCNGeometry(sources: [vertexSource, uvSource], elements: elements)
-		geometry.materials = (0..<orderedFaces.count).map { _ in SCNMaterial() }
+		geometry.materials = (0..<faces.count).map { _ in SCNMaterial() }
 		return geometry
 	}
 
@@ -269,44 +315,73 @@ enum DiceSingleDieSceneGeometryFactory {
 		}
 
 		storeOrientationMap(map, for: 4)
-		return map[value] ?? SCNVector3Zero
+		if let orientation = map[value] {
+			return orientation
+		}
+		return SCNVector3Zero
 	}
 
-    // TODO: why does this exist? This crashes on watchOS, but I don't see it used at all on iOS
-	private static func d4OrderedFaceVertices(for face: [Int], vertices: [SIMD3<Float>]) -> [Int] {
+	static func orderedD4FaceVertices(for face: [Int], vertices: [SIMD3<Float>]) -> [Int] {
 		guard face.count == 3 else { return face }
-		let sortedByZ = face.sorted { vertices[$0].z > vertices[$1].z }
-		guard let top = sortedByZ.first else { return face }
-		let remaining = sortedByZ.dropFirst()
+		let points = face.map { vertices[$0] }
+		let center = points.reduce(SIMD3<Float>(repeating: 0), +) / Float(points.count)
+		let normal = simd_normalize(simd_cross(points[1] - points[0], points[2] - points[0]))
+
+		var worldUp = SIMD3<Float>(0, 1, 0)
+		if abs(simd_dot(normal, worldUp)) > 0.95 {
+			worldUp = SIMD3<Float>(1, 0, 0)
+		}
+		let xAxis = simd_normalize(simd_cross(worldUp, normal))
+		let yAxis = simd_normalize(simd_cross(normal, xAxis))
+
+		let projected: [(vertex: Int, x: Float, y: Float)] = face.map { vertexIndex in
+			let point = vertices[vertexIndex]
+			let delta = point - center
+			return (
+				vertex: vertexIndex,
+				x: simd_dot(delta, xAxis),
+				y: simd_dot(delta, yAxis)
+			)
+		}
+
+		let top = projected.max(by: { lhs, rhs in
+			if lhs.y == rhs.y { return lhs.vertex > rhs.vertex }
+			return lhs.y < rhs.y
+		})!
+		let remaining = projected.filter { $0.vertex != top.vertex }
 		guard remaining.count == 2 else { return face }
-		let left: Int
-		let right: Int
-		if vertices[remaining[0]].x <= vertices[remaining[1]].x {
+		let left: (vertex: Int, x: Float, y: Float)
+		let right: (vertex: Int, x: Float, y: Float)
+		if remaining[0].x <= remaining[1].x {
 			left = remaining[0]
 			right = remaining[1]
 		} else {
 			left = remaining[1]
 			right = remaining[0]
 		}
-		return [top, left, right]
+		var orderedFace = [top.vertex, left.vertex, right.vertex]
+		let orderedPoints = orderedFace.map { vertices[$0] }
+		let orderedNormal = simd_normalize(simd_cross(orderedPoints[1] - orderedPoints[0], orderedPoints[2] - orderedPoints[0]))
+		if simd_dot(orderedNormal, center) < 0 {
+			orderedFace.swapAt(1, 2)
+		}
+		return orderedFace
 	}
 
-	private static func meshData(for sideCount: Int) -> (vertices: [SIMD3<Float>], faces: [[Int]]) {
-		switch sideCount {
-		case 4:
+	private static func meshData(for sideCount: Int) -> PolyhedralMesh {
+		switch PolyhedralMeshKind(rawValue: sideCount)! {
+		case .d4:
 			return (tetrahedronVertices(), tetrahedronFaces())
-		case 6:
+		case .d6:
 			return (cubeVertices(), cubeFaces())
-		case 8:
+		case .d8:
 			return (octahedronVertices(), octahedronFaces())
-		case 10:
+		case .d10:
 			return pentagonalTrapezohedron()
-		case 12:
+		case .d12:
 			return dodecahedronFromIcosahedronDual()
-		case 20:
+		case .d20:
 			return icosahedron()
-		default:
-			return (cubeVertices(), cubeFaces())
 		}
 	}
 
