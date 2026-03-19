@@ -366,13 +366,45 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 ### tvOS Experience and Modality Adaptation
 
-- [ ] Create tvOS root scene/navigation shell using Focus Engine patterns instead of touch-first controls.
-- [ ] Replace free-form text notation entry with tvOS-friendly token composer (quick dice chips + count stepper + separator actions).
-- [ ] Map Siri Remote inputs to roll interactions (click, play/pause, swipe gestures) and define predictable focus transitions.
-- [ ] Implement per-die option overlays using focusable panels, including lock/color/mode controls with clear focused states.
-- [ ] Tune SceneKit/3D board layout for 10-foot readability (minimum die size, label scaling, contrast thresholds).
-- [ ] Add tvOS audio feedback profile tuned for living-room output levels and no-haptics fallback behavior.
-- [ ] Add tvOS simulator acceptance checklist with focus traversal, roll latency, and legibility screenshots.
+#### Interaction Model and Information Architecture
+
+- [ ] Write a tvOS UX decision record that fixes the primary control model: focus-first navigation, `Select` to activate, `Menu/Back` to dismiss or go up one level, and `Play/Pause` reserved for secondary/context actions only.
+- [ ] Define the tvOS top-level information architecture for a 10-foot interface: `Roll`, `Presets`, `History`, and `Settings`, with `Roll` as the launch default and state restoration back to the last-open tab.
+- [ ] Decide the tvOS root navigation shell (`UITabBarController` top tab bar vs custom focus-first shell) and document why it fits Dice better than touch-derived navigation patterns.
+- [ ] Create a screen-by-screen focus map for each tvOS destination, including initial focus target, directional neighbors, and focus-return behavior after dismissing overlays.
+- [ ] Define tvOS focus appearance for dice, cards, and actions (scale, parallax/shadow, glow, sound) with contrast/readability thresholds suitable for sofa distance.
+- [ ] Plan a first-launch help surface that teaches the remote model in one screen (`Select`, directional movement, `Play/Pause`, `Menu`) without relying on long instructional text.
+
+#### Notation Entry and Composer UX
+
+- [ ] Replace free-form notation as the primary input path with a tvOS token composer plan: count stepper, die-size picker, add-token button, separator picker, and remove/clear actions.
+- [ ] Define a row of large “common roll” chips (`d20`, `2d6`, `3d6`, `6d6`, recent expressions) so the most common actions avoid any keyboard entry.
+- [ ] Design the token composer focus order so users can build mixed expressions without dead-end navigation or forced long lateral travel.
+- [ ] Plan an advanced text-entry escape hatch using the system tvOS keyboard for rare cases only, with explicit entry/exit focus restoration.
+- [ ] Define how long or mixed expressions are summarized on the main `Roll` screen so the composer remains readable without exposing a tiny horizontally scrolling text field.
+
+#### Roll Screen and Board Interaction
+
+- [ ] Design the tvOS `Roll` screen layout around three stable focus zones: notation/composer header, dice board, and global actions, and document expected transitions between zones.
+- [ ] Define board camera/layout rules for tvOS so dice remain readable at 10 feet: minimum on-screen die size, maximum default columns, and how the board scrolls or pages when too many dice exist.
+- [ ] Define focused-die behavior so a die can be clearly targeted without obscuring neighbors: subtle scale/parallax emphasis, persistent value readability, and no tiny embedded controls.
+- [ ] Define primary and secondary board actions: global `Roll` rerolls all unlocked dice, `Select` on a focused die rerolls that die, and `Play/Pause` on a focused die opens die-specific options.
+- [ ] Design the per-die options overlay as a large-card focus panel with `Lock`, `Color`, `Remove`, and `Cancel`, including exact focus entry/exit behavior back to the originating die.
+- [ ] Define how locked dice are communicated on tvOS using shape/icon/state treatment that stays readable from distance and does not rely on color alone.
+
+#### Presets, History, and Settings Adaptation
+
+- [ ] Design the `Presets` screen as large focusable cards with apply/preview affordances and no dependence on compact list-row controls.
+- [ ] Design the `History`/`Stats` experience as a dedicated tvOS destination rather than a cramped overlay, with chart legibility rules and focus-safe navigation back to the board.
+- [ ] Define tvOS settings-group UX using large rows and stepped selectors for mode, background, lighting, and accessibility-related options.
+- [ ] Plan how destructive or high-impact actions (`Reset Stats`, `Clear Dice`, deleting presets) are confirmed on tvOS without modal clutter or ambiguous button focus.
+
+#### Remote, Controller, Audio, and Accessibility
+
+- [ ] Map Siri Remote inputs and game-controller inputs to the same semantic actions, documenting any optional controller-only enhancements while preserving full Siri Remote parity.
+- [ ] Define living-room audio feedback rules for tvOS: focus tick, roll trigger, settle confirmation, and behavior when system audio is muted or very low.
+- [ ] Define accessibility requirements for tvOS: VoiceOver naming, predictable focus order, reduced-motion handling, and contrast safeguards for large-screen viewing distances.
+- [ ] Add a tvOS simulator acceptance checklist covering focus traversal, no orphaned focus states, composer speed, remote/controller parity, legibility screenshots, and roll latency.
 
 ### visionOS Experience and Modality Adaptation
 
