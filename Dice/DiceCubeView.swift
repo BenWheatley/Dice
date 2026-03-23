@@ -435,7 +435,9 @@ final class DiceCubeView: UIView {
 		let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
 		scnView.addGestureRecognizer(tapRecognizer)
 		let panRecognizer = UIPanGestureRecognizer(target: self, action: #selector(handleCameraPan(_:)))
+		#if !os(tvOS)
 		panRecognizer.maximumNumberOfTouches = 1
+		#endif
 		scnView.addGestureRecognizer(panRecognizer)
 
 		cameraNode.camera = SCNCamera()

@@ -351,7 +351,8 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 - [ ] Define shared-core vs platform-shell boundaries for macOS, tvOS, and visionOS targets, and document target/module ownership.
 - [ ] Create a platform capability matrix (input, rendering, audio/haptics, widgets, shortcuts, notifications) and mark required v1 parity vs platform-specific deltas.
-- [ ] Add new target scaffolds and build settings for tvOS and visionOS, ensuring simulator-first deployment constraints and shared source inclusion.
+- [x] Add new target scaffold and build settings for tvOS, ensuring simulator-first deployment constraints and shared source inclusion.
+- [ ] Add new target scaffold and build settings for visionOS, ensuring simulator-first deployment constraints and shared source inclusion.
 - [ ] Add compile-time platform adapters for unsupported APIs (for example haptics, watch-specific controls, UIKit-only presentation APIs).
 - [ ] Add cross-platform smoke tests that instantiate shared roll/session/configuration services from each platform target.
 

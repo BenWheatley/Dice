@@ -37,6 +37,68 @@
 		C0DE000F2F4400FE00D1CE00 /* DiceRollHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE000E2F4400FE00D1CE00 /* DiceRollHistoryStore.swift */; };
 		C0DE00112F44012000D1CE00 /* DiceTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00102F44012000D1CE00 /* DiceTelemetry.swift */; };
 		C0DE00132F44014200D1CE00 /* DiceViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00122F44014200D1CE00 /* DiceViewModel.swift */; };
+		TV2000012F70000100D1CE00 /* DiceBoardLayoutCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = TV1000012F70000100D1CE00 /* DiceBoardLayoutCalculator.swift */; };
+		TV2000022F70000200D1CE00 /* DiceBoardLayoutCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = TV1000012F70000100D1CE00 /* DiceBoardLayoutCalculator.swift */; };
+		TV2000032F70000300D1CE00 /* TVAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = TV1000022F70000200D1CE00 /* TVAppDelegate.swift */; };
+		TV2000042F70000400D1CE00 /* TVRootViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = TV1000032F70000300D1CE00 /* TVRootViewController.swift */; };
+		TV2000052F70000500D1CE00 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B50B44D7215D804100A6399B /* Assets.xcassets */; };
+		TV2000062F70000600D1CE00 /* DiceSurfaceBaseShader.metal in Resources */ = {isa = PBXBuildFile; fileRef = E0CE10022F54000200D1CE00 /* DiceSurfaceBaseShader.metal */; };
+		TV2000072F70000700D1CE00 /* DiceSurfaceStoneShader.metal in Resources */ = {isa = PBXBuildFile; fileRef = E0CE10032F54000300D1CE00 /* DiceSurfaceStoneShader.metal */; };
+		TV2000082F70000800D1CE00 /* DiceTableSurfaceShader.metal in Resources */ = {isa = PBXBuildFile; fileRef = E1CE10042F59000400D1CE00 /* DiceTableSurfaceShader.metal */; };
+		TV2000092F70000900D1CE00 /* DiceViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00122F44014200D1CE00 /* DiceViewModel.swift */; };
+		TV2000102F70001000D1CE00 /* DiceAppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00082F44009800D1CE00 /* DiceAppState.swift */; };
+		TV2000112F70001100D1CE00 /* DicePreferencesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE000A2F4400BA00D1CE00 /* DicePreferencesStore.swift */; };
+		TV2000122F70001200D1CE00 /* DiceRollHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE000C2F4400DC00D1CE00 /* DiceRollHistory.swift */; };
+		TV2000132F70001300D1CE00 /* DiceRollHistoryAnalytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00492F44720100D1CE00 /* DiceRollHistoryAnalytics.swift */; };
+		TV2000142F70001400D1CE00 /* DiceRollHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE000E2F4400FE00D1CE00 /* DiceRollHistoryStore.swift */; };
+		TV2000152F70001500D1CE00 /* DiceTelemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00102F44012000D1CE00 /* DiceTelemetry.swift */; };
+		TV2000162F70001600D1CE00 /* DiceRollSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00062F44007600D1CE00 /* DiceRollSession.swift */; };
+		TV2000172F70001700D1CE00 /* IntuitiveRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00042F44005400D1CE00 /* IntuitiveRoller.swift */; };
+		TV2000182F70001800D1CE00 /* TrueRandomRoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00022F44003200D1CE00 /* TrueRandomRoller.swift */; };
+		TV2000192F70001900D1CE00 /* DiceNotationParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00002F44000100D1CE00 /* DiceNotationParser.swift */; };
+		TV2000202F70002000D1CE00 /* DiceCubeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57DA5B92F4228E00057BC3A /* DiceCubeView.swift */; };
+		TV2000212F70002100D1CE00 /* DiceSingleDieSceneGeometryFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3CE10012F5C100100D1CE00 /* DiceSingleDieSceneGeometryFactory.swift */; };
+		TV2000222F70002200D1CE00 /* DiceSingleDieMaterialPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4CE10012F5C200100D1CE00 /* DiceSingleDieMaterialPlanner.swift */; };
+		TV2000232F70002300D1CE00 /* DiceRollAnimationMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFCE10012F5E100100D1CE00 /* DiceRollAnimationMath.swift */; };
+		TV2000242F70002400D1CE00 /* DiceTableSurfaceMaterialConfigurator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1CE10012F5E000100D1CE00 /* DiceTableSurfaceMaterialConfigurator.swift */; };
+		TV2000252F70002500D1CE00 /* DiceTableTexture.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00342F4403A100D1CE00 /* DiceTableTexture.swift */; };
+		TV2000262F70002600D1CE00 /* DiceDieFinish.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00362F4404DA00D1CE00 /* DiceDieFinish.swift */; };
+		TV2000272F70002700D1CE00 /* DiceFaceContrast.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00382F4406AF00D1CE00 /* DiceFaceContrast.swift */; };
+		TV2000282F70002800D1CE00 /* DiceDieColorPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE003B2F4407DD00D1CE00 /* DiceDieColorPreferences.swift */; };
+		TV2000292F70002900D1CE00 /* DiceD6PipStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE003D2F4408A100D1CE00 /* DiceD6PipStyle.swift */; };
+		TV2000302F70003000D1CE00 /* DiceFaceNumeralFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00402F44092300D1CE00 /* DiceFaceNumeralFont.swift */; };
+		TV2000312F70003100D1CE00 /* DiceAnimationIntensity.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00452F440B8700D1CE00 /* DiceAnimationIntensity.swift */; };
+		TV2000322F70003200D1CE00 /* DiceBoardLayoutPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00472F440C4900D1CE00 /* DiceBoardLayoutPreset.swift */; };
+		TV2000332F70003300D1CE00 /* DiceLightingAngle.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00502F44C00100D1CE00 /* DiceLightingAngle.swift */; };
+		TV2000342F70003400D1CE00 /* DiceLightingDirectionResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00522F44C00200D1CE00 /* DiceLightingDirectionResolver.swift */; };
+		TV2000352F70003500D1CE00 /* DiceFaceLabelSizing.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE004D2F44A00100D1CE00 /* DiceFaceLabelSizing.swift */; };
+		TV2000362F70003600D1CE00 /* DiceMotionBehaviorProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE004F2F44A20100D1CE00 /* DiceMotionBehaviorProfile.swift */; };
+		TV2000372F70003700D1CE00 /* DiceShaderModifierSourceLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0CE10012F54000100D1CE00 /* DiceShaderModifierSourceLoader.swift */; };
+		TV2000382F70003800D1CE00 /* D6FaceOrientation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10012F51000100D1CE00 /* D6FaceOrientation.swift */; };
+		TV2000392F70003900D1CE00 /* D6SceneKitRenderConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10022F51000200D1CE00 /* D6SceneKitRenderConfig.swift */; };
+		TV2000402F70004000D1CE00 /* D6BeveledCubeGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10192F51001900D1CE00 /* D6BeveledCubeGeometry.swift */; };
+		TV2000412F70004100D1CE00 /* DiceDieColorPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10032F51000300D1CE00 /* DiceDieColorPreset.swift */; };
+		TV2000422F70004200D1CE00 /* DiceInputError.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10042F51000400D1CE00 /* DiceInputError.swift */; };
+		TV2000432F70004300D1CE00 /* DicePool.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10052F51000500D1CE00 /* DicePool.swift */; };
+		TV2000442F70004400D1CE00 /* DiceSavedPreset.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10062F51000600D1CE00 /* DiceSavedPreset.swift */; };
+		TV2000452F70004500D1CE00 /* DiceSoundPack.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10072F51000700D1CE00 /* DiceSoundPack.swift */; };
+		TV2000462F70004600D1CE00 /* DiceStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10082F51000800D1CE00 /* DiceStats.swift */; };
+		TV2000472F70004700D1CE00 /* DiceTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00322F44035300D1CE00 /* DiceTheme.swift */; };
+		TV2000482F70004800D1CE00 /* DiceThemePalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE100A2F51000A00D1CE00 /* DiceThemePalette.swift */; };
+		TV2000492F70004900D1CE00 /* DiceUserPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE100B2F51000B00D1CE00 /* DiceUserPreferences.swift */; };
+		TV2000502F70005000D1CE00 /* FaceContrastStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE100C2F51000C00D1CE00 /* FaceContrastStyle.swift */; };
+		TV2000512F70005100D1CE00 /* IntuitiveRollContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE100D2F51000D00D1CE00 /* IntuitiveRollContext.swift */; };
+		TV2000522F70005200D1CE00 /* RollConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE100E2F51000E00D1CE00 /* RollConfiguration.swift */; };
+		TV2000532F70005300D1CE00 /* RollHistogram.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE100F2F51000F00D1CE00 /* RollHistogram.swift */; };
+		TV2000542F70005400D1CE00 /* RollHistoryDateRangeFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10102F51001000D1CE00 /* RollHistoryDateRangeFilter.swift */; };
+		TV2000552F70005500D1CE00 /* RollHistoryEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10112F51001100D1CE00 /* RollHistoryEntry.swift */; };
+		TV2000562F70005600D1CE00 /* RollHistoryExportFormat.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10122F51001200D1CE00 /* RollHistoryExportFormat.swift */; };
+		TV2000572F70005700D1CE00 /* RollHistoryExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10132F51001300D1CE00 /* RollHistoryExporter.swift */; };
+		TV2000582F70005800D1CE00 /* RollHistoryFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10142F51001400D1CE00 /* RollHistoryFilter.swift */; };
+		TV2000592F70005900D1CE00 /* RollHistoryIndicators.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10152F51001500D1CE00 /* RollHistoryIndicators.swift */; };
+		TV2000602F70006000D1CE00 /* RollHistoryModeFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10162F51001600D1CE00 /* RollHistoryModeFilter.swift */; };
+		TV2000612F70006100D1CE00 /* RollOutcome.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10172F51001700D1CE00 /* RollOutcome.swift */; };
+		TV2000622F70006200D1CE00 /* RollSessionSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CE10182F51001800D1CE00 /* RollSessionSummary.swift */; };
 		C0DE00152F44016400D1CE00 /* WatchRollViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00142F44016400D1CE00 /* WatchRollViewModel.swift */; };
 		C0DE00332F44035300D1CE00 /* DiceTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00322F44035300D1CE00 /* DiceTheme.swift */; };
 		C0DE00352F4403A100D1CE00 /* DiceTableTexture.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00342F4403A100D1CE00 /* DiceTableTexture.swift */; };
@@ -234,6 +296,7 @@
 		B50B44EC215D804100A6399B /* DiceUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DiceUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B50B44F0215D804100A6399B /* DiceUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceUITests.swift; sourceTree = "<group>"; };
 		B50B44F2215D804100A6399B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		TV1000052F70000500D1CE00 /* Dice tvOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Dice tvOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B50B44F5215D804200A6399B /* Dice WatchKit App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Dice WatchKit App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B50B44FB215D804200A6399B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Interface.storyboard; sourceTree = "<group>"; };
 		B50B44FD215D804200A6399B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -245,6 +308,10 @@
 		B50B450F215D804300A6399B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B50B4511215D804300A6399B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B50B4512215D804300A6399B /* PushNotificationPayload.apns */ = {isa = PBXFileReference; lastKnownFileType = text; path = PushNotificationPayload.apns; sourceTree = "<group>"; };
+		TV1000012F70000100D1CE00 /* DiceBoardLayoutCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceBoardLayoutCalculator.swift; sourceTree = "<group>"; };
+		TV1000022F70000200D1CE00 /* TVAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVAppDelegate.swift; sourceTree = "<group>"; };
+		TV1000032F70000300D1CE00 /* TVRootViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVRootViewController.swift; sourceTree = "<group>"; };
+		TV1000042F70000400D1CE00 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B57DA5B92F4228E00057BC3A /* DiceCubeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceCubeView.swift; sourceTree = "<group>"; };
 		A1CE10012F5B000100D1CE00 /* WatchSingleDieConfigurationSyncBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSingleDieConfigurationSyncBridge.swift; sourceTree = "<group>"; };
 		A3CE10012F5C100100D1CE00 /* DiceSingleDieSceneGeometryFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceSingleDieSceneGeometryFactory.swift; sourceTree = "<group>"; };
@@ -356,6 +423,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		TV4000012F70000100D1CE00 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B50B4501215D804200A6399B /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -379,6 +453,7 @@
 				B50B44CF215D803D00A6399B /* Dice */,
 				B50B44E4215D804100A6399B /* DiceTests */,
 				B50B44EF215D804100A6399B /* DiceUITests */,
+				TV3000012F70000100D1CE00 /* Dice tvOS */,
 				B50B44F9215D804200A6399B /* Dice WatchKit App */,
 				B50B4508215D804200A6399B /* Dice WatchKit Extension */,
 				W60000012F56000100D1CE00 /* Dice Widgets */,
@@ -392,6 +467,7 @@
 				B50B44CD215D803D00A6399B /* Dice.app */,
 				B50B44E1215D804100A6399B /* DiceTests.xctest */,
 				B50B44EC215D804100A6399B /* DiceUITests.xctest */,
+				TV1000052F70000500D1CE00 /* Dice tvOS.app */,
 				B50B44F5215D804200A6399B /* Dice WatchKit App.app */,
 				B50B4504215D804200A6399B /* Dice WatchKit Extension.appex */,
 				W40000012F56000100D1CE00 /* Dice Widgets Extension.appex */,
@@ -427,6 +503,7 @@
 				C0DE00432F440A7100D1CE00 /* DiceBoardCameraPreset.swift */,
 				C0DE00452F440B8700D1CE00 /* DiceAnimationIntensity.swift */,
 				C0DE00472F440C4900D1CE00 /* DiceBoardLayoutPreset.swift */,
+				TV1000012F70000100D1CE00 /* DiceBoardLayoutCalculator.swift */,
 				C0DE00502F44C00100D1CE00 /* DiceLightingAngle.swift */,
 				C0DE00522F44C00200D1CE00 /* DiceLightingDirectionResolver.swift */,
 				C0DE004D2F44A00100D1CE00 /* DiceFaceLabelSizing.swift */,
@@ -493,6 +570,16 @@
 				B50B44DC215D804100A6399B /* Info.plist */,
 			);
 			path = Dice;
+			sourceTree = "<group>";
+		};
+		TV3000012F70000100D1CE00 /* Dice tvOS */ = {
+			isa = PBXGroup;
+			children = (
+				TV1000022F70000200D1CE00 /* TVAppDelegate.swift */,
+				TV1000032F70000300D1CE00 /* TVRootViewController.swift */,
+				TV1000042F70000400D1CE00 /* Info.plist */,
+			);
+			path = "Dice tvOS";
 			sourceTree = "<group>";
 		};
 		B50B44E4215D804100A6399B /* DiceTests */ = {
@@ -606,6 +693,23 @@
 			productReference = B50B44EC215D804100A6399B /* DiceUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		TV5000012F70000100D1CE00 /* Dice tvOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = TV7000012F70000100D1CE00 /* Build configuration list for PBXNativeTarget "Dice tvOS" */;
+			buildPhases = (
+				TV4000022F70000200D1CE00 /* Sources */,
+				TV4000012F70000100D1CE00 /* Frameworks */,
+				TV4000032F70000300D1CE00 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Dice tvOS";
+			productName = "Dice tvOS";
+			productReference = TV1000052F70000500D1CE00 /* Dice tvOS.app */;
+			productType = "com.apple.product-type.application";
+		};
 		B50B44F4215D804100A6399B /* Dice WatchKit App */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = B50B4519215D804300A6399B /* Build configuration list for PBXNativeTarget "Dice WatchKit App" */;
@@ -678,6 +782,9 @@
 						CreatedOnToolsVersion = 10.0;
 						TestTargetID = B50B44CC215D803C00A6399B;
 					};
+					TV5000012F70000100D1CE00 = {
+						CreatedOnToolsVersion = 16.0;
+					};
 					B50B44F4215D804100A6399B = {
 						CreatedOnToolsVersion = 10.0;
 					};
@@ -705,6 +812,7 @@
 				B50B44CC215D803C00A6399B /* Dice */,
 				B50B44E0215D804100A6399B /* DiceTests */,
 				B50B44EB215D804100A6399B /* DiceUITests */,
+				TV5000012F70000100D1CE00 /* Dice tvOS */,
 				B50B44F4215D804100A6399B /* Dice WatchKit App */,
 				B50B4503215D804200A6399B /* Dice WatchKit Extension */,
 				W70000012F56000100D1CE00 /* Dice Widgets Extension */,
@@ -742,6 +850,17 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		TV4000032F70000300D1CE00 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				TV2000082F70000800D1CE00 /* DiceTableSurfaceShader.metal in Resources */,
+				TV2000072F70000700D1CE00 /* DiceSurfaceStoneShader.metal in Resources */,
+				TV2000062F70000600D1CE00 /* DiceSurfaceBaseShader.metal in Resources */,
+				TV2000052F70000500D1CE00 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B50B44F3215D804100A6399B /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -775,6 +894,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				TV2000012F70000100D1CE00 /* DiceBoardLayoutCalculator.swift in Sources */,
 				C0DE00132F44014200D1CE00 /* DiceViewModel.swift in Sources */,
 				C0DE00152F44016400D1CE00 /* WatchRollViewModel.swift in Sources */,
 				A1CE11012F5B000100D1CE00 /* WatchSingleDieConfigurationSyncBridge.swift in Sources */,
@@ -871,6 +991,70 @@
 			buildActionMask = 2147483647;
 			files = (
 				B50B44F1215D804100A6399B /* DiceUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		TV4000022F70000200D1CE00 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				TV2000092F70000900D1CE00 /* DiceViewModel.swift in Sources */,
+				TV2000102F70001000D1CE00 /* DiceAppState.swift in Sources */,
+				TV2000112F70001100D1CE00 /* DicePreferencesStore.swift in Sources */,
+				TV2000122F70001200D1CE00 /* DiceRollHistory.swift in Sources */,
+				TV2000132F70001300D1CE00 /* DiceRollHistoryAnalytics.swift in Sources */,
+				TV2000142F70001400D1CE00 /* DiceRollHistoryStore.swift in Sources */,
+				TV2000152F70001500D1CE00 /* DiceTelemetry.swift in Sources */,
+				TV2000162F70001600D1CE00 /* DiceRollSession.swift in Sources */,
+				TV2000172F70001700D1CE00 /* IntuitiveRoller.swift in Sources */,
+				TV2000182F70001800D1CE00 /* TrueRandomRoller.swift in Sources */,
+				TV2000192F70001900D1CE00 /* DiceNotationParser.swift in Sources */,
+				TV2000202F70002000D1CE00 /* DiceCubeView.swift in Sources */,
+				TV2000212F70002100D1CE00 /* DiceSingleDieSceneGeometryFactory.swift in Sources */,
+				TV2000222F70002200D1CE00 /* DiceSingleDieMaterialPlanner.swift in Sources */,
+				TV2000232F70002300D1CE00 /* DiceRollAnimationMath.swift in Sources */,
+				TV2000242F70002400D1CE00 /* DiceTableSurfaceMaterialConfigurator.swift in Sources */,
+				TV2000252F70002500D1CE00 /* DiceTableTexture.swift in Sources */,
+				TV2000262F70002600D1CE00 /* DiceDieFinish.swift in Sources */,
+				TV2000272F70002700D1CE00 /* DiceFaceContrast.swift in Sources */,
+				TV2000282F70002800D1CE00 /* DiceDieColorPreferences.swift in Sources */,
+				TV2000292F70002900D1CE00 /* DiceD6PipStyle.swift in Sources */,
+				TV2000302F70003000D1CE00 /* DiceFaceNumeralFont.swift in Sources */,
+				TV2000312F70003100D1CE00 /* DiceAnimationIntensity.swift in Sources */,
+				TV2000322F70003200D1CE00 /* DiceBoardLayoutPreset.swift in Sources */,
+				TV2000022F70000200D1CE00 /* DiceBoardLayoutCalculator.swift in Sources */,
+				TV2000332F70003300D1CE00 /* DiceLightingAngle.swift in Sources */,
+				TV2000342F70003400D1CE00 /* DiceLightingDirectionResolver.swift in Sources */,
+				TV2000352F70003500D1CE00 /* DiceFaceLabelSizing.swift in Sources */,
+				TV2000362F70003600D1CE00 /* DiceMotionBehaviorProfile.swift in Sources */,
+				TV2000372F70003700D1CE00 /* DiceShaderModifierSourceLoader.swift in Sources */,
+				TV2000382F70003800D1CE00 /* D6FaceOrientation.swift in Sources */,
+				TV2000392F70003900D1CE00 /* D6SceneKitRenderConfig.swift in Sources */,
+				TV2000402F70004000D1CE00 /* D6BeveledCubeGeometry.swift in Sources */,
+				TV2000412F70004100D1CE00 /* DiceDieColorPreset.swift in Sources */,
+				TV2000422F70004200D1CE00 /* DiceInputError.swift in Sources */,
+				TV2000432F70004300D1CE00 /* DicePool.swift in Sources */,
+				TV2000442F70004400D1CE00 /* DiceSavedPreset.swift in Sources */,
+				TV2000452F70004500D1CE00 /* DiceSoundPack.swift in Sources */,
+				TV2000462F70004600D1CE00 /* DiceStats.swift in Sources */,
+				TV2000472F70004700D1CE00 /* DiceTheme.swift in Sources */,
+				TV2000482F70004800D1CE00 /* DiceThemePalette.swift in Sources */,
+				TV2000492F70004900D1CE00 /* DiceUserPreferences.swift in Sources */,
+				TV2000502F70005000D1CE00 /* FaceContrastStyle.swift in Sources */,
+				TV2000512F70005100D1CE00 /* IntuitiveRollContext.swift in Sources */,
+				TV2000522F70005200D1CE00 /* RollConfiguration.swift in Sources */,
+				TV2000532F70005300D1CE00 /* RollHistogram.swift in Sources */,
+				TV2000542F70005400D1CE00 /* RollHistoryDateRangeFilter.swift in Sources */,
+				TV2000552F70005500D1CE00 /* RollHistoryEntry.swift in Sources */,
+				TV2000562F70005600D1CE00 /* RollHistoryExportFormat.swift in Sources */,
+				TV2000572F70005700D1CE00 /* RollHistoryExporter.swift in Sources */,
+				TV2000582F70005800D1CE00 /* RollHistoryFilter.swift in Sources */,
+				TV2000592F70005900D1CE00 /* RollHistoryIndicators.swift in Sources */,
+				TV2000602F70006000D1CE00 /* RollHistoryModeFilter.swift in Sources */,
+				TV2000612F70006100D1CE00 /* RollOutcome.swift in Sources */,
+				TV2000622F70006200D1CE00 /* RollSessionSummary.swift in Sources */,
+				TV2000032F70000300D1CE00 /* TVAppDelegate.swift in Sources */,
+				TV2000042F70000400D1CE00 /* TVRootViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1338,6 +1522,42 @@
 			};
 			name = Release;
 		};
+		TV6000012F70000100D1CE00 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = "Dice tvOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kitsunesoftware.Dice.tvos;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 18.0;
+			};
+			name = Debug;
+		};
+		TV6000022F70000200D1CE00 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				INFOPLIST_FILE = "Dice tvOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kitsunesoftware.Dice.tvos;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 18.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1391,6 +1611,15 @@
 			buildConfigurations = (
 				B50B4524215D804300A6399B /* Debug */,
 				B50B4525215D804300A6399B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		TV7000012F70000100D1CE00 /* Build configuration list for PBXNativeTarget "Dice tvOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				TV6000012F70000100D1CE00 /* Debug */,
+				TV6000022F70000200D1CE00 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

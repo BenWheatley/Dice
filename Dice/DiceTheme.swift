@@ -51,16 +51,45 @@ enum DiceTheme: String, CaseIterable {
 			)
 		case .system:
 			return DiceThemePalette(
-				screenBackgroundColor: .systemBackground,
-				panelBackgroundColor: UIColor.secondarySystemBackground.withAlphaComponent(0.9),
+				screenBackgroundColor: DiceSystemThemeColors.screenBackground,
+				panelBackgroundColor: DiceSystemThemeColors.panelBackground,
 				primaryTextColor: .label,
 				secondaryTextColor: .secondaryLabel,
 				validationColor: .systemRed,
 				fieldBorderErrorColor: .systemRed,
-				fallbackDieBackgroundColor: UIColor.systemBackground.withAlphaComponent(0.8),
+				fallbackDieBackgroundColor: DiceSystemThemeColors.fallbackDieBackground,
 				fallbackDieBorderColor: .separator,
 				fallbackDieTextColor: .label
 			)
+		}
+	}
+}
+
+private enum DiceSystemThemeColors {
+	static let screenBackground = UIColor { trait in
+		switch trait.userInterfaceStyle {
+		case .dark:
+			return UIColor(red: 0.11, green: 0.12, blue: 0.13, alpha: 1.0)
+		default:
+			return UIColor(white: 1.0, alpha: 1.0)
+		}
+	}
+
+	static let panelBackground = UIColor { trait in
+		switch trait.userInterfaceStyle {
+		case .dark:
+			return UIColor(red: 0.18, green: 0.19, blue: 0.21, alpha: 0.9)
+		default:
+			return UIColor(red: 0.95, green: 0.95, blue: 0.97, alpha: 0.9)
+		}
+	}
+
+	static let fallbackDieBackground = UIColor { trait in
+		switch trait.userInterfaceStyle {
+		case .dark:
+			return UIColor(red: 0.16, green: 0.17, blue: 0.19, alpha: 0.8)
+		default:
+			return UIColor(white: 1.0, alpha: 0.8)
 		}
 	}
 }

@@ -1831,6 +1831,37 @@ final class DiceTests: XCTestCase {
 		XCTAssertGreaterThanOrEqual(layout.sideLength + 0.001, floor)
 	}
 
+	func testSharedBoardLayoutCalculatorMatchesReadableFloorRules() {
+		let bounds = CGRect(x: 0, y: 0, width: 390, height: 844)
+		let layout = DiceBoardLayoutCalculator.boardRenderLayout(
+			itemCount: 24,
+			bounds: bounds,
+			layoutPreset: .compact,
+			mixed: true
+		)
+		let floor = DiceBoardLayoutCalculator.readableBoardSideLengthFloor(layoutPreset: .compact, mixed: true)
+		XCTAssertGreaterThanOrEqual(layout.sideLength + 0.001, floor)
+	}
+
+	func testSharedBoardLayoutCalculatorDetectsSizeDrivenRefresh() {
+		let previous = CGRect(x: 0, y: 0, width: 300, height: 500)
+		let sameSizeDifferentOrigin = CGRect(x: 40, y: 80, width: 300, height: 500)
+		let changedWidth = CGRect(x: 0, y: 0, width: 320, height: 500)
+
+		XCTAssertFalse(
+			DiceBoardLayoutCalculator.layoutNeedsRefresh(
+				previousBounds: previous,
+				currentBounds: sameSizeDifferentOrigin
+			)
+		)
+		XCTAssertTrue(
+			DiceBoardLayoutCalculator.layoutNeedsRefresh(
+				previousBounds: previous,
+				currentBounds: changedWidth
+			)
+		)
+	}
+
 	func testViewModelFormattedTotalsOmitsBoardWarningForSupportedMixedDice() {
 		let suiteName = "DiceTests.viewmodel.board.supportedmixed.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!
@@ -2645,6 +2676,84 @@ final class DiceTests: XCTestCase {
 		XCTAssertFalse(source.contains("private func orientation(for value: Int, sideCount: Int)"))
 		XCTAssertFalse(source.contains("private func coinTargetOrientation("))
 		XCTAssertFalse(source.contains("private func d4Orientation("))
+	}
+
+	func testTvOSRootControllerUsesSharedRenderAndLayoutPath() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let controllerURL = projectRoot
+			.appendingPathComponent("Dice tvOS")
+			.appendingPathComponent("TVRootViewController.swift")
+		let source = try String(contentsOf: controllerURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("private let viewModel = DiceViewModel()"))
+		XCTAssertTrue(source.contains("private let diceBoardView = DiceCubeView()"))
+		XCTAssertTrue(source.contains("DiceBoardLayoutCalculator.boardRenderLayout"))
+		XCTAssertFalse(source.contains("private func boardRenderLayout("))
+		XCTAssertFalse(source.contains("SCNView("))
+	}
+
+	func testProjectContainsTvOSTargetWithExpectedBuildSettings() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let pbxprojURL = projectRoot
+			.appendingPathComponent("Dice.xcodeproj")
+			.appendingPathComponent("project.pbxproj")
+		let source = try String(contentsOf: pbxprojURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("/* Dice tvOS */ = {"))
+		XCTAssertTrue(source.contains("name = \"Dice tvOS\";"))
+		XCTAssertTrue(source.contains("productType = \"com.apple.product-type.application\";"))
+		XCTAssertTrue(source.contains("SDKROOT = appletvos;"))
+		XCTAssertTrue(source.contains("TVOS_DEPLOYMENT_TARGET = 18.0;"))
+		XCTAssertTrue(source.contains("TARGETED_DEVICE_FAMILY = 3;"))
+	}
+
+	func testTvOSTargetIncludesSharedShaderAndAssetResources() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let pbxprojURL = projectRoot
+			.appendingPathComponent("Dice.xcodeproj")
+			.appendingPathComponent("project.pbxproj")
+		let source = try String(contentsOf: pbxprojURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("DiceSurfaceBaseShader.metal in Resources"))
+		XCTAssertTrue(source.contains("DiceSurfaceStoneShader.metal in Resources"))
+		XCTAssertTrue(source.contains("DiceTableSurfaceShader.metal in Resources"))
+		XCTAssertTrue(source.contains("Assets.xcassets in Resources"))
+	}
+
+	func testSystemThemePaletteResolvesDistinctLightAndDarkBackgrounds() {
+		let palette = DiceTheme.system.palette
+		let lightTraits = UITraitCollection(userInterfaceStyle: .light)
+		let darkTraits = UITraitCollection(userInterfaceStyle: .dark)
+
+		let lightScreen = palette.screenBackgroundColor.resolvedColor(with: lightTraits)
+		let darkScreen = palette.screenBackgroundColor.resolvedColor(with: darkTraits)
+		let lightPanel = palette.panelBackgroundColor.resolvedColor(with: lightTraits)
+		let darkPanel = palette.panelBackgroundColor.resolvedColor(with: darkTraits)
+		let lightDie = palette.fallbackDieBackgroundColor.resolvedColor(with: lightTraits)
+		let darkDie = palette.fallbackDieBackgroundColor.resolvedColor(with: darkTraits)
+
+		XCTAssertNotEqual(lightScreen.cgColor, darkScreen.cgColor)
+		XCTAssertNotEqual(lightPanel.cgColor, darkPanel.cgColor)
+		XCTAssertNotEqual(lightDie.cgColor, darkDie.cgColor)
+	}
+
+	func testDiceCubeViewGuardsTouchOnlyPanConfigurationForTvOS() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let cubeViewURL = projectRoot
+			.appendingPathComponent("Dice")
+			.appendingPathComponent("DiceCubeView.swift")
+		let source = try String(contentsOf: cubeViewURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("#if !os(tvOS)"))
+		XCTAssertTrue(source.contains("panRecognizer.maximumNumberOfTouches = 1"))
 	}
 
 	func testSingleDieSceneGeometryFactorySupportsPolyhedralAndFallbackDescriptors() {
