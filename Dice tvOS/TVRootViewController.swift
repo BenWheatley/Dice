@@ -171,7 +171,8 @@ final class TVRootViewController: UIViewController {
 	private func presentPresets() {
 		let picker = PresetPickerViewController(
 			currentNotation: viewModel.configuration.notation,
-			customPresets: viewModel.customPresets
+			customPresets: viewModel.customPresets,
+			recentNotations: viewModel.recentPresets
 		)
 		picker.onSelectNotationPreset = { [weak self] notation in
 			self?.applyNotationPreset(notation)
@@ -182,9 +183,22 @@ final class TVRootViewController: UIViewController {
 		picker.onCreateCustomPreset = { [weak self] title, notation in
 			self?.viewModel.createCustomPreset(title: title, notation: notation) ?? .failure(.invalidFormat)
 		}
+#if os(tvOS)
+		picker.onEditCurrentDice = { [weak self, weak picker] _ in
+			self?.pushDiceComposer(from: picker)
+		}
+#endif
 		let navigationController = UINavigationController(rootViewController: picker)
 		navigationController.modalPresentationStyle = UIModalPresentationStyle.fullScreen
 		present(navigationController, animated: true)
+	}
+
+	private func pushDiceComposer(from picker: UIViewController?) {
+		let composer = TVDiceComposerViewController(configuration: viewModel.configuration)
+		composer.onApplyConfiguration = { [weak self] configuration in
+			self?.applyNotationPreset(configuration.notation)
+		}
+		picker?.navigationController?.pushViewController(composer, animated: true)
 	}
 
 	private func applyNotationPreset(_ notation: String) {

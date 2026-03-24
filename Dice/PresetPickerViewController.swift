@@ -4,8 +4,24 @@ final class PresetPickerViewController: UIViewController, UITableViewDataSource,
 	var onSelectNotationPreset: ((String) -> Void)?
 	var onSaveCustomPresets: (([DiceSavedPreset]) -> Void)?
 	var onCreateCustomPreset: ((String, String) -> Result<Void, DiceInputError>)?
+#if os(tvOS)
+	var onEditCurrentDice: ((String) -> Void)?
+#endif
 
 	private static let unifiedPresetsInitializedKey = "Dice.unifiedPresetsInitialized"
+
+#if os(tvOS)
+	private enum TVSection: Int, CaseIterable {
+		case tvActions
+		case tvQuickRolls
+		case presets
+	}
+
+	private enum TVActionRow: Int, CaseIterable {
+		case editCurrentDice
+		case saveCurrentPreset
+	}
+#endif
 
 #if os(tvOS)
 	private let tableView = UITableView(frame: .zero, style: .grouped)
@@ -13,11 +29,13 @@ final class PresetPickerViewController: UIViewController, UITableViewDataSource,
 	private let tableView = UITableView(frame: .zero, style: .insetGrouped)
 #endif
 	private let currentNotation: String
+	private let recentNotations: [String]
 	private var presets: [DiceSavedPreset]
 	private let parser = DiceNotationParser()
 
-	init(currentNotation: String, customPresets: [DiceSavedPreset]) {
+	init(currentNotation: String, customPresets: [DiceSavedPreset], recentNotations: [String] = []) {
 		self.currentNotation = currentNotation
+		self.recentNotations = recentNotations
 		let initialized = UserDefaults.standard.bool(forKey: Self.unifiedPresetsInitializedKey)
 		self.presets = Self.mergedPresets(saved: customPresets, initialized: initialized)
 		super.init(nibName: nil, bundle: nil)
@@ -44,11 +62,13 @@ final class PresetPickerViewController: UIViewController, UITableViewDataSource,
 			target: self,
 			action: #selector(close)
 		)
+#if !os(tvOS)
 		navigationItem.rightBarButtonItem = UIBarButtonItem(
 			barButtonSystemItem: .add,
 			target: self,
 			action: #selector(addPreset)
 		)
+#endif
 		configureTableView()
 
 		tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -83,44 +103,170 @@ final class PresetPickerViewController: UIViewController, UITableViewDataSource,
 #endif
 	}
 
+	func numberOfSections(in tableView: UITableView) -> Int {
+#if os(tvOS)
+		return TVSection.allCases.count
+#else
+		return 1
+#endif
+	}
+
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-		presets.count
+#if os(tvOS)
+		guard let section = TVSection(rawValue: section) else { return 0 }
+		switch section {
+		case .tvActions:
+			return TVActionRow.allCases.count
+		case .tvQuickRolls:
+			return DiceTokenComposerState.quickRollNotations(recent: recentNotations).count
+		case .presets:
+			return presets.count
+		}
+#else
+		return presets.count
+#endif
 	}
 
 	func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-		NSLocalizedString("menu.presets.all", comment: "All presets section title")
+#if os(tvOS)
+		guard let section = TVSection(rawValue: section) else { return nil }
+		switch section {
+		case .tvActions:
+			return NSLocalizedString("tvos.presets.section.diceSet", comment: "tvOS dice set section title")
+		case .tvQuickRolls:
+			return NSLocalizedString("tvos.presets.section.quickStart", comment: "tvOS quick rolls section title")
+		case .presets:
+			return NSLocalizedString("menu.presets.all", comment: "All presets section title")
+		}
+#else
+		return NSLocalizedString("menu.presets.all", comment: "All presets section title")
+#endif
 	}
 
 	func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 		let cell = tableView.dequeueReusableCell(withIdentifier: "PresetCell", for: indexPath)
-		let preset = presets[indexPath.row]
 		var content = UIListContentConfiguration.subtitleCell()
-		content.text = preset.title
-		content.secondaryText = preset.notation
+
 #if os(tvOS)
+		if let section = TVSection(rawValue: indexPath.section) {
+			switch section {
+			case .tvActions:
+				configureTVActionCell(cell, content: content, indexPath: indexPath)
+				return cell
+			case .tvQuickRolls:
+				let notation = DiceTokenComposerState.quickRollNotations(recent: recentNotations)[indexPath.row]
+				content.text = notation
+				content.secondaryText = notation == currentNotation
+					? NSLocalizedString("tvos.presets.currentDice", comment: "Current dice set subtitle")
+					: NSLocalizedString("tvos.presets.applyQuickRoll", comment: "Apply quick roll subtitle")
+				cell.accessoryType = notation == currentNotation ? .checkmark : .none
+				cell.accessibilityIdentifier = "quickRoll_\(notation)"
+			case .presets:
+				let preset = presets[indexPath.row]
+				content.text = preset.title
+				content.secondaryText = preset.notation
+				cell.accessoryType = preset.notation == currentNotation ? .checkmark : .none
+				cell.accessibilityIdentifier = "preset_\(preset.id)"
+			}
+		}
+
 		content.textProperties.color = .white
 		content.textProperties.font = UIFont.preferredFont(forTextStyle: .title3)
 		content.secondaryTextProperties.color = UIColor(white: 1.0, alpha: 0.72)
 		content.secondaryTextProperties.font = UIFont.preferredFont(forTextStyle: .body)
-#endif
 		cell.contentConfiguration = content
-		cell.accessibilityIdentifier = "preset_\(preset.id)"
-#if os(tvOS)
 		var background = UIBackgroundConfiguration.listCell()
 		background.backgroundColor = UIColor(white: 0.12, alpha: 0.96)
 		cell.backgroundConfiguration = background
 		cell.tintColor = .systemBlue
-		cell.accessoryType = .none
 #else
+		let preset = presets[indexPath.row]
+		content.text = preset.title
+		content.secondaryText = preset.notation
+		cell.contentConfiguration = content
+		cell.accessibilityIdentifier = "preset_\(preset.id)"
 		cell.accessoryType = .disclosureIndicator
 #endif
 		return cell
 	}
 
+#if os(tvOS)
+	private func configureTVActionCell(_ cell: UITableViewCell, content: UIListContentConfiguration, indexPath: IndexPath) {
+		var content = content
+		switch TVActionRow(rawValue: indexPath.row) {
+		case .editCurrentDice:
+			content.text = NSLocalizedString("tvos.presets.action.editDice", comment: "Edit current dice action")
+			content.secondaryText = currentNotation
+			cell.accessibilityIdentifier = "tvEditCurrentDice"
+		case .saveCurrentPreset:
+			content.text = NSLocalizedString("tvos.presets.action.saveCurrentPreset", comment: "Save current preset action")
+			content.secondaryText = currentNotation
+			cell.accessibilityIdentifier = "tvSaveCurrentPreset"
+		case .none:
+			content.text = nil
+			content.secondaryText = nil
+		}
+
+		content.textProperties.color = .white
+		content.textProperties.font = UIFont.preferredFont(forTextStyle: .title3)
+		content.secondaryTextProperties.color = UIColor(white: 1.0, alpha: 0.72)
+		content.secondaryTextProperties.font = UIFont.preferredFont(forTextStyle: .body)
+		cell.contentConfiguration = content
+		cell.accessoryType = .none
+		var background = UIBackgroundConfiguration.listCell()
+		background.backgroundColor = UIColor(white: 0.12, alpha: 0.96)
+		cell.backgroundConfiguration = background
+		cell.tintColor = .systemBlue
+	}
+#endif
+
 	func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-		onSelectNotationPreset?(presets[indexPath.row].notation)
+#if os(tvOS)
+		guard let section = TVSection(rawValue: indexPath.section) else { return }
+		switch section {
+		case .tvActions:
+			switch TVActionRow(rawValue: indexPath.row) {
+			case .editCurrentDice:
+				onEditCurrentDice?(currentNotation)
+			case .saveCurrentPreset:
+				saveCurrentNotationAsPreset()
+			case .none:
+				return
+			}
+		case .tvQuickRolls:
+			applyNotation(DiceTokenComposerState.quickRollNotations(recent: recentNotations)[indexPath.row])
+		case .presets:
+			applyNotation(presets[indexPath.row].notation)
+		}
+#else
+		applyNotation(presets[indexPath.row].notation)
+#endif
+	}
+
+	private func applyNotation(_ notation: String) {
+		onSelectNotationPreset?(notation)
 		dismiss(animated: true)
 	}
+
+#if os(tvOS)
+	private func saveCurrentNotationAsPreset() {
+		guard !presets.contains(where: { $0.notation.caseInsensitiveCompare(currentNotation) == .orderedSame }) else {
+			presentInlineError(NSLocalizedString("tvos.presets.exists", comment: "Preset already exists message"))
+			return
+		}
+		guard parser.parse(currentNotation) != nil else {
+			presentInlineError(NSLocalizedString("error.input.invalidFormat", comment: "Invalid format fallback"))
+			return
+		}
+		let title = currentNotation
+		if case let .failure(error) = onCreateCustomPreset?(title, currentNotation) {
+			presentInlineError(error.userMessage)
+			return
+		}
+		presets.append(DiceSavedPreset(title: title, notation: currentNotation))
+		tableView.reloadSections(IndexSet(integer: TVSection.presets.rawValue), with: .automatic)
+	}
+#endif
 
 #if !os(tvOS)
 	func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
@@ -140,7 +286,6 @@ final class PresetPickerViewController: UIViewController, UITableViewDataSource,
 		config.performsFirstActionWithFullSwipe = false
 		return config
 	}
-#endif
 
 	@objc private func addPreset() {
 		let alert = UIAlertController(
@@ -178,10 +323,6 @@ final class PresetPickerViewController: UIViewController, UITableViewDataSource,
 		present(alert, animated: true)
 	}
 
-	@objc private func close() {
-		dismiss(animated: true)
-	}
-
 	private func presentEditPreset(at index: Int) {
 		guard presets.indices.contains(index) else { return }
 		let existing = presets[index]
@@ -217,6 +358,11 @@ final class PresetPickerViewController: UIViewController, UITableViewDataSource,
 			}
 		})
 		present(alert, animated: true)
+	}
+#endif
+
+	@objc private func close() {
+		dismiss(animated: true)
 	}
 
 	private func presentInlineError(_ message: String) {

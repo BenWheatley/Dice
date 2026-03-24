@@ -1143,6 +1143,38 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(error, .invalidSegment(segment: "x", hintKey: "error.input.hint.invalidCharacter"))
 	}
 
+	func testDiceTokenComposerStateAddsUpdatesAndRemovesPoolsUsingSharedConfigurationModel() {
+		var state = DiceTokenComposerState(
+			configuration: RollConfiguration(
+				pools: [
+					DicePool(diceCount: 2, sideCount: 6, intuitive: false, colorTag: "red")
+				]
+			)
+		)
+
+		state.addPool()
+		state.setDiceCount(4, at: 1)
+		state.setSideCount(20, at: 1)
+		state.setIntuitive(true, at: 1)
+		state.setColor(.emerald, at: 1)
+		state.setSideCount(8, at: 0)
+		state.removePool(at: 0)
+
+		XCTAssertEqual(
+			state.configuration.pools,
+			[
+				DicePool(diceCount: 4, sideCount: 20, intuitive: true, colorTag: "green")
+			]
+		)
+		XCTAssertEqual(state.notation, "4d20i(green)")
+	}
+
+	func testDiceTokenComposerStateBuildsQuickRollsWithoutRepeatingCommonNotations() {
+		let quickRolls = DiceTokenComposerState.quickRollNotations(recent: ["6d6", "1d20", "3d20+1d6", "2d6"])
+
+		XCTAssertEqual(quickRolls, ["1d20", "2d6", "3d6", "6d6", "3d20+1d6"])
+	}
+
 	func testViewModelCreateCustomPresetValidatesNotationAndPersists() {
 		let suiteName = "DiceTests.viewmodel.custompresets.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!
@@ -2767,6 +2799,50 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(source.contains("reloadSections(IndexSet(integer: sectionIndex), with: .none)"))
 		XCTAssertFalse(source.contains("button.cancel"))
 		XCTAssertFalse(source.contains("Reset"))
+	}
+
+	func testTvOSPresetPickerOffersDiceComposerAndQuickRollSections() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let controllerURL = projectRoot
+			.appendingPathComponent("Dice")
+			.appendingPathComponent("PresetPickerViewController.swift")
+		let source = try String(contentsOf: controllerURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("var onEditCurrentDice: ((String) -> Void)?"))
+		XCTAssertTrue(source.contains("case tvActions"))
+		XCTAssertTrue(source.contains("case tvQuickRolls"))
+		XCTAssertTrue(source.contains("DiceTokenComposerState.quickRollNotations"))
+		XCTAssertTrue(source.contains("onEditCurrentDice?(currentNotation)"))
+	}
+
+	func testTvOSRootControllerPushesDiceComposerFromPresetPicker() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let controllerURL = projectRoot
+			.appendingPathComponent("Dice tvOS")
+			.appendingPathComponent("TVRootViewController.swift")
+		let source = try String(contentsOf: controllerURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("picker.onEditCurrentDice"))
+		XCTAssertTrue(source.contains("TVDiceComposerViewController"))
+		XCTAssertTrue(source.contains("recentNotations: viewModel.recentPresets"))
+	}
+
+	func testTvOSDiceComposerUsesSharedTokenComposerStateInsteadOfNotationParsing() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let controllerURL = projectRoot
+			.appendingPathComponent("Dice tvOS")
+			.appendingPathComponent("TVDiceComposerViewController.swift")
+		let source = try String(contentsOf: controllerURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("private var composerState: DiceTokenComposerState"))
+		XCTAssertTrue(source.contains("var onApplyConfiguration: ((RollConfiguration) -> Void)?"))
+		XCTAssertFalse(source.contains("DiceNotationParser()"))
 	}
 
 	func testProjectContainsTvOSTargetWithExpectedBuildSettings() throws {

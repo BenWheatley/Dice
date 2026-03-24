@@ -379,7 +379,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 
 #### Notation Entry and Composer UX
 
-- [ ] Replace free-form notation as the primary input path with a tvOS token composer plan: count stepper, die-size picker, add-token button, separator picker, and remove/clear actions.
+- [x] Replace free-form notation as the primary tvOS input path with a focus-first dice-set composer inside Presets, using shared `RollConfiguration`/`DicePool` state, large count/side controls, quick-roll rows, and save-current-preset actions instead of text-entry alerts.
 - [ ] Define a row of large “common roll” chips (`d20`, `2d6`, `3d6`, `6d6`, recent expressions) so the most common actions avoid any keyboard entry.
 - [ ] Design the token composer focus order so users can build mixed expressions without dead-end navigation or forced long lateral travel.
 - [ ] Plan an advanced text-entry escape hatch using the system tvOS keyboard for rare cases only, with explicit entry/exit focus restoration.
