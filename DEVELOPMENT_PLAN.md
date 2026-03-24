@@ -370,7 +370,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 #### Interaction Model and Information Architecture
 
 - [x] Write a tvOS UX decision record that fixes the primary control model: focus-first navigation, `Select` to activate, `Menu/Back` to dismiss or go up one level, and `Play/Pause` reserved for secondary/context actions only.
-- [ ] Define the tvOS top-level information architecture for a 10-foot interface: `Roll`, `Presets`, `History`, and `Settings`, with `Roll` as the launch default and state restoration back to the last-open tab.
+- [x] Define the tvOS top-level information architecture for a 10-foot interface: `Roll`, `Presets`, `History`, and `Settings`, with `Roll` as the launch default and state restoration back to the last-open tab.
 - [ ] Decide the tvOS root navigation shell (`UITabBarController` top tab bar vs custom focus-first shell) and document why it fits Dice better than touch-derived navigation patterns.
 - [ ] Create a screen-by-screen focus map for each tvOS destination, including initial focus target, directional neighbors, and focus-return behavior after dismissing overlays.
 - [ ] Define tvOS focus appearance for dice, cards, and actions (scale, parallax/shadow, glow, sound) with contrast/readability thresholds suitable for sofa distance.
