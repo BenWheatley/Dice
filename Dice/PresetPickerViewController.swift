@@ -7,7 +7,11 @@ final class PresetPickerViewController: UIViewController, UITableViewDataSource,
 
 	private static let unifiedPresetsInitializedKey = "Dice.unifiedPresetsInitialized"
 
+#if os(tvOS)
+	private let tableView = UITableView(frame: .zero, style: .grouped)
+#else
 	private let tableView = UITableView(frame: .zero, style: .insetGrouped)
+#endif
 	private let currentNotation: String
 	private var presets: [DiceSavedPreset]
 	private let parser = DiceNotationParser()
@@ -29,7 +33,11 @@ final class PresetPickerViewController: UIViewController, UITableViewDataSource,
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		title = NSLocalizedString("menu.presets.title", comment: "Preset menu title")
+#if os(tvOS)
+		view.backgroundColor = .black
+#else
 		view.backgroundColor = .systemBackground
+#endif
 		navigationItem.leftBarButtonItem = UIBarButtonItem(
 			title: NSLocalizedString("button.close", comment: "Close button title"),
 			style: .plain,
@@ -66,6 +74,13 @@ final class PresetPickerViewController: UIViewController, UITableViewDataSource,
 		tableView.delegate = self
 		tableView.register(UITableViewCell.self, forCellReuseIdentifier: "PresetCell")
 		tableView.accessibilityIdentifier = "presetsTable"
+#if os(tvOS)
+		tableView.backgroundColor = .clear
+		tableView.rowHeight = 92
+		tableView.sectionHeaderHeight = 56
+		tableView.remembersLastFocusedIndexPath = true
+		tableView.cellLayoutMarginsFollowReadableWidth = true
+#endif
 	}
 
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -82,9 +97,23 @@ final class PresetPickerViewController: UIViewController, UITableViewDataSource,
 		var content = UIListContentConfiguration.subtitleCell()
 		content.text = preset.title
 		content.secondaryText = preset.notation
+#if os(tvOS)
+		content.textProperties.color = .white
+		content.textProperties.font = UIFont.preferredFont(forTextStyle: .title3)
+		content.secondaryTextProperties.color = UIColor(white: 1.0, alpha: 0.72)
+		content.secondaryTextProperties.font = UIFont.preferredFont(forTextStyle: .body)
+#endif
 		cell.contentConfiguration = content
 		cell.accessibilityIdentifier = "preset_\(preset.id)"
+#if os(tvOS)
+		var background = UIBackgroundConfiguration.listCell()
+		background.backgroundColor = UIColor(white: 0.12, alpha: 0.96)
+		cell.backgroundConfiguration = background
+		cell.tintColor = .systemBlue
+		cell.accessoryType = .none
+#else
 		cell.accessoryType = .disclosureIndicator
+#endif
 		return cell
 	}
 
@@ -93,6 +122,7 @@ final class PresetPickerViewController: UIViewController, UITableViewDataSource,
 		dismiss(animated: true)
 	}
 
+#if !os(tvOS)
 	func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
 		let edit = UIContextualAction(style: .normal, title: NSLocalizedString("button.edit", comment: "Edit button title")) { [weak self] _, _, done in
 			guard let self else { return }
@@ -110,6 +140,7 @@ final class PresetPickerViewController: UIViewController, UITableViewDataSource,
 		config.performsFirstActionWithFullSwipe = false
 		return config
 	}
+#endif
 
 	@objc private func addPreset() {
 		let alert = UIAlertController(

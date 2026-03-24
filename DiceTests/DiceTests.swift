@@ -2694,6 +2694,81 @@ final class DiceTests: XCTestCase {
 		XCTAssertFalse(source.contains("SCNView("))
 	}
 
+	func testTvOSRootControllerUsesVisibleControlChromeInsteadOfHiddenGlobalPressHandling() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let controllerURL = projectRoot
+			.appendingPathComponent("Dice tvOS")
+			.appendingPathComponent("TVRootViewController.swift")
+		let source = try String(contentsOf: controllerURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("private let controlOverlayView = TVControlOverlayView()"))
+		XCTAssertTrue(source.contains("controlOverlayView.onRoll"))
+		XCTAssertTrue(source.contains("controlOverlayView.onShowPresets"))
+		XCTAssertTrue(source.contains("controlOverlayView.onShowSettings"))
+		XCTAssertTrue(source.contains("controlOverlayView.onShowHelp"))
+		XCTAssertTrue(source.contains("UIAlertController("))
+		XCTAssertTrue(source.contains("tvHelpShownKey"))
+		XCTAssertFalse(source.contains("override func pressesEnded("))
+	}
+
+	func testTvOSRootControllerPresentsPersistentSettingsController() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let controllerURL = projectRoot
+			.appendingPathComponent("Dice tvOS")
+			.appendingPathComponent("TVRootViewController.swift")
+		let source = try String(contentsOf: controllerURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("let settingsController = TVSettingsViewController("))
+		XCTAssertTrue(source.contains("settingsController.onSelectMode"))
+		XCTAssertTrue(source.contains("settingsController.onSelectTexture"))
+		XCTAssertTrue(source.contains("settingsController.onSelectTheme"))
+		XCTAssertFalse(source.contains("title: \"Settings\""))
+	}
+
+	func testTvOSControlOverlayDefinesLargeFocusableButtons() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let overlayURL = projectRoot
+			.appendingPathComponent("Dice tvOS")
+			.appendingPathComponent("TVControlOverlayView.swift")
+		let source = try String(contentsOf: overlayURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("rollButton.accessibilityIdentifier = \"tvRollButton\""))
+		XCTAssertTrue(source.contains("presetsButton.accessibilityIdentifier = \"tvPresetsButton\""))
+		XCTAssertTrue(source.contains("settingsButton.accessibilityIdentifier = \"tvSettingsButton\""))
+		XCTAssertTrue(source.contains("helpButton.accessibilityIdentifier = \"tvHelpButton\""))
+		XCTAssertTrue(source.contains("button.heightAnchor.constraint(greaterThanOrEqualToConstant: 72)"))
+		XCTAssertTrue(source.contains("var primaryFocusableView: UIView"))
+		XCTAssertTrue(source.contains("var boardViewportInsets"))
+		XCTAssertTrue(source.contains("summaryLabel.textColor = .white"))
+		XCTAssertTrue(source.contains("hintLabel.textColor = UIColor(white: 1.0, alpha: 0.72)"))
+		XCTAssertTrue(source.contains("configuration.baseForegroundColor = .white"))
+		XCTAssertTrue(source.contains("configuration.baseBackgroundColor = UIColor(white: 0.16, alpha: 0.94)"))
+	}
+
+	func testTvOSSettingsControllerUsesPersistentCheckmarkSections() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let controllerURL = projectRoot
+			.appendingPathComponent("Dice tvOS")
+			.appendingPathComponent("TVSettingsViewController.swift")
+		let source = try String(contentsOf: controllerURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("final class TVSettingsViewController: UITableViewController"))
+		XCTAssertTrue(source.contains("title = NSLocalizedString(\"settings.title\""))
+		XCTAssertTrue(source.contains("title: NSLocalizedString(\"button.close\""))
+		XCTAssertTrue(source.contains("cell.accessoryType = isSelected ? .checkmark : .none"))
+		XCTAssertTrue(source.contains("reloadSections(IndexSet(integer: sectionIndex), with: .none)"))
+		XCTAssertFalse(source.contains("button.cancel"))
+		XCTAssertFalse(source.contains("Reset"))
+	}
+
 	func testProjectContainsTvOSTargetWithExpectedBuildSettings() throws {
 		let projectRoot = URL(fileURLWithPath: #filePath)
 			.deletingLastPathComponent()
@@ -2724,6 +2799,26 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(source.contains("DiceSurfaceStoneShader.metal in Resources"))
 		XCTAssertTrue(source.contains("DiceTableSurfaceShader.metal in Resources"))
 		XCTAssertTrue(source.contains("Assets.xcassets in Resources"))
+		XCTAssertTrue(source.contains("TV2000652F71000300D1CE00 /* Localizable.strings in Resources */"))
+		XCTAssertTrue(source.contains("TV2000662F71000400D1CE00 /* InfoPlist.strings in Resources */"))
+	}
+
+	func testRollConfigurationModeInitializerPreservesPoolColorTags() {
+		let configuration = RollConfiguration(
+			pools: [
+				DicePool(diceCount: 2, sideCount: 6, intuitive: false, colorTag: "red"),
+				DicePool(diceCount: 1, sideCount: 20, intuitive: false, colorTag: "blue"),
+			],
+			intuitive: true
+		)
+
+		XCTAssertEqual(
+			configuration.pools,
+			[
+				DicePool(diceCount: 2, sideCount: 6, intuitive: true, colorTag: "red"),
+				DicePool(diceCount: 1, sideCount: 20, intuitive: true, colorTag: "blue"),
+			]
+		)
 	}
 
 	func testSystemThemePaletteResolvesDistinctLightAndDarkBackgrounds() {

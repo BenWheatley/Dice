@@ -7,6 +7,8 @@
 "button.ok" = "OK";
 "button.close" = "Close";
 "button.manage" = "Manage";
+"button.settings" = "Settings";
+"button.help" = "Help";
 "quickaction.rollNow.title" = "Roll Now";
 "quickaction.rollNow.subtitle" = "Roll using current notation";
 "quickaction.repeatLast.title" = "Repeat Last Roll";
@@ -46,6 +48,7 @@
 "menu.control.animations" = "Animations";
 "button.show-stats" = "Stats";
 "menu.control.actions" = "Actions";
+"menu.control.mode" = "Roll Mode";
 "menu.control.repeatLast" = "Repeat Last Roll";
 "menu.control.animationIntensity" = "Animation Intensity";
 "menu.control.theme" = "Theme";
@@ -64,6 +67,10 @@
 "theme.lightMode" = "Light Mode";
 "theme.darkMode" = "Dark Mode";
 "theme.system" = "System";
+"settings.title" = "Settings";
+"tvos.help.title" = "How to Use Dice";
+"tvos.help.message" = "Use the remote to focus a button. Select activates the focused action. Roll rerolls the current dice. Presets changes the dice set. Settings updates roll mode, background, and theme without closing. Menu goes back.";
+"tvos.control.hint" = "Use the remote to focus Roll, Presets, Settings, or Help.";
 "lighting.natural" = "Natural";
 "lighting.fixed" = "Fixed (3pm)";
 "texture.felt" = "Felt";

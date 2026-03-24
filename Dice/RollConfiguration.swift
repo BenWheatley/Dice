@@ -8,7 +8,14 @@ struct RollConfiguration {
 	}
 
 	init(pools: [DicePool], intuitive: Bool) {
-		self.pools = pools.map { DicePool(diceCount: $0.diceCount, sideCount: $0.sideCount, intuitive: intuitive) }
+		self.pools = pools.map {
+			DicePool(
+				diceCount: $0.diceCount,
+				sideCount: $0.sideCount,
+				intuitive: intuitive,
+				colorTag: $0.colorTag
+			)
+		}
 	}
 
 	init(pools: [DicePool]) {

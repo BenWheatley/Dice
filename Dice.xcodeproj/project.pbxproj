@@ -41,6 +41,11 @@
 		TV2000022F70000200D1CE00 /* DiceBoardLayoutCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = TV1000012F70000100D1CE00 /* DiceBoardLayoutCalculator.swift */; };
 		TV2000032F70000300D1CE00 /* TVAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = TV1000022F70000200D1CE00 /* TVAppDelegate.swift */; };
 		TV2000042F70000400D1CE00 /* TVRootViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = TV1000032F70000300D1CE00 /* TVRootViewController.swift */; };
+		TV2000632F71000100D1CE00 /* TVControlOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = TV1000052F71000100D1CE00 /* TVControlOverlayView.swift */; };
+		TV2000642F71000200D1CE00 /* PresetPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE100E2F50000E00D1CE00 /* PresetPickerViewController.swift */; };
+		TV2000652F71000300D1CE00 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = C0DE00302F44033100D1CE00 /* Localizable.strings */; };
+		TV2000662F71000400D1CE00 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = QA0100022F57000100D1CE00 /* InfoPlist.strings */; };
+		TV2000672F71000500D1CE00 /* TVSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = TV1000062F71000200D1CE00 /* TVSettingsViewController.swift */; };
 		TV2000052F70000500D1CE00 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B50B44D7215D804100A6399B /* Assets.xcassets */; };
 		TV2000062F70000600D1CE00 /* DiceSurfaceBaseShader.metal in Resources */ = {isa = PBXBuildFile; fileRef = E0CE10022F54000200D1CE00 /* DiceSurfaceBaseShader.metal */; };
 		TV2000072F70000700D1CE00 /* DiceSurfaceStoneShader.metal in Resources */ = {isa = PBXBuildFile; fileRef = E0CE10032F54000300D1CE00 /* DiceSurfaceStoneShader.metal */; };
@@ -312,6 +317,8 @@
 		TV1000022F70000200D1CE00 /* TVAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVAppDelegate.swift; sourceTree = "<group>"; };
 		TV1000032F70000300D1CE00 /* TVRootViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVRootViewController.swift; sourceTree = "<group>"; };
 		TV1000042F70000400D1CE00 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		TV1000052F71000100D1CE00 /* TVControlOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVControlOverlayView.swift; sourceTree = "<group>"; };
+		TV1000062F71000200D1CE00 /* TVSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVSettingsViewController.swift; sourceTree = "<group>"; };
 		B57DA5B92F4228E00057BC3A /* DiceCubeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceCubeView.swift; sourceTree = "<group>"; };
 		A1CE10012F5B000100D1CE00 /* WatchSingleDieConfigurationSyncBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSingleDieConfigurationSyncBridge.swift; sourceTree = "<group>"; };
 		A3CE10012F5C100100D1CE00 /* DiceSingleDieSceneGeometryFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceSingleDieSceneGeometryFactory.swift; sourceTree = "<group>"; };
@@ -576,6 +583,8 @@
 			isa = PBXGroup;
 			children = (
 				TV1000022F70000200D1CE00 /* TVAppDelegate.swift */,
+				TV1000052F71000100D1CE00 /* TVControlOverlayView.swift */,
+				TV1000062F71000200D1CE00 /* TVSettingsViewController.swift */,
 				TV1000032F70000300D1CE00 /* TVRootViewController.swift */,
 				TV1000042F70000400D1CE00 /* Info.plist */,
 			);
@@ -858,6 +867,8 @@
 				TV2000072F70000700D1CE00 /* DiceSurfaceStoneShader.metal in Resources */,
 				TV2000062F70000600D1CE00 /* DiceSurfaceBaseShader.metal in Resources */,
 				TV2000052F70000500D1CE00 /* Assets.xcassets in Resources */,
+				TV2000652F71000300D1CE00 /* Localizable.strings in Resources */,
+				TV2000662F71000400D1CE00 /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1054,7 +1065,10 @@
 				TV2000612F70006100D1CE00 /* RollOutcome.swift in Sources */,
 				TV2000622F70006200D1CE00 /* RollSessionSummary.swift in Sources */,
 				TV2000032F70000300D1CE00 /* TVAppDelegate.swift in Sources */,
+				TV2000632F71000100D1CE00 /* TVControlOverlayView.swift in Sources */,
+				TV2000672F71000500D1CE00 /* TVSettingsViewController.swift in Sources */,
 				TV2000042F70000400D1CE00 /* TVRootViewController.swift in Sources */,
+				TV2000642F71000200D1CE00 /* PresetPickerViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

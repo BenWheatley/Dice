@@ -375,6 +375,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [ ] Create a screen-by-screen focus map for each tvOS destination, including initial focus target, directional neighbors, and focus-return behavior after dismissing overlays.
 - [ ] Define tvOS focus appearance for dice, cards, and actions (scale, parallax/shadow, glow, sound) with contrast/readability thresholds suitable for sofa distance.
 - [ ] Plan a first-launch help surface that teaches the remote model in one screen (`Select`, directional movement, `Play/Pause`, `Menu`) without relying on long instructional text.
+- [x] Implement visible tvOS control chrome on top of the shared board render path: current-notation summary, large focusable `Roll`/`Presets`/`Settings`/`Help` actions, and first-launch help so the simulator shell is immediately discoverable.
 
 #### Notation Entry and Composer UX
 
