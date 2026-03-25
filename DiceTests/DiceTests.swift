@@ -3785,10 +3785,8 @@ final class DiceTests: XCTestCase {
 		controller.loadViewIfNeeded()
 
 		let field = findView(in: controller.view, accessibilityIdentifier: "dieInspectorSideCountField") as? UITextField
-		let button = findView(in: controller.view, accessibilityIdentifier: "dieInspectorApplySideCountButton") as? UIButton
 		XCTAssertEqual(field?.text, "8")
 		field?.text = "12"
-		button?.sendActions(for: .touchUpInside)
 
 		XCTAssertEqual(capturedSideCount, 12)
 	}

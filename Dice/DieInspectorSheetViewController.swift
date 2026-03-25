@@ -77,8 +77,6 @@ final class DieInspectorSheetViewController: UIViewController {
 	private let rerollButton = UIButton(type: .system)
 	private let lockButton = UIButton(type: .system)
 	private let sideCountTextField = UITextField()
-	private let applySideCountButton = UIButton(type: .system)
-	private let sideCountValidationLabel = UILabel()
 	private let styleSegmentedControl = UISegmentedControl(items: [])
 	private let styleSectionTitleLabel = UILabel()
 	private var colorButtons: [DiceDieColorPreset: UIButton] = [:]
@@ -159,23 +157,18 @@ final class DieInspectorSheetViewController: UIViewController {
 		}
 	}
 
-	@objc private func sideCountEditingChanged() {
-		sideCountValidationLabel.text = nil
-	}
-
-	@objc private func applySideCountTapped() {
-		guard let text = sideCountTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines),
-			  let sideCount = Int(text),
-			  Self.sideCountBounds.contains(sideCount) else {
-			sideCountValidationLabel.text = NSLocalizedString(
-				"die.options.faces.validation",
-				comment: "Validation message for invalid side-count entry"
-			)
-			return
-		}
-		sideCountValidationLabel.text = nil
-		onSetSideCount?(sideCount)
-	}
+    @objc private func sideCountEditingChanged() {
+        let text = sideCountTextField.text?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        // Convert safely, default to 2 if nil or invalid, then clip to range 2-100 inclusive
+        var sideCount = Int(text ?? "") ?? 2
+        sideCount = max(2, min(sideCount, 100))
+        
+        // Reflect corrected value back into the text field
+        sideCountTextField.text = "\(sideCount)"
+        
+        onSetSideCount?(sideCount)
+    }
 
 	private func configureLayout() {
 		scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -236,27 +229,10 @@ final class DieInspectorSheetViewController: UIViewController {
 		sideCountTextField.clearButtonMode = .whileEditing
 		sideCountTextField.accessibilityIdentifier = "dieInspectorSideCountField"
 		sideCountTextField.addTarget(self, action: #selector(sideCountEditingChanged), for: .editingChanged)
-#if !os(tvOS)
 		sideCountTextField.keyboardType = .numberPad
-#endif
-
-		var applyConfig = UIButton.Configuration.filled()
-		applyConfig.title = NSLocalizedString("die.options.faces.apply", comment: "Apply die side-count change")
-		applyConfig.cornerStyle = .large
-		applyConfig.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 12, bottom: 10, trailing: 12)
-		applySideCountButton.configuration = applyConfig
-		applySideCountButton.accessibilityIdentifier = "dieInspectorApplySideCountButton"
-		applySideCountButton.addTarget(self, action: #selector(applySideCountTapped), for: .touchUpInside)
-
-		sideCountValidationLabel.font = .preferredFont(forTextStyle: .footnote)
-		sideCountValidationLabel.adjustsFontForContentSizeCategory = true
-		sideCountValidationLabel.textColor = .systemRed
-		sideCountValidationLabel.numberOfLines = 0
-		sideCountValidationLabel.accessibilityIdentifier = "dieInspectorSideCountValidationLabel"
-
+        sideCountTextField.delegate = self
+        
 		body.addArrangedSubview(sideCountTextField)
-		body.addArrangedSubview(applySideCountButton)
-		body.addArrangedSubview(sideCountValidationLabel)
 		stackView.addArrangedSubview(section.container)
 	}
 
@@ -345,7 +321,6 @@ final class DieInspectorSheetViewController: UIViewController {
 			format: NSLocalizedString("die.options.faces.placeholder", comment: "Side-count entry placeholder"),
 			state.sideCount
 		)
-		sideCountValidationLabel.text = nil
 
 		styleSegmentedControl.removeAllSegments()
 		switch Self.styleSectionKind(for: state.sideCount) {
@@ -392,4 +367,19 @@ final class DieInspectorSheetViewController: UIViewController {
 		didNotifyDismiss = true
 		onDismiss?()
 	}
+}
+
+extension DieInspectorSheetViewController: UITextFieldDelegate {
+    func textField(_ textField: UITextField,
+                   shouldChangeCharactersIn range: NSRange,
+                   replacementString string: String) -> Bool {
+        if textField == sideCountTextField {
+            // Allow only digits
+            let allowedCharacters = CharacterSet.decimalDigits
+            let characterSet = CharacterSet(charactersIn: string)
+            return allowedCharacters.isSuperset(of: characterSet)
+        }
+        
+        return true
+    }
 }
