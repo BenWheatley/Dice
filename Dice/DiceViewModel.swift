@@ -355,14 +355,43 @@ final class DiceViewModel {
 
 	func applyPerDieColorSelection(_ preset: DiceDieColorPreset, at index: Int) {
 		guard appState.configuration.sideCountsPerDie.indices.contains(index) else { return }
-		let updatedPools = recoloredPools(
-			from: appState.configuration.pools,
-			dieIndex: index,
-			colorTag: preset.notationName
-		)
+		let updatedPools = rewrittenPools(from: appState.configuration.pools, dieIndex: index) { pool in
+			DicePool(
+				diceCount: 1,
+				sideCount: pool.sideCount,
+				intuitive: pool.intuitive,
+				colorTag: preset.notationName
+			)
+		}
 		appState.configuration = RollConfiguration(pools: updatedPools)
 		applyNotationColorOverrides(from: appState.configuration)
 		persistPreferences()
+	}
+
+	func setDieSideCount(_ sideCount: Int, forDieAt index: Int) -> Result<Void, DiceInputError> {
+		guard appState.configuration.sideCountsPerDie.indices.contains(index) else {
+			return .failure(.invalidFormat)
+		}
+		guard notationParser.sideBounds.contains(sideCount) else {
+			return .failure(.outOfBounds(diceBounds: notationParser.diceBounds, sideBounds: notationParser.sideBounds))
+		}
+
+		let updatedPools = rewrittenPools(from: appState.configuration.pools, dieIndex: index) { pool in
+			DicePool(
+				diceCount: 1,
+				sideCount: sideCount,
+				intuitive: pool.intuitive,
+				colorTag: pool.colorTag
+			)
+		}
+
+		appState.configuration = RollConfiguration(pools: updatedPools)
+		appState.diceSideCounts = appState.configuration.sideCountsPerDie
+		synchronizeDiceStateAfterConfigurationEdit(updatedIndex: index, updatedSideCount: sideCount)
+		applyNotationColorOverrides(from: appState.configuration)
+		refreshStatsAfterConfigurationEdit()
+		persistPreferences()
+		return .success(())
 	}
 
 	func setDieColorPreset(_ preset: DiceDieColorPreset, for sideCount: Int) {
@@ -607,7 +636,27 @@ final class DiceViewModel {
 		historyStore.savePersistedEntries(rollHistory.persistedRecentEntries)
 	}
 
-	private func recoloredPools(from pools: [DicePool], dieIndex: Int, colorTag: String) -> [DicePool] {
+	private func synchronizeDiceStateAfterConfigurationEdit(updatedIndex: Int, updatedSideCount: Int) {
+		let requiredCount = appState.configuration.diceCount
+		if appState.diceValues.count > requiredCount {
+			appState.diceValues = Array(appState.diceValues.prefix(requiredCount))
+		} else if appState.diceValues.count < requiredCount {
+			appState.diceValues.append(contentsOf: Array(repeating: 1, count: requiredCount - appState.diceValues.count))
+		}
+		if appState.diceValues.indices.contains(updatedIndex) {
+			appState.diceValues[updatedIndex] = max(1, min(appState.diceValues[updatedIndex], updatedSideCount))
+		}
+		appState.lockedDieIndices = appState.lockedDieIndices.filter { $0 >= 0 && $0 < requiredCount }
+		appState.dieFaceNumeralFontOverrides = appState.dieFaceNumeralFontOverrides.filter { $0.key >= 0 && $0.key < requiredCount }
+		appState.dieColorOverrides = appState.dieColorOverrides.filter { $0.key >= 0 && $0.key < requiredCount }
+	}
+
+	private func refreshStatsAfterConfigurationEdit() {
+		appState.stats.localTotals = localTotalsFromValues(appState.diceValues, sideCounts: appState.diceSideCounts)
+		appState.stats.sum = appState.diceValues.reduce(0, +)
+	}
+
+	private func rewrittenPools(from pools: [DicePool], dieIndex: Int, transform: (DicePool) -> DicePool) -> [DicePool] {
 		var rebuilt: [DicePool] = []
 		rebuilt.reserveCapacity(pools.count + 2)
 
@@ -634,12 +683,7 @@ final class DiceViewModel {
 					colorTag: pool.colorTag
 				))
 			}
-			rebuilt.append(DicePool(
-				diceCount: 1,
-				sideCount: pool.sideCount,
-				intuitive: pool.intuitive,
-				colorTag: colorTag
-			))
+			rebuilt.append(transform(pool))
 			if rightCount > 0 {
 				rebuilt.append(DicePool(
 					diceCount: rightCount,

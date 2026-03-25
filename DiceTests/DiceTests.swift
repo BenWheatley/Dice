@@ -1175,6 +1175,77 @@ final class DiceTests: XCTestCase {
 		XCTAssertEqual(quickRolls, ["1d20", "2d6", "3d6", "6d6", "3d20+1d6"])
 	}
 
+	func testViewModelSetDieSideCountPreservesTargetModeAndColorOverride() {
+		var scripted = [4, 5, 6, 7]
+		let viewModel = DiceViewModel(
+			rollSession: DiceRollSession(
+				intuitiveRoller: IntuitiveRoller(
+					fallbackRoller: TrueRandomRoller { _ in scripted.removeFirst() },
+					randomDouble: { 0.5 }
+				)
+			)
+		)
+
+		switch viewModel.rollFromInput("1d6(red)+2d8i(blue)+1d10") {
+		case .failure(let error):
+			XCTFail("Expected parse success, got \(error)")
+		case .success:
+			break
+		}
+
+		let originalValues = viewModel.diceValues
+		let result = viewModel.setDieSideCount(20, forDieAt: 2)
+		if case let .failure(error) = result {
+			XCTFail("Expected side-count update success, got \(error)")
+		}
+		XCTAssertEqual(
+			viewModel.configuration.pools,
+			[
+				DicePool(diceCount: 1, sideCount: 6, intuitive: false, colorTag: "red"),
+				DicePool(diceCount: 1, sideCount: 8, intuitive: true, colorTag: "blue"),
+				DicePool(diceCount: 1, sideCount: 20, intuitive: true, colorTag: "blue"),
+				DicePool(diceCount: 1, sideCount: 10, intuitive: false, colorTag: nil),
+			]
+		)
+		XCTAssertEqual(viewModel.diceSideCounts, [6, 8, 20, 10])
+		XCTAssertEqual(viewModel.dieColorOverridesByIndex[2], .sapphire)
+		XCTAssertEqual(viewModel.configuration.perDieIntuitiveFlags, [false, true, true, false])
+		XCTAssertEqual(viewModel.diceValues[0], originalValues[0])
+		XCTAssertEqual(viewModel.diceValues[1], originalValues[1])
+		XCTAssertEqual(viewModel.diceValues[2], originalValues[2])
+		XCTAssertEqual(viewModel.diceValues[3], originalValues[3])
+	}
+
+	func testViewModelSetDieSideCountClampsCurrentValueAndRejectsOutOfBounds() {
+		var scripted = [10]
+		let viewModel = DiceViewModel(
+			rollSession: DiceRollSession(
+				intuitiveRoller: IntuitiveRoller(
+					fallbackRoller: TrueRandomRoller { _ in scripted.removeFirst() },
+					randomDouble: { 0.5 }
+				)
+			)
+		)
+
+		switch viewModel.rollFromInput("1d20") {
+		case .failure(let error):
+			XCTFail("Expected parse success, got \(error)")
+		case .success:
+			break
+		}
+
+		XCTAssertEqual(viewModel.diceValues, [10])
+		if case let .failure(error) = viewModel.setDieSideCount(6, forDieAt: 0) {
+			XCTFail("Expected side-count update success, got \(error)")
+		}
+		XCTAssertEqual(viewModel.diceSideCounts, [6])
+		XCTAssertEqual(viewModel.diceValues, [6])
+		guard case let .failure(error) = viewModel.setDieSideCount(101, forDieAt: 0) else {
+			return XCTFail("Expected out-of-bounds failure")
+		}
+		XCTAssertEqual(error, .outOfBounds(diceBounds: 1...30, sideBounds: 2...100))
+	}
+
 	func testViewModelCreateCustomPresetValidatesNotationAndPersists() {
 		let suiteName = "DiceTests.viewmodel.custompresets.\(UUID().uuidString)"
 		let defaults = UserDefaults(suiteName: suiteName)!
@@ -3615,6 +3686,30 @@ final class DiceTests: XCTestCase {
 	func testDieInspectorUsesNumeralFontForNonD6Dice() {
 		XCTAssertEqual(DieInspectorSheetViewController.styleSectionKind(for: 20), .numeralFont)
 		XCTAssertEqual(DieInspectorSheetViewController.styleSectionKind(for: 4), .numeralFont)
+	}
+
+	func testDieInspectorExposesSideCountEditorAndAppliesValidEntry() {
+		let controller = DieInspectorSheetViewController(
+			state: .init(
+				dieIndex: 0,
+				sideCount: 8,
+				isLocked: false,
+				selectedColor: .ivory,
+				d6PipStyle: .round,
+				selectedFont: .classic
+			)
+		)
+		var capturedSideCount: Int?
+		controller.onSetSideCount = { capturedSideCount = $0 }
+		controller.loadViewIfNeeded()
+
+		let field = findView(in: controller.view, accessibilityIdentifier: "dieInspectorSideCountField") as? UITextField
+		let button = findView(in: controller.view, accessibilityIdentifier: "dieInspectorApplySideCountButton") as? UIButton
+		XCTAssertEqual(field?.text, "8")
+		field?.text = "12"
+		button?.sendActions(for: .touchUpInside)
+
+		XCTAssertEqual(capturedSideCount, 12)
 	}
 
 	func testControllerEmbedsDiceBoardSurfaceDirectly() {

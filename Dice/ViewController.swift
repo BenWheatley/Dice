@@ -395,6 +395,10 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 			guard let self else { return }
 			self.selectFaceNumeralFont(font, dieIndex: dieIndex)
 		}
+		inspector.onSetSideCount = { [weak self] sideCount in
+			guard let self else { return }
+			self.updateDieSideCount(sideCount, dieIndex: dieIndex)
+		}
 	}
 
 	private func dieInspectorState(for index: Int) -> DieInspectorSheetViewController.State {
@@ -454,6 +458,18 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 		viewModel.toggleDieLock(at: index)
 		updateDiceBoard(animated: false)
 		refreshDieInspectorIfVisible()
+	}
+
+	private func updateDieSideCount(_ sideCount: Int, dieIndex: Int) {
+		switch viewModel.setDieSideCount(sideCount, forDieAt: dieIndex) {
+		case .success:
+			updateNotationField()
+			updateDiceBoard(animated: false)
+			refreshSystemSurfaces()
+			refreshDieInspectorIfVisible()
+		case .failure:
+			return
+		}
 	}
 
 	private func updateDiceBoard(animated: Bool, animatingIndices: Set<Int>? = nil) {

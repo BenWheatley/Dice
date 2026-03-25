@@ -130,6 +130,10 @@
 "die.options.unlock" = "Unlock Die";
 "die.options.color" = "Die Color";
 "die.options.color.title" = "d%d Color";
+"die.options.faces" = "Die Faces";
+"die.options.faces.apply" = "Apply Face Count";
+"die.options.faces.placeholder" = "d%d";
+"die.options.faces.validation" = "Enter a whole number from 2 to 100.";
 "die.options.pips" = "D6 Pip Style";
 "die.options.pips.title" = "D6 Pip Style";
 "die.options.font" = "Numeral Font";

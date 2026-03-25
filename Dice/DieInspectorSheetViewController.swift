@@ -1,6 +1,8 @@
 import UIKit
 
 final class DieInspectorSheetViewController: UIViewController {
+	private static let sideCountBounds = 2...100
+
 	enum StyleSectionKind: Equatable {
 		case d6Pips
 		case numeralFont
@@ -20,12 +22,16 @@ final class DieInspectorSheetViewController: UIViewController {
 	var onSetColor: ((DiceDieColorPreset) -> Void)?
 	var onSetD6PipStyle: ((DiceD6PipStyle) -> Void)?
 	var onSetFaceNumeralFont: ((DiceFaceNumeralFont) -> Void)?
+	var onSetSideCount: ((Int) -> Void)?
 	var onDismiss: (() -> Void)?
 
 	private let scrollView = UIScrollView()
 	private let stackView = UIStackView()
 	private let rerollButton = UIButton(type: .system)
 	private let lockButton = UIButton(type: .system)
+	private let sideCountTextField = UITextField()
+	private let applySideCountButton = UIButton(type: .system)
+	private let sideCountValidationLabel = UILabel()
 	private let styleSegmentedControl = UISegmentedControl(items: [])
 	private let styleSectionTitleLabel = UILabel()
 	private var colorButtons: [DiceDieColorPreset: UIButton] = [:]
@@ -97,6 +103,24 @@ final class DieInspectorSheetViewController: UIViewController {
 		}
 	}
 
+	@objc private func sideCountEditingChanged() {
+		sideCountValidationLabel.text = nil
+	}
+
+	@objc private func applySideCountTapped() {
+		guard let text = sideCountTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines),
+			  let sideCount = Int(text),
+			  Self.sideCountBounds.contains(sideCount) else {
+			sideCountValidationLabel.text = NSLocalizedString(
+				"die.options.faces.validation",
+				comment: "Validation message for invalid side-count entry"
+			)
+			return
+		}
+		sideCountValidationLabel.text = nil
+		onSetSideCount?(sideCount)
+	}
+
 	private func configureLayout() {
 		scrollView.translatesAutoresizingMaskIntoConstraints = false
 		stackView.translatesAutoresizingMaskIntoConstraints = false
@@ -119,6 +143,7 @@ final class DieInspectorSheetViewController: UIViewController {
 		])
 
 		configureActionSection()
+		configureSideCountSection()
 		configureColorSection()
 		configureStyleSection()
 	}
@@ -144,6 +169,38 @@ final class DieInspectorSheetViewController: UIViewController {
 
 		body.addArrangedSubview(rerollButton)
 		body.addArrangedSubview(lockButton)
+		stackView.addArrangedSubview(section.container)
+	}
+
+	private func configureSideCountSection() {
+		let section = makeSection(titleKey: "die.options.faces")
+		let body = section.body
+
+		sideCountTextField.borderStyle = .roundedRect
+		sideCountTextField.clearButtonMode = .whileEditing
+		sideCountTextField.accessibilityIdentifier = "dieInspectorSideCountField"
+		sideCountTextField.addTarget(self, action: #selector(sideCountEditingChanged), for: .editingChanged)
+#if !os(tvOS)
+		sideCountTextField.keyboardType = .numberPad
+#endif
+
+		var applyConfig = UIButton.Configuration.filled()
+		applyConfig.title = NSLocalizedString("die.options.faces.apply", comment: "Apply die side-count change")
+		applyConfig.cornerStyle = .large
+		applyConfig.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 12, bottom: 10, trailing: 12)
+		applySideCountButton.configuration = applyConfig
+		applySideCountButton.accessibilityIdentifier = "dieInspectorApplySideCountButton"
+		applySideCountButton.addTarget(self, action: #selector(applySideCountTapped), for: .touchUpInside)
+
+		sideCountValidationLabel.font = .preferredFont(forTextStyle: .footnote)
+		sideCountValidationLabel.adjustsFontForContentSizeCategory = true
+		sideCountValidationLabel.textColor = .systemRed
+		sideCountValidationLabel.numberOfLines = 0
+		sideCountValidationLabel.accessibilityIdentifier = "dieInspectorSideCountValidationLabel"
+
+		body.addArrangedSubview(sideCountTextField)
+		body.addArrangedSubview(applySideCountButton)
+		body.addArrangedSubview(sideCountValidationLabel)
 		stackView.addArrangedSubview(section.container)
 	}
 
@@ -224,6 +281,15 @@ final class DieInspectorSheetViewController: UIViewController {
 			config?.background.strokeWidth = 1
 			button.configuration = config
 		}
+
+		if !sideCountTextField.isFirstResponder {
+			sideCountTextField.text = String(state.sideCount)
+		}
+		sideCountTextField.placeholder = String(
+			format: NSLocalizedString("die.options.faces.placeholder", comment: "Side-count entry placeholder"),
+			state.sideCount
+		)
+		sideCountValidationLabel.text = nil
 
 		styleSegmentedControl.removeAllSegments()
 		switch Self.styleSectionKind(for: state.sideCount) {
