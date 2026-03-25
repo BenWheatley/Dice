@@ -50,8 +50,8 @@ final class TVControlOverlayView: UIView {
 		configure(button: helpButton, title: NSLocalizedString("button.help", comment: "Help button title"))
 	}
 
-	func updateSummary(notation: String, mode: String) {
-		summaryLabel.text = "\(notation) • \(mode)"
+	func updateSummary(notation: String) {
+		summaryLabel.text = "\(notation)"
 		hintLabel.text = NSLocalizedString("tvos.control.hint", comment: "tvOS control hint")
 	}
 

@@ -136,18 +136,8 @@ final class TVRootViewController: UIViewController {
 
 	private func updateOverlaySummary() {
 		controlOverlayView.updateSummary(
-			notation: viewModel.configuration.notation,
-			mode: currentModeText()
+			notation: viewModel.configuration.notation
 		)
-	}
-
-	private func currentModeText() -> String {
-		let configuration = viewModel.configuration
-		if configuration.hasIntuitivePools && configuration.hasTrueRandomPools {
-			return NSLocalizedString("stats.mode.mixed", comment: "Mixed roll mode")
-		}
-		let key = configuration.hasIntuitivePools ? "stats.mode.intuitive" : "stats.mode.trueRandom"
-		return NSLocalizedString(key, comment: "tvOS roll mode summary")
 	}
 
 	private func presentHelpIfNeeded() {
