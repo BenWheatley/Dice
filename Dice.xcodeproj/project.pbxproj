@@ -51,6 +51,8 @@
 		TV2000692F72000300D1CE00 /* TVDiceComposerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = TV1000072F72000100D1CE00 /* TVDiceComposerViewController.swift */; };
 		TV2000702F72000400D1CE00 /* TVDicePoolEditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = TV1000082F72000200D1CE00 /* TVDicePoolEditorViewController.swift */; };
 		TV2000712F72000500D1CE00 /* TVStepperTableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = TV1000092F72000300D1CE00 /* TVStepperTableViewCell.swift */; };
+		TV2000722F73000100D1CE00 /* TVDiceSelectionOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = TV1000102F73000100D1CE00 /* TVDiceSelectionOverlayView.swift */; };
+		TV2000732F73000200D1CE00 /* DieInspectorSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3CE10012F5A000100D1CE00 /* DieInspectorSheetViewController.swift */; };
 		TV2000052F70000500D1CE00 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B50B44D7215D804100A6399B /* Assets.xcassets */; };
 		TV2000062F70000600D1CE00 /* DiceSurfaceBaseShader.metal in Resources */ = {isa = PBXBuildFile; fileRef = E0CE10022F54000200D1CE00 /* DiceSurfaceBaseShader.metal */; };
 		TV2000072F70000700D1CE00 /* DiceSurfaceStoneShader.metal in Resources */ = {isa = PBXBuildFile; fileRef = E0CE10032F54000300D1CE00 /* DiceSurfaceStoneShader.metal */; };
@@ -133,6 +135,8 @@
 		D1CE11042F50000400D1CE00 /* DiceOptionsSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10042F50000400D1CE00 /* DiceOptionsSheetViewController.swift */; };
 		D1CE11052F50000500D1CE00 /* DiceOptionsSectionBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10052F50000500D1CE00 /* DiceOptionsSectionBuilder.swift */; };
 		D3CE11012F5A000100D1CE00 /* DieInspectorSheetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3CE10012F5A000100D1CE00 /* DieInspectorSheetViewController.swift */; };
+		D4CE11012F73000100D1CE00 /* DieInspectorSheetCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4CE10012F73000100D1CE00 /* DieInspectorSheetCoordinator.swift */; };
+		D4CE11022F73000100D1CE00 /* DieInspectorSheetCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4CE10012F73000100D1CE00 /* DieInspectorSheetCoordinator.swift */; };
 		D1CE11072F50000700D1CE00 /* DiceSoundEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10072F50000700D1CE00 /* DiceSoundEngine.swift */; };
 		D1CE11082F50000800D1CE00 /* DiceAudioFormatResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE10082F50000800D1CE00 /* DiceAudioFormatResolver.swift */; };
 		D1CE110B2F50000B00D1CE00 /* HistoryRowFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1CE100B2F50000B00D1CE00 /* HistoryRowFormatter.swift */; };
@@ -327,6 +331,7 @@
 		TV1000072F72000100D1CE00 /* TVDiceComposerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVDiceComposerViewController.swift; sourceTree = "<group>"; };
 		TV1000082F72000200D1CE00 /* TVDicePoolEditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVDicePoolEditorViewController.swift; sourceTree = "<group>"; };
 		TV1000092F72000300D1CE00 /* TVStepperTableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVStepperTableViewCell.swift; sourceTree = "<group>"; };
+		TV1000102F73000100D1CE00 /* TVDiceSelectionOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TVDiceSelectionOverlayView.swift; sourceTree = "<group>"; };
 		B57DA5B92F4228E00057BC3A /* DiceCubeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceCubeView.swift; sourceTree = "<group>"; };
 		A1CE10012F5B000100D1CE00 /* WatchSingleDieConfigurationSyncBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSingleDieConfigurationSyncBridge.swift; sourceTree = "<group>"; };
 		A3CE10012F5C100100D1CE00 /* DiceSingleDieSceneGeometryFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceSingleDieSceneGeometryFactory.swift; sourceTree = "<group>"; };
@@ -370,6 +375,7 @@
 		D1CE10042F50000400D1CE00 /* DiceOptionsSheetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceOptionsSheetViewController.swift; sourceTree = "<group>"; };
 		D1CE10052F50000500D1CE00 /* DiceOptionsSectionBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceOptionsSectionBuilder.swift; sourceTree = "<group>"; };
 		D3CE10012F5A000100D1CE00 /* DieInspectorSheetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DieInspectorSheetViewController.swift; sourceTree = "<group>"; };
+		D4CE10012F73000100D1CE00 /* DieInspectorSheetCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DieInspectorSheetCoordinator.swift; sourceTree = "<group>"; };
 		D1CE10072F50000700D1CE00 /* DiceSoundEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceSoundEngine.swift; sourceTree = "<group>"; };
 		D1CE10082F50000800D1CE00 /* DiceAudioFormatResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiceAudioFormatResolver.swift; sourceTree = "<group>"; };
 		D1CE100B2F50000B00D1CE00 /* HistoryRowFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryRowFormatter.swift; sourceTree = "<group>"; };
@@ -538,6 +544,7 @@
 				D1CE100C2F50000C00D1CE00 /* HistorySummaryCardRenderer.swift */,
 				D1CE10042F50000400D1CE00 /* DiceOptionsSheetViewController.swift */,
 				D3CE10012F5A000100D1CE00 /* DieInspectorSheetViewController.swift */,
+				D4CE10012F73000100D1CE00 /* DieInspectorSheetCoordinator.swift */,
 				D1CE10052F50000500D1CE00 /* DiceOptionsSectionBuilder.swift */,
 				D1CE10072F50000700D1CE00 /* DiceSoundEngine.swift */,
 				D1CE10082F50000800D1CE00 /* DiceAudioFormatResolver.swift */,
@@ -598,6 +605,7 @@
 				TV1000072F72000100D1CE00 /* TVDiceComposerViewController.swift */,
 				TV1000082F72000200D1CE00 /* TVDicePoolEditorViewController.swift */,
 				TV1000092F72000300D1CE00 /* TVStepperTableViewCell.swift */,
+				TV1000102F73000100D1CE00 /* TVDiceSelectionOverlayView.swift */,
 				TV1000032F70000300D1CE00 /* TVRootViewController.swift */,
 				TV1000042F70000400D1CE00 /* Info.plist */,
 			);
@@ -959,6 +967,7 @@
 				D1CE110C2F50000C00D1CE00 /* HistorySummaryCardRenderer.swift in Sources */,
 				D1CE11042F50000400D1CE00 /* DiceOptionsSheetViewController.swift in Sources */,
 				D3CE11012F5A000100D1CE00 /* DieInspectorSheetViewController.swift in Sources */,
+				D4CE11012F73000100D1CE00 /* DieInspectorSheetCoordinator.swift in Sources */,
 				D1CE11052F50000500D1CE00 /* DiceOptionsSectionBuilder.swift in Sources */,
 				D1CE11072F50000700D1CE00 /* DiceSoundEngine.swift in Sources */,
 				D1CE11082F50000800D1CE00 /* DiceAudioFormatResolver.swift in Sources */,
@@ -1084,9 +1093,12 @@
 				TV2000692F72000300D1CE00 /* TVDiceComposerViewController.swift in Sources */,
 				TV2000702F72000400D1CE00 /* TVDicePoolEditorViewController.swift in Sources */,
 				TV2000712F72000500D1CE00 /* TVStepperTableViewCell.swift in Sources */,
+				TV2000722F73000100D1CE00 /* TVDiceSelectionOverlayView.swift in Sources */,
+				TV2000732F73000200D1CE00 /* DieInspectorSheetViewController.swift in Sources */,
 				TV2000042F70000400D1CE00 /* TVRootViewController.swift in Sources */,
 				TV2000642F71000200D1CE00 /* PresetPickerViewController.swift in Sources */,
 				TV2000682F72000200D1CE00 /* DiceTokenComposerState.swift in Sources */,
+				D4CE11022F73000100D1CE00 /* DieInspectorSheetCoordinator.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

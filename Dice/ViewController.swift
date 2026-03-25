@@ -329,16 +329,16 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 		guard viewModel.diceValues.indices.contains(index), viewModel.diceSideCounts.indices.contains(index) else { return }
 		selectedDieIndex = index
 		diceBoardView.setSelectedDieIndex(index)
-		let state = dieInspectorState(for: index)
+		let state = DieInspectorSheetCoordinator.makeState(viewModel: viewModel, dieIndex: index)
 
 		if let inspector = dieInspectorSheetController, inspector.presentingViewController != nil {
-			bindDieInspectorCallbacks(inspector, dieIndex: index)
+			DieInspectorSheetCoordinator.bind(inspector, handlers: dieInspectorHandlers(for: index))
 			inspector.updateState(state)
 			return
 		}
 
 		let inspector = DieInspectorSheetViewController(state: state)
-		bindDieInspectorCallbacks(inspector, dieIndex: index)
+		DieInspectorSheetCoordinator.bind(inspector, handlers: dieInspectorHandlers(for: index))
 		inspector.onDismiss = { [weak self, weak inspector] in
 			guard let self else { return }
 			if self.dieInspectorSheetController === inspector {
@@ -348,15 +348,10 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 			self.diceBoardView.setSelectedDieIndex(nil)
 		}
 
-		let navigationController = UINavigationController(rootViewController: inspector)
-		switch viewModel.theme {
-		case .lightMode:
-			navigationController.overrideUserInterfaceStyle = .light
-		case .darkMode:
-			navigationController.overrideUserInterfaceStyle = .dark
-		case .system:
-			navigationController.overrideUserInterfaceStyle = .unspecified
-		}
+		let navigationController = DieInspectorSheetCoordinator.themedNavigationController(
+			rootViewController: inspector,
+			theme: viewModel.theme
+		)
 		navigationController.modalPresentationStyle = .pageSheet
         // Deliberate product decision: keep a compact fixed-height stats sheet.
         // This is intentionally constrained to avoid covering the board UI.
@@ -374,44 +369,32 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 		dieInspectorSheetController = inspector
 	}
 
-	private func bindDieInspectorCallbacks(_ inspector: DieInspectorSheetViewController, dieIndex: Int) {
-		inspector.onReroll = { [weak self] in
-			guard let self else { return }
-			_ = self.rerollDie(at: dieIndex)
-		}
-		inspector.onToggleLock = { [weak self] in
-			guard let self else { return }
-			self.toggleDieLock(at: dieIndex)
-		}
-		inspector.onSetColor = { [weak self] preset in
-			guard let self else { return }
-			self.selectDieColorPreset(preset, index: dieIndex)
-		}
-		inspector.onSetD6PipStyle = { [weak self] style in
-			guard let self else { return }
-			self.selectD6PipStyle(style)
-		}
-		inspector.onSetFaceNumeralFont = { [weak self] font in
-			guard let self else { return }
-			self.selectFaceNumeralFont(font, dieIndex: dieIndex)
-		}
-		inspector.onSetSideCount = { [weak self] sideCount in
-			guard let self else { return }
-			self.updateDieSideCount(sideCount, dieIndex: dieIndex)
-		}
-	}
-
-	private func dieInspectorState(for index: Int) -> DieInspectorSheetViewController.State {
-		let sideCount = viewModel.diceSideCounts[index]
-		let selectedColor = viewModel.dieColorPreset(forDieAt: index) ?? viewModel.dieColorPreset(for: sideCount)
-		let selectedFont = viewModel.faceNumeralFont(forDieAt: index) ?? viewModel.faceNumeralFont
-		return DieInspectorSheetViewController.State(
-			dieIndex: index,
-			sideCount: sideCount,
-			isLocked: viewModel.isDieLocked(at: index),
-			selectedColor: selectedColor,
-			d6PipStyle: viewModel.d6PipStyle,
-			selectedFont: selectedFont
+	private func dieInspectorHandlers(for dieIndex: Int) -> DieInspectorSheetHandlers {
+		DieInspectorSheetHandlers(
+			reroll: { [weak self] in
+				guard let self else { return }
+				_ = self.rerollDie(at: dieIndex)
+			},
+			toggleLock: { [weak self] in
+				guard let self else { return }
+				self.toggleDieLock(at: dieIndex)
+			},
+			setColor: { [weak self] preset in
+				guard let self else { return }
+				self.selectDieColorPreset(preset, index: dieIndex)
+			},
+			setD6PipStyle: { [weak self] style in
+				guard let self else { return }
+				self.selectD6PipStyle(style)
+			},
+			setFaceNumeralFont: { [weak self] font in
+				guard let self else { return }
+				self.selectFaceNumeralFont(font, dieIndex: dieIndex)
+			},
+			setSideCount: { [weak self] sideCount in
+				guard let self else { return }
+				self.updateDieSideCount(sideCount, dieIndex: dieIndex)
+			}
 		)
 	}
 
@@ -419,8 +402,8 @@ class DiceViewController: UIViewController, UITextFieldDelegate {
 		guard let inspector = dieInspectorSheetController, inspector.presentingViewController != nil else { return }
 		guard let index = selectedDieIndex else { return }
 		guard viewModel.diceValues.indices.contains(index), viewModel.diceSideCounts.indices.contains(index) else { return }
-		bindDieInspectorCallbacks(inspector, dieIndex: index)
-		inspector.updateState(dieInspectorState(for: index))
+		DieInspectorSheetCoordinator.bind(inspector, handlers: dieInspectorHandlers(for: index))
+		inspector.updateState(DieInspectorSheetCoordinator.makeState(viewModel: viewModel, dieIndex: index))
 	}
 
 #if DEBUG

@@ -5,9 +5,12 @@ final class TVRootViewController: UIViewController {
 
 	private let viewModel = DiceViewModel()
 	private let diceBoardView = DiceCubeView()
+	private let diceSelectionOverlayView = TVDiceSelectionOverlayView()
 	private let controlOverlayView = TVControlOverlayView()
 	private var hasPerformedInitialRoll = false
 	private var previousBoardLayoutBounds: CGRect?
+	private var selectedDieIndex: Int?
+	private weak var dieInspectorSheetController: DieInspectorSheetViewController?
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -36,7 +39,7 @@ final class TVRootViewController: UIViewController {
 	}
 
 	override var preferredFocusEnvironments: [UIFocusEnvironment] {
-		[controlOverlayView.primaryFocusableView]
+		[diceSelectionOverlayView.primaryFocusableView ?? controlOverlayView.primaryFocusableView]
 	}
 
 	private func configureBoard() {
@@ -49,6 +52,24 @@ final class TVRootViewController: UIViewController {
 			diceBoardView.topAnchor.constraint(equalTo: view.topAnchor),
 			diceBoardView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
 		])
+
+		view.addSubview(diceSelectionOverlayView)
+		NSLayoutConstraint.activate([
+			diceSelectionOverlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+			diceSelectionOverlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+			diceSelectionOverlayView.topAnchor.constraint(equalTo: view.topAnchor),
+			diceSelectionOverlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+		])
+
+		diceSelectionOverlayView.onSelectDie = { [weak self] index in
+			self?.presentDieInspector(for: index)
+		}
+		diceSelectionOverlayView.onFocusedDie = { [weak self] index in
+			guard let self else { return }
+			guard self.dieInspectorSheetController?.presentingViewController == nil else { return }
+			self.selectedDieIndex = index
+			self.diceBoardView.setSelectedDieIndex(index)
+		}
 	}
 
 	private func configureControlOverlay() {
@@ -89,11 +110,16 @@ final class TVRootViewController: UIViewController {
 		let sideCounts = viewModel.diceSideCounts
 		guard !sideCounts.isEmpty else {
 			diceBoardView.isHidden = true
+			diceSelectionOverlayView.isHidden = true
 			diceBoardView.setDice(values: [], centers: [], sideLength: 0, sideCounts: [], animated: false)
+			diceSelectionOverlayView.updateDiceTargets(centers: [], sideLength: 0)
+			selectedDieIndex = nil
+			diceBoardView.setSelectedDieIndex(nil)
 			return
 		}
 
 		diceBoardView.isHidden = false
+		diceSelectionOverlayView.isHidden = false
 		diceBoardView.setDieFinish(viewModel.dieFinish)
 		diceBoardView.setEdgeOutlinesEnabled(viewModel.edgeOutlinesEnabled)
 		diceBoardView.setDieColorPreferences(viewModel.dieColorPreferences)
@@ -131,6 +157,12 @@ final class TVRootViewController: UIViewController {
 			lockedIndices: viewModel.lockedDieIndices,
 			animated: animated
 		)
+		if let selectedDieIndex, selectedDieIndex >= values.count {
+			self.selectedDieIndex = nil
+		}
+		diceSelectionOverlayView.updateDiceTargets(centers: layout.centers, sideLength: layout.sideLength)
+		diceSelectionOverlayView.setPreferredFocusedDieIndex(selectedDieIndex)
+		diceBoardView.setSelectedDieIndex(selectedDieIndex)
 		updateOverlaySummary()
 	}
 
@@ -199,6 +231,90 @@ final class TVRootViewController: UIViewController {
 		case let .failure(error):
 			presentInlineAlert(title: "Invalid Preset", message: error.userMessage)
 		}
+	}
+
+	private func presentDieInspector(for index: Int) {
+		guard viewModel.diceValues.indices.contains(index), viewModel.diceSideCounts.indices.contains(index) else { return }
+		selectedDieIndex = index
+		diceSelectionOverlayView.setPreferredFocusedDieIndex(index)
+		diceBoardView.setSelectedDieIndex(index)
+		let state = DieInspectorSheetCoordinator.makeState(viewModel: viewModel, dieIndex: index)
+
+		if let inspector = dieInspectorSheetController, inspector.presentingViewController != nil {
+			DieInspectorSheetCoordinator.bind(inspector, handlers: dieInspectorHandlers(for: index))
+			inspector.updateState(state)
+			return
+		}
+
+		let inspector = DieInspectorSheetViewController(state: state)
+		DieInspectorSheetCoordinator.bind(inspector, handlers: dieInspectorHandlers(for: index))
+		inspector.onDismiss = { [weak self, weak inspector] in
+			guard let self else { return }
+			if self.dieInspectorSheetController === inspector {
+				self.dieInspectorSheetController = nil
+			}
+			guard let index = self.selectedDieIndex else { return }
+			self.diceSelectionOverlayView.setPreferredFocusedDieIndex(index)
+			self.setNeedsFocusUpdate()
+			self.updateFocusIfNeeded()
+		}
+
+		let navigationController = DieInspectorSheetCoordinator.themedNavigationController(
+			rootViewController: inspector,
+			theme: viewModel.theme
+		)
+		navigationController.modalPresentationStyle = .automatic
+		navigationController.preferredContentSize = CGSize(width: 900, height: 980)
+		present(navigationController, animated: true)
+		dieInspectorSheetController = inspector
+	}
+
+	private func dieInspectorHandlers(for dieIndex: Int) -> DieInspectorSheetHandlers {
+		DieInspectorSheetHandlers(
+			reroll: { [weak self] in
+				guard let self else { return }
+				_ = self.viewModel.rerollDie(at: dieIndex)
+				self.renderBoard(animated: self.viewModel.animationIntensity != .off)
+			},
+			toggleLock: { [weak self] in
+				guard let self else { return }
+				self.viewModel.toggleDieLock(at: dieIndex)
+				self.renderBoard(animated: false)
+				self.refreshDieInspectorIfVisible()
+			},
+			setColor: { [weak self] preset in
+				guard let self else { return }
+				self.viewModel.applyPerDieColorSelection(preset, at: dieIndex)
+				self.renderBoard(animated: false)
+				self.refreshDieInspectorIfVisible()
+			},
+			setD6PipStyle: { [weak self] style in
+				guard let self else { return }
+				self.viewModel.setD6PipStyle(style)
+				self.renderBoard(animated: false)
+				self.refreshDieInspectorIfVisible()
+			},
+			setFaceNumeralFont: { [weak self] font in
+				guard let self else { return }
+				self.viewModel.setFaceNumeralFont(font, forDieAt: dieIndex)
+				self.renderBoard(animated: false)
+				self.refreshDieInspectorIfVisible()
+			},
+			setSideCount: { [weak self] sideCount in
+				guard let self else { return }
+				guard case .success = self.viewModel.setDieSideCount(sideCount, forDieAt: dieIndex) else { return }
+				self.renderBoard(animated: false)
+				self.refreshDieInspectorIfVisible()
+			}
+		)
+	}
+
+	private func refreshDieInspectorIfVisible() {
+		guard let inspector = dieInspectorSheetController, inspector.presentingViewController != nil else { return }
+		guard let index = selectedDieIndex else { return }
+		guard viewModel.diceValues.indices.contains(index), viewModel.diceSideCounts.indices.contains(index) else { return }
+		DieInspectorSheetCoordinator.bind(inspector, handlers: dieInspectorHandlers(for: index))
+		inspector.updateState(DieInspectorSheetCoordinator.makeState(viewModel: viewModel, dieIndex: index))
 	}
 
 	private func presentSettings() {

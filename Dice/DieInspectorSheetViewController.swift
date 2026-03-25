@@ -3,6 +3,53 @@ import UIKit
 final class DieInspectorSheetViewController: UIViewController {
 	private static let sideCountBounds = 2...100
 
+	private enum Palette {
+		static let screenBackground = UIColor { trait in
+			switch trait.userInterfaceStyle {
+			case .dark:
+				return UIColor(red: 0.10, green: 0.11, blue: 0.13, alpha: 1.0)
+			default:
+				return UIColor(white: 1.0, alpha: 1.0)
+			}
+		}
+
+		static let sectionBackground = UIColor { trait in
+			switch trait.userInterfaceStyle {
+			case .dark:
+				return UIColor(red: 0.18, green: 0.20, blue: 0.23, alpha: 1.0)
+			default:
+				return UIColor(red: 0.95, green: 0.95, blue: 0.97, alpha: 1.0)
+			}
+		}
+
+		static let secondaryButtonBackground = UIColor { trait in
+			switch trait.userInterfaceStyle {
+			case .dark:
+				return UIColor(red: 0.22, green: 0.24, blue: 0.27, alpha: 1.0)
+			default:
+				return UIColor(red: 0.92, green: 0.92, blue: 0.94, alpha: 1.0)
+			}
+		}
+
+		static let disabledPrimaryBackground = UIColor { trait in
+			switch trait.userInterfaceStyle {
+			case .dark:
+				return UIColor(red: 0.30, green: 0.31, blue: 0.34, alpha: 1.0)
+			default:
+				return UIColor(red: 0.78, green: 0.79, blue: 0.83, alpha: 1.0)
+			}
+		}
+
+		static let disabledPrimaryForeground = UIColor { trait in
+			switch trait.userInterfaceStyle {
+			case .dark:
+				return UIColor(red: 0.74, green: 0.77, blue: 0.81, alpha: 1.0)
+			default:
+				return UIColor(red: 0.42, green: 0.44, blue: 0.48, alpha: 1.0)
+			}
+		}
+	}
+
 	enum StyleSectionKind: Equatable {
 		case d6Pips
 		case numeralFont
@@ -49,13 +96,22 @@ final class DieInspectorSheetViewController: UIViewController {
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		view.backgroundColor = .systemBackground
+		view.backgroundColor = Palette.screenBackground
 		view.accessibilityIdentifier = "dieInspectorSheet"
+#if os(tvOS)
+		navigationItem.rightBarButtonItem = UIBarButtonItem(
+			title: NSLocalizedString("button.close", comment: "Close button title"),
+			style: .done,
+			target: self,
+			action: #selector(closeSheet)
+		)
+#else
 		navigationItem.rightBarButtonItem = UIBarButtonItem(
 			barButtonSystemItem: .close,
 			target: self,
 			action: #selector(closeSheet)
 		)
+#endif
 		configureLayout()
 		applyState()
 	}
@@ -261,8 +317,8 @@ final class DieInspectorSheetViewController: UIViewController {
 
 		rerollButton.isEnabled = !state.isLocked
 		var rerollConfig = rerollButton.configuration
-		rerollConfig?.baseBackgroundColor = state.isLocked ? .systemGray4 : .systemBlue
-		rerollConfig?.baseForegroundColor = state.isLocked ? .systemGray : .white
+		rerollConfig?.baseBackgroundColor = state.isLocked ? Palette.disabledPrimaryBackground : .systemBlue
+		rerollConfig?.baseForegroundColor = state.isLocked ? Palette.disabledPrimaryForeground : .white
 		rerollButton.configuration = rerollConfig
 
 		var lockConfig = lockButton.configuration
@@ -275,7 +331,7 @@ final class DieInspectorSheetViewController: UIViewController {
 		for (preset, button) in colorButtons {
 			var config = button.configuration
 			let isSelected = preset == state.selectedColor
-			config?.baseBackgroundColor = isSelected ? .systemBlue : .secondarySystemBackground
+			config?.baseBackgroundColor = isSelected ? .systemBlue : Palette.secondaryButtonBackground
 			config?.baseForegroundColor = isSelected ? .white : .label
 			config?.background.strokeColor = isSelected ? UIColor.systemBlue : UIColor.separator
 			config?.background.strokeWidth = 1
@@ -323,7 +379,7 @@ final class DieInspectorSheetViewController: UIViewController {
 		body.spacing = 10
 		body.isLayoutMarginsRelativeArrangement = true
 		body.layoutMargins = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
-		body.backgroundColor = .secondarySystemGroupedBackground
+		body.backgroundColor = Palette.sectionBackground
 		body.layer.cornerRadius = 12
 
 		container.addArrangedSubview(titleLabel)

@@ -223,7 +223,7 @@ Each checklist item is scoped to about 1-2 hours of focused developer work.
 - [x] Restore per-die tap menu presentation using direct `UIEditMenuInteraction` anchored at the actual tapped 3D die location (remove proxy button trigger path).
 - [x] Replace per-die contextual edit menus with a tap-selected inspector sheet (reroll/lock/color/style controls) and highlight the selected die directly in `DiceCubeView`.
 - [x] Extend the shared per-die inspector sheet with side-count text entry (`2...100`) and canonical single-die pool mutation that preserves per-die mode/color overrides across iOS and tvOS.
-- [ ] Reuse the shared per-die inspector on the tvOS main board by making rendered dice individually focusable/selectable for editing instead of relying on global-only controls.
+- [x] Reuse the shared per-die inspector on the tvOS main board by making rendered dice individually focusable/selectable for editing instead of relying on global-only controls.
 - [x] Remove obsolete `boardSupportedSides` plumbing from controller/view-model totals formatting path and update call sites/tests to eliminate dead parameters.
 - [x] Document product decision to keep Roll Distribution on a fixed-height custom detent (compact board-first layout) directly in sheet presentation code.
 - [x] Run dead-code/resource sweep for the stats/settings refactor and remove unreachable style-preview UI path plus unreferenced symbols.

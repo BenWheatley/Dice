@@ -2902,6 +2902,87 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(source.contains("recentNotations: viewModel.recentPresets"))
 	}
 
+	func testSharedDieInspectorSheetCoordinatorCentralizesStateAndBinding() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let coordinatorURL = projectRoot
+			.appendingPathComponent("Dice")
+			.appendingPathComponent("DieInspectorSheetCoordinator.swift")
+		let source = try String(contentsOf: coordinatorURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("struct DieInspectorSheetHandlers"))
+		XCTAssertTrue(source.contains("static func makeState(viewModel: DiceViewModel, dieIndex: Int)"))
+		XCTAssertTrue(source.contains("static func bind(_ inspector: DieInspectorSheetViewController"))
+		XCTAssertTrue(source.contains("static func themedNavigationController"))
+	}
+
+	func testViewControllerUsesSharedDieInspectorSheetCoordinator() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let controllerURL = projectRoot
+			.appendingPathComponent("Dice")
+			.appendingPathComponent("ViewController.swift")
+		let source = try String(contentsOf: controllerURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("DieInspectorSheetCoordinator.makeState"))
+		XCTAssertTrue(source.contains("DieInspectorSheetCoordinator.bind"))
+		XCTAssertTrue(source.contains("DieInspectorSheetCoordinator.themedNavigationController"))
+		XCTAssertFalse(source.contains("private func bindDieInspectorCallbacks"))
+		XCTAssertFalse(source.contains("private func dieInspectorState("))
+	}
+
+	func testTvOSRootControllerUsesPerDieSelectionOverlayAndSharedInspector() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let controllerURL = projectRoot
+			.appendingPathComponent("Dice tvOS")
+			.appendingPathComponent("TVRootViewController.swift")
+		let source = try String(contentsOf: controllerURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("private let diceSelectionOverlayView = TVDiceSelectionOverlayView()"))
+		XCTAssertTrue(source.contains("diceSelectionOverlayView.onSelectDie"))
+		XCTAssertTrue(source.contains("diceSelectionOverlayView.onFocusedDie"))
+		XCTAssertTrue(source.contains("diceSelectionOverlayView.updateDiceTargets"))
+		XCTAssertTrue(source.contains("presentDieInspector(for:"))
+		XCTAssertTrue(source.contains("DieInspectorSheetCoordinator.makeState"))
+		XCTAssertTrue(source.contains("DieInspectorSheetCoordinator.bind"))
+		XCTAssertTrue(source.contains("DieInspectorSheetViewController"))
+	}
+
+	func testTvOSDiceSelectionOverlayDefinesFocusablePerDieButtons() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let overlayURL = projectRoot
+			.appendingPathComponent("Dice tvOS")
+			.appendingPathComponent("TVDiceSelectionOverlayView.swift")
+		let source = try String(contentsOf: overlayURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("var onSelectDie: ((Int) -> Void)?"))
+		XCTAssertTrue(source.contains("var onFocusedDie: ((Int?) -> Void)?"))
+		XCTAssertTrue(source.contains("var primaryFocusableView: UIView?"))
+		XCTAssertTrue(source.contains("func updateDiceTargets(centers: [CGPoint], sideLength: CGFloat)"))
+		XCTAssertTrue(source.contains("button.addTarget(self, action: #selector(handleDieSelection(_:)), for: .primaryActionTriggered)"))
+		XCTAssertTrue(source.contains("onFocusedDie?(button.tag)"))
+		XCTAssertTrue(source.contains("focusRingView"))
+	}
+
+	func testTvOSTargetIncludesDiceSelectionOverlayAndSharedCoordinatorSources() throws {
+		let projectRoot = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent()
+			.deletingLastPathComponent()
+		let pbxprojURL = projectRoot
+			.appendingPathComponent("Dice.xcodeproj")
+			.appendingPathComponent("project.pbxproj")
+		let source = try String(contentsOf: pbxprojURL, encoding: .utf8)
+
+		XCTAssertTrue(source.contains("TVDiceSelectionOverlayView.swift in Sources"))
+		XCTAssertTrue(source.contains("DieInspectorSheetCoordinator.swift in Sources"))
+	}
+
 	func testTvOSDiceComposerUsesSharedTokenComposerStateInsteadOfNotationParsing() throws {
 		let projectRoot = URL(fileURLWithPath: #filePath)
 			.deletingLastPathComponent()
