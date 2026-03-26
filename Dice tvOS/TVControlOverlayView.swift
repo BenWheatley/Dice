@@ -8,7 +8,6 @@ final class TVControlOverlayView: UIView {
 
 	private let summaryContainer = UIView()
 	private let summaryLabel = UILabel()
-	private let hintLabel = UILabel()
 	private let actionContainer = UIView()
 	private let actionStackView = UIStackView()
 	private let rollButton = UIButton(type: .system)
@@ -43,7 +42,6 @@ final class TVControlOverlayView: UIView {
 		summaryContainer.backgroundColor = UIColor(white: 0.08, alpha: 0.84)
 		actionContainer.backgroundColor = UIColor(white: 0.08, alpha: 0.84)
 		summaryLabel.textColor = .white
-		hintLabel.textColor = UIColor(white: 1.0, alpha: 0.72)
 		configure(button: rollButton, title: NSLocalizedString("button.roll", comment: "Roll button title"))
 		configure(button: presetsButton, title: NSLocalizedString("button.presets", comment: "Presets button title"))
 		configure(button: settingsButton, title: NSLocalizedString("button.settings", comment: "Settings button title"))
@@ -52,7 +50,6 @@ final class TVControlOverlayView: UIView {
 
 	func updateSummary(notation: String) {
 		summaryLabel.text = "\(notation)"
-		hintLabel.text = NSLocalizedString("tvos.control.hint", comment: "tvOS control hint")
 	}
 
 	private func configureHierarchy() {
@@ -73,11 +70,6 @@ final class TVControlOverlayView: UIView {
 		summaryLabel.adjustsFontForContentSizeCategory = true
 		summaryLabel.lineBreakMode = .byTruncatingMiddle
 
-		hintLabel.translatesAutoresizingMaskIntoConstraints = false
-		hintLabel.font = UIFont.preferredFont(forTextStyle: .footnote)
-		hintLabel.adjustsFontForContentSizeCategory = true
-		hintLabel.numberOfLines = 2
-
 		actionStackView.translatesAutoresizingMaskIntoConstraints = false
 		actionStackView.axis = .horizontal
 		actionStackView.alignment = .fill
@@ -87,7 +79,6 @@ final class TVControlOverlayView: UIView {
 		addSubview(summaryContainer)
 		addSubview(actionContainer)
 		summaryContainer.addSubview(summaryLabel)
-		summaryContainer.addSubview(hintLabel)
 		actionContainer.addSubview(actionStackView)
 
 		NSLayoutConstraint.activate([
@@ -98,11 +89,7 @@ final class TVControlOverlayView: UIView {
 			summaryLabel.topAnchor.constraint(equalTo: summaryContainer.topAnchor, constant: 20),
 			summaryLabel.leadingAnchor.constraint(equalTo: summaryContainer.leadingAnchor, constant: 24),
 			summaryLabel.trailingAnchor.constraint(equalTo: summaryContainer.trailingAnchor, constant: -24),
-
-			hintLabel.topAnchor.constraint(equalTo: summaryLabel.bottomAnchor, constant: 8),
-			hintLabel.leadingAnchor.constraint(equalTo: summaryContainer.leadingAnchor, constant: 24),
-			hintLabel.trailingAnchor.constraint(equalTo: summaryContainer.trailingAnchor, constant: -24),
-			hintLabel.bottomAnchor.constraint(equalTo: summaryContainer.bottomAnchor, constant: -20),
+            summaryLabel.bottomAnchor.constraint(equalTo: summaryContainer.bottomAnchor, constant: -20),
 
 			actionContainer.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor, constant: 64),
 			actionContainer.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor, constant: -64),

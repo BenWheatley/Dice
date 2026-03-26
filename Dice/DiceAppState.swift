@@ -7,8 +7,20 @@
 
 import Foundation
 
+extension Notification.Name {
+    static let diceAppStateConfigurationDidChange =
+        Notification.Name("DiceAppState.configurationDidChange")
+}
+
 final class DiceAppState {
-	var configuration: RollConfiguration
+    var configuration: RollConfiguration {
+        didSet {
+            NotificationCenter.default.post(
+                            name: .diceAppStateConfigurationDidChange,
+                            object: self
+                        )
+        }
+    }
 	var diceValues: [Int]
 	var diceSideCounts: [Int]
 	var stats: DiceStats

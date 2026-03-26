@@ -71,7 +71,6 @@
 "settings.title" = "Settings";
 "tvos.help.title" = "How to Use Dice";
 "tvos.help.message" = "Use the remote to focus a button. Select activates the focused action. Roll rerolls the current dice. Presets changes the dice set. Settings updates roll mode, background, and theme without closing. Menu goes back.";
-"tvos.control.hint" = "Use the remote to focus Roll, Presets, Settings, or Help.";
 "tvos.presets.section.diceSet" = "Dice Set";
 "tvos.presets.section.quickStart" = "Quick Start";
 "tvos.presets.action.editDice" = "Edit Current Dice";

@@ -11,6 +11,11 @@ final class TVRootViewController: UIViewController {
 	private var previousBoardLayoutBounds: CGRect?
 	private var selectedDieIndex: Int?
 	private weak var dieInspectorSheetController: DieInspectorSheetViewController?
+    
+    private let downFocusGuide = UIFocusGuide()
+    private let upFocusGuide = UIFocusGuide()
+    
+    private var configurationObserver: NSObjectProtocol?
 
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -19,7 +24,50 @@ final class TVRootViewController: UIViewController {
 		configureControlOverlay()
 		applyTheme()
 		renderBoard(animated: false)
+        
+        view.addLayoutGuide(downFocusGuide)
+        view.addLayoutGuide(upFocusGuide)
+        
+        updateFocusGuides()
+        
+        configurationObserver = NotificationCenter.default.addObserver(
+                forName: .diceAppStateConfigurationDidChange,
+                object: viewModel.appState, // or nil if you want all senders
+                queue: .main
+            ) { [weak self] _ in
+                self?.updateFocusGuides()
+            }
+        
+        NSLayoutConstraint.activate([
+            // Down from top group to bottom group
+            downFocusGuide.leadingAnchor.constraint(equalTo: diceSelectionOverlayView.leadingAnchor),
+            downFocusGuide.trailingAnchor.constraint(equalTo: diceSelectionOverlayView.trailingAnchor),
+            downFocusGuide.topAnchor.constraint(equalTo: diceSelectionOverlayView.bottomAnchor, constant: -1),
+            downFocusGuide.bottomAnchor.constraint(equalTo: diceSelectionOverlayView.topAnchor, constant: 1),
+            
+            // Up from bottom group to top group
+            upFocusGuide.leadingAnchor.constraint(equalTo: controlOverlayView.leadingAnchor),
+            upFocusGuide.trailingAnchor.constraint(equalTo: controlOverlayView.trailingAnchor),
+            upFocusGuide.topAnchor.constraint(equalTo: controlOverlayView.bottomAnchor, constant: -1),
+            upFocusGuide.bottomAnchor.constraint(equalTo: controlOverlayView.topAnchor, constant: 1)
+        ])
 	}
+    
+    deinit {
+        if let configurationObserver {
+            NotificationCenter.default.removeObserver(configurationObserver)
+        }
+    }
+    
+    private func updateFocusGuides() {
+        downFocusGuide.preferredFocusEnvironments = [controlOverlayView.primaryFocusableView]
+
+        if let diceFocusView = diceSelectionOverlayView.primaryFocusableView {
+            upFocusGuide.preferredFocusEnvironments = [diceFocusView]
+        } else {
+            upFocusGuide.preferredFocusEnvironments = []
+        }
+    }
 
 	override func viewDidAppear(_ animated: Bool) {
 		super.viewDidAppear(animated)
@@ -39,7 +87,7 @@ final class TVRootViewController: UIViewController {
 	}
 
 	override var preferredFocusEnvironments: [UIFocusEnvironment] {
-		[diceSelectionOverlayView.primaryFocusableView ?? controlOverlayView.primaryFocusableView]
+		[controlOverlayView.primaryFocusableView]
 	}
 
 	private func configureBoard() {

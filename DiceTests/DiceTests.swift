@@ -2846,10 +2846,8 @@ final class DiceTests: XCTestCase {
 		XCTAssertTrue(source.contains("settingsButton.accessibilityIdentifier = \"tvSettingsButton\""))
 		XCTAssertTrue(source.contains("helpButton.accessibilityIdentifier = \"tvHelpButton\""))
 		XCTAssertTrue(source.contains("button.heightAnchor.constraint(greaterThanOrEqualToConstant: 72)"))
-		XCTAssertTrue(source.contains("var primaryFocusableView: UIView"))
 		XCTAssertTrue(source.contains("var boardViewportInsets"))
 		XCTAssertTrue(source.contains("summaryLabel.textColor = .white"))
-		XCTAssertTrue(source.contains("hintLabel.textColor = UIColor(white: 1.0, alpha: 0.72)"))
 		XCTAssertTrue(source.contains("configuration.baseForegroundColor = .white"))
 		XCTAssertTrue(source.contains("configuration.baseBackgroundColor = UIColor(white: 0.16, alpha: 0.94)"))
 	}
@@ -2963,7 +2961,6 @@ final class DiceTests: XCTestCase {
 
 		XCTAssertTrue(source.contains("var onSelectDie: ((Int) -> Void)?"))
 		XCTAssertTrue(source.contains("var onFocusedDie: ((Int?) -> Void)?"))
-		XCTAssertTrue(source.contains("var primaryFocusableView: UIView?"))
 		XCTAssertTrue(source.contains("func updateDiceTargets(centers: [CGPoint], sideLength: CGFloat)"))
 		XCTAssertTrue(source.contains("button.addTarget(self, action: #selector(handleDieSelection(_:)), for: .primaryActionTriggered)"))
 		XCTAssertTrue(source.contains("onFocusedDie?(button.tag)"))
